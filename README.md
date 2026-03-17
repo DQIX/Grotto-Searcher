@@ -11,9 +11,9 @@ Ultimate search
 - Grotto Name, Level
 - Environment, SMR(B1 Monster Rank), Depth, Boss
 - Location, Base Quality
-- Chest counts by Chest rank
+- Chest counts by various Chest rank
 - ElistOfs (Wandering Monster Floor Status - fixed misjudgments by TKG)
-- <Monster name> only floor
+- Single monster floor (Only)
 
 Other searches
 - Quickload B3/B4 same item x2 (QL)
