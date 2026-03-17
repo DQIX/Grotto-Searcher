@@ -16,8 +16,8 @@ Ultimate search
 - Grotto Name, Level
 - Environment, SMR(B1 Monster Rank), Depth, Boss
 - Location, Base Quality
-- Chest counts by various Chest rank
-- Wandering Monster bugged floor Status (ElistOfs)
+- Chest amount in each Chest rank
+- Wandering Monster bugged floor status (ElistOfs)
 - Single monster floor (Only)
 
 Other searches
