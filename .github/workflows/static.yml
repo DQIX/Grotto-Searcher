@@ -25,6 +25,12 @@ jobs:
         run: |
           mkdir site
           cp DQ9_Grotto_Searcher.html site/index.html
+          cp 1.css site/1.css
+          cp 1.js site/1.js
+          cp 2.js site/2.js
+          cp 3.js site/3.js
+          cp 4.js site/4.js
+          cp 5.js site/5.js
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
