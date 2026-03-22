@@ -39,8 +39,8 @@ el.innerHTML='<div class="error">Invalid Seed/Rank</div>';
 return;
 }
 const seedHex=mapData.MapSeed.toString(16).toUpperCase().padStart(4,'0');
-const rankHex=mapData.MapRank.toString(16).toUpperCase().padStart(2,'0');
-const locData=calcLocations(mapData.MapSeed,rankHex);
+const rStr=mapData.MapRank.toString(16).toUpperCase().padStart(2,'0');
+const locData=calcLocations(mapData.MapSeed,rStr);
 let locHtmlString='';
 if(locData.outputOrder.length>0){
 const locStrings=locData.outputOrder.map(item=>{
@@ -76,7 +76,7 @@ boxCountHtmlArr.push(`<span style="margin-right:14px;display:inline-block;backgr
 }
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">None</span>';
 let html=`<div class="info-bar">
-<span>Rank:<strong>${rankHex}</strong></span>
+<span>Rank:<strong>${rStr}</strong></span>
 <span>Seed:<strong>${seedHex}</strong></span>
 <span>Name:<strong style="display:inline-block;vertical-align:top;">
 <span style="display:block;color:#ffd700">${mapData.mapName}</span>

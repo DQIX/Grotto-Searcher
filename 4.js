@@ -39,7 +39,7 @@ resultDiv.innerHTML='<div style="color:#aaa;font-size:13px;margin-bottom:8px">Pr
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
 const conds=getUltimateConds();
-let ranksToSearch=searchAllRanks?[0x02,0x38,0x3D,0x4C,0x51,0x65,0x79,0x8D,0xA1,0xB5,0xC9,0xDD]:[parseInt(baseRankStr)];
+let ranksToSearch=searchAllRanks?ALL_MAP_RANKS:[parseInt(baseRankStr)];
 if(config.filterRanks){
 ranksToSearch=config.filterRanks(ranksToSearch,conds);
 }
@@ -74,19 +74,14 @@ if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,searchFilterLo
 searchEngine.cDungeonDetail();
 let boxHtml="";
 if(conds.hasBoxCond){
-let boxCounts=searchEngine.getMapBoxCounts();
-let boxMatch=true;
 let boxStr=[];
-for(let r=10;r>=1;r--){
-if(conds.reqBox[r]>0){
-if(boxCounts[r]!==conds.reqBox[r]){
-boxMatch=false;break;
+let boxMatch=true;
+for (let r=10;r>=1;r--){
+if(conds.reqBox[r]>0&&searchEngine._details2[r-1]!==conds.reqBox[r]){boxMatch=false;break;}
+if(conds.reqBox[r]>0)boxStr.push(`${CHEST_RANK[r]}x${conds.reqBox[r]}`);
 }
-boxStr.push(`${CHEST_RANK[r]}x${conds.reqBox[r]}`);
-}
-}
-if(!boxMatch){processed++;continue;}
-boxHtml=`<br><span style="color:#ffcc00;font-size:11px;background:#442200;padding:1px 4px;border-radius:3px;">Specified Chest:${boxStr.join(',')}</span>`;
+if(!boxMatch){processed++;continue;} 
+boxHtml=`<br><span style="color:#ffcc00;font-size:11px;background:#442200;padding:1px 4px;border-radius:3px;display:inline-block;">Chest: ${boxStr.join(',')}</span>`;
 }
 let hitResult=config.checkDungeon(searchEngine);
 if(hitResult&&hitResult.isHit){
@@ -164,8 +159,8 @@ let minOffset=Math.trunc(0-baseQ/10);
 let maxOffset=Math.trunc((modulo-1)-baseQ/10);
 let minFinalQ=Math.max(2,baseQ+minOffset);
 let maxFinalQ=Math.min(248,baseQ+maxOffset);
-let rankHex=rank.toString(16).toUpperCase().padStart(2,'0');
-let rankInfo=RANKS[rankHex];
+let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
+let rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax)){
 return false;
 }
@@ -540,7 +535,7 @@ let validCount=0;
 let foundOffsets=[];
 let POPValue=null;
 for(let step=1;step<=maxSteps;step++){
-rng=(Math.imul(rng,1103515245)+12345)>>>0;
+rng=lcg(rng);
 let val=(rng>>>16)& 0x7FFF;
 if(step===POPIndex)POPValue=val;
 if(step<38)continue;
@@ -659,7 +654,7 @@ const resultDiv=document.getElementById('searchResults');
 resultDiv.innerHTML='<div style="color:#aaa;font-size:13px;margin-bottom:8px">Progress: <span id="searchProgress" style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>';
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
-let ranksToSearch=searchAllRanks?[0x02,0x38,0x3D,0x4C,0x51,0x65,0x79,0x8D,0xA1,0xB5,0xC9,0xDD]:[parseInt(baseRankStr)];
+let ranksToSearch=searchAllRanks?ALL_MAP_RANKS:[parseInt(baseRankStr)];
 if(cond_only_mon||conds.monster||conds.bq){
 ranksToSearch=ranksToSearch.filter(rank=>{
 if(conds.bq){
@@ -669,8 +664,8 @@ let minOffset=Math.trunc(0-baseQ/10);
 let maxOffset=Math.trunc((modulo-1)-baseQ/10);
 let minFinalQ=Math.max(2,baseQ+minOffset);
 let maxFinalQ=Math.min(248,baseQ+maxOffset);
-let rankHex=rank.toString(16).toUpperCase().padStart(2,'0');
-let rankInfo=RANKS[rankHex];
+let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
+let rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax)){
 return false;
 }
@@ -726,12 +721,12 @@ let searchEngine=new GrottoDetail();
 let fragment=document.createDocumentFragment();
 for(let rank of ranksToSearch){
 if(searchCancel)break;
-let rankHex=rank.toString(16).toUpperCase().padStart(2,'0');
-let targetRankKey=RANKS[rankHex]?rankHex:(RANKS["0x"+rankHex]?"0x"+rankHex:null);
+let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
+let targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:null);
 for(let seed=minSeed;seed<=maxSeed;seed++){
 if(searchCancel)break;
 if(processed % 200===0){
-progressSpan.textContent=Math.floor((processed / totalCombos)* 100)+'% (Rank '+rankHex+',Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+hitCount+' found]';
+progressSpan.textContent=Math.floor((processed / totalCombos)* 100)+'% (Rank '+rStr+',Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+hitCount+' found]';
 if(fragment.children.length>0)grid.appendChild(fragment);
 await new Promise(r=>setTimeout(r,0));
 }
@@ -762,17 +757,12 @@ searchEngine._at_offset=0;
 searchEngine._force_16_floors=true;
 searchEngine.calculateDetail();
 let boxHtml="";
-let boxMatch=true;
 if(conds.hasBoxCond){
-let boxCounts=searchEngine.getMapBoxCounts();
 let boxStr=[];
+let boxMatch=true;
 for(let r=10;r>=1;r--){
-if(conds.reqBox[r]>0){
-if(boxCounts[r]!==conds.reqBox[r]){
-boxMatch=false;break;
-}
-boxStr.push(`${CHEST_RANK[r]}x${conds.reqBox[r]}`);
-}
+if(conds.reqBox[r]>0&&searchEngine._details2[r-1]!==conds.reqBox[r]){boxMatch=false;break;}
+if(conds.reqBox[r]>0)boxStr.push(`${CHEST_RANK[r]}x${conds.reqBox[r]}`);
 }
 if(!boxMatch){processed++;continue;}
 boxHtml=`<br><span style="color:#ffcc00;font-size:11px;background:#442200;padding:1px 4px;border-radius:3px;margin-top:2px;display:inline-block;">Chests:${boxStr.join(',')}</span>`;
@@ -860,7 +850,7 @@ if(hasAnyD)itemNode.dataset.hasD="true";
 let bugIcon=isFloorIncreased?'📈':'';
 itemNode.innerHTML=`
 <span style="color:#ffd700;font-weight:bold;font-size:15px;">${seed.toString(16).toUpperCase().padStart(4,'0')}</span>
-<span style="color:#888">(Rank ${rankHex})</span><br>
+<span style="color:#888">(Rank ${rStr})</span><br>
 <div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
 <span style="color:#aaa;font-size:11px">[Source] ${origName} | B${origFloors}F | ${origBoss}</span><br>
 <span style="color:#ff88ff;font-size:12px">[Bug] ${bugName} | B${bugFloors}F | ${bugBoss}${bugIcon}</span>
@@ -873,7 +863,7 @@ ${elistHtmlStr}
 `;
 itemNode.onclick=()=>{
 document.getElementById('seed').value=seed.toString(16).toUpperCase().padStart(4,'0');
-document.getElementById('rank').value="0x"+rankHex;
+document.getElementById('rank').value="0x"+rStr;
 calculate();
 document.getElementById('result').scrollIntoView({behavior:'smooth'});
 };

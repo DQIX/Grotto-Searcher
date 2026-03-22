@@ -80,7 +80,7 @@ const resultDiv=document.getElementById('searchResults');
 resultDiv.innerHTML='<div style="color:#aaa;font-size:13px;margin-bottom:8px">Progress: <span id="searchProgress" style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>';
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
-let ranksToSearch=searchAllRanks?[0x02,0x38,0x3D,0x4C,0x51,0x65,0x79,0x8D,0xA1,0xB5,0xC9,0xDD]:[parseInt(baseRankStr)];
+let ranksToSearch=searchAllRanks?ALL_MAP_RANKS:[parseInt(baseRankStr)];
 if(conds.onlyMon||conds.monster||conds.bq){
 ranksToSearch=ranksToSearch.filter(rank=>{
 if(conds.bq){
@@ -90,8 +90,8 @@ let minOffset=Math.trunc(0-baseQ/10);
 let maxOffset=Math.trunc((modulo-1)-baseQ/10);
 let minFinalQ=Math.max(2,baseQ+minOffset);
 let maxFinalQ=Math.min(248,baseQ+maxOffset);
-let rankHex=rank.toString(16).toUpperCase().padStart(2,'0');
-let rankInfo=RANKS[rankHex];
+let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
+let rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax))return false;
 }
 if(!conds.onlyMon &&!conds.monster)return true;
@@ -153,12 +153,12 @@ let fragment=document.createDocumentFragment();
 try{
 for(let rank of ranksToSearch){
 if(searchCancel)break;
-let rankHex=rank.toString(16).toUpperCase().padStart(2,'0');
-let targetRankKey=RANKS[rankHex]?rankHex:(RANKS["0x"+rankHex]?"0x"+rankHex:null);
+let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
+let targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:null);
 for(let seed=0;seed<=maxSeed;seed++){
 if(searchCancel)break;
 if(seed % 250===0){
-progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% (Rank '+rankHex+',Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+hitCount+' found]';
+progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% (Rank '+rStr+',Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+hitCount+' found]';
 if(fragment.children.length>0)grid.appendChild(fragment);
 await new Promise(r=>setTimeout(r,0));
 }
@@ -197,9 +197,8 @@ if(needMapGeneration){
 searchEngine.cDungeonDetail();
 }
 if(match&&hasBoxCond){
-let boxCounts=searchEngine.getMapBoxCounts();
 for(let r=10;r>=1;r--){
-if(reqBox[r]>0&&boxCounts[r]!==reqBox[r]){match=false;break;}
+if(reqBox[r]>0&&searchEngine._details2[r-1]!==reqBox[r]){match=false;break;}
 }
 }
 let specialHitDetails=[];
@@ -331,7 +330,6 @@ else if(conds.anomaly==='corridor'||conds.anomaly==='multi_corridor')jumpToFloor
 else if(conds.anomaly==='multi_region')jumpToFloor=firstMultiRegionFloor;
 else if(conds.anomaly==='chest_corridor')jumpToFloor=(firstChestFloor!==-1)?firstChestFloor:firstCorridorFloor;
 if(jumpToFloor===-1){
-if(firstStairFloor!==-1)jumpToFloor=firstStairFloor;
 else if(firstNoChestFloor!==-1)jumpToFloor=firstNoChestFloor;
 else if(firstChestFloor!==-1)jumpToFloor=firstChestFloor;
 else if(firstMultiRegionFloor!==-1)jumpToFloor=firstMultiRegionFloor;
@@ -371,7 +369,7 @@ let boxHtml=boxStr.length>0?`<div style="margin-top:4px;"><span style="color:#ff
 let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:4px;">${anomalyDetails.join('<br>')}</div>`:'';
 itemNode.innerHTML=`
 <span style="color:#ffd700;font-weight:bold">${seed.toString(16).toUpperCase().padStart(4,'0')}</span> 
-<span style="color:#888">(Rank ${rankHex})</span><br>
+<span style="color:#888">(Rank ${rStr})</span><br>
 <span style="color:#00ffff;font-size:11px">${searchEngine.mapName}</span>${detailsHtml}
 ${boxHtml}${locHtml}
 ${specialHtml}
@@ -379,7 +377,7 @@ ${anomalyHtml}
 `;
 itemNode.onclick=()=>{
 document.getElementById('seed').value=seed.toString(16).toUpperCase().padStart(4,'0');
-document.getElementById('rank').value="0x"+rankHex;
+document.getElementById('rank').value="0x"+rStr;
 calculate();
 document.getElementById('result').scrollIntoView({behavior:'smooth'});
 if(jumpToFloor!==-1){

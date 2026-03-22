@@ -87,8 +87,6 @@ this._seed=0;
 this.MapSeed=0;
 this.MapRank=0;
 this.MapLocale=0;
-this.BoxInfoList=[];
-for(let i=0;i<16;i++)this.BoxInfoList[i]=[];
 }
 _readI32(floor,offset){
 const d=this.di[floor];
@@ -102,7 +100,7 @@ d[offset+2]=(val>>>16)&0xFF;
 d[offset+3]=(val>>>24)&0xFF;
 }
 gRNG(){
-this._seed=(Math.imul(this._seed,1103515245)+12345)>>>0;
+this._seed=lcg(this._seed);
 return(this._seed>>>16)&0x7FFF;
 }
 gRNGDiv(div){
@@ -681,7 +679,6 @@ return 1;
 calculateDetail(skipMapGen=false){
 for(let i=0;i<16;i++){
 this.di[i].fill(0);
-this.BoxInfoList[i]=[];
 }
 this._details.fill(0);
 this._details2.fill(0);
@@ -759,15 +756,6 @@ for(let i14=0;i14<d[8];i14++){
 d[i14+9]=this.getItemRank(TableN[(num-1)*4+1],TableN[(num-1)*4+2]);
 this._details2[d[i14+9]-1]++;
 }
-if(d[8]>0){
-for(let i15=0;i15<d[8];i15++){
-const info={index:i15,rank:d[9+i15],x:d[i15*2+13],y:d[i15*2+14]};
-let idx=0;
-while(idx<this.BoxInfoList[i12].length &&
- info.rank<=this.BoxInfoList[i12][idx].rank)idx++;
-this.BoxInfoList[i12].splice(idx,0,info);
-}
-}
 }
 }
 get floorCount(){return this._details[1];}
@@ -844,16 +832,20 @@ if(num1<num4)return TableR[TableQ[i3]][1];
 }
 return null;
 }
-getMapBoxCounts(maxFloor=this.floorCount){
-let counts={10:0,9:0,8:0,7:0,6:0,5:0,4:0,3:0,2:0,1:0};
-let total=0;
-for(let f=2;f<maxFloor;f++){
-let boxes=this.getTreasureBoxCount(f);
-for(let b=0;b<boxes;b++){
-counts[this.getTreasureBoxInfo(f,b).rank]++;
-total++;
-}
-}
+getMapBoxCounts(){
+let counts={
+10:this._details2[9],
+9:this._details2[8],
+8:this._details2[7],
+7:this._details2[6],
+6:this._details2[5],
+5:this._details2[4],
+4:this._details2[3],
+3:this._details2[2],
+2:this._details2[1],
+1:this._details2[0]
+};
+let total=this._details2[0]+this._details2[1]+this._details2[2]+this._details2[3]+this._details2[4]+this._details2[5]+this._details2[6]+this._details2[7]+this._details2[8]+this._details2[9];
 return{counts,total};
 }
 }

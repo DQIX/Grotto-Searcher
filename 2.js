@@ -371,17 +371,17 @@ const RANKS={
 "C9":{fqMin:201,fqMax:220},
 "DD":{fqMin:221,fqMax:248}
 };
-function lcg(seed){
-return(Math.imul(seed,1103515245)+12345)>>>0;
-}
 function getLocationMax(finalQuality){
 if(finalQuality<=50)return 47;
 if(finalQuality<=80)return 131;
 return 150;
 }
+function lcg(seed){
+return(Math.imul(seed,1103515245)+12345)>>>0;
+}
 function calcFinalQuality(baseQ,r1){
-const modulo=Math.floor(baseQ / 10)* 2+1;
-const offset=Math.trunc(r1 % modulo-baseQ / 10);
+const modulo=Math.floor(baseQ/10)*2+1;
+const offset=Math.trunc(r1%modulo-baseQ/10);
 let final=baseQ+offset;
 if(final<2)final=2;
 if(final>248)final=248;
@@ -404,8 +404,8 @@ ranges.push(start===end?`${start}`:`${start}-${end}`);
 return ranges.join(',');
 }
 let SEED_TO_TIMERS_CACHE=null;
-function calcLocations(seed,rankHex){
-const{fqMin,fqMax}=RANKS[rankHex] ||{fqMin:2,fqMax:248};
+function calcLocations(seed,rStr){
+const{fqMin,fqMax}=RANKS[rStr]||{fqMin:2,fqMax:248};
 const seenLocations={};
 const outputOrder=[];
 if(!SEED_TO_TIMERS_CACHE){
@@ -448,7 +448,7 @@ seenLocations[loc].add(bq);
 }
 }
 }
-if(rankHex==="02"&&seed===0x0032){
+if(rStr==="02"&&seed===0x0032){
 if(2>=fqMin&&2<=fqMax){
 if(!seenLocations[5]){
 seenLocations[5]=new Set();
