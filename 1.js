@@ -773,8 +773,6 @@ get monsterRank(){return this._details[2];}
 get mapLevel(){return this._details[4];}
 get mapTypeName(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][0]:"Unknown";}
 get mapTypeNameJP(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][1]:"不明";}
-get mapTypeIndex(){return this._details[3]-1;}
-get bossIndex(){return this._details[0]-1;}
 get bossName(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][0]:"Unknown";}
 get bossNameJP(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][2]:"不明";}
 get mapName(){

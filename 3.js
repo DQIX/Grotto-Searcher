@@ -110,7 +110,6 @@ return;
 let totalCombos=ranksToSearch.length*(maxSeed+1);
 let processed=0;
 let hitCount=0;
-window.lastSearchResults=[];
 let searchEngine=new GrottoDetail();
 let targetLocNum=conds.location?parseInt(conds.location,16):null;
 let targetBqNum=conds.bq?parseInt(conds.bq):null;
@@ -361,17 +360,6 @@ if(tab)tab.click();
 fragment.appendChild(itemNode);
 let targetFloorForElist=jumpToFloor!==-1?jumpToFloor:0;
 let elistHex=typeof getFloorElistInfo==='function'&&searchEngine.floorCount>targetFloorForElist?getFloorElistInfo(searchEngine,targetFloorForElist).hex:"0000";
-window.lastSearchResults.push({
-rank:rankHex,
-seed:seed.toString(16).toUpperCase().padStart(4,'0'),
-mapLevel:searchEngine.mapLevel,
-mapName:searchEngine.mapName,
-mapNameJP:searchEngine.mapNameJP,
-boss:searchEngine.bossName,
-bossJP:searchEngine.bossNameJP,
-floor:specialHitDetails.length>0?specialHitDetails[0].split(':') [0]:"All",
-hex:`${elistHex}`
-});
 }
 processed++;
 }
