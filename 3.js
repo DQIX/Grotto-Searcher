@@ -71,6 +71,26 @@ isMatch:true,
 html:`<div style="margin-top:4px;"><span style="color:#ffcc00;font-size:11px;background:#442200;padding:2px 4px;border-radius:3px;">${boxStr.join(' ')}</span></div>`
 };
 }
+function LocaHtml(seed,targetRankKey,conds,searchFilterLoc){
+let targetLocNum=conds.location?parseInt(conds.location,16):null;
+let targetBqNum=conds.bq?parseInt(conds.bq):null;
+if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc)return "";
+if(targetRankKey===null||typeof calcLocations!=='function')return "";
+let locData=calcLocations(seed, targetRankKey);
+if(locData.outputOrder.length===0)return "";
+let matchedLocs=[];
+for(let locObj of locData.outputOrder){
+let locNum=locObj.location;
+let isMatch=true;
+if(targetLocNum!==null&&locNum!==targetLocNum)isMatch=false;
+if(targetBqNum!==null&&!locData.seenLocations[locNum].has(targetBqNum))isMatch=false;
+if(isMatch){matchedLocs.push(locNum.toString(16).toUpperCase().padStart(2,'0'));}
+}
+if(matchedLocs.length>0){
+return `<span style="margin-left:4px;color:#ccc;font-size:10px;background:#222;padding:1px 4px;border-radius:3px;">${matchedLocs.join(' / ')}</span>`;
+}
+return "";
+}
 async function startUltimateSearch(){
 if(isSearching){searchCancel=true;return;}
 const conds=getUltimateConds();
@@ -94,7 +114,7 @@ resultDiv.innerHTML='<div style="color:#aaa;font-size:13px;margin-bottom:8px">Pr
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
 let ranksToSearch=searchAllRanks?ALL_MAP_RANKS:[parseInt(baseRankStr)];
-if(conds.onlyMon||conds.monster||conds.bq){
+if(conds.onlyMon||conds.monster||conds.bq||conds.hasBoxCond){
 ranksToSearch=ranksToSearch.filter(rank=>{
 if(conds.bq){
 let baseQ=parseInt(conds.bq);
@@ -107,13 +127,32 @@ let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
 let rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax))return false;
 }
-if(!conds.onlyMon &&!conds.monster)return true;
 let minSMR=1,maxSMR=9;
 for(let i=0;i<8;i++){
 if(rank>=TableC[i*4]&&rank<=TableC[i*4+1]){
 minSMR=TableC[i*4+2];maxSMR=TableC[i*4+3];break;
 }
 }
+if(conds.hasBoxCond){
+let maxFloorCount=16;
+for(let i=0;i<9;i++){
+if(rank>=TableB[i*4]&&rank<=TableB[i*4+1]){maxFloorCount=TableB[i*4+3];break;}
+}
+if(conds.depth) maxFloorCount=parseInt(conds.depth);
+let maxPossibleNum=Math.min(12,maxSMR+Math.floor((maxFloorCount-1)/4));
+for(let r=10;r>=1;r--){
+if(conds.reqBox[r]>0){
+let canDrop=false;
+for(let num=minSMR;num<=maxPossibleNum;num++){
+let cMin=TableN[(num-1)*4+1];
+let cMax=TableN[(num-1)*4+2];
+if(r>=cMin&&r<=cMax){canDrop=true;break;}
+}
+if(!canDrop)return false;
+}
+}
+}
+if(!conds.onlyMon&&!conds.monster)return true;
 if(conds.monster){
 let targetSMR=parseInt(conds.monster);
 if(targetSMR<minSMR||targetSMR>maxSMR)return false;
@@ -121,9 +160,7 @@ if(targetSMR<minSMR||targetSMR>maxSMR)return false;
 if(conds.onlyMon){
 let maxFloorCount=16;
 for(let i=0;i<9;i++){
-if(rank>=TableB[i*4]&&rank<=TableB[i*4+1]){
-maxFloorCount=TableB[i*4+3];break;
-}
+if(rank>=TableB[i*4]&&rank<=TableB[i*4+1]){maxFloorCount=TableB[i*4+3];break;}
 }
 let maxOffset=Math.floor((maxFloorCount-1)/ 4);
 let targetEnvStr=conds.env?ENV_NAMES[conds.env][0]:null;
@@ -326,7 +363,7 @@ let countBadges=anom.isolatedRegions.map(size=>`<span style="background:#ff6ec7;
 anomalyDetails.push(`<span style="color:#ffaa00;font-size:11px;">B${f+1}F Chamber${countBadges}</span>`);
 if(firstCorridorFloor===-1)firstCorridorFloor=f;
 }
-if(anom.hasInaccessibleChest && anom.hasIsolatedCorridor){
+if(anom.hasInaccessibleChest&&anom.hasIsolatedCorridor){
 hasAnyChestCorridorCombo=true;
 }
 }
@@ -355,22 +392,7 @@ hitCount++;
 let itemNode=document.createElement('div');
 itemNode.className='search-result-item';
 if(hasMatchedD)itemNode.dataset.hasD="true";
-let locHtml="";
-if(conds.bq&&targetRankKey!==null&&typeof calcLocations==='function'){
-let targetBqNum=parseInt(conds.bq);
-let locData=calcLocations(seed,targetRankKey);
-let matchedLocs=[];
-for(let locObj of locData.outputOrder){
-let locNum=locObj.location;
-if(locData.seenLocations[locNum].has(targetBqNum)){
-let locHex=locNum.toString(16).toUpperCase().padStart(2,'0');
-matchedLocs.push(locHex);
-}
-}
-if(matchedLocs.length>0){
-locHtml=`<span style="margin-left:4px;color:#ccc;font-size:10px;background:#222;padding:1px 4px;border-radius:3px;">${matchedLocs.join(' / ')}</span>`;
-}
-}
+let locHtml=LocaHtml(seed,targetRankKey,conds,searchFilterLoc);
 let specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
 let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:4px;">${anomalyDetails.join('<br>')}</div>`:'';
 itemNode.innerHTML=`

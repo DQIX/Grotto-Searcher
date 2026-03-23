@@ -61,8 +61,8 @@ let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
 let targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:(RANKS[rank]?rank:null));
 for(let seed=0;seed<=maxSeed;seed++){
 if(searchCancel)break;
-if(seed % 250===0){
-progressSpan.textContent=Math.floor((processed / totalCombos)* 100)+'% (Search Rank '+rStr+', Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+hitCount+' found]';
+if(seed%250===0){
+progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% (Search Rank '+rStr+', Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+hitCount+' found]';
 if(fragment.children.length>0)grid.appendChild(fragment);
 await new Promise(r=>setTimeout(r,0));
 }
@@ -78,32 +78,15 @@ let boxHtml=chestResult.html;
 let hitResult=config.checkDungeon(searchEngine);
 if(hitResult&&hitResult.isHit){
 hitCount++;
-let locHtml="";
-if(conds.bq&&targetRankKey!==null&&typeof calcLocations==='function'){
-let targetBqNum=parseInt(conds.bq);
-let locData=calcLocations(seed,targetRankKey);
-let matchedLocs=[];
-for(let locObj of locData.outputOrder){
-let locNum=locObj.location;
-if(locData.seenLocations[locNum].has(targetBqNum)){
-let locHex=locNum.toString(16).toUpperCase().padStart(2,'0');
-matchedLocs.push(locHex);
-}
-}
-if(matchedLocs.length>0){
-locHtml=`<br><span style="color:#aaa;font-size:11px;background:#222;padding:1px 4px;border-radius:3px;margin-top:2px;display:inline-block;">Loc:<span style="color:#fff;">${matchedLocs.join(' / ')}</span></span>`;
-}
-}
+let locHtml=LocaHtml(seed,targetRankKey,conds,searchFilterLoc);
 let itemNode=document.createElement('div');
 itemNode.className='search-result-item';
 if(hitResult.specialStyle)itemNode.style.border=hitResult.specialStyle;
 itemNode.innerHTML=`
 <span style="color:#ffd700;font-weight:bold">${seed.toString(16).toUpperCase().padStart(4,'0')}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#00ffff;font-size:11px;margin-bottom:2px;display:inline-block;">${searchEngine.mapName}</span>
-${boxHtml}${locHtml}
-<br>
-${hitResult.displayHtml}
+<span style="color:#00ffff;font-size:11px;margin-bottom:2px;display:inline-block;">${searchEngine.mapName}</span>${locHtml}${boxHtml}
+<div style="margin-top:4px;">${hitResult.displayHtml}</div>
 `;
 itemNode.title="Click it to preview this grotto.";
 itemNode.onclick=()=>{
@@ -141,7 +124,7 @@ if(itemNames.includes(TableR[TableQ[i]][0])&&!ranks.includes(r))ranks.push(r);
 }
 return ranks;
 }
-function filterMapRanksBySMRAndChest(ranksToSearch,conds,chestRankGroups){
+function filterMapRanksBySMRAndChest(ranksToSearch,conds,chestRankGroups,targetFloorOffset){
 return ranksToSearch.filter(rank=>{
 if(conds&&conds.bq){
 let baseQ=parseInt(conds.bq);
@@ -153,9 +136,9 @@ let maxFinalQ=Math.min(248,baseQ+maxOffset);
 let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
 let rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax)){return false;}
-} 
+}
 let minSMR=1,maxSMR=9;
-for(let i=0;i<8;i++){
+for (let i=0;i<8;i++){
 if(rank>=TableC[i*4]&&rank<=TableC[i*4+1]){minSMR=TableC[i*4+2];maxSMR=TableC[i*4+3];break;}
 }
 if(conds&&conds.monster){
@@ -168,10 +151,19 @@ for(let i=0;i<9;i++){
 if(rank>=TableB[i*4]&&rank<=TableB[i*4+1]){maxFloorCount=TableB[i*4+3];break;}
 }
 if(conds&&conds.depth)maxFloorCount=parseInt(conds.depth);
-let maxNum=Math.min(12,maxSMR+Math.floor((maxFloorCount-1)/4));
+let minOffset=0;
+let maxOffset=Math.floor((maxFloorCount-1)/4);
+if(targetFloorOffset!==undefined&&targetFloorOffset!==null){
+let requiredFloors=(targetFloorOffset*4)+1;
+if(maxFloorCount<requiredFloors)return false;
+minOffset=targetFloorOffset;
+maxOffset=targetFloorOffset;
+}
+let minPossibleNum=minSMR+minOffset;
+let maxPossibleNum=Math.min(12,maxSMR+maxOffset);
 return chestRankGroups.every(group=>{
 return group.some(r=>{
-for(let num=minSMR;num<=maxNum;num++){
+for(let num=minPossibleNum;num<=maxPossibleNum;num++){
 let cMin=TableN[(num-1)*4+1];
 let cMax=TableN[(num-1)*4+2];
 if(r>=cMin&&r<=cMax)return true;
@@ -822,22 +814,7 @@ stateColor="#ff88ff";
 let dHtml=info.dValue>0?`<span style="background:#ffaa00;color:#000;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px;white-space:nowrap;">${info.dValue}</span>`:'';
 return `<span style="color:#00ffff;font-size:12px;">B${info.floor}F:[${info.hex}] <strong style="color:${stateColor};">${info.state}</strong>${dHtml}</span>`;
 }).join('<br>');
-let locHtml="";
-if(conds.bq&&targetRankKey!==null&&typeof calcLocations==='function'){
-let targetBqNum=parseInt(conds.bq);
-let locData=calcLocations(seed,targetRankKey);
-let matchedLocs=[];
-for(let locObj of locData.outputOrder){
-let locNum=locObj.location;
-if(locData.seenLocations[locNum].has(targetBqNum)){
-let locHex=locNum.toString(16).toUpperCase().padStart(2,'0');
-matchedLocs.push(locHex);
-}
-}
-if(matchedLocs.length>0){
-locHtml=`<span style="color:#aaa;font-size:11px;background:#222;padding:1px 4px;border-radius:3px;margin-top:2px;margin-bottom:2px;display:inline-block;">Loc:<span style="color:#fff;">${matchedLocs.join(' / ')}</span></span><br>`;
-}
-}
+let locHtml=LocaHtml(seed,targetRankKey,conds,searchFilterLoc);
 let itemNode=document.createElement('div');
 itemNode.className='search-result-item';
 if(hasAnyD)itemNode.dataset.hasD="true";

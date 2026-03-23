@@ -45,7 +45,7 @@ let locHtmlString='';
 if(locData.outputOrder.length>0){
 const locStrings=locData.outputOrder.map(item=>{
 const bqs=Array.from(locData.seenLocations[item.location]);
-return `${item.location.toString(16).toUpperCase().padStart(2,'0')}(${formatRanges(bqs)})`;
+return `${item.location.toString(16).toUpperCase().padStart(2,'0')} (${formatRanges(bqs)})`;
 });
 locHtmlString=locStrings.join('<br>');
 }else{
