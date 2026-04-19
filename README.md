@@ -8,7 +8,7 @@ Improvements from legacy DQ9 Grotto search tools
 - Fundamentally fixed Softlock (危険？ハマる地図 in Japanese, floor Seed 0x5BC7)'s wrong display of stairs & chests by referring Yab's DQ9 Tool's result then fixing reverse-engineered database by Claude
 - Deciphered Multibug phenomenon and implemented Multibug special floor searching by Claude and Gemini
 
-For details, please see Disclaimer inside the tool.
+For details, please see help documents & Disclaimer inside the tool.
 
 # Available Search Functions
 
@@ -19,17 +19,21 @@ Ultimate search
 - Chest amount in each Chest rank
 - Wandering Monster bugged floor status (ElistOfs)
 - Single monster floor (Only)
-- Nipple Map (inaccessible chest), Chamber Map (inaccessible area)
+- Nipple Map (inaccessible chest), Chamber Map (inaccessible area), Softlock, etc.
+- 4-player Multiplay Bug (Multibug)
 
 Other searches
-- Quickload B3/B4 same item x2 (QL)
+- Quickload B3/B4/B9 same item x2 (QL)
 - Quickload + 3rd Chest same item (Combo)
 - 3rd Chest same item x2 (3rd)
-- 3rd Chest Sainted Soma x2 (S3)
-- Quickload B9 same item x2 (B9F)
-- Quickload + 3rd Chest Sainted Soma (J-Fire)
-- 4-player Multiplay Bug (Multibug)
+- Chest free search (up to 3 chests)
 - AT search for player's Map Method self-development (AT)
+
+# In-tool Documents
+
+Ultimate Search - Grotto mechanics
+Chest Timer Search - Basic knowledge of Chest Timer
+Map Method (AT) Search - Map Method mechanics
 
 # Requirements
 
