@@ -27,7 +27,9 @@ Other searches
 - Quickload + 3rd Chest same item (Combo)
 - 3rd Chest same item x2 (3rd)
 - Chest free search (up to 3 chests)
-- AT search for player's Map Method self-development (AT)
+- AT search (1) List all map Seeds of selected item drop pattern
+- AT search (2) List all map Seeds for specific Whistle-summoned monster
+- AT search (Detail) Enter map Seed to check details
 
 # In-tool Documents
 
