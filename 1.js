@@ -1,5 +1,5 @@
 const DISPLAY_LANG='EN';
-const _L = (DISPLAY_LANG==='EN') ? 0 : (DISPLAY_LANG==='JP') ? 2 : 1;
+const _L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
 function T(en,tw,jp){return _L===0?en:(_L=== 2?jp:tw);}
 const A01=T('Please choose at least one condition.','請至少輸入一個搜尋條件！','少なくとも1つの条件を入力してください。');
 const A02=T('Sorry! Unable to search any result from these conditions.','條件衝突！您選擇的 Map Rank 無法產出符合所選條件的怪物。','条件が矛盾しています！選択した Map Rank では該当する結果が存在しません。');
@@ -22,7 +22,7 @@ const C01=T('Name','地圖名稱','地図名');
 const C02=T('Type','地形','地形');
 const C03=T('SMR','怪物等級','敵ランク');
 const C04=T('Depth','樓層數','深さ');
-const C05=T('Location & BQ','位置與 BQ','場所 & Base値');
+const C05=T('Location&BQ','位置與 BQ','場所&Base値');
 const C06=T('AT value','AT 判定值','AT 判定値');
 const C07=T('📦 Total Chests:','📦 全圖寶箱分佈:','📦 宝箱:');
 const C08=T('Chests','箱','箱');
@@ -30,13 +30,20 @@ const C09=T('No Chest','無寶箱','箱無し');
 const C10=T('Size','地圖大小','サイズ');
 const C11=T('Stairs','樓梯','階段');
 const C12=T('Monster','怪物','モンスター');
-const C14=T('Chests','寶箱數','宝箱の数');
-const C15=T('(Tap to see Chest Timer)','(點圖看 Chest Timer)','(クリックで中断技の秒数を見る)');
-const C16=T('Chest','寶箱','宝箱');
-const C18=T('None','無','なし');
-const C19=T('Seed must be a hex value from 0000 to 7FFF','Seed 必須是 0000~7FFF 的十六進位值','Seed は 0000～7FFF の16進数で入力してください');
-const C20=T('Invalid Seed/Rank','無效的 Seed/Rank 組合','無効な Seed/Rank の組み合わせ');
-const C21=T('No Location','無符合條件的位置','場所候補なし');
+const C13=T('Chests','寶箱數','宝箱の数');
+const C14=T('(Tap to see Chest Timer)','(點圖看 Chest Timer)','(クリックで中断技の秒数を見る)');
+const C15=T('Chest','寶箱','宝箱');
+const C16=T('None','無','なし');
+const C17=T('Seed must be a hex value from 0000 to 7FFF','Seed 必須是 0000~7FFF 的十六進位值','Seed は 0000～7FFF の16進数で入力してください');
+const C18=T('Invalid Seed/Rank','無效的 Seed/Rank 組合','無効な Seed/Rank の組み合わせ');
+const C19=T('No Location','無符合條件的位置','場所候補なし');
+const C20=T('Fastest','最快達成','最短');
+const C21=T(' steps not found','步內未發現','回まで該当なし');
+const C22=T('(AT to hit the drop)','(掉寶所需 AT 消費量)','(ドロップまで消費するAT)');
+const C23=T('(AT on Battle Start)','(戰鬥初始 AT)','(ATの初期位置)');
+const C24=T('RNG Sequence','亂數序列','乱数の序列');
+const C25=T('Drop','掉寶','落');
+const C26=T('Auto','秘傳書','盗');
 const D01=T('Floor','地板','床');
 const D02=T('Wall','牆壁','壁');
 const D03=T('Corridor','走廊','通路');
@@ -47,8 +54,7 @@ const D07=T('Chest','寶箱','宝箱');
 const F01=T('Search all Ranks','掃描所有 Rank','全てのRankを検索');
 const F03=T('Maps with Flag0','僅搜含 Flag0 的地圖','「敵無・無無無判定→有」のみ');
 const F04=T('Depth↑','樓層↑','深さ↑');
-const G00=T('🚀 Control Panel','🚀 控制台','🚀 コントロール パネル');
-const G01=T('Ultimate Search','Ultimate Search (留空代表不限)','Ultimate Search');
+const G01=T('🚀 Control Panel','🚀 控制台','🚀 コントロール パネル');
 const G02=T('------','-- 不限 --','------');
 const G03=T('Prefix','前綴','地図名1');
 const G04=T('Suffix','後綴','地図名2');
@@ -56,28 +62,38 @@ const G05=T('Locale','中間名','地図名3');
 const G06=T('Location','位置','場所');
 const G07=T('Type','地形','地形');
 const G08=T('SMR','怪物等級','敵ランク');
-const G09=T('Depth','樓層深度','深さ');
-const G10=T('Bug Terrain','Bug地形','ネタ地形');
-const G11=T('Sp.Floor (ElistOfs)','特殊樓層 (ElistOfs)','特殊フロア (ElistOfs)');
-const G12=T('ONLY Monster','指定 ONLY 怪物','オンリーモンスター');
-const G14=T('B3/B4/B9 Solo･Party / Combo / 3rd Chest (B13:S3)','B3/B4/B9 即開･一人旅 / 体感 / 整列箱 (B13:S整列)','B3/B4/B9 即開･一人旅 / 体感 / 整列箱 (B13:S整列)');
-const G17=T('4-player multiplay bug','4人連線異變','4人マルチによるバグ');
-const G18=T('Map Method Maps (AT) Search','地圖法地圖 (AT) 搜尋','地図法地図 (AT) 検索');
-const G19=T('Seed Range (Hex)','Seed 範圍 (Hex)','Seed 範囲 (Hex)');
-const G20=T('Zoom','魯拉','ルーラ');
-const G21=T('Def','靈巧','きようさ');
+const G09=T('FloorMR','FloorMR','ﾌﾛｱ敵ﾗﾝｸ');
+const G10=T('Depth','樓層深度','深さ');
+const G11=T('Bug Terrain','Bug地形','ネタ地形');
+const G12=T('Sp.Floor (ElistOfs)','特殊樓層 (ElistOfs)','特殊フロア (ElistOfs)');
+const G13=T('ONLY Monster','指定 ONLY 怪物','オンリーモンスター');
+const G14=T('Seed Range (Hex)','Seed 範圍 (Hex)','Seed 範囲 (Hex)');
+const G15=T('4-player multiplay bug','4人連線異變','4人マルチによるバグ');
+const G16=T('B3/B4/B9 Solo･Party / Combo / 3rd Chest (B13:S3)','B3/B4/B9 即開･一人旅 / 體感 / 整列箱 (B13:S整列)','B3/B4/B9 即開･一人旅 / 体感 / 整列箱 (B13:S整列)');
+const G17=T('Free Search','自由搜尋','フリー検索');
+const G18=T('Deftness','靈巧','きようさ');
+const G19=T('Zoom','魯拉','ﾙｰﾗ');
+const G20=T('Pattern','掉寶Pattern','ﾄﾞﾛｯﾌﾟﾊﾟﾀｰﾝ');
+const G21=T('Max Steps','最大步數','最大ｽﾃｯﾌﾟ');
+const G22=T('E.Mon','敵怪','敵数');
+const G23=T('E.Group','敵組','敵ｸﾞﾙｰﾌﾟ');
+const G24=T('Rare','稀有','レア');
+const G25=T('Normal','普通','通常');
+const G26=T('Thief\'s Theory User Lv','盜賊秘傳書 持有者 Lv','とうぞくの秘伝書 所持者 Lv');
 const GBQ=T('Base Quality','BQ','Base値');
-const H00=T('Chest Timer Search (Solo / Party / Combo / 3rd Chest)','中斷技 搜尋 (即開 / 一人旅 / 體感 / 整列箱)','中断技 検索 (即開 / 一人旅 / 体感 / 整列箱)');
+const H00=T('Chest Timer Search','中斷技 搜尋','中断技 検索');
 const H01=T('QL','即一人旅','即一人旅');
-const H02=T('Combo','体感','体感');
+const H02=T('Combo','體感','体感');
 const H03=T('3rd','整列箱','整列箱');
-const H04=T('Free Search','自由搜尋','フリー検索');
+const H04=T('Map Method (AT) Search','地圖法 (AT) 搜尋','地図法 (AT) 検索');
 const H05=T('Multibug','Multibug','マルチバグ');
 const H06=T('📥 TXT Output','📥 匯出 TXT','📥 TXT 出力');
 const J01=T('Click to preview','點擊直接預覽此地圖','クリックでプレビュー');
-const J02=T('Waiting for searching...','等待執行搜尋...','検索待ち...');
+const J02=T('Waiting for searching...','等待執行搜尋...','検索待ち中...');
 const J03=T('Item Table','寶箱內容物','アイテムテーブル');
-const K01=T('🗺️ Help','🗺️ 說明','🗺️ 使い方');
+const K01=T('🗺️ Ultimate Search Help','🗺️ Ultimate Search 說明','🗺️ Ultimate Searchの使い方');
+const K02=T('🗺️ Chest Timer Search Help','🗺️ 中斷技搜尋說明','🗺️ 中断技検索の使い方');
+const K03=T('🗺️ Map Method (AT) Search Help','🗺️ 地圖法 (AT) 搜尋說明','🗺️ 地図法 (AT) 検索の使い方');
 const STR_SOLO=T('Solo','一人旅','一人旅');
 const STR_PARTY=T('Party','即開','即開');
 const STR_BOTH=T('Solo+Party','即+一人旅','即+一人旅');
@@ -87,7 +103,7 @@ const TKB2_2=T('Chamber (Multi-floor)','イケない通路 (多層樓)','イケ�
 const TKB2_3=T('Chamber (Same floor, multiple)','イケない通路 (同層多個)','イケない通路 (同じフロアに複数)');
 const TKB1_2=T('Nipple+Chamber','チラリズム','チラリズム (イケない乳首)');
 const TKB1_3=T('Chestless','無寶箱樓層','箱無しフロア');
-const TKB3_0=T('Hidden Stair','被牆壁封死的樓梯','隠し階段');
+const TKB3_0=T('Wall-Embedded Stair','被牆壁封死的樓梯','壁に埋まった階段');
 const TKB3_1=T('Ghost Stair','幽靈樓梯','ゴースト階段');
 const TKB3_2=T('Softlock','危険？ハマるフロア','危険？ハマるフロア');
 const EL_M=T('Multi-Special-Floor','複數特殊層','複数の特殊フロア');
@@ -105,10 +121,10 @@ const AT_O=[['R2',T('2 Rare','連續 2 個稀有','レア×2')],['R2_3',T('2 Rar
 const AT_PAT={'R2':1,'N2':2,'R2_3':3,'R3':4,'R4':5,'R5':6,'4_in_6':7,'3_in_7':8,'N3':9,'N4':10,'N5':11,'4_in_10':12,'3_in_10':13};
 const i18nDict={
 'F01':F01,'F03':F03,'F04':F04,
-'G00':G00,'G01':G01,'G02':G02,'G03':G03,'G04':G04,'G05':G05,'G06':G06,'G07':G07,'G08':G08,'G09':G09,'G10':G10,
-'G11':G11,'G12':G12,'G14':G14,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'GBQ':GBQ,
+'G01':G01,'G02':G02,'G03':G03,'G04':G04,'G05':G05,'G06':G06,'G07':G07,'G08':G08,'G09':G09,'G10':G10,'G11':G11,'G12':G12,'G13':G13,'G14':G14,'G15':G15,
+'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'GBQ':GBQ,
 'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,
-'J02':J02,'J03':J03,'K01':K01,
+'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
 'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,
 'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
 };
@@ -123,7 +139,7 @@ const BOSS_NAMES={
 const PREFIX_NAMES={
 1:['Clay','はかなき'],2:['Rock','ちいさな'],3:['Granite','うす暗き'],4:['Basalt','ゆらめく'],
 5:['Graphite','ざわめく'],6:['Iron','ねむれる'],7:['Copper','怒れる'],8:['Bronze','呪われし'],
-9:['Steel','放たれし'],10:['Silver','けだかき'],11:['Gold','わななく'],12:['Platinum','残された'],
+9:['Steel','放たれし'],10:['Silver','けだかき'],11:['Gold','わななく'],12:['Platminum','残された'],
 13:['Ruby','見えざる'],14:['Emerald','あらぶる'],15:['Sapphire','とどろく'],16:['Diamond','大いなる']
 };
 const SUFFIX_NAMES={
@@ -197,762 +213,762 @@ const TableR=[
 ["Mimic","ミミック"], ["Cannibox","ひとくいばこ"]
 ];
 const b3fThreeItems=["Mini medal","Sage's elixir","Iron nails","Hephaestus' flame"];
-function lcg(seed) {return (Math.imul(seed, 1103515245) + 12345) >>> 0;}
+function lcg(seed){return (Math.imul(seed,1103515245)+12345)>>>0;}
 class GrottoDetail {
-constructor() {
-this.di = [];
-for (let i = 0; i < 16; i++) this.di[i] = new Uint8Array(1336);
-this._details = new Uint8Array(20);
-this._details2 = new Uint8Array(20);
-this._seed = 0;
-this.MapSeed = 0;
-this.MapRank = 0;
-this.MapLocale = 0;
-this.isStairOverflow = new Array(16).fill(false);
-this.trackOverflow = false;
-this._at_offset = 0;
-this._force_16_floors = false;
+constructor(){
+this.di=[];
+for(let i=0;i<16;i++) this.di[i]=new Uint8Array(1336);
+this._details=new Uint8Array(20);
+this._details2=new Uint8Array(20);
+this._seed=0;
+this.MapSeed=0;
+this.MapRank=0;
+this.MapLocale=0;
+this.isStairOverflow=new Array(16).fill(false);
+this.trackOverflow=false;
+this._at_offset=0;
+this._force_16_floors=false;
 }
-_readI32(floor, offset) {
-const d = this.di[floor];
-return d[offset] | (d[offset+1] << 8) | (d[offset+2] << 16) | (d[offset+3] << 24);
+_readI32(floor, offset){
+const d=this.di[floor];
+return d[offset] | (d[offset+1]<<8) | (d[offset+2]<<16) | (d[offset+3]<<24);
 }
-_writeI32(floor, offset, val) {
-const d = this.di[floor];
-d[offset] = val & 0xFF;
-d[offset+1] = (val >>> 8) & 0xFF;
-d[offset+2] = (val >>> 16) & 0xFF;
-d[offset+3] = (val >>> 24) & 0xFF;
+_writeI32(floor, offset, val){
+const d=this.di[floor];
+d[offset]=val&0xFF;
+d[offset+1]=(val>>>8)&0xFF;
+d[offset+2]=(val>>>16)&0xFF;
+d[offset+3]=(val>>>24)&0xFF;
 }
-gRNG() {
-this._seed = lcg(this._seed);
-return (this._seed >>> 16) & 0x7FFF;
+gRNG(){
+this._seed=lcg(this._seed);
+return (this._seed>>>16)&0x7FFF;
 }
-gRNGDiv(div) {
+gRNGDiv(div){
 return this.gRNG() % div;
 }
-gRNGRange(v1, v2) {
-if (v1 === v2) return v1;
-const r = this.gRNG();
-const num = (v2|0) - (v1|0) + 1;
-return num === 0 ? v1 : ((v1 + r % num) >>> 0);
+gRNGRange(v1, v2){
+if(v1===v2)return v1;
+const r=this.gRNG();
+const num=(v2|0)-(v1|0)+1;
+return num===0?v1:((v1+r % num)>>>0);
 }
-getItemRank(value1, value2) {
-const num = Math.fround(this.gRNG() - 1);
-return (Math.fround(((value2|0) - (value1|0) + 1) * num / 32767) >>> 0) + value1;
+getItemRank(value1, value2){
+const num=Math.fround(this.gRNG()-1);
+return (Math.fround(((value2|0)-(value1|0)+1)*num / 32767)>>>0)+value1;
 }
-seek1(table, tableSize) {
-const random = this.gRNGDiv(100);
-let num = 0;
-for (let i = 0; i < tableSize; i++) {
-num += table[i * 4 + 1];
-if (random < num) return table[i * 4];
+seek1(table, tableSize){
+const random=this.gRNGDiv(100);
+let num=0;
+for(let i=0;i<tableSize;i++){
+num += table[i*4+1];
+if(random<num)return table[i*4];
 }
 return 0;
 }
-seek2(table, value, tableSize) {
-for (let i = 0; i < tableSize; i++)
-if (value >= table[i*4] && value <= table[i*4+1])
+seek2(table, value, tableSize){
+for(let i=0;i<tableSize;i++)
+if(value>=table[i*4]&&value<=table[i*4+1])
 return this.seek3(table[i*4+2], table[i*4+3]);
 return 0;
 }
-seek3(val1, val2) {
-const r = this.gRNG();
-const num = val2 - val1 + 1;
-return num === 0 ? val1 : (val1 + r % num);
+seek3(val1, val2){
+const r=this.gRNG();
+const num=val2-val1+1;
+return num===0?val1:(val1+r % num);
 }
-seek4(table1, table2, roopCount) {
-for (let i1 = 0; i1 < roopCount; i1++) {
-if (this.MapRank >= table1[i1*4] && this.MapRank <= table1[i1*4+1]) {
-let num1 = 0;
-for (let i2 = table1[i1*4+2]; i2 <= table1[i1*4+3]; i2++)
+seek4(table1, table2, roopCount){
+for(let i1=0;i1<roopCount;i1++){
+if(this.MapRank>=table1[i1*4]&&this.MapRank<=table1[i1*4+1]){
+let num1=0;
+for(let i2=table1[i1*4+2];i2<=table1[i1*4+3];i2++)
 num1 += table2[(i2-1)*2+1];
-const num2 = this.gRNG() % num1;
-let num3 = 0;
-for (let i3 = table1[i1*4+2]; i3 <= table1[i1*4+3]; i3++) {
+const num2=this.gRNG() % num1;
+let num3=0;
+for(let i3=table1[i1*4+2];i3<=table1[i1*4+3];i3++){
 num3 += table2[(i3-1)*2+1];
-if (num2 < num3) return i3;
+if(num2<num3)return i3;
 }
 break;
 }
 }
 return 0;
 }
-routineRandom(value) {
-return (Math.fround(this.gRNG() - 1) * value / 32767) >>> 0;
+routineRandom(value){
+return (Math.fround(this.gRNG()-1)*value / 32767)>>>0;
 }
-routine1(floor, address, value1, value2) {
-for (let i = 0; i < value2; i++)
-this.di[floor][address + i] = value1 & 0xFF;
+routine1(floor, address, value1, value2){
+for(let i=0;i<value2;i++)
+this.di[floor][address+i]=value1&0xFF;
 }
-setValue(floor, address, v1, v2, v3, v4) {
-const d = this.di[floor];
-d[address] = v1; d[address+1] = v2; d[address+2] = v3; d[address+3] = v4;
+setValue(floor, address, v1, v2, v3, v4){
+const d=this.di[floor];
+d[address]=v1;d[address+1]=v2;d[address+2]=v3;d[address+3]=v4;
 }
-routineA(floor, address, value1, value2) {
-const d = this.di[floor];
-const num1 = d[address+3] + 1 - d[address+1];
-if (num1 < 7 || d[address+4] !== 0) return false;
-const random = this.gRNGRange(0, num1 - 7);
-const num2 = d[address+1] + random + 3;
-for (let i = d[address]; i < d[address+2] + 1; i++)
-d[(num2 << 4) + i + 792] = 3;
+routineA(floor, address, value1, value2){
+const d=this.di[floor];
+const num1=d[address+3]+1-d[address+1];
+if(num1<7||d[address+4]!==0)return false;
+const random=this.gRNGRange(0, num1-7);
+const num2=d[address+1]+random+3;
+for(let i=d[address];i<d[address+2]+1;i++)
+d[(num2<<4)+i+792]=3;
 this.setValue(floor, value2, d[address], num2, d[address+2], num2);
 this.setValue(floor, value1, d[address], num2+1, d[address+2], d[address+3]);
-d[value1+4] = 0; d[value1+5] = 0;
-d[address+3] = num2 - 1;
-d[address+4] = 1;
+d[value1+4]=0;d[value1+5]=0;
+d[address+3]=num2-1;
+d[address+4]=1;
 this._writeI32(floor, value2+4, address);
 this._writeI32(floor, value2+8, value1);
-d[value2+12] = 1;
+d[value2+12]=1;
 return true;
 }
-routineE(floor, address, value1, value2) {
-const d = this.di[floor];
-const num1 = d[address+2] + 1 - d[address];
-if (num1 < 7 || d[address+5] !== 0) return false;
-const random = this.gRNGRange(0, num1 - 7);
-const num2 = d[address] + random + 3;
-for (let i = d[address+1]; i < d[address+3] + 1; i++)
-d[(i << 4) + num2 + 792] = 3;
+routineE(floor, address, value1, value2){
+const d=this.di[floor];
+const num1=d[address+2]+1-d[address];
+if(num1<7||d[address+5]!==0)return false;
+const random=this.gRNGRange(0, num1-7);
+const num2=d[address]+random+3;
+for(let i=d[address+1];i<d[address+3]+1;i++)
+d[(i<<4)+num2+792]=3;
 this.setValue(floor, value2, num2, d[address+1], num2, d[address+3]);
 this.setValue(floor, value1, num2+1, d[address+1], d[address+2], d[address+3]);
-d[value1+4] = 0; d[value1+5] = 0;
-d[address+2] = num2 - 1;
-d[address+5] = 1;
+d[value1+4]=0;d[value1+5]=0;
+d[address+2]=num2-1;
+d[address+5]=1;
 this._writeI32(floor, value2+4, address);
 this._writeI32(floor, value2+8, value1);
-d[value2+12] = 2;
+d[value2+12]=2;
 return true;
 }
-routineB(floor, address) {
-const d = this.di[floor];
-const num = d[21];
-d[21]++; d[22]++;
-if ((this.gRNG() & 1) !== 0) {
+routineB(floor, address){
+const d=this.di[floor];
+const num=d[21];
+d[21]++;d[22]++;
+if((this.gRNG()&1)!==0){
 this.routineF(floor, address);
-this.routineF(floor, num * 12 + 24);
-} else {
-this.routineF(floor, num * 12 + 24);
+this.routineF(floor, num*12+24);
+}else{
+this.routineF(floor, num*12+24);
 this.routineF(floor, address);
 }
 }
-routineF(floor, address) {
-const d = this.di[floor];
-if (d[21] >= 15) return;
-if (d[address+5] !== 0) {
-if (!this.routineA(floor, address, d[21]*12+24, (d[22]<<4)+216)) return;
+routineF(floor, address){
+const d=this.di[floor];
+if(d[21]>=15)return;
+if(d[address+5]!==0){
+if(!this.routineA(floor, address, d[21]*12+24, (d[22]<<4)+216))return;
 this.routineB(floor, address);
-} else if (d[address+4] !== 0) {
-if (!this.routineE(floor, address, d[21]*12+24, (d[22]<<4)+216)) return;
+}else if(d[address+4]!==0){
+if(!this.routineE(floor, address, d[21]*12+24, (d[22]<<4)+216))return;
 this.routineB(floor, address);
-} else if ((this.gRNG() & 1) !== 0) {
-if (!this.routineE(floor, address, d[21]*12+24, (d[22]<<4)+216)) return;
+}else if((this.gRNG()&1)!==0){
+if(!this.routineE(floor, address, d[21]*12+24, (d[22]<<4)+216))return;
 this.routineB(floor, address);
-} else {
-if (!this.routineA(floor, address, d[21]*12+24, (d[22]<<4)+216)) return;
+}else{
+if(!this.routineA(floor, address, d[21]*12+24, (d[22]<<4)+216))return;
 this.routineB(floor, address);
 }
 }
-routineC(floor, address1, address2) {
-const d = this.di[floor];
-if (d[address1+2] + 1 - d[address1] < 3 || d[address1+3] + 1 - d[address1+1] < 3)
+routineC(floor, address1, address2){
+const d=this.di[floor];
+if(d[address1+2]+1-d[address1]<3||d[address1+3]+1-d[address1+1]<3)
 return false;
-const num1 = d[address1], num2 = d[address1+1], num3 = d[address1+2], num4 = d[address1+3];
+const num1=d[address1], num2=d[address1+1], num3=d[address1+2], num4=d[address1+3];
 let random1, random2, random3, random4;
-if (this.gRNGRange(0, 1) !== 0) {
-random1 = this.gRNGRange(num1, num1 + ((num3-num1+1)/3|0));
-random2 = this.gRNGRange(num2, num2 + ((num4-num2+1)/3|0));
-} else {
-random1 = this.gRNGRange(num1+1, num1 + ((num3-num1+1)/3|0));
-random2 = this.gRNGRange(num2+1, num2 + ((num4-num2+1)/3|0));
+if(this.gRNGRange(0, 1)!==0){
+random1=this.gRNGRange(num1, num1+((num3-num1+1)/3|0));
+random2=this.gRNGRange(num2, num2+((num4-num2+1)/3|0));
+}else{
+random1=this.gRNGRange(num1+1, num1+((num3-num1+1)/3|0));
+random2=this.gRNGRange(num2+1, num2+((num4-num2+1)/3|0));
 }
-if (this.gRNGRange(0, 1) !== 0) {
-random3 = this.gRNGRange(num1 + ((num3-num1+1)/3|0)*2, num3);
-random4 = this.gRNGRange(num2 + ((num4-num2+1)/3|0)*2, num4);
-} else {
-random3 = this.gRNGRange(num1 + ((num3-num1+1)/3|0)*2, num3-1);
-random4 = this.gRNGRange(num2 + ((num4-num2+1)/3|0)*2, num4-1);
+if(this.gRNGRange(0, 1)!==0){
+random3=this.gRNGRange(num1+((num3-num1+1)/3|0)*2, num3);
+random4=this.gRNGRange(num2+((num4-num2+1)/3|0)*2, num4);
+}else{
+random3=this.gRNGRange(num1+((num3-num1+1)/3|0)*2, num3-1);
+random4=this.gRNGRange(num2+((num4-num2+1)/3|0)*2, num4-1);
 }
 this.setValue(floor, address2, random1, random2, random3, random4);
-for (let i = 4; i < 20; i++) d[address2+i] = 0;
+for(let i=4;i<20;i++) d[address2+i]=0;
 this._writeI32(floor, address1+8, address2);
-for (let y = random2; y <= random4; y++)
-for (let x = random1; x <= random3; x++)
-d[x + (y << 4) + 792] = 0;
+for(let y=random2;y<=random4;y++)
+for(let x=random1;x<=random3;x++)
+d[x+(y<<4)+792]=0;
 this.routineD(floor, address2);
 return true;
 }
-routineD(floor, address) {
-const d = this.di[floor];
-const num1 = d[address], num2 = d[address+2];
-if (num1 === 0 || d[address+1] === 0) return false;
-if (num2 === 0 || d[address+3] === 0) return false;
-if (num2 - num1 + 1 < 5) {
-d[address+12] = this.gRNGRange(num1, num2);
-d[address+13] = d[address+1];
-d[address+16] = this.gRNGRange(d[address], d[address+2]);
-d[address+17] = d[address+3];
-d[(d[address+13]<<4)+792+d[address+12]] = 8;
-d[(d[address+17]<<4)+792+d[address+16]] = 8;
-} else {
-const num3 = num1 + ((num2-num1+1)/2|0) - 1;
-d[address+12] = this.gRNGRange(num1, num3);
-d[address+13] = d[address+1];
-d[address+14] = this.gRNGRange(num3+1, d[address+2]);
-d[address+15] = d[address+1];
-d[address+16] = this.gRNGRange(d[address], num3);
-d[address+17] = d[address+3];
-d[address+18] = this.gRNGRange(num3+1, d[address+2]);
-d[address+19] = d[address+3];
-d[(d[address+13]<<4)+792+d[address+12]] = 8;
-d[(d[address+15]<<4)+792+d[address+14]] = 8;
-d[(d[address+17]<<4)+792+d[address+16]] = 8;
-d[(d[address+19]<<4)+792+d[address+18]] = 8;
+routineD(floor, address){
+const d=this.di[floor];
+const num1=d[address], num2=d[address+2];
+if(num1===0||d[address+1]===0)return false;
+if(num2===0||d[address+3]===0)return false;
+if(num2-num1+1<5){
+d[address+12]=this.gRNGRange(num1, num2);
+d[address+13]=d[address+1];
+d[address+16]=this.gRNGRange(d[address], d[address+2]);
+d[address+17]=d[address+3];
+d[(d[address+13]<<4)+792+d[address+12]]=8;
+d[(d[address+17]<<4)+792+d[address+16]]=8;
+}else{
+const num3=num1+((num2-num1+1)/2|0)-1;
+d[address+12]=this.gRNGRange(num1, num3);
+d[address+13]=d[address+1];
+d[address+14]=this.gRNGRange(num3+1, d[address+2]);
+d[address+15]=d[address+1];
+d[address+16]=this.gRNGRange(d[address], num3);
+d[address+17]=d[address+3];
+d[address+18]=this.gRNGRange(num3+1, d[address+2]);
+d[address+19]=d[address+3];
+d[(d[address+13]<<4)+792+d[address+12]]=8;
+d[(d[address+15]<<4)+792+d[address+14]]=8;
+d[(d[address+17]<<4)+792+d[address+16]]=8;
+d[(d[address+19]<<4)+792+d[address+18]]=8;
 }
-if (d[address+3] - d[address+1] + 1 < 5) {
-d[address+4] = d[address];
-d[address+5] = this.gRNGRange(d[address+1], d[address+3]);
-d[address+8] = d[address+2];
-d[address+9] = this.gRNGRange(d[address+1], d[address+3]);
-d[(d[address+5]<<4)+792+d[address+4]] = 8;
-d[(d[address+9]<<4)+792+d[address+8]] = 8;
-} else {
-const num4 = d[address+1];
-const num5 = num4 + ((d[address+3]+1-num4)/2|0) - 1;
-d[address+4] = d[address];
-d[address+5] = this.gRNGRange(d[address+1], num5);
-d[address+6] = d[address];
-d[address+7] = this.gRNGRange(num5+1, d[address+3]);
-d[address+8] = d[address+2];
-d[address+9] = this.gRNGRange(d[address+1], num5);
-d[address+10] = d[address+2];
-d[address+11] = this.gRNGRange(num5+1, d[address+3]);
-d[(d[address+5]<<4)+792+d[address+4]] = 8;
-d[(d[address+7]<<4)+792+d[address+6]] = 8;
-d[(d[address+9]<<4)+792+d[address+8]] = 8;
-d[(d[address+11]<<4)+792+d[address+10]] = 8;
+if(d[address+3]-d[address+1]+1<5){
+d[address+4]=d[address];
+d[address+5]=this.gRNGRange(d[address+1], d[address+3]);
+d[address+8]=d[address+2];
+d[address+9]=this.gRNGRange(d[address+1], d[address+3]);
+d[(d[address+5]<<4)+792+d[address+4]]=8;
+d[(d[address+9]<<4)+792+d[address+8]]=8;
+}else{
+const num4=d[address+1];
+const num5=num4+((d[address+3]+1-num4)/2|0)-1;
+d[address+4]=d[address];
+d[address+5]=this.gRNGRange(d[address+1], num5);
+d[address+6]=d[address];
+d[address+7]=this.gRNGRange(num5+1, d[address+3]);
+d[address+8]=d[address+2];
+d[address+9]=this.gRNGRange(d[address+1], num5);
+d[address+10]=d[address+2];
+d[address+11]=this.gRNGRange(num5+1, d[address+3]);
+d[(d[address+5]<<4)+792+d[address+4]]=8;
+d[(d[address+7]<<4)+792+d[address+6]]=8;
+d[(d[address+9]<<4)+792+d[address+8]]=8;
+d[(d[address+11]<<4)+792+d[address+10]]=8;
 }
 return true;
 }
-generateFloorMap(floor, address) {
-const d = this.di[floor];
-const index1 = this._readI32(floor, address + 8);
-const num1 = ((d[index1+2] - d[index1] + 1) / 2) | 0;
-const num2 = ((d[index1+3] - d[index1+1] + 1) / 2) | 0;
-let num3 = 0;
-if (d[1] === 0 && this.gRNGRange(0, 15) === 0)
-num3 = 1;
+generateFloorMap(floor, address){
+const d=this.di[floor];
+const index1=this._readI32(floor, address+8);
+const num1=((d[index1+2]-d[index1]+1) / 2) | 0;
+const num2=((d[index1+3]-d[index1+1]+1) / 2) | 0;
+let num3=0;
+if(d[1]===0&&this.gRNGRange(0, 15)===0)
+num3=1;
 let num4, num5, num6, num7;
-if (num3 === 0) {
-num4 = d[address+3] - d[index1+3];
-num5 = d[index1] - d[address];
-num6 = d[address+2] - d[index1+2];
-num7 = d[index1+1] - d[address+1];
-} else {
-num4 = d[3] - d[index1+3] - 1;
-num5 = d[index1] - 1;
-num6 = d[2] - d[index1+2] - 1;
-num7 = d[index1+1] - 1;
-d[1] = 1;
+if(num3===0){
+num4=d[address+3]-d[index1+3];
+num5=d[index1]-d[address];
+num6=d[address+2]-d[index1+2];
+num7=d[index1+1]-d[address+1];
+}else{
+num4=d[3]-d[index1+3]-1;
+num5=d[index1]-1;
+num6=d[2]-d[index1+2]-1;
+num7=d[index1+1]-1;
+d[1]=1;
 }
-for (let i3 = d[index1]; i3 <= d[index1+2]; i3++) {
-const num8 = d[i3 + (d[index1+1] << 4) + 792];
-if (num8 === 1 || num8 === 3) continue;
-if (this.gRNGRange(0, 1) === 0) {
-if (num8 !== 8) {
-const above = d[i3 + ((d[index1+1]-1)<<4) + 792];
-if (above === 1 || above === 8) continue;
-const random1 = this.gRNGRange(0, num2);
-const num9 = i3 - 1;
-for (let i4 = 0;
-i4 < random1 &&
-d[i3 + ((d[index1+1]+i4)<<4) + 792] !== 8 &&
-d[i3 + ((d[index1+1]+i4+1)<<4) + 792] !== 1 &&
-(d[((d[index1+1]+i4)<<4) + i3 + 1 + 792] === 1 ||
-d[((d[index1+1]+i4+1)<<4) + i3 + 1 + 792] !== 1) &&
-(d[((d[index1+1]+i4)<<4) + num9 + 792] === 1 ||
-d[num9 + ((d[index1+1]+i4+1)<<4) + 792] !== 1);
+for(let i3=d[index1];i3<=d[index1+2];i3++){
+const num8=d[i3+(d[index1+1]<<4)+792];
+if(num8===1||num8===3) continue;
+if(this.gRNGRange(0, 1)===0){
+if(num8!==8){
+const above=d[i3+((d[index1+1]-1)<<4)+792];
+if(above===1||above===8) continue;
+const random1=this.gRNGRange(0, num2);
+const num9=i3-1;
+for(let i4=0;
+i4<random1 &&
+d[i3+((d[index1+1]+i4)<<4)+792]!==8 &&
+d[i3+((d[index1+1]+i4+1)<<4)+792]!==1 &&
+(d[((d[index1+1]+i4)<<4)+i3+1+792]===1 ||
+d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1) &&
+(d[((d[index1+1]+i4)<<4)+num9+792]===1 ||
+d[num9+((d[index1+1]+i4+1)<<4)+792]!==1);
 i4++)
-d[i3 + ((d[index1+1]+i4)<<4) + 792] = 1;
+d[i3+((d[index1+1]+i4)<<4)+792]=1;
 }
-} else {
-const random2 = this.gRNGRange(0, num7);
-for (let i5 = 0; i5 < random2; i5++) {
-const idx = i3 + ((d[index1+1]-1-i5)<<4) + 792;
-if (d[idx] !== 8) d[idx] = 0;
+}else{
+const random2=this.gRNGRange(0, num7);
+for(let i5=0;i5<random2;i5++){
+const idx=i3+((d[index1+1]-1-i5)<<4)+792;
+if(d[idx]!==8) d[idx]=0;
 }
 }
 }
-for (let i7 = d[index1]; i7 <= d[index1+2]; i7++) {
-const num10 = d[i7 + (d[index1+3] << 4) + 792];
-if (num10 === 1 || num10 === 3) continue;
-if (this.gRNGRange(0, 1) !== 0) {
-const random = this.gRNGRange(0, num4);
-for (let i8 = 0; i8 < random; i8++)
-if (d[i7 + ((d[index1+3]+i8+1)<<4) + 792] !== 8)
-d[i7 + ((d[index1+3]+i8+1)<<4) + 792] = 0;
-} else {
-if (num10 !== 8) {
-const below = d[i7 + ((d[index1+3]+1)<<4) + 792];
-if (below === 1 || below === 8) continue;
-const random3 = this.gRNGRange(0, num2);
-const num11 = i7 - 1;
-for (let i9 = 0;
-i9 < random3 &&
-d[i7 + ((d[index1+3]-i9)<<4) + 792] !== 8 &&
-d[i7 + ((d[index1+3]-i9-1)<<4) + 792] !== 1 &&
-(d[((d[index1+3]-i9)<<4) + i7 + 1 + 792] === 1 ||
-d[((d[index1+3]-i9-1)<<4) + i7 + 1 + 792] !== 1) &&
-(d[num11 + ((d[index1+3]-i9)<<4) + 792] === 1 ||
-d[num11 + ((d[index1+3]-i9-1)<<4) + 792] !== 1);
+for(let i7=d[index1];i7<=d[index1+2];i7++){
+const num10=d[i7+(d[index1+3]<<4)+792];
+if(num10===1||num10===3) continue;
+if(this.gRNGRange(0, 1)!==0){
+const random=this.gRNGRange(0, num4);
+for(let i8=0;i8<random;i8++)
+if(d[i7+((d[index1+3]+i8+1)<<4)+792]!==8)
+d[i7+((d[index1+3]+i8+1)<<4)+792]=0;
+}else{
+if(num10!==8){
+const below=d[i7+((d[index1+3]+1)<<4)+792];
+if(below===1||below===8) continue;
+const random3=this.gRNGRange(0, num2);
+const num11=i7-1;
+for(let i9=0;
+i9<random3 &&
+d[i7+((d[index1+3]-i9)<<4)+792]!==8 &&
+d[i7+((d[index1+3]-i9-1)<<4)+792]!==1 &&
+(d[((d[index1+3]-i9)<<4)+i7+1+792]===1 ||
+d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1) &&
+(d[num11+((d[index1+3]-i9)<<4)+792]===1 ||
+d[num11+((d[index1+3]-i9-1)<<4)+792]!==1);
 i9++)
-d[i7 + ((d[index1+3]-i9)<<4) + 792] = 1;
+d[i7+((d[index1+3]-i9)<<4)+792]=1;
 }
 }
 }
-for (let i10 = d[index1+1]; i10 <= d[index1+3]; i10++) {
-const num12 = d[(i10<<4) + 792 + d[index1]];
-if (num12 === 1 || num12 === 3) continue;
-if (this.gRNGRange(0, 1) !== 0) {
-const random = this.gRNGRange(0, num5);
-for (let i11 = 0; i11 < random; i11++)
-if (d[(i10<<4) + 792 + d[index1] - 1 - i11] !== 8)
-d[(i10<<4) + 792 + d[index1] - 1 - i11] = 0;
-} else {
-if (num12 !== 8) {
-const left = d[(i10<<4) + 792 + d[index1] - 1];
-if (left === 1 || left === 8) continue;
-const random4 = this.gRNGRange(0, num1);
-const num13 = i10 - 1;
-for (let i12 = 0;
-i12 < random4 &&
-d[i12 + (i10<<4) + d[index1] + 792] !== 8 &&
-d[i12 + (i10<<4) + d[index1] + 792 + 1] !== 1 &&
-(d[i12 + ((i10+1)<<4) + d[index1] + 792] === 1 ||
-d[i12 + ((i10+1)<<4) + d[index1] + 792 + 1] !== 1) &&
-(d[i12 + (num13<<4) + d[index1] + 792] === 1 ||
-d[i12 + (num13<<4) + d[index1] + 792 + 1] !== 1);
+for(let i10=d[index1+1];i10<=d[index1+3];i10++){
+const num12=d[(i10<<4)+792+d[index1]];
+if(num12===1||num12===3) continue;
+if(this.gRNGRange(0, 1)!==0){
+const random=this.gRNGRange(0, num5);
+for(let i11=0;i11<random;i11++)
+if(d[(i10<<4)+792+d[index1]-1-i11]!==8)
+d[(i10<<4)+792+d[index1]-1-i11]=0;
+}else{
+if(num12!==8){
+const left=d[(i10<<4)+792+d[index1]-1];
+if(left===1||left===8) continue;
+const random4=this.gRNGRange(0, num1);
+const num13=i10-1;
+for(let i12=0;
+i12<random4 &&
+d[i12+(i10<<4)+d[index1]+792]!==8 &&
+d[i12+(i10<<4)+d[index1]+792+1]!==1 &&
+(d[i12+((i10+1)<<4)+d[index1]+792]===1 ||
+d[i12+((i10+1)<<4)+d[index1]+792+1]!==1) &&
+(d[i12+(num13<<4)+d[index1]+792]===1 ||
+d[i12+(num13<<4)+d[index1]+792+1]!==1);
 i12++)
-d[i12 + (i10<<4) + d[index1] + 792] = 1;
+d[i12+(i10<<4)+d[index1]+792]=1;
 }
 }
 }
-for (let i13 = d[index1+1]; i13 <= d[index1+3]; i13++) {
-const num14 = d[(i13<<4) + 792 + d[index1+2]];
-if (num14 === 1 || num14 === 3) continue;
-if (this.gRNGRange(0, 1) !== 0) {
-const random = this.gRNGRange(0, num6);
-for (let i14 = 0; i14 < random; i14++)
-if (d[i14 + (i13<<4) + d[index1+2] + 792 + 1] !== 8)
-d[i14 + (i13<<4) + d[index1+2] + 792 + 1] = 0;
-} else {
-if (num14 !== 8) {
-const right = d[d[index1+1] + (i13<<4) + 792 + 1];
-if (right === 1 || right === 8) continue;
-const random5 = this.gRNGRange(0, num1);
-const num15 = i13 - 1;
-for (let i15 = 0;
-i15 < random5 &&
-d[(i13<<4) + 792 + d[index1+2] - i15] !== 8 &&
-d[(i13<<4) + 792 + d[index1+2] - i15 - 1] !== 1 &&
-(d[((i13+1)<<4) + 792 + d[index1+2] - i15] === 1 ||
-d[((i13+1)<<4) + 792 + d[index1+2] - i15 - 1] !== 1) &&
-(d[(num15<<4) + 792 + d[index1+2] - i15] === 1 ||
-d[(num15<<4) + 792 + d[index1+2] - i15 - 1] !== 1);
+for(let i13=d[index1+1];i13<=d[index1+3];i13++){
+const num14=d[(i13<<4)+792+d[index1+2]];
+if(num14===1||num14===3) continue;
+if(this.gRNGRange(0, 1)!==0){
+const random=this.gRNGRange(0, num6);
+for(let i14=0;i14<random;i14++)
+if(d[i14+(i13<<4)+d[index1+2]+792+1]!==8)
+d[i14+(i13<<4)+d[index1+2]+792+1]=0;
+}else{
+if(num14!==8){
+const right=d[d[index1+1]+(i13<<4)+792+1];
+if(right===1||right===8) continue;
+const random5=this.gRNGRange(0, num1);
+const num15=i13-1;
+for(let i15=0;
+i15<random5 &&
+d[(i13<<4)+792+d[index1+2]-i15]!==8 &&
+d[(i13<<4)+792+d[index1+2]-i15-1]!==1 &&
+(d[((i13+1)<<4)+792+d[index1+2]-i15]===1 ||
+d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1) &&
+(d[(num15<<4)+792+d[index1+2]-i15]===1 ||
+d[(num15<<4)+792+d[index1+2]-i15-1]!==1);
 i15++)
-d[(i13<<4) + 792 + d[index1+2] - i15] = 1;
+d[(i13<<4)+792+d[index1+2]-i15]=1;
 }
 }
 }
 }
-routineI(floor, value1, value2, value3) {
-const d = this.di[floor];
-const num1 = d[value1 + (value2 << 4) + 792];
-if (num1 === 1 || num1 === 3) return 255;
-const num2 = d[value1 + ((value2-1) << 4) + 792];
-const num3 = d[value1 + ((value2-1) << 4) + 792 - 1];
-const num4 = d[value1 + ((value2-1) << 4) + 792 + 1];
-const num5 = d[value1 + (value2 << 4) + 792 + 1];
-const num6 = d[value1 + ((value2+1) << 4) + 792 + 1];
-const num7 = d[value1 + ((value2+1) << 4) + 792];
-const num8 = d[value1 + ((value2+1) << 4) + 792 - 1];
-const num9 = d[value1 + (value2 << 4) + 792 - 1];
-if (num1 !== 0 && num1 !== 2 && ((num1 + 252) & 255) > 4) return value3;
-if (num3===1||num3===3) value3|=128; else value3&=127;
-if (num4===1||num4===3) value3|=32; else value3&=223;
-if (num6===1||num6===3) value3|=8; else value3&=247;
-if (num8===1||num8===3) value3|=2; else value3&=253;
-if (num2===1||num2===3) value3|=224; else value3&=191;
-if (num5===1||num5===3) value3|=56; else value3&=239;
-if (num7===1||num7===3) value3|=14; else value3&=251;
-if (num9===1||num9===3) value3|=131; else value3&=254;
+routineI(floor, value1, value2, value3){
+const d=this.di[floor];
+const num1=d[value1+(value2<<4)+792];
+if(num1===1||num1===3)return 255;
+const num2=d[value1+((value2-1)<<4)+792];
+const num3=d[value1+((value2-1)<<4)+792-1];
+const num4=d[value1+((value2-1)<<4)+792+1];
+const num5=d[value1+(value2<<4)+792+1];
+const num6=d[value1+((value2+1)<<4)+792+1];
+const num7=d[value1+((value2+1)<<4)+792];
+const num8=d[value1+((value2+1)<<4)+792-1];
+const num9=d[value1+(value2<<4)+792-1];
+if(num1!==0&&num1!==2&&((num1+252)&255)>4)return value3;
+if(num3===1||num3===3) value3|=128;else value3&=127;
+if(num4===1||num4===3) value3|=32;else value3&=223;
+if(num6===1||num6===3) value3|=8;else value3&=247;
+if(num8===1||num8===3) value3|=2;else value3&=253;
+if(num2===1||num2===3) value3|=224;else value3&=191;
+if(num5===1||num5===3) value3|=56;else value3&=239;
+if(num7===1||num7===3) value3|=14;else value3&=251;
+if(num9===1||num9===3) value3|=131;else value3&=254;
 return value3;
 }
-routineG(floor, address) {
-const d = this.di[floor];
-const address3 = address;
-if (d[address3+12] === 1) {
-const parentAddr = this._readI32(floor, address3+4);
-const address1 = this._readI32(floor, parentAddr+8);
-const siblingAddr = this._readI32(floor, address3+8);
-const address2 = this._readI32(floor, siblingAddr+8);
-const num1 = this.gRNGRange(0,7)===0 ? 1 : 0;
+routineG(floor, address){
+const d=this.di[floor];
+const address3=address;
+if(d[address3+12]===1){
+const parentAddr=this._readI32(floor, address3+4);
+const address1=this._readI32(floor, parentAddr+8);
+const siblingAddr=this._readI32(floor, address3+8);
+const address2=this._readI32(floor, siblingAddr+8);
+const num1=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 16, address2, 12, address3, num1);
-const num2 = this.gRNGRange(0,7)===0 ? 1 : 0;
+const num2=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 18, address2, 12, address3, num2);
-const num3 = this.gRNGRange(0,7)===0 ? 1 : 0;
+const num3=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 16, address2, 14, address3, num3);
-const num4 = this.gRNGRange(0,7)===0 ? 1 : 0;
+const num4=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 18, address2, 14, address3, num4);
-} else if (d[address3+12] === 2) {
-const parentAddr = this._readI32(floor, address3+4);
-const address1 = this._readI32(floor, parentAddr+8);
-const siblingAddr = this._readI32(floor, address3+8);
-const address2 = this._readI32(floor, siblingAddr+8);
-const num5 = this.gRNGRange(0,7)===0 ? 1 : 0;
+}else if(d[address3+12]===2){
+const parentAddr=this._readI32(floor, address3+4);
+const address1=this._readI32(floor, parentAddr+8);
+const siblingAddr=this._readI32(floor, address3+8);
+const address2=this._readI32(floor, siblingAddr+8);
+const num5=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 8, address2, 4, address3, num5);
-const num6 = this.gRNGRange(0,7)===0 ? 1 : 0;
+const num6=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 10, address2, 4, address3, num6);
-const num7 = this.gRNGRange(0,7)===0 ? 1 : 0;
+const num7=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 8, address2, 6, address3, num7);
-const num8 = this.gRNGRange(0,7)===0 ? 1 : 0;
+const num8=this.gRNGRange(0,7)===0?1:0;
 this.routineH(floor, address1, 10, address2, 6, address3, num8);
 }
 return 1;
 }
-routineH(floor, address1, value1, address2, value2, address3, value3) {
-const d = this.di[floor];
-const index1 = address3;
-const num1 = d[address1+value1];
-const num2 = d[address1+value1+1];
-const num3 = d[address2+value2];
-const num4 = d[address2+value2+1];
-if (num1===0||num2===0||num3===0||num4===0) return false;
-if (d[address3+12] === 1) {
-for (let i = num2+1; i < d[index1+1]+1; i++)
-d[(i<<4)+792+num1] = 2;
-for (let i = num4-1; i > d[index1+1]; i--)
-d[(i<<4)+792+num3] = 2;
-if (num1 < num3)
-for (let i = num1; i < num3+1; i++)
-d[i + (d[index1+1]<<4) + 792] = 2;
-else if (num1 > num3)
-for (let i = num3; i < num1+1; i++)
-d[i + (d[index1+1]<<4) + 792] = 2;
-if (value3 === 0) return true;
-if (num1 < num3) {
-ext1: for (let i = num3+1; i < 16; i++) {
-const v = d[i + (d[index1+1]<<4) + 792];
-if (v===1||v===3) continue;
-for (let j = num3+1; j < i; j++)
-d[j + (d[index1+1]<<4) + 792] = 2;
+routineH(floor, address1, value1, address2, value2, address3, value3){
+const d=this.di[floor];
+const index1=address3;
+const num1=d[address1+value1];
+const num2=d[address1+value1+1];
+const num3=d[address2+value2];
+const num4=d[address2+value2+1];
+if(num1===0||num2===0||num3===0||num4===0)return false;
+if(d[address3+12]===1){
+for(let i=num2+1;i<d[index1+1]+1;i++)
+d[(i<<4)+792+num1]=2;
+for(let i=num4-1;i>d[index1+1];i--)
+d[(i<<4)+792+num3]=2;
+if(num1<num3)
+for(let i=num1;i<num3+1;i++)
+d[i+(d[index1+1]<<4)+792]=2;
+else if(num1>num3)
+for(let i=num3;i<num1+1;i++)
+d[i+(d[index1+1]<<4)+792]=2;
+if(value3===0)return true;
+if(num1<num3){
+ext1: for(let i=num3+1;i<16;i++){
+const v=d[i+(d[index1+1]<<4)+792];
+if(v===1||v===3) continue;
+for(let j=num3+1;j<i;j++)
+d[j+(d[index1+1]<<4)+792]=2;
 break ext1;
 }
-for (let i = num1-1; i >= 0; i--) {
-const v = d[i + (d[index1+1]<<4) + 792];
-if (v===1||v===3) continue;
-for (let j = num1-1; j > i; j--)
-d[j + (d[index1+1]<<4) + 792] = 2;
+for(let i=num1-1;i>=0;i--){
+const v=d[i+(d[index1+1]<<4)+792];
+if(v===1||v===3) continue;
+for(let j=num1-1;j>i;j--)
+d[j+(d[index1+1]<<4)+792]=2;
 break;
 }
-} else if (num1 >= num3) {
-ext2: for (let i = num1+1; i < 16; i++) {
-const v = d[i + (d[index1+1]<<4) + 792];
-if (v===1||v===3) continue;
-for (let j = num1+1; j < i; j++)
-d[j + (d[index1+1]<<4) + 792] = 2;
+}else if(num1>=num3){
+ext2: for(let i=num1+1;i<16;i++){
+const v=d[i+(d[index1+1]<<4)+792];
+if(v===1||v===3) continue;
+for(let j=num1+1;j<i;j++)
+d[j+(d[index1+1]<<4)+792]=2;
 break ext2;
 }
-for (let i = num3-1; i >= 0; i--) {
-const v = d[i + (d[index1+1]<<4) + 792];
-if (v===1||v===3) continue;
-for (let j = num3-1; j > i; j--)
-d[j + (d[index1+1]<<4) + 792] = 2;
+for(let i=num3-1;i>=0;i--){
+const v=d[i+(d[index1+1]<<4)+792];
+if(v===1||v===3) continue;
+for(let j=num3-1;j>i;j--)
+d[j+(d[index1+1]<<4)+792]=2;
 break;
 }
 }
-} else if (d[address3+12] === 2) {
-for (let i = num1+1; i < d[index1]+1; i++)
-d[i + (num2<<4) + 792] = 2;
-for (let i = num3-1; i > d[index1]; i--)
-d[i + (num4<<4) + 792] = 2;
-if (num2 < num4)
-for (let i = num2; i < num4+1; i++)
-d[(i<<4)+792+d[index1]] = 2;
-else if (num2 > num4)
-for (let i = num4; i < num2+1; i++)
-d[(i<<4)+792+d[index1]] = 2;
-if (value3 === 0) return true;
-if (num2 < num4) {
-ext3: for (let i = num4+1; i < 16; i++) {
-const v = d[(i<<4)+792+d[index1]];
-if (v===1||v===3) continue;
-for (let j = num4+1; j < i; j++)
-d[(j<<4)+792+d[index1]] = 2;
+}else if(d[address3+12]===2){
+for(let i=num1+1;i<d[index1]+1;i++)
+d[i+(num2<<4)+792]=2;
+for(let i=num3-1;i>d[index1];i--)
+d[i+(num4<<4)+792]=2;
+if(num2<num4)
+for(let i=num2;i<num4+1;i++)
+d[(i<<4)+792+d[index1]]=2;
+else if(num2>num4)
+for(let i=num4;i<num2+1;i++)
+d[(i<<4)+792+d[index1]]=2;
+if(value3===0)return true;
+if(num2<num4){
+ext3: for(let i=num4+1;i<16;i++){
+const v=d[(i<<4)+792+d[index1]];
+if(v===1||v===3) continue;
+for(let j=num4+1;j<i;j++)
+d[(j<<4)+792+d[index1]]=2;
 break ext3;
 }
-for (let i = num2-1; i >= 0; i--) {
-const v = d[(i<<4)+792+d[index1]];
-if (v===1||v===3) continue;
-for (let j = num2-1; j > i; j--)
-d[(j<<4)+792+d[index1]] = 2;
+for(let i=num2-1;i>=0;i--){
+const v=d[(i<<4)+792+d[index1]];
+if(v===1||v===3) continue;
+for(let j=num2-1;j>i;j--)
+d[(j<<4)+792+d[index1]]=2;
 break;
 }
-} else {
-ext4: for (let i = (num2>=num4 ? num2+1 : num2); i < 16; i++) {
-const v = d[(i<<4)+792+d[index1]];
-if (v===1||v===3) continue;
-for (let j = num2+1; j < i; j++)
-d[(j<<4)+792+d[index1]] = 2;
+}else{
+ext4: for(let i=(num2>=num4?num2+1:num2);i<16;i++){
+const v=d[(i<<4)+792+d[index1]];
+if(v===1||v===3) continue;
+for(let j=num2+1;j<i;j++)
+d[(j<<4)+792+d[index1]]=2;
 break ext4;
 }
-for (let i = num4-1; i >= 0; i--) {
-const v = d[(i<<4)+792+d[index1]];
-if (v===1||v===3) continue;
-for (let j = num4-1; j > i; j--)
-d[(j<<4)+792+d[index1]] = 2;
+for(let i=num4-1;i>=0;i--){
+const v=d[(i<<4)+792+d[index1]];
+if(v===1||v===3) continue;
+for(let j=num4-1;j>i;j--)
+d[(j<<4)+792+d[index1]]=2;
 break;
 }
 }
 }
 return true;
 }
-routineJ(floor) {
-const d = this.di[floor];
-let num1 = 0, num2 = 0;
-let random1 = 0, random2 = 0;
+routineJ(floor){
+const d=this.di[floor];
+let num1=0, num2=0;
+let random1=0, random2=0;
 let random3, random4, random5;
-while (true) {
-random3 = this.gRNGRange(0, d[23]-1);
-const idx1 = random3 * 20 + 472;
-random4 = this.gRNGRange(d[idx1], d[idx1+2]);
-random5 = this.gRNGRange(d[idx1+1], d[idx1+3]);
-if (num2 < 100) {
-const n3 = d[((random5-1)<<4)+random4+792];
-const n4 = d[((random5+1)<<4)+random4+792];
-const n5 = d[(random5<<4)+792+random4-1];
-const n6 = d[(random5<<4)+792+random4+1];
-const w7 = (n3===1||n3===3)?1:0;
-const w8 = (n4===1||n4===3)?1:0;
-const w9 = (n5===1||n5===3)?1:0;
-const w10 = (n6===1||n6===3)?1:0;
-if (w7&&w8&&w9&&w10) { num2++; continue; }
-if (w7&&w10) { num2++; continue; }
-if (w7&&w9) { num2++; continue; }
-if (w8&&w10) { num2++; continue; }
-if (w8&&w9) { num2++; continue; }
-const ri = this.routineI(floor, random4, random5, 0) & 255;
-if ([46,58,139,142,163,171,174,184,186,226,232,234].includes(ri)) { num2++; continue; }
+while (true){
+random3=this.gRNGRange(0, d[23]-1);
+const idx1=random3*20+472;
+random4=this.gRNGRange(d[idx1], d[idx1+2]);
+random5=this.gRNGRange(d[idx1+1], d[idx1+3]);
+if(num2<100){
+const n3=d[((random5-1)<<4)+random4+792];
+const n4=d[((random5+1)<<4)+random4+792];
+const n5=d[(random5<<4)+792+random4-1];
+const n6=d[(random5<<4)+792+random4+1];
+const w7=(n3===1||n3===3)?1:0;
+const w8=(n4===1||n4===3)?1:0;
+const w9=(n5===1||n5===3)?1:0;
+const w10=(n6===1||n6===3)?1:0;
+if(w7&&w8&&w9&&w10){num2++;continue;}
+if(w7&&w10){num2++;continue;}
+if(w7&&w9){num2++;continue;}
+if(w8&&w10){num2++;continue;}
+if(w8&&w9){num2++;continue;}
+const ri=this.routineI(floor, random4, random5, 0)&255;
+if([46,58,139,142,163,171,174,184,186,226,232,234].includes(ri)){num2++;continue;}
 }
-d[random4 + (random5<<4) + 792] = 4;
-d[4] = random4; d[5] = random5;
-if (num2 >= 100) { num1 = 0; num2 = 0; if (this.trackOverflow) this.isStairOverflow[floor] = true; }
-random1 = random4; random2 = random5; let num13 = random3;
+d[random4+(random5<<4)+792]=4;
+d[4]=random4;d[5]=random5;
+if(num2>=100){num1=0;num2=0;if(this.trackOverflow) this.isStairOverflow[floor]=true;}
+random1=random4;random2=random5;let num13=random3;
 do {
-const random6 = this.gRNGRange(0, d[23]-1);
-if (random6 === (random3 & 255) && (num1 & 255) < 25) {
+const random6=this.gRNGRange(0, d[23]-1);
+if(random6===(random3&255)&&(num1&255)<25){
 num1++;
-} else {
-const idx2 = random6 * 20 + 472;
-random1 = this.gRNGRange(d[idx2], d[idx2+2]);
-num13 = random6;
-random2 = this.gRNGRange(d[idx2+1], d[idx2+3]);
+}else{
+const idx2=random6*20+472;
+random1=this.gRNGRange(d[idx2], d[idx2+2]);
+num13=random6;
+random2=this.gRNGRange(d[idx2+1], d[idx2+3]);
 }
-} while ((random3 & 255) === num13 && random1 === (random4 & 0xFFFF) && random2 === (random5 & 0xFFFF));
-const n14 = d[random1+((random2-1)<<4)+792];
-const n15 = d[random1+((random2+1)<<4)+792];
-const n16 = d[random1+(random2<<4)+792-1];
-const n17 = d[random1+(random2<<4)+792+1];
-const w18 = (n14===1||n14===3)?1:0;
-const w19 = (n15===1||n15===3)?1:0;
-const w20 = (n16===1||n16===3)?1:0;
-const w21 = (n17===1||n17===3)?1:0;
-if (w18&&w19&&w20&&w21) { num2++; }
-else if (w18&&w21) { num2++; }
-else if (w18&&w20) { num2++; }
-else if (w19&&w21) { num2++; }
-else if (w19&&w20) { num2++; }
+}while((random3&255)===num13&&random1===(random4&0xFFFF)&&random2===(random5&0xFFFF));
+const n14=d[random1+((random2-1)<<4)+792];
+const n15=d[random1+((random2+1)<<4)+792];
+const n16=d[random1+(random2<<4)+792-1];
+const n17=d[random1+(random2<<4)+792+1];
+const w18=(n14===1||n14===3)?1:0;
+const w19=(n15===1||n15===3)?1:0;
+const w20=(n16===1||n16===3)?1:0;
+const w21=(n17===1||n17===3)?1:0;
+if(w18&&w19&&w20&&w21){num2++;}
+else if(w18&&w21){num2++;}
+else if(w18&&w20){num2++;}
+else if(w19&&w21){num2++;}
+else if(w19&&w20){num2++;}
 else break;
 }
-d[random1 + (random2<<4) + 792] = 5;
-d[6] = random1; d[7] = random2;
+d[random1+(random2<<4)+792]=5;
+d[6]=random1;d[7]=random2;
 }
-routineK(floor) {
-const d = this.di[floor];
-const random1 = this.gRNGRange(1, 3);
-d[8] = random1;
-let num1 = 0, num2 = 0;
+routineK(floor){
+const d=this.di[floor];
+const random1=this.gRNGRange(1, 3);
+d[8]=random1;
+let num1=0, num2=0;
 do {
-const idx = this.gRNGRange(0, d[23]-1) * 20 + 472;
-const random2 = this.gRNGRange(d[idx], d[idx+2]);
-const random3 = this.gRNGRange(d[idx+1], d[idx+3]);
-const num3 = d[random2 + ((random3 & 255) << 4) + 792];
-if (num1 < 100 && (d[0] === 3 || d[0] === 1)) {
+const idx=this.gRNGRange(0, d[23]-1)*20+472;
+const random2=this.gRNGRange(d[idx], d[idx+2]);
+const random3=this.gRNGRange(d[idx+1], d[idx+3]);
+const num3=d[random2+((random3&255)<<4)+792];
+if(num1<100&&(d[0]===3||d[0]===1)){
 num1++;
-} else if (num3 === 6 || num3 === 4 || num3 === 5) {
+}else if(num3===6||num3===4||num3===5){
 num1++;
-} else {
-d[random2 + ((random3 & 255) << 4) + 792] = 6;
-d[num2 * 2 + 13] = random2;
-d[num2 * 2 + 14] = random3;
+}else{
+d[random2+((random3&255)<<4)+792]=6;
+d[num2*2+13]=random2;
+d[num2*2+14]=random3;
 num2++;
 }
-} while (num2 < (random1 & 255));
+}while(num2<(random1&255));
 return 1;
 }
-calculateDetail(skipMapGen = false) {
-for (let i = 0; i < 16; i++) {
+calculateDetail(skipMapGen=false){
+for(let i=0;i<16;i++){
 this.di[i].fill(0);
 }
 this._details.fill(0);
 this._details2.fill(0);
-if (this.trackOverflow) this.isStairOverflow.fill(false);
-if (this.MapRank < 2 || this.MapRank > 248) return;
-this._seed = this.MapSeed;
-if (this._at_offset === 1) {this._seed = lcg(this._seed);}
-for (let i = 0; i < 12; i++) this.gRNGDiv(100);
-this._details[3] = this.seek1(TableA, 5);
-this._details[1] = this.seek2(TableB, this.MapRank, 9);
-if (this._force_16_floors) {this._details[1]=16;}
-this._details[2] = this.seek2(TableC, this.MapRank, 8);
-this._details[0] = this.seek4(TableD, TableE, 9);
-for (let i = 0; i < 12; i++)
-this._details[i+1+7] = this.seek3(TableF[i*4+1], TableF[i*4+2]);
-this._details[5] = this.seek2(TableH, this._details[2], 5);
-this._details[6] = this.seek2(TableI, this._details[0], 4);
-this._details[7] = this.seek2(TableG, this._details[1], 8);
-let num1 = (this._details[0]+this._details[1]+this._details[2]-4)*3 + (this.gRNGDiv(11) - 5);
-if (num1 < 1) num1 = 1;
-if (num1 > 99) num1 = 99;
-this._details[4] = num1;
-this.MapLocale = LOCALE_INDEX[(this._details[7]-1)*5 + this._details[3]-1];
-for (let i = 1; i < this._details[1]+1; i++) {
+if(this.trackOverflow) this.isStairOverflow.fill(false);
+if(this.MapRank<2||this.MapRank>248)return;
+this._seed=this.MapSeed;
+if(this._at_offset===1){this._seed=lcg(this._seed);}
+for(let i=0;i<12;i++) this.gRNGDiv(100);
+this._details[3]=this.seek1(TableA, 5);
+this._details[1]=this.seek2(TableB, this.MapRank, 9);
+if(this._force_16_floors){this._details[1]=16;}
+this._details[2]=this.seek2(TableC, this.MapRank, 8);
+this._details[0]=this.seek4(TableD, TableE, 9);
+for(let i=0;i<12;i++)
+this._details[i+1+7]=this.seek3(TableF[i*4+1], TableF[i*4+2]);
+this._details[5]=this.seek2(TableH, this._details[2], 5);
+this._details[6]=this.seek2(TableI, this._details[0], 4);
+this._details[7]=this.seek2(TableG, this._details[1], 8);
+let num1=(this._details[0]+this._details[1]+this._details[2]-4)*3+(this.gRNGDiv(11)-5);
+if(num1<1) num1=1;
+if(num1>99) num1=99;
+this._details[4]=num1;
+this.MapLocale=LOCALE_INDEX[(this._details[7]-1)*5+this._details[3]-1];
+for(let i=1;i<this._details[1]+1;i++){
 let num9;
-if (i > 12) num9 = 16;
-else if (i > 8) num9 = (this.MapSeed+i)%3 + 14;
-else if (i > 4) num9 = (this.MapSeed+i)%4 + 12;
-else num9 = (this.MapSeed+i)%5 + 10;
-this.di[i-1][2] = num9;
-this.di[i-1][3] = num9;
+if(i>12) num9=16;
+else if(i>8) num9=(this.MapSeed+i)%3+14;
+else if(i>4) num9=(this.MapSeed+i)%4+12;
+else num9=(this.MapSeed+i)%5+10;
+this.di[i-1][2]=num9;
+this.di[i-1][3]=num9;
 }
-if (!skipMapGen) {
+if(!skipMapGen){
 this.createDungeonDetail();
 }
 }
-createDungeonDetail() {
-for (let index1 = 1; index1 < this._details[1]+1; index1++) {
-const floor = index1 - 1;
-const d = this.di[floor];
-d[0] = index1;
-d[8] = 0;
-this._seed = (this.MapSeed + index1) >>> 0;
+createDungeonDetail(){
+for(let index1=1;index1<this._details[1]+1;index1++){
+const floor=index1-1;
+const d=this.di[floor];
+d[0]=index1;
+d[8]=0;
+this._seed=(this.MapSeed+index1)>>>0;
 this.routine1(floor, 792, 1, 256);
-d[21] = 1; d[22] = 0; d[23] = 0; d[1] = 0;
+d[21]=1;d[22]=0;d[23]=0;d[1]=0;
 this.setValue(floor, 24, 1, 1, d[2]-2, d[3]-2);
-d[28] = 0; d[29] = 0;
+d[28]=0;d[29]=0;
 this.routineF(floor, 24);
-for (let i2 = 0; i2 < d[21]; i2++)
-if (this.routineC(floor, i2*12+24, d[23]*20+472))
+for(let i2=0;i2<d[21];i2++)
+if(this.routineC(floor, i2*12+24, d[23]*20+472))
 d[23]++;
-for (let i3 = 0; i3 < d[21]; i3++)
+for(let i3=0;i3<d[21];i3++)
 this.generateFloorMap(floor, i3*12+24);
-for (let i4 = 0; i4 < d[22]; i4++)
+for(let i4=0;i4<d[22];i4++)
 this.routineG(floor, (i4<<4)+216);
-for (let i5 = 0; i5 < d[2]; i5++) {
-d[i5 + 792] = 1;
-d[((d[3]-1)<<4) + i5 + 792] = 1;
+for(let i5=0;i5<d[2];i5++){
+d[i5+792]=1;
+d[((d[3]-1)<<4)+i5+792]=1;
 }
-for (let i6 = 0; i6 < d[3]; i6++) {
-d[(i6<<4) + 792] = 1;
-d[(i6<<4) + 792 + d[2] - 1] = 1;
+for(let i6=0;i6<d[3];i6++){
+d[(i6<<4)+792]=1;
+d[(i6<<4)+792+d[2]-1]=1;
 }
 this.routineJ(floor);
-if (d[0] <= 2) d[8] = 0;
+if(d[0]<=2) d[8]=0;
 else this.routineK(floor);
 }
-for (let i12 = 2; i12 < this._details[1]; i12++) {
-const d = this.di[i12];
-this._seed = (this.MapSeed + i12 + 1) >>> 0;
-for (let i13 = 0; i13 < d[8] << 1; i13++) this.gRNG();
-const num = this._details[2] + (i12/4|0);
-for (let i14 = 0; i14 < d[8]; i14++) {
-d[i14+9] = this.getItemRank(TableN[(num-1)*4+1], TableN[(num-1)*4+2]);
+for(let i12=2;i12<this._details[1];i12++){
+const d=this.di[i12];
+this._seed=(this.MapSeed+i12+1)>>>0;
+for(let i13=0;i13<d[8]<<1;i13++) this.gRNG();
+const num=this._details[2]+(i12/4|0);
+for(let i14=0;i14<d[8];i14++){
+d[i14+9]=this.getItemRank(TableN[(num-1)*4+1], TableN[(num-1)*4+2]);
 this._details2[d[i14+9]-1]++;
 }
 }
 }
-get floorCount() { return this._details[1]; }
-get monsterRank() { return this._details[2]; }
-get mapLevel() { return this._details[4]; }
-get mapTypeName() { return ENV_NAMES[this._details[3]] ? ENV_NAMES[this._details[3]][0] : "Unknown"; }
-get mapTypeNameJP() { return ENV_NAMES[this._details[3]] ? ENV_NAMES[this._details[3]][1] : "不明"; }
-get mapTypeIndex() { return this._details[3] - 1; }
-get bossIndex() { return this._details[0] - 1; }
-get bossName() { return BOSS_NAMES[this._details[0]] ? BOSS_NAMES[this._details[0]][0] : "Unknown"; }
-get bossNameJP() { return BOSS_NAMES[this._details[0]] ? BOSS_NAMES[this._details[0]][2] : "不明"; }
-get mapName() {
-if (this.MapRank < 2 || this.MapRank > 248) return "Unknown";
-const p = PREFIX_NAMES[this._details[5]][0];
-const s = SUFFIX_NAMES[this._details[6]][0];
-const l = LOCALE_NAMES[this.MapLocale][0];
+get floorCount(){return this._details[1];}
+get monsterRank(){return this._details[2];}
+get mapLevel(){return this._details[4];}
+get mapTypeName(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][0] :"Unknown";}
+get mapTypeNameJP(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][1] :"不明";}
+get mapTypeIndex(){return this._details[3]-1;}
+get bossIndex(){return this._details[0]-1;}
+get bossName(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][0] :"Unknown";}
+get bossNameJP(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][2] :"不明";}
+get mapName(){
+if(this.MapRank<2||this.MapRank>248)return "Unknown";
+const p=PREFIX_NAMES[this._details[5]][0];
+const s=SUFFIX_NAMES[this._details[6]][0];
+const l=LOCALE_NAMES[this.MapLocale][0];
 return `${p} ${l} of ${s} Lv.${this._details[4]}`;
 }
-get mapNameJP() {
-if (this.MapRank < 2 || this.MapRank > 248) return "Unknown";
-const p = PREFIX_NAMES[this._details[5]][1];
-const s = SUFFIX_NAMES[this._details[6]][1];
-const l = LOCALE_NAMES[this.MapLocale][1];
+get mapNameJP(){
+if(this.MapRank<2||this.MapRank>248)return "Unknown";
+const p=PREFIX_NAMES[this._details[5]][1];
+const s=SUFFIX_NAMES[this._details[6]][1];
+const l=LOCALE_NAMES[this.MapLocale][1];
 return `${p}${s}の${l}Lv${this._details[4]}`;
 }
-getFloorWidth(f) { return this.di[f][2]; }
-getFloorHeight(f) { return this.di[f][3]; }
-getUpStair(f) { return { x: this.di[f][4], y: this.di[f][5] }; }
-getDownStair(f) { return { x: this.di[f][6], y: this.di[f][7] }; }
-getBoxCount(f) { return this.di[f][8]; }
-getBoxInfo(f, i) {
-const d = this.di[f];
-return { rank: d[9+i], x: d[i*2+13], y: d[i*2+14] };
+getFloorWidth(f){return this.di[f][2];}
+getFloorHeight(f){return this.di[f][3];}
+getUpStair(f){return{x: this.di[f][4], y: this.di[f][5] };}
+getDownStair(f){return{x: this.di[f][6], y: this.di[f][7] };}
+getBoxCount(f){return this.di[f][8];}
+getBoxInfo(f, i){
+const d=this.di[f];
+return{rank: d[9+i], x: d[i*2+13], y: d[i*2+14] };
 }
-getFloorMap(f) {
-const w = this.getFloorWidth(f), h = this.getFloorHeight(f);
-const map = [];
-for (let y = 0; y < h; y++) {
-map[y] = [];
-for (let x = 0; x < w; x++)
-map[y][x] = this.di[f][x + (y << 4) + 792];
+getFloorMap(f){
+const w=this.getFloorWidth(f), h=this.getFloorHeight(f);
+const map=[];
+for(let y=0;y<h;y++){
+map[y]=[];
+for(let x=0;x<w;x++)
+map[y][x]=this.di[f][x+(y<<4)+792];
 }
 return map;
 }
-getBoxItem(floor,boxIndex,second) {
+getBoxItem(floor,boxIndex,second){
 this._seed=(this.di[floor][0]+this.MapSeed+second)>>>0;
-for (let i1=0; i1<this.di[floor][8]; i1++) {
+for(let i1=0;i1<this.di[floor][8];i1++){
 const num1=this.routineRandom(100);
-if (i1===boxIndex) {
+if(i1===boxIndex){
 const index2=this.di[floor][i1+9];
 const num2=TableO[index2-1], num3=TableO[index2];
 let num4=0;
-for (let i3=num2; i3<num3; i3++) {
+for(let i3=num2;i3<num3;i3++){
 num4+=TableP[i3];
-if (num1<num4) return [TableR[TableQ[i3]][0], TableR[TableQ[i3]][1]];
+if(num1<num4)return [TableR[TableQ[i3]][0], TableR[TableQ[i3]][1]];
 }
 }
 }
 return [null, null];
 }
-getFloorItemNames(floor, second) {
-const d = this.di[floor];
-const boxCount = d[8];
-this._seed = (d[0] + this.MapSeed + second) >>> 0;
-const names = [];
-for (let i1 = 0; i1 < boxCount; i1++) {
-const num1 = this.routineRandom(100);
-const index2 = d[i1 + 9];
-const num2 = TableO[index2 - 1], num3 = TableO[index2];
-let num4 = 0, name = null;
-for (let i3 = num2; i3 < num3; i3++) {
+getFloorItemNames(floor, second){
+const d=this.di[floor];
+const boxCount=d[8];
+this._seed=(d[0]+this.MapSeed+second)>>>0;
+const names=[];
+for(let i1=0;i1<boxCount;i1++){
+const num1=this.routineRandom(100);
+const index2=d[i1+9];
+const num2=TableO[index2-1], num3=TableO[index2];
+let num4=0, name=null;
+for(let i3=num2;i3<num3;i3++){
 num4 += TableP[i3];
-if (num1 < num4) { name = TableR[TableQ[i3]][0]; break; }
+if(num1<num4){name=TableR[TableQ[i3]][0];break;}
 }
 names.push(name);
 }
