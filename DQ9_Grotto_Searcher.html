@@ -5,32 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DQ9 Grotto Searcher</title>
 <link rel=stylesheet href=1.css>
+</style>
 </head>
 <body>
 <div class="header">
-<h1>DQ9 GROTTO SEARCHER (CELESTIAN VERSION)</h1>
+<h1>DQ9 GROTTO SEARCHER (CELESTRIA VERSION)</h1>
 </div>
 <div id="controls_container" style="display:flex; justify-content:center; padding-bottom: 20px; border-bottom: 2px solid #4a4a8a;">
-<div id="single_map_controls" style="display:flex; align-items:center; background:#0a0a15; padding:6px 12px; border-radius:6px; border:1px solid #335;">
+ <div id="single_map_controls" style="display:flex; align-items:center; background:#0a0a15; padding:6px 12px; border-radius:6px; border:1px solid #335;">
 <label style="color:#aaa; font-size:13px; font-weight:bold;">Rank</label>
 <select id="rank" style="background:#000; color:#0f0; border:1px solid #555; padding:4px; font-size:14px; width:65px;">
-<option value="0x02">02</option>
-<option value="0x38">38</option>
-<option value="0x3D">3D</option>
-<option value="0x4C">4C</option>
-<option value="0x51">51</option>
-<option value="0x65">65</option>
-<option value="0x79">79</option>
-<option value="0x8D">8D</option>
-<option value="0xA1">A1</option>
-<option value="0xB5">B5</option>
-<option value="0xC9">C9</option>
-<option value="0xDD" selected>DD</option>
+ <option value="0x02">02</option>
+ <option value="0x38">38</option>
+ <option value="0x3D">3D</option>
+ <option value="0x4C">4C</option>
+ <option value="0x51">51</option>
+ <option value="0x65">65</option>
+ <option value="0x79">79</option>
+ <option value="0x8D">8D</option>
+ <option value="0xA1">A1</option>
+ <option value="0xB5">B5</option>
+ <option value="0xC9">C9</option>
+ <option value="0xDD" selected>DD</option>
 </select>
 <label style="color:#aaa; font-size:13px; font-weight:bold; margin-left:4px;">Seed</label>
 <input type="text" id="seed" value="263C" maxlength="4" placeholder="Hex" style="text-transform:uppercase; font-family:monospace; font-size:14px; width:60px; text-align:center; background:#000; color:#0f0; border:1px solid #555; padding:4px;">
-<button class="go" onclick="calculate()" style="background:linear-gradient(135deg, #0ff, #0088aa); color:#000; border:none; padding:6px 16px; font-size:13px; font-weight:bold; border-radius:4px; cursor:pointer; margin-left:8px;">Go</button>
-</div>
+<button class="go" onclick="calculate()" style="background:linear-gradient(135deg,#0ff,#08a); color:#000; border:none; padding:6px 16px; font-size:13px; font-weight:bold; border-radius:4px; cursor:pointer; margin-left:8px;">Go</button>
+ </div>
 </div>
 <script src=1.js></script>
 <script src=2.js></script>
@@ -46,16 +47,18 @@
 <div class="modal-body" id="chestModalBody"></div>
 </div>
 </div>
+
 <div id="seedInspectorModal" class="modal-overlay" onclick="closeSeedInspector(event)">
 <div class="si-modal-content modal-content" onclick="event.stopPropagation()">
 <div class="si-header">
-<h3 style="color:#0ff;margin:0;font-size:14px;">AT Detail Search</h3>
+<h3 style="color:#0ff; margin:0; font-size:14px;">AT Detail Search</h3>
 <button class="modal-close" onclick="closeSeedInspector()">×</button>
 </div>
-<div class="modal-body" style="padding:12px;overflow-y:auto;max-height:85vh;">
+<div class="modal-body" style="padding:12px; overflow-y:auto; max-height:85vh;">
+
 <div class="si-section">
 <div class="si-grid">
-<div class="si-field"><label>Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px;text-transform:uppercase;" oninput="updateSeedInspector()"></div>
+<div class="si-field"><label>Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px; text-transform:uppercase;" oninput="updateSeedInspector()"></div>
 <div class="si-field"><label data-i18n="G07"></label><select id="si_env" style="width:65px;" onchange="updateSeedInspector()"><option value="1">洞窟</option><option value="2" selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
 <div class="si-field"><label data-i18n="G09"></label><select id="si_mr" onchange="updateSeedInspector()"></select></div>
 <div class="si-field"><label data-i18n="G18"></label><input type="number" id="si_deft" value=910 min=1 max=999 style="width:60px;" oninput="updateSeedInspector()"></div>
@@ -64,16 +67,18 @@
 <div class="si-field"><label data-i18n="G21"></label><input type="number" id="si_scan_max" value=2000 min=0 style="width:60px;" oninput="updateSeedInspector()"></div>
 </div>
 </div>
+
 <div class="si-section"><div class="si-result-box" id="si_at_results"></div></div>
+
 <div class="si-section">
 <div class="si-grid" style="gap:6px;">
 <div class="si-field"><label data-i18n="G22"></label><select id="si_enemy_count" onchange="updateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
 <div class="si-field"><label data-i18n="G23"></label><select id="si_group_size" onchange="updateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label style="display:block;margin-bottom:5px;font-size:11px;color:#fa0;">2T</label><div style="display:flex;align-items:center;height:16px;"><input type="checkbox" id="si_2nd_turn" onchange="updateSeedInspector()" style="width:20px;height:20px;cursor:pointer;"></div></div>
+<div class="si-field"><label style="display:block; margin-bottom:5px; font-size:11px; color:#fa0;">2T</label><div style="display:flex; align-items:center; height:16px;"><input type="checkbox" id="si_2nd_turn" onchange="updateSeedInspector()" style="width:20px; height:20px; cursor:pointer;"></div></div>
 <div class="si-field"><label data-i18n="G24"></label><select id="si_rare_rate" style="width:60px;" onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256" selected>1/256</option></select></div>
 <div class="si-field"><label data-i18n="G25"></label><select id="si_norm_rate" style="width:60px;" onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128" selected>1/128</option></select></div>
 <div class="si-field"><label data-i18n="G26"></label>
-<div style="display:flex;gap:4px;">
+<div style="display:flex; gap:4px;">
 <select id="si_t1" onchange="updateSeedInspector()" style="width:45px;"></select>
 <select id="si_t2" onchange="updateSeedInspector()" style="width:45px;"></select>
 <select id="si_t3" onchange="updateSeedInspector()" style="width:45px;"></select>
@@ -82,9 +87,10 @@
 </div>
 </div>
 </div>
+
 <div class="si-section">
-<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
-<label style="color:#aaa;font-size:12px;">AT Debug</label>
+<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+<label style="color:#aaa; font-size:12px;">AT Debug</label>
 <input type="number" id="si_target_step" value="35" min="1" style="width:65px;" oninput="updateSeedInspector()">
 </div>
 <div class="si-result-box" id="si_target_results" style="border-color:#f44;"></div>
@@ -92,6 +98,7 @@
 </div>
 </div>
 </div>
+
 <div id="disclaimerModal" class="modal-overlay" onclick="closeDisclaimerModal(event)" style="z-index: 1001;">
 <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
 <div class="modal-header">
@@ -99,12 +106,15 @@
 <button class="modal-close" onclick="closeDisclaimerModal()">×</button>
 </div>
 <div class="modal-body" id="disclaimerModalBody" style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 70vh;">
+
 <div class="modal-tabs">
 <div id="discTabTW" style="padding: 6px 16px; background: #1a1a3a; color: #ffd700; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;" onclick="switchDisclaimerTab('TW')">繁體中文</div>
 <div id="discTabEN" style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;" onclick="switchDisclaimerTab('EN')">English</div>
 <div id="discTabJP" style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;" onclick="switchDisclaimerTab('JP')">日本語</div>
 </div>
+
 <div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.6; color: #ccc;">
+
 <div id="discListTW" style="display: block;">
 <p>本專案為非商業性質的 Dragon Quest IX 藏寶圖玩家工具，不隸屬於、不獲授權於 Square Enix。</p>
 <h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">社群公知的 DQ9 遊戲解析知識</h3>
@@ -132,10 +142,11 @@
 <li>反編譯資料庫的轉譯：由 Claude 執行，本專案作者負責 debug</li>
 <li>ElistOfs 相關邏輯：本專案作者轉述 TKG 整理的邏輯，由 Gemini 實作</li>
 <li>其餘所有功能及代碼：由 Gemini 實作，本專案作者負責提供想法和 debug</li>
-<li>說明書：本專案作者製作繁體中文版，由 Claude 校正及翻譯為其他語言</li>
+<li>說明書：本專案作者製作繁體中文版的原稿，由 Claude 校正及翻譯為其他語言</li>
 </ul>
 <p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本專案不主張對以上任何來源的原創性。本專案採 <strong><a href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant target=_blank style="color:#8cc8ff;">CC BY-NC-SA 4.0 (創用 CC 姓名標示-非商業性-相同方式分享)</a></strong> 授權，代碼嚴禁任何形式之商業使用。</small></p>
 </div>
+
 <div id="discListEN" style="display: none;">
 <p>This is a non-commercial fan tool for Grottoes (treasure maps) from Dragon Quest IX: Sentinels of the Starry Skies. It is not affiliated with or endorsed by Square Enix Co. Ltd.</p>
 <h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Community-documented DQ9 game mechanics</h3>
@@ -167,6 +178,7 @@
 </ul>
 <p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>No claim of originality is made over any of the above sources. This project is licensed under <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong>. Commercial use is strictly prohibited.</small></p>
 </div>
+
 <div id="discListJP" style="display: none;">
 <p>本プロジェクトは『ドラゴンクエストIX 星空の守り人』の宝の地図に関するファンツールです。株式会社スクウェア・エニックスとは無関係であり、公式に認定・許諾されたものではありません。</p>
 <h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">コミュニティに広く知られているDQ9のゲーム解析知識</h3>
@@ -194,7 +206,7 @@
 <li>データベースの変換：Claude が実行し、本プロジェクトの作者がデバッグを担当</li>
 <li>ElistOfs 関連ロジック：本プロジェクトの作者が TKG 氏のロジックを自身の言葉で伝え、Gemini が JavaScript で実装</li>
 <li>その他すべての機能・コード：Gemini が実装し、本プロジェクトの作者がアイデアの提供とデバッグを担当</li>
-<li>説明書：本プロジェクトの作者が繁体中国語版を作成し、Claudeが英語・日本語版を翻訳</li>
+<li>説明書：本プロジェクトの作者が繁体中国語版の原稿を作成し、Claudeが英語・日本語版を翻訳</li>
 </ul>
 <p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本プロジェクトは、上記のいかなる情報源に対してもオリジナリティを主張しません。本プロジェクトは <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong> ライセンスのもとで公開されており、商業目的での使用は禁じられています。</small></p>
 </div>
@@ -202,6 +214,7 @@
 </div>
 </div>
 </div>
+
 <div id="h1Modal" class="modal-overlay" onclick="closeh1Modal(event)" style="z-index: 1002;">
 <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
 <div class="modal-header">
@@ -215,8 +228,9 @@
 <div id="h1TabJP" style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;" onclick="switchH1Tab('JP')">日本語</div>
 </div>
 <div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.7; color: #ccc;">
+
 <div id="h1ListTW" style="display: block;">
-<h3 class="h1sec" style="margin-top:0;">地圖名稱</h3>
+<h3 class="h1sec" id="sec-mapname" style="margin-top:0;">地圖名稱</h3>
 <table class="h1t">
 <tr class="hdr"><td colspan="5" class="hdr" style="padding:4px;">English</td></tr>
 <tr>
@@ -250,60 +264,97 @@
 </tr>
 </table>
 
-<details class="h1det" ontoggle="if(this.open) renderMapNamesTable()">
-<summary>📖 前綴 / 後綴 / 中間名 列表</summary>
-<div id="mapNamesContainer" style="margin-top:12px; max-height:400px; overflow-y:auto; border:1px solid #333;">
-<p style="color:#888; font-size:12px; padding:8px;">正在讀取內建陣列...</p></div>
-<script>
-// 這個函數會在展開時自動讀取你的物件並生成表格
-function renderMapNamesTable() {
-const target = document.getElementById('mapNamesContainer');
-if (!target || target.innerHTML.includes('<table')) return; 
+<h3 class="h1sec" id="sec-naming">前綴・中間名・後綴・Lv</h3>
 
-const prefixes = typeof PREFIX_NAMES !== 'undefined' ? PREFIX_NAMES : null;
-const suffixes = typeof SUFFIX_NAMES !== 'undefined' ? SUFFIX_NAMES : null;
-const locales = typeof LOCALE_NAMES !== 'undefined' ? LOCALE_NAMES : null;
+<div class="h1box">
+<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<li><strong style="color:#39C5BB;">前綴：</strong>由 <span style="color:#cff;">B1F 怪物等級 (SMR)</span> 決定。</li>
+<li><strong style="color:#39C5BB;">後綴：</strong>由 <span style="color:#cff;">BOSS 種類</span> 決定。</li>
+<li><strong style="color:#39C5BB;">中間名：</strong>由 <span style="color:#cff;">樓層深度</span> 與 <span style="color:#cff;">地形</span> 共同決定。</li>
+<li><strong style="color:#39C5BB;">Lv</strong>＝<code style="color:#fa0;">(樓層深度＋B1F怪物等級(SMR)＋BOSS種類－4)×3±5</code>。最小為 1，最大為 99。</li>
+</ul>
+</div>
 
-let html = '<table style="width:100%; border-collapse:collapse; font-size:12px; text-align:center;">';
-html += '<tr style="background:#1a1a3a; color:#0ca; position:sticky; top:0;"><th style="border:1px solid #4a4a8a; padding:6px;">類型</th><th style="border:1px solid #4a4a8a; padding:6px;">日文名稱 (JP)</th><th style="border:1px solid #4a4a8a; padding:6px;">英文名稱 (EN)</th><th style="border:1px solid #4a4a8a; padding:6px; width:40%;">我自己填</th></tr>';
-
-const buildRows = (title, obj) => {
-if(!obj || Object.keys(obj).length === 0) return `<tr><td colspan="4" style="border:1px solid #4a4a8a; padding:4px; text-align:center; color:#888;">找不到 ${title.replace('<br>','')} 資料</td></tr>`;
-let res = '';
-let keys = Object.keys(obj);
-for(let i=0; i<keys.length; i++) {
-let key = keys[i];
-let val = obj[key];
-let enTxt = '';
-let jpTxt = '';
-if (Array.isArray(val)) {
-enTxt = val[0] || '';
-jpTxt = val[1] || '';
-} else {
-jpTxt = val;
-}
-res += `<tr>`;
-if(i===0) res += `<td rowspan="${keys.length}" style="background:#112; border:1px solid #4a4a8a; padding:4px; text-align:center; font-weight:bold;">${title}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px; color:#fff;">${jpTxt}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px; color:#88b;">${enTxt}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px;"></td>`;
-res += `</tr>`;
-}
-return res;
-};
-
-html += buildRows('前綴<br>PREFIX', prefixes);
-html += buildRows('後綴<br>SUFFIX', suffixes);
-html += buildRows('中間名<br>LOCALE', locales);
-html += '</table>';
-target.innerHTML = html;
-}
-</script>
-
+<details class="h1det">
+<summary>📖 詳細名稱</summary>
+<div>
+<p style="margin-top:12px; color:#aaa;">前綴</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">編號</th>
+<th style="padding:4px;">英文</th>
+<th style="padding:4px;">日文</th>
+<th style="padding:4px;">編號</th>
+<th style="padding:4px;">英文</th>
+<th style="padding:4px;">日文</th>
+</tr>
+<tr><td>1</td><td>Clay</td><td>はかなき</td><td>9</td><td>Steel</td><td>放たれし</td></tr>
+<tr><td>2</td><td>Rock</td><td>ちいさな</td><td>10</td><td>Silver</td><td>けだかき</td></tr>
+<tr><td>3</td><td>Granite</td><td>うす暗き</td><td>11</td><td>Gold</td><td>わななく</td></tr>
+<tr><td>4</td><td>Basalt</td><td>ゆらめく</td><td>12</td><td>Platinum</td><td>残された</td></tr>
+<tr><td>5</td><td>Graphite</td><td>ざわめく</td><td>13</td><td>Ruby</td><td>見えざる</td></tr>
+<tr><td>6</td><td>Iron</td><td>ねむれる</td><td>14</td><td>Emerald</td><td>あらぶる</td></tr>
+<tr><td>7</td><td>Copper</td><td>怒れる</td><td>15</td><td>Sapphire</td><td>とどろく</td></tr>
+<tr><td>8</td><td>Bronze</td><td>呪われし</td><td>16</td><td>Diamond</td><td>大いなる</td></tr>
+</table>
+<p style="margin-top:12px; color:#aaa;">後綴</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">編號</th>
+<th style="padding:4px;">英文</th>
+<th style="padding:4px;">日文</th>
+<th style="padding:4px;">編號</th>
+<th style="padding:4px;">英文</th>
+<th style="padding:4px;">日文</th>
+</tr>
+<tr><td>1</td><td>Joy</td><td>花</td><td>9</td><td>Fear</td><td>運命</td></tr>
+<tr><td>2</td><td>Bliss</td><td>岩</td><td>10</td><td>Dread</td><td>魂</td></tr>
+<tr><td>3</td><td>Glee</td><td>風</td><td>11</td><td>Hurt</td><td>闇</td></tr>
+<tr><td>4</td><td>Doubt</td><td>空</td><td>12</td><td>Gloom</td><td>光</td></tr>
+<tr><td>5</td><td>Woe</td><td>獣</td><td>13</td><td>Doom</td><td>魔神</td></tr>
+<tr><td>6</td><td>Dolour</td><td>夢</td><td>14</td><td>Evil</td><td>星々</td></tr>
+<tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
+<tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr>
+</table>
+<p style="color:#aaa; margin-top:12px;">中間名</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">編號</th>
+<th style="padding:4px;">英文</th>
+<th style="padding:4px;">日文</th>
+<th class="w" style="padding:4px;">X</th>
+<th style="padding:4px;">出現於地形</th>
+</tr>
+<tr><td>1</td><td>Cave</td><td>洞くつ</td><td>1</td><td>洞窟・冰・水・火山</td></tr>
+<tr><td>2</td><td>Tunnel</td><td>地下道</td><td>1</td><td>遺跡</td></tr>
+<tr><td>3</td><td>Mine</td><td>坑道</td><td>2</td><td>洞窟・遺跡・火山</td></tr>
+<tr><td>4</td><td>Crevasse</td><td>雪道</td><td>2</td><td>冰</td></tr>
+<tr><td>5</td><td>Marsh</td><td>沼地</td><td>2</td><td>水</td></tr>
+<tr><td>6</td><td>Lair</td><td>アジト</td><td>3</td><td>洞窟・遺跡</td></tr>
+<tr><td>7</td><td>Icepit</td><td>氷穴</td><td>3</td><td>冰</td></tr>
+<tr><td>8</td><td>Lake</td><td>地底湖</td><td>3</td><td>水</td></tr>
+<tr><td>9</td><td>Crater</td><td>火口</td><td>3</td><td>火山</td></tr>
+<tr><td>10</td><td>Path</td><td>道</td><td>4</td><td>洞窟・遺跡</td></tr>
+<tr><td>11</td><td>Snowhall</td><td>雪原</td><td>4</td><td>冰</td></tr>
+<tr><td>12</td><td>Moor</td><td>湿原</td><td>4</td><td>水</td></tr>
+<tr><td>13</td><td>Dungeon</td><td>牢ごく</td><td>4</td><td>火山</td></tr>
+<tr><td>14</td><td>Crypt</td><td>墓場</td><td>5</td><td>洞窟・遺跡・冰・水・火山</td></tr>
+<tr><td>15</td><td>Nest</td><td>巣</td><td>6</td><td>洞窟・火山</td></tr>
+<tr><td>16</td><td>Ruins</td><td>遺跡</td><td>6</td><td>遺跡</td></tr>
+<tr><td>17</td><td>Tundra</td><td>凍土</td><td>6</td><td>冰</td></tr>
+<tr><td>18</td><td>Waterway</td><td>水脈</td><td>6</td><td>水</td></tr>
+<tr><td>19</td><td>World</td><td>世界</td><td>7</td><td>洞窟・遺跡・冰・水・火山</td></tr>
+<tr><td>20</td><td>Abyss</td><td>奈落</td><td>8</td><td>洞窟</td></tr>
+<tr><td>21</td><td>Maze</td><td>迷宮</td><td>8</td><td>遺跡</td></tr>
+<tr><td>22</td><td>Glacier</td><td>氷河</td><td>8</td><td>冰</td></tr>
+<tr><td>23</td><td>Chasm</td><td>眠る地</td><td>8</td><td>水</td></tr>
+<tr><td>24</td><td>Void</td><td>じごく</td><td>8</td><td>火山</td></tr>
+</table>
+</div>
 </details>
 
-<h3 class="h1sec" style="margin-top:0;">位置</h3>
-<p style="margin-bottom:8px;">地圖入口的所在位置。FQ (Final Quality) 能改變它的最大取值範圍：</p>
+<h3 class="h1sec" id="sec-location" style="margin-top:0;">位置</h3>
+<p style="margin-bottom:8px;">地圖入口的所在位置。<a href="#sec-bq-fq" style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">FQ (Final Quality)</a> 能改變它的最大取值範圍：</p>
 
 <table class="h1t" style="width:100%; max-width:300px;">
 <tr class="hdr">
@@ -520,7 +571,7 @@ target.innerHTML = html;
 </p>
 </div>
 </details>
-<h3 class="h1sec">Rank、Seed</h3>
+<h3 class="h1sec" id="sec-rank-seed">Rank、Seed</h3>
 <p style="margin-bottom:12px; color:#aaa;">藏寶圖表面上是由 <span style="color:#fff;">地圖名稱</span> 組成，實際上是由 <strong style="color:#0ff;">Rank</strong> 和 <strong style="color:#f8f;">Seed</strong> 兩個隱藏參數構成。<br>本工具的核心運作原理，就是透過您輸入的各種表面特徵，查出 Rank 與 Seed 這兩個代表每張地圖的「身分證號」。</p>
 
 <div style="background:#112; border-left:3px solid #f8f; padding:8px 12px; margin-bottom:16px;">
@@ -535,7 +586,7 @@ target.innerHTML = html;
 
 <div class="h1box2">
 <h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
-<p style="color:#ccc; margin-bottom:8px;">將下方提到的 <strong>Final Quality (FQ)</strong> 劃分為 12 個區間，是為 Rank。</p>
+<p style="color:#ccc; margin-bottom:8px;">將下方提到的 <a href="#sec-bq-fq" style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final Quality (FQ)</strong></a> 劃分為 12 個區間，是為 Rank。</p>
 
 <table class="h1t" style="font-size:11px;">
 <tr class="hdr2">
@@ -558,50 +609,51 @@ target.innerHTML = html;
 </table>
 </div>
 
-<h3 class="h1sec">Base Quality (BQ)、Final Quality (FQ)</h3>
+<h3 class="h1sec" id="sec-bq-fq">Base Quality (BQ)、Final Quality (FQ)</h3>
 
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base Quality (BQ)</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">BQ = 主角全職業最高Lv + 主角全職業最高轉生次數×5 + 正在攻略的地圖Lv</code>
+<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">BQ＝主角全職業最高Lv＋主角全職業最高轉生次數×5＋正在攻略的地圖Lv</code>
 </div>
 <div style="margin-bottom:16px;">
 <strong style="color:#0ff;">Final Quality (FQ)</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">FQ = BQ±10%</code>
+<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">FQ＝BQ±10%</code>
 <br><span style="color:#aaa;">FQ 最小為 2，最大為 248。地圖的 FQ 數值落在哪個區間，該地圖的 Rank 就是多少。</span>
 <br><br><span style="color:#aaa;">搜尋時，右邊的方框填 BQ 具體數值。</span>
-<br><span style="color:#aaa;">左邊的下拉選單 選「1」搜尋只有一個BQ能打出該地圖的地圖，選「1'」則搜尋其中一個位置只有一個BQ能打出該地圖的地圖。</span>
+<br><span style="color:#aaa;">左邊的下拉選單 選「1」搜尋「只有一個 BQ 能發掘到它」的地圖，選「1'」則搜尋「只有一個 BQ 能發掘到它其中一個位置」的地圖。</span>
 </div>
 
 <details class="h1det">
-<summary>📖 地圖生成的三大步驟</summary>
+<summary>📖 地圖生成的步驟</summary>
 <div>
 <ol style="padding-left:20px; color:#ccc; line-height:1.6;">
-<li style="margin-bottom:8px;"><strong style="color:#0ca;">決定「±10%」的具體值</strong></li>
+<li style="margin-bottom:8px;"><strong style="color:#0ca;">決定 FQ 浮動值「±10%」的具體值</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">決定地圖 Seed</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">決定地圖的入口位置</strong></li>
 </ol>
-<p>系統按照以上 3 步形成總共 65536 個組合的地圖庫，從中每抽一張地圖耗時 1/521875 秒，也就是一秒鐘能循環所有的組合將近 8 次。人類無法擁有這麼快的反射神經來控制這個時間。因此靠人力精確控制 抽到某張特定地圖 在實機上是不可能的。</p>
+<p>每跑一次上述步驟，耗時 1/521875 秒，也就是一秒鐘可以跑將近 8 圈（一圈 65536 次）。人類無法擁有這麼快的反射神經來控制它。因此靠人力精確控制 生成某張特定地圖 在實機上是不可能的。</p>
 </div>
 </details>
-<h3 class="h1sec">地形</h3>
+
+<h3 class="h1sec" id="sec-terrain">地形</h3>
 
 <div class="h1box">
 <p style="margin-bottom:8px; color:#ccc;">地形共分為 <strong style="color:#fa0;">洞窟、遺跡、冰、水、火山</strong> 五種。生成機率分別為：洞窟佔 30%，遺跡佔 40%，其餘各佔 10%。部分 QUEST 需要獲取「指定地形」與「指定 FloorMR」的地圖才能達成。</p>
 
 <ul style="padding-left:20px; color:#aaa; line-height:1.7;">
-<li><strong style="color:#39C5BB;">遺跡：</strong>十字路口出現怪物時 <span style="color:#f88;">極易被堵死</span>。</li>
+<li><strong style="color:#39C5BB;">遺跡：</strong>通道入口出現怪物時 <span style="color:#f88;">極易被堵死</span>。</li>
 <li><strong style="color:#39C5BB;">洞窟 & 水：</strong>廣闊空間的邊緣有突出結構，會讓玩家多走一點腳程。</li>
 <li><strong style="color:#39C5BB;">洞窟 & 冰 & 火山：</strong>廣闊空間有像小石子一樣的障礙物，移動時需注意避開。</li>
-<li><strong style="color:#39C5BB;">洞窟 (FloorMR 10-11)：</strong>會出現能把所有路口、通路 <span style="color:#f8f;">全部堵死</span> 的「だいおうクジラ」，嚴重影響玩家從入口快速走到 BOSS 面前的體驗，其他地形問題沒那麼嚴重。</li>
+<li><strong style="color:#39C5BB;">洞窟 (FloorMR 10-11)：</strong>會出現能把所有路口、通道 <span style="color:#f8f;">全部堵死</span> 的「だいおうクジラ」，嚴重影響玩家從入口快速走到 BOSS 面前的體驗，其他地形問題沒那麼嚴重。</li>
 <li><strong style="color:#39C5BB;">BOSS 樓層所需時間：</strong>從樓層入口到 BOSS 跟前的所需時間也有地形差別：<span style="color:#0ff;">遺跡 6.6秒</span>，<span style="color:#f88;">火山 7.4秒</span>，<span style="color:#ddd;">其餘皆為 7.2秒</span>。這微小的差距足以改變部分低Lv發掘用地圖的排名。(來源: <a href="https://w.atwiki.jp/masha-masha/181.html" target="_blank" style="color:#0ca; text-decoration:none; border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
 </ul>
 </div>
 
-<h3 class="h1sec">B1F 怪物等級、樓層深度、BOSS</h3>
+<h3 class="h1sec" id="sec-smr-depth-boss">B1F 怪物等級、樓層深度、BOSS</h3>
 
 <div style="margin-bottom:12px; font-size:12px;">
 <strong style="color:#0ff;">具體某一層樓的怪物等級 (FloorMR) 的計算公式：</strong><br>
-<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR = B1F怪物等級(SMR) + int[(樓層數-1)÷4]</code>
+<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR＝B1F怪物等級(SMR)＋int[(樓層數－1)÷4]</code>
 </div>
 
 <table class="h1t" style="font-size:11px;">
@@ -675,7 +727,7 @@ target.innerHTML = html;
 </tr>
 </table>
 
-<details class="h1det">
+<details class="h1det" id="det-boss-names">
 <summary>📖 BOSS 名稱對照</summary>
 <div>
 <table class="h1t" style="margin-top:8px;">
@@ -700,7 +752,7 @@ target.innerHTML = html;
 </div>
 </details>
 
-<h3 class="h1sec">Bug 地形</h3>
+<h3 class="h1sec" id="sec-bug-terrain">Bug 地形</h3>
 <p style="margin-bottom:12px; color:#ccc; font-size:12px;">DQ9 生成地圖時，因為某些機制，而出現下述匪夷所思的現象。</p>
 
 <table class="h1t" style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
@@ -710,11 +762,11 @@ target.innerHTML = html;
 </tr>
 <tr>
 <td class="bug">乳首</td>
-<td class="bugd">被封在牆壁中的寶箱。如果是火山地形，則看上去像是浮在半空中。<br><span style="color:#888;">此名稱源自於 5ch <a href=https://kako.5ch.net/test/read.cgi/ff/1251713439 target=_blank style="color:#aaa;">原 Post</a>。樓主講到用 DS 觸摸筆戳寶箱時，2 樓大叔插話說不如也戳一戳他的乳首，之後整個氣氛被帶到把樓主的地圖命名為「乳首」。自此之後所有「寶箱浮在半空中」的地圖都叫「乳首地圖」。</span><br><span style="color:#996;">注：0000~7FFF 中，實機上肉眼能看到寶箱的 Seed 只有 7 種：07FE、1811、2416、2489、5808、623C、7930。</span></td>
+<td class="bugd">最初用於形容 部分火山地圖中出現的「浮在半空中」的寶箱。<br>發現其機制後「被封在牆壁中」的寶箱也被歸於此類 (也就是「廣義的乳首」)。<br>如果整層樓只有一個被封在牆壁中的寶箱，則叫做「無寶箱樓層」。<br><span style="color:#888;">此名稱源自於 5ch <a href=https://kako.5ch.net/test/read.cgi/ff/1251713439 target=_blank style="color:#aaa;">原 Post</a>。樓主講到用 DS 觸摸筆戳寶箱時，2 樓大叔插話說不如也戳一戳他的乳首，之後整個氣氛被帶到把樓主的地圖命名為「乳首」。自此之後所有「寶箱浮在半空中」的地圖都叫「乳首地圖」。</span><br><span style="color:#996;">注：0000~7FFF 中，實機上能看到「浮在半空中的寶箱」的 Seed 只有 7 種：07FE、1811、2416、2489、5808、623C、7930。</span></td>
 </tr>
 <tr>
 <td class="bug">イケない通路</td>
-<td class="bugd">被封在牆壁中的小房間，如果尺寸是 1x2 或以上則能在大地圖上被顯示。</td>
+<td class="bugd">被封在牆壁中的小房間，如果尺寸是 1x2 或以上，則能在大地圖上被顯示。</td>
 </tr>
 <tr>
 <td class="bug">チラリズム</td>
@@ -726,11 +778,11 @@ target.innerHTML = html;
 </tr>
 <tr>
 <td class="bug">幽靈樓梯</td>
-<td class="bugd">下方畫布中，滑鼠移到某個地板時，右下角顯示的文字為樓梯。</td>
+<td class="bugd">下方畫布中，滑鼠移到某個地板時，右下角顯示的文字為「樓梯」。</td>
 </tr>
 <tr>
 <td class="bug">危険？ハマるフロア</td>
-<td class="bugd">樓梯與寶箱挨在一起，往下走被困住出不去，往上走無法回頭的地圖。<br><span style="color:#888;">發現其生成機制後，把相同機制但樓梯與寶箱不挨在一起的地圖也歸於此類。</span></td>
+<td class="bugd">樓梯與寶箱挨在一起，往下走被困住出不去，往上走無法回頭的地圖。<br><span style="color:#888;">發現其生成機制後，相同機制但樓梯與寶箱不挨在一起的地圖也被歸於此類。</span></td>
 </tr>
 </table>
 <details class="h1det">
@@ -746,7 +798,7 @@ target.innerHTML = html;
 <p style="margin-bottom:8px; text-align:justify;">　根據上述機制，如果一個樓層 100 次上樓梯候選全部無法通過檢查，進入溢出模式後跳過所有檢查，就有可能把上樓梯也放進牆壁。但由於 100 次候選全部無法通過檢查的樓層實在太少，總共就 4 種 16 個搜尋結果，實際上這種情形並沒有發生。</p>
 </div>
 </details>
-<h3 class="h1sec">特殊樓層 (ElistOfs) 與 指定 ONLY 怪物</h3>
+<h3 class="h1sec" id="sec-special-floor">特殊樓層 (ElistOfs) 與 指定 ONLY 怪物</h3>
 
 <table class="h1t" style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
 <tr class="hdr2">
@@ -800,7 +852,7 @@ target.innerHTML = html;
 <p style="margin-bottom:16px; text-align:justify;">　此機制最初由 <code>dq9tmap101.exe</code> 的作者 (43) 發現，並命名為 <strong style="color:#fff;">ElistOfs (Enemy List Offsets)</strong>。但當時作者並未發現 <strong>Flag0</strong> 的存在，導致所有帶 Flag0 的地圖算出來的 ElistOfs 比真實值大很多，產生了大量的誤判（例如「敵減」被誤判為「ONLY」，「ONLY」被誤判為「敵無」）。
 <br>　除此之外，作者還犯了一個人為錯誤——當所有白方格鄰接四邊之和的總數÷2 ≧ 256 時，程式莫名其妙地把它減去 256，造成了「ElistOfs=1Exx~1Fxx 但卻是特殊樓層」的嚴重誤判 (也就是「敵無/敵減/ONLY 誤判為 無無無」)。
 <br>　由於作者後來遭到 5ch 網友排擠，<code>dq9tmap101.exe</code> 停止更新，這個誤判就這樣存在了 16 年。在此期間，<strong>Terence</strong> 於 2010 年 10 月發表的 <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#0ca;">Grotto Mechanics Guide</a>
- 初步提到了白方格過多導致的怪物不生成現象，但沒有進一步研究。而日本玩家群則靠著一張張地圖打出來比對，建立了不少資料庫 (例如 <a href="https://w.atwiki.jp/dq9-only" target="_blank" style="color:#0ca;">オンリー敵減(2種) wiki</a>，<strong>ぶぶづけ</strong> さん為 <code>dq9tmap101.exe</code> 做的 mapdata patch (網站已於 2026.3.31 關閉) 等)，但沒人從機制上探索。
+ 初步提到了白方格過多導致的怪物不生成現象，但沒有進一步研究。而日本玩家群則靠著一張張地圖打出來比對，建立了不少資料庫 (例如 <a href="https://w.atwiki.jp/dq9-only" target="_blank" style="color:#0ca;">オンリー敵減(2種) wiki</a>，<strong>ぶぶづけ</strong> 為 <code>dq9tmap101.exe</code> 做的 mapdata patch (他的<a href=http://bubudzuke.pa.land.to target="_blank" style="color:#0ca;">網站</a>已於 2026.03.31 關閉) 等)，但沒人從機制上探索。
 <br>　2025年12月，本工具的開發者委託 <strong>TKG</strong> 徹底分析了 <code>dq9tmap101.exe</code>，終於把 ElistOfs 的真相找出來了：</p>
 
 <h4 class="h1h4">ElistOfs 計算公式</h4>
@@ -882,7 +934,7 @@ target.innerHTML = html;
 </div>
 
 <div id="h1ListEN" style="display: none;">
-<h3 class="h1sec" style="margin-top:0;">Grotto Name</h3>
+<h3 class="h1sec" id="sec-mapname" style="margin-top:0;">Grotto Name</h3>
 <table class="h1t">
 <tr class="hdr"><td colspan="5" class="hdr" style="padding:4px;">English</td></tr>
 <tr>
@@ -916,58 +968,97 @@ target.innerHTML = html;
 </tr>
 </table>
 
-<details class="h1det" ontoggle="if(this.open) renderMapNamesTableEN()">
-<summary>📖 Prefix / Suffix / Locale list</summary>
-<div id="mapNamesContainerEN" style="margin-top:12px; max-height:400px; overflow-y:auto; border:1px solid #333;">
-<p style="color:#888; font-size:12px; padding:8px;">Now loading...</p></div>
-<script>
-function renderMapNamesTableEN() {
-const target = document.getElementById('mapNamesContainerEN');
-if (!target || target.innerHTML.includes('<table')) return; 
+<h3 class="h1sec" id="sec-naming">Prefix / Locale / Suffix / Lv</h3>
 
-const prefixes = typeof PREFIX_NAMES !== 'undefined' ? PREFIX_NAMES : null;
-const suffixes = typeof SUFFIX_NAMES !== 'undefined' ? SUFFIX_NAMES : null;
-const locales = typeof LOCALE_NAMES !== 'undefined' ? LOCALE_NAMES : null;
+<div class="h1box">
+<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<li><strong style="color:#39C5BB;">Prefix:</strong> determined by <span style="color:#cff;">B1F Monster Rank (SMR)</span>.</li>
+<li><strong style="color:#39C5BB;">Locale:</strong> determined by <span style="color:#cff;">Depth</span> and <span style="color:#cff;">Terrain Type (Type)</span> together.</li>
+<li><strong style="color:#39C5BB;">Suffix:</strong> determined by <span style="color:#cff;">Boss</span>.</li>
+<li><strong style="color:#39C5BB;">Lv:</strong>＝<code style="color:#fa0;">(Depth＋SMR＋Boss－4)×3±5</code>. Min: 1, Max: 99.</li>
+</ul>
+</div>
 
-let html = '<table style="width:100%; border-collapse:collapse; font-size:12px; text-align:center;">';
-html += '<tr class="hdr2" style="position:sticky; top:0;"><th style="padding:6px;">Type</th><th style="padding:6px;">Japanese</th><th style="padding:6px;">English</th><th style="padding:6px; width:40%;">My Notes</th></tr>';
-
-const buildRows = (title, obj) => {
-if(!obj || Object.keys(obj).length === 0) return `<tr><td colspan="4" class="g" style="padding:4px;">Cannot find ${title.replace('<br>','')}!</td></tr>`;
-let res = '';
-let keys = Object.keys(obj);
-for(let i=0; i<keys.length; i++) {
-let key = keys[i];
-let val = obj[key];
-let enTxt = '';
-let jpTxt = '';
-if (Array.isArray(val)) {
-enTxt = val[0] || '';
-jpTxt = val[1] || '';
-} else {
-jpTxt = val;
-}
-res += `<tr>`;
-if(i===0) res += `<td rowspan="${keys.length}" style="background:#112; border:1px solid #4a4a8a; padding:4px; text-align:center; font-weight:bold;">${title}</td>`;
-res += `<td class="w" style="padding:4px;">${jpTxt}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px; color:#88b;">${enTxt}</td>`;
-res += `<td style="padding:4px;"></td>`;
-res += `</tr>`;
-}
-return res;
-};
-
-html += buildRows('Prefix', prefixes);
-html += buildRows('Suffix', suffixes);
-html += buildRows('Locale', locales);
-html += '</table>';
-target.innerHTML = html;
-}
-</script>
+<details class="h1det">
+<summary>📖 Name Tables</summary>
+<div>
+<p style="margin-top:12px; color:#aaa;">Prefix</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">No.</th>
+<th style="padding:4px;">English</th>
+<th style="padding:4px;">Japanese</th>
+<th style="padding:4px;">No.</th>
+<th style="padding:4px;">English</th>
+<th style="padding:4px;">Japanese</th>
+</tr>
+<tr><td>1</td><td>Clay</td><td>はかなき</td><td>9</td><td>Steel</td><td>放たれし</td></tr>
+<tr><td>2</td><td>Rock</td><td>ちいさな</td><td>10</td><td>Silver</td><td>けだかき</td></tr>
+<tr><td>3</td><td>Granite</td><td>うす暗き</td><td>11</td><td>Gold</td><td>わななく</td></tr>
+<tr><td>4</td><td>Basalt</td><td>ゆらめく</td><td>12</td><td>Platinum</td><td>残された</td></tr>
+<tr><td>5</td><td>Graphite</td><td>ざわめく</td><td>13</td><td>Ruby</td><td>見えざる</td></tr>
+<tr><td>6</td><td>Iron</td><td>ねむれる</td><td>14</td><td>Emerald</td><td>あらぶる</td></tr>
+<tr><td>7</td><td>Copper</td><td>怒れる</td><td>15</td><td>Sapphire</td><td>とどろく</td></tr>
+<tr><td>8</td><td>Bronze</td><td>呪われし</td><td>16</td><td>Diamond</td><td>大いなる</td></tr>
+</table>
+<p style="margin-top:12px; color:#aaa;">Suffix</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">No.</th>
+<th style="padding:4px;">English</th>
+<th style="padding:4px;">Japanese</th>
+<th style="padding:4px;">No.</th>
+<th style="padding:4px;">English</th>
+<th style="padding:4px;">Japanese</th>
+</tr>
+<tr><td>1</td><td>Joy</td><td>花</td><td>9</td><td>Fear</td><td>運命</td></tr>
+<tr><td>2</td><td>Bliss</td><td>岩</td><td>10</td><td>Dread</td><td>魂</td></tr>
+<tr><td>3</td><td>Glee</td><td>風</td><td>11</td><td>Hurt</td><td>闇</td></tr>
+<tr><td>4</td><td>Doubt</td><td>空</td><td>12</td><td>Gloom</td><td>光</td></tr>
+<tr><td>5</td><td>Woe</td><td>獣</td><td>13</td><td>Doom</td><td>魔神</td></tr>
+<tr><td>6</td><td>Dolour</td><td>夢</td><td>14</td><td>Evil</td><td>星々</td></tr>
+<tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
+<tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr>
+</table>
+<p style="color:#aaa; margin-top:12px;">Locale</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">No.</th>
+<th style="padding:4px;">English</th>
+<th style="padding:4px;">Japanese</th>
+<th class="w" style="padding:4px;">X</th>
+<th style="padding:4px;">Appears in terrain</th>
+</tr>
+<tr><td>1</td><td>Cave</td><td>洞くつ</td><td>1</td><td>Caves・Ice・Water・Fire</td></tr>
+<tr><td>2</td><td>Tunnel</td><td>地下道</td><td>1</td><td>Ruins</td></tr>
+<tr><td>3</td><td>Mine</td><td>坑道</td><td>2</td><td>Caves・Ruins・Fire</td></tr>
+<tr><td>4</td><td>Crevasse</td><td>雪道</td><td>2</td><td>Ice</td></tr>
+<tr><td>5</td><td>Marsh</td><td>沼地</td><td>2</td><td>Water</td></tr>
+<tr><td>6</td><td>Lair</td><td>アジト</td><td>3</td><td>Caves・Ruins</td></tr>
+<tr><td>7</td><td>Icepit</td><td>氷穴</td><td>3</td><td>Ice</td></tr>
+<tr><td>8</td><td>Lake</td><td>地底湖</td><td>3</td><td>Water</td></tr>
+<tr><td>9</td><td>Crater</td><td>火口</td><td>3</td><td>Fire</td></tr>
+<tr><td>10</td><td>Path</td><td>道</td><td>4</td><td>Caves・Ruins</td></tr>
+<tr><td>11</td><td>Snowhall</td><td>雪原</td><td>4</td><td>Ice</td></tr>
+<tr><td>12</td><td>Moor</td><td>湿原</td><td>4</td><td>Water</td></tr>
+<tr><td>13</td><td>Dungeon</td><td>牢ごく</td><td>4</td><td>Fire</td></tr>
+<tr><td>14</td><td>Crypt</td><td>墓場</td><td>5</td><td>Caves・Ruins・Ice・Water・Fire</td></tr>
+<tr><td>15</td><td>Nest</td><td>巣</td><td>6</td><td>Caves・Fire</td></tr>
+<tr><td>16</td><td>Ruins</td><td>遺跡</td><td>6</td><td>Ruins</td></tr>
+<tr><td>17</td><td>Tundra</td><td>凍土</td><td>6</td><td>Ice</td></tr>
+<tr><td>18</td><td>Waterway</td><td>水脈</td><td>6</td><td>Water</td></tr>
+<tr><td>19</td><td>World</td><td>世界</td><td>7</td><td>Caves・Ruins・Ice・Water・Fire</td></tr>
+<tr><td>20</td><td>Abyss</td><td>奈落</td><td>8</td><td>Caves</td></tr>
+<tr><td>21</td><td>Maze</td><td>迷宮</td><td>8</td><td>Ruins</td></tr>
+<tr><td>22</td><td>Glacier</td><td>氷河</td><td>8</td><td>Ice</td></tr>
+<tr><td>23</td><td>Chasm</td><td>眠る地</td><td>8</td><td>Water</td></tr>
+<tr><td>24</td><td>Void</td><td>じごく</td><td>8</td><td>Fire</td></tr>
+</table>
+</div>
 </details>
 
-<h3 class="h1sec" style="margin-top:0;">Location</h3>
-<p style="margin-bottom:8px;">Location is the spot that the map entrance located on the overworld.<br>FQ (Final Quality) determines the maximum range of possible locations:</p>
+<h3 class="h1sec" id="sec-location" style="margin-top:0;">Location</h3>
+<p style="margin-bottom:8px;">Location is the spot that the map entrance located on the overworld.<br><a href="#sec-bq-fq" style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">FQ (Final Quality)</a> determines the maximum range of possible locations:</p>
 
 <table class="h1t" style="width:100%; max-width:300px;">
 <tr class="hdr">
@@ -1184,7 +1275,7 @@ target.innerHTML = html;
 </p>
 </div>
 </details>
-<h3 class="h1sec">Rank &amp; Seed</h3>
+<h3 class="h1sec" id="sec-rank-seed">Rank &amp; Seed</h3>
 <p style="margin-bottom:12px; color:#aaa;">A treasure map is nominally defined by its <span style="color:#fff;">grotto name</span>, but internally it is constructed from two hidden parameters: <strong style="color:#0ff;">Rank</strong> and <strong style="color:#f8f;">Seed</strong>.<br>The core principle of this tool is to determine the Rank and Seed — the "ID number" of each map — based on the various nominal features you input.</p>
 
 <div style="background:#112; border-left:3px solid #f8f; padding:8px 12px; margin-bottom:16px;">
@@ -1199,7 +1290,7 @@ target.innerHTML = html;
 
 <div class="h1box2">
 <h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
-<p style="color:#ccc; margin-bottom:8px;">The <strong>Final Quality (FQ)</strong> mentioned below is divided into 12 intervals, which define the Rank.</p>
+<p style="color:#ccc; margin-bottom:8px;">The <a href="#sec-bq-fq" style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final Quality (FQ)</strong></a> mentioned below is divided into 12 intervals, which define the Rank.</p>
 
 <table class="h1t" style="font-size:11px;">
 <tr class="hdr2">
@@ -1222,7 +1313,7 @@ target.innerHTML = html;
 </table>
 </div>
 
-<h3 class="h1sec">Base Quality (BQ) &amp; Final Quality (FQ)</h3>
+<h3 class="h1sec" id="sec-bq-fq">Base Quality (BQ) &amp; Final Quality (FQ)</h3>
 
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base Quality (BQ)</strong><br>
@@ -1236,27 +1327,29 @@ target.innerHTML = html;
 <code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">FQ = BQ±10%</code>
 <br><span style="color:#aaa;">FQ has a minimum of 2 and a maximum of 248. The Rank of a map is determined by which interval its FQ value falls into.</span>
 <br><br><span style="color:#aaa;">When searching, enter the specific BQ value in the box on the right.</span>
-<br><span style="color:#aaa;">Selecting "1" in the dropdown on the left searches for maps where only one BQ value can produce that map; selecting "1'" searches for maps where at least one location can only be produced by a single BQ value.</span>
+<br><span style="color:#aaa;">For the dropdown on the left searches:</span>
+<br><strong>1</strong>: The map can only be generated by exactly one BQ.
+<br><strong>1'</strong>: One of the map's valid locations can only be generated by exactly one BQ.
 </div>
 
 <details class="h1det">
-<summary>📖 The 3-step map generation process</summary>
+<summary>📖 Map Generation Process</summary>
 <div>
 <ol style="padding-left:20px; color:#ccc; line-height:1.6;">
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Determine the actual value of ±10%</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Determine the map Seed</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Determine the map entrance location</strong></li>
 </ol>
-<p>After the 3-step for each process, the game has 65,536 grotto combinations in total. Choosing one of them consumes 1/521,875 seconds — nearly 8 times per second. No human possesses the reflexes to control the specific combination at this speed. Therefore, precisely controlling the generation of a specific map by human input alone is impossible on real hardware.</p>
+<p>Processing each map takes 1/521,875 seconds. Each circle has 65,536 maps —— so the map generation runs nearly 8 circles per second. No human possesses the reflexes to control this speed. Therefore, precisely controlling the generation of a specific map by human input alone is impossible on real hardware.</p>
 </div>
 </details>
-<h3 class="h1sec">Type</h3>
 
+<h3 class="h1sec" id="sec-terrain">Type</h3>
 <div class="h1box">
 <p style="margin-bottom:8px; color:#ccc;">There are <strong style="color:#fa0;">5 terrain types: Caves, Ruins, Ice, Water, and Fire</strong>. Caves has 30%, Ruins has 40%, and the rest have 10% each. Certain quests require maps with a specific terrain type and a specific FloorMR to complete.</p>
 
 <ul style="padding-left:20px; color:#aaa; line-height:1.7;">
-<li><strong style="color:#39C5BB;">Ruins:</strong> When a monster spawns at the crossroad, it is <span style="color:#f88;">easy to get blocked</span>.</li>
+<li><strong style="color:#39C5BB;">Ruins:</strong> When a monster spawns at the corridor entrance, it is <span style="color:#f88;">easy to get blocked</span>.</li>
 <li><strong style="color:#39C5BB;">Caves & Water:</strong> The edges of open areas have protruding structures, forcing the player to walk a bit.</li>
 <li><strong style="color:#39C5BB;">Caves & Ice & Fire:</strong> Open areas have small pebble-like obstacles that require careful avoidance when moving.</li>
 <li><strong style="color:#39C5BB;">Caves (FloorMR 10-11):</strong> The monster Stale Whale can <span style="color:#f8f;">completely block all junctions and corridors</span>, severely hindering the player's ability to quickly reach the BOSS from the entrance. Other types have less severe issues.</li>
@@ -1264,7 +1357,7 @@ target.innerHTML = html;
 </ul>
 </div>
 
-<h3 class="h1sec">SMR, Depth, Boss</h3>
+<h3 class="h1sec" id="sec-smr-depth-boss">SMR, Depth, Boss</h3>
 
 <div style="margin-bottom:12px; font-size:12px;">
 <strong style="color:#0ff;">Formula for a specific floor's Monster Rank (FloorMR):</strong><br>
@@ -1342,7 +1435,7 @@ target.innerHTML = html;
 </tr>
 </table>
 
-<details class="h1det">
+<details class="h1det" id="det-boss-names">
 <summary>📖 Boss Name</summary>
 <div>
 <table class="h1t" style="margin-top:8px;">
@@ -1367,7 +1460,7 @@ target.innerHTML = html;
 </div>
 </details>
 
-<h3 class="h1sec">Bug Terrain</h3>
+<h3 class="h1sec" id="sec-bug-terrain">Bug Terrain</h3>
 <p style="margin-bottom:12px; color:#ccc; font-size:12px;">Due to certain mechanisms in DQ9's map generation, the following bizarre phenomena can occur.</p>
 
 <table class="h1t" style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
@@ -1377,7 +1470,7 @@ target.innerHTML = html;
 </tr>
 <tr>
 <td class="bug">Nipple</td>
-<td class="bugd">A chest embedded inside a wall. In Fire maps, it appears to be floating in mid-air.<br>※ "Chestless" means the only-1 chest on the floor is embedded inside a wall.<br><span style="color:#888;">This name originates from a <a href=https://kako.5ch.net/test/read.cgi/ff/1251713439 target=_blank style="color:#aaa;">5ch thread</a>. OP mentioned poking a chest with the DS stylus, then #2 joked about poking his nipples too, which derailed the whole thread into naming OP's grotto "Nipple Map". Since then, all maps with "chests floating in mid-air" have been categorized into Nipple Maps.</span><br><span style="color:#996;">Note: In 0000~7FFF, only 7 Seeds player can actually see the chest floating in the air: 07FE, 1811, 2416, 2489, 5808, 623C, 7930.</span></td>
+<td class="bugd">Originally a term for a chest "floating in mid-air" on certain Fire maps.<br>After the mechanism was identified, chests "embedded inside a wall" were also grouped under the same name.<br>If a floor contains only a single chest embedded in the wall, it is called "Chestless."<br><span style="color:#888;">This name originates from a <a href=https://kako.5ch.net/test/read.cgi/ff/1251713439 target=_blank style="color:#aaa;">5ch thread</a>. OP mentioned poking a chest with the DS stylus, then #2 joked about poking his nipples too, which derailed the whole thread into naming OP's grotto "Nipple Map". Since then, all maps with "chests floating in mid-air" have been categorized into Nipple Maps.</span><br><span style="color:#996;">Note: In 0000~7FFF, only 7 Seeds player can actually see the chest floating in mid-air: 07FE, 1811, 2416, 2489, 5808, 623C, 7930.</span></td>
 </tr>
 <tr>
 <td class="bug">Chamber</td>
@@ -1403,17 +1496,54 @@ target.innerHTML = html;
 <details class="h1det">
 <summary>📖 Mechanism</summary>
 <div>
-<h4 class="h1h4" style="margin-top:8px;">Nipple, Chamber</h4>
-<p style="margin-bottom:16px; text-align:justify;">　During map generation, the system first uses Binary Space Partitioning (BSP) to divide the floor into multiple regions, carves out a room in each region, and then draws corridors along the partition lines to connect all rooms. Next comes the "erosion" phase: based on the number of surrounding walls for each tile, the system decides whether to keep it as floor or fill it back in as wall. Erosion is unaware of which corridors are the only passageway, so it may fill in a 1-tile-wide corridor, completely isolatming some rooms. When placing chests afterward, the system randomly picks coordinates within a room's boundary, skipping only tiles that already contain stairs or chests — it does not check whether the tile is a wall, nor whether the player can reach it. If a chest lands on a tile surrounded by walls on all four sides, it becomes embedded in the center of a wall, completely invisible to the player — this is <b>Nipple</b> (乳首). If a corridor is severed by erosion but the tiles themselves are preserved, it becomes a white passage sealed off by walls that cannot be entered — this is <b>Chamber</b> (イケない通路). The Japanese term チラリズム (Nipple+Chamber) refers to the case where a 1x2 or larger Chamber contains a chest inside it.</p>
-<h4 class="h1h4">Ghost Stairs, Softlock</h4>
-<p style="margin-bottom:16px; text-align:justify;">　When placing stairs, the system first randomly selects an up-staircase candidate position that has passed all checks, writes it to the map, and then selects a down-staircase candidate. If the down-staircase is rejected (e.g. stuck in a corner), the system goes back and re-selects the up-staircase — but the previously written up-staircase is unwiped, remaining in the map as a "Ghost Staircase": it looks like an ordinary floor tile, but the underlying data says it is stairs. In most cases, ghost staircases are just harmless remnants. However, when the map structure is extremely constrained and all 100 candidates fail the checks, the system enters overflow mode: it skips all checks and places the up-staircase directly, then resets the counter to zero and starts over. If the down-staircase fails again, another 100 rejections must accumulate before overflow triggers again. Each overflow may leave behind a new ghost staircase, and these ghost staircases can contaminate the adjacency checks of neighboring tiles, causing subsequent down-staircase candidates to fail as well. The final staircase placement may result in an up-staircase placed right next to a chest, forming an impassable barrier that splits the map into two disconnected areas — going down traps you, going up leaves no way back. This is Softlock (危険？ハマるフロア).
-<br>　For a floor to have all 100 candidates fail, the following condition must be met: all open areas are 2x2, and everything else is corridors.
-<br>　Not every floor of this type produces a stairs-adjacent-to-chest layout. The fact that 5BC3 B4F / 5BC4 B3F produce this layout is truly exceptional.</p>
+
+<h4 class="h1h4" style="margin-top:8px;">Nipple, Chamber, チラリズム</h4>
+<p style="margin-bottom:8px;">Floor generation proceeds as follows:</p>
+<ol style="padding-left:20px; margin-bottom:12px;">
+<li>Binary Space Partitioning (BSP) divides the floor into multiple regions, and a room is carved out in each region.</li>
+<li>Corridors are drawn along the partition lines to connect all rooms.</li>
+<li>"Erosion" phase: for each tile, the system decides — based on the number of surrounding walls — whether to keep it as floor or fill it back in as wall.
+<strong style="color:#f88;">Erosion does not recognize which corridors are the only passageway.</strong> As a result, the entrance of a corridor may be filled with walls, completely isolating the room inside.</li>
+<li>Chest placement: coordinates are randomly chosen within a room's boundary. Only tiles that already contain stairs or chests are skipped.
+<strong style="color:#f88;">Whether the tile is a wall, or whether the player can reach it, is never checked.</strong></li>
+</ol>
+<p style="margin-bottom:8px;">The above flow produces the following phenomena:</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li><strong>Nipple (乳首):</strong> a chest is placed on a tile surrounded by walls on all four sides, becoming embedded in the wall. It is completely invisible in-game, or appears to float in mid-air on Fire terrain.</li>
+<li><strong>Chamber (イケない通路):</strong> erosion severs the entrance of a corridor, leaving an unreachable space sealed off by walls.</li>
+<li><strong>チラリズム:</strong> a state where a 1x2 or larger Chamber contains a chest inside it.</li>
+</ul>
+
+<h4 class="h1h4">Ghost Stairs, Softlock (危険？ハマるフロア)</h4>
+<p style="margin-bottom:8px;">Staircase placement proceeds as follows:</p>
+<ol style="padding-left:20px; margin-bottom:12px;">
+<li>An up-staircase candidate tile is randomly selected and, if it passes all checks, written to the map.</li>
+<li>The corresponding down-staircase candidate is then selected.</li>
+<li>Down-staircase check passes → staircase placement complete.</li>
+<li>Down-staircase check fails (e.g. stuck in a corner) → return to step 1.<br>
+<strong style="color:#f88;">However, the previously written up-staircase is not erased.</strong> It remains in the map as a "Ghost Staircase": it looks like an ordinary floor tile, but the underlying data says it is stairs.</li>
+</ol>
+<p style="margin-bottom:8px;">Normally, ghost staircases are just harmless remnants. The problem arises when the map structure is extremely constrained:</p>
+<ol style="padding-left:20px; margin-bottom:12px;">
+<li>100 consecutive up-staircase checks fail → the system enters overflow mode.</li>
+<li>Overflow mode: all checks are skipped, the up-staircase is placed directly, the counter is reset to zero, and the down-staircase check proceeds.</li>
+<li>If the down-staircase check also fails → return to step 1. Due to map constraints, another 99 failures occur (100 total), triggering overflow again.</li>
+</ol>
+<p style="margin-bottom:8px;">In other words, on maps where overflow occurs:</p>
+<ul style="padding-left:20px; margin-bottom:12px;">
+<li>An up-staircase is placed only <strong>1 in every 100</strong> attempts.</li>
+<li>A ghost staircase is left behind <strong>1 in every 100</strong> attempts.</li>
+<li>Ghost staircases affect the adjacency checks of neighboring tiles, causing subsequent down-staircase checks to fail in a chain reaction.</li>
+</ul>
+<p style="margin-bottom:16px;">　When the final placement puts an up-staircase right next to a chest, it forms an impassable barrier that splits the map into two disconnected areas — going down traps you, going up leaves no way back. This is <b>Softlock (危険？ハマるフロア)</b>.</p>
+<p style="margin-bottom:4px;">　Condition for a floor where 100 consecutive checks fail: all open areas are 2x2, and everything else is corridors.</p>
+<p style="margin-bottom:16px;">　However, not every floor meeting this condition produces this layout. The fact that 5BC3 B4F / 5BC4 B3F produce it is an exceptional case.</p>
+
 <h4 class="h1h4">Wall-Embedded Stairs</h4>
-<p style="margin-bottom:8px; text-align:justify;">　Based on the mechanism described above, if all 100 up-staircase candidates on a floor fail the checks and the system enters overflow mode (skipping all checks), it would theoretically be possible for an up-staircase to be placed inside a wall. However, since floors where all 100 candidates fail are exceedingly rare — only 4 layout types yielding 16 search results in total — this situation has never actually occurred.</p>
+<p style="margin-bottom:8px; text-align:justify;">　Based on the mechanism above, if all 100 up-staircase candidates on a floor fail the checks and the system enters overflow mode, it would theoretically be possible for an up-staircase to be placed inside a wall. However, since floors where all 100 candidates fail are extremely rare — only 4 layout types yielding 16 search results in total — this situation has never actually occurred.</p>
 </div>
 </details>
-<h3 class="h1sec">Wandering Monster Bug Floors (Special Floors, ElistOfs)</h3>
+<h3 class="h1sec" id="sec-special-floor">Wandering Monster Bug Floors (Special Floors, ElistOfs)</h3>
 
 <table class="h1t" style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
 <tr class="hdr2">
@@ -1548,7 +1678,7 @@ target.innerHTML = html;
 </div>
 
 <div id="h1ListJP" style="display: none;">
-<h3 class="h1sec" style="margin-top:0;">地図名</h3>
+<h3 class="h1sec" id="sec-mapname" style="margin-top:0;">地図名</h3>
 <table class="h1t">
 <tr class="hdr"><td colspan="5" class="hdr" style="padding:4px;">English</td></tr>
 <tr>
@@ -1582,59 +1712,96 @@ target.innerHTML = html;
 </tr>
 </table>
 
-<details class="h1det" ontoggle="if(this.open) renderMapNamesTableJP()">
+<h3 class="h1sec" id="sec-naming">地図名 解説</h3>
+<div class="h1box">
+<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<li><strong style="color:#39C5BB;">地図名1：</strong><span style="color:#cff;">B1F 敵ランク (SMR)</span> によって決定。</li>
+<li><strong style="color:#39C5BB;">地図名2：</strong><span style="color:#cff;">BOSS の種類</span> によって決定。</li>
+<li><strong style="color:#39C5BB;">地図名3：</strong><span style="color:#cff;">深さ</span> と <span style="color:#cff;">地形</span> によって決定。</li>
+<li><strong style="color:#39C5BB;">Lv</strong>＝<code style="color:#fa0;">(深さ＋SMR＋BOSS種類－4)×3±5</code>。最小は 1、最大は 99。</li>
+</ul>
+</div>
+
+<details class="h1det">
 <summary>📖 地図名 一覧</summary>
-<div id="mapNamesContainerJP" style="margin-top:12px; max-height:400px; overflow-y:auto; border:1px solid #333;">
-<p style="color:#888; font-size:12px; padding:8px;">読み込み中...</p></div>
-<script>
-// この関数は展開時に自動的にオブジェクトを読み込み、テーブルを生成する
-function renderMapNamesTableJP() {
-const target = document.getElementById('mapNamesContainerJP');
-if (!target || target.innerHTML.includes('<table')) return; 
-
-const prefixes = typeof PREFIX_NAMES !== 'undefined' ? PREFIX_NAMES : null;
-const suffixes = typeof SUFFIX_NAMES !== 'undefined' ? SUFFIX_NAMES : null;
-const locales = typeof LOCALE_NAMES !== 'undefined' ? LOCALE_NAMES : null;
-
-let html = '<table style="width:100%; border-collapse:collapse; font-size:12px; text-align:center;">';
-html += '<tr style="background:#1a1a3a; color:#0ca; position:sticky; top:0;"><th style="border:1px solid #4a4a8a; padding:6px;">種別</th><th style="border:1px solid #4a4a8a; padding:6px;">日本語名 (JP)</th><th style="border:1px solid #4a4a8a; padding:6px;">英語名 (EN)</th><th style="border:1px solid #4a4a8a; padding:6px; width:40%;">メモ</th></tr>';
-
-const buildRows = (title, obj) => {
-if(!obj || Object.keys(obj).length === 0) return `<tr><td colspan="4" style="border:1px solid #4a4a8a; padding:4px; text-align:center; color:#888;">${title.replace('<br>','')} のデータが見つかりません</td></tr>`;
-let res = '';
-let keys = Object.keys(obj);
-for(let i=0; i<keys.length; i++) {
-let key = keys[i];
-let val = obj[key];
-let enTxt = '';
-let jpTxt = '';
-if (Array.isArray(val)) {
-enTxt = val[0] || '';
-jpTxt = val[1] || '';
-} else {
-jpTxt = val;
-}
-res += `<tr>`;
-if(i===0) res += `<td rowspan="${keys.length}" style="background:#112; border:1px solid #4a4a8a; padding:4px; text-align:center; font-weight:bold;">${title}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px; color:#fff;">${jpTxt}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px; color:#88b;">${enTxt}</td>`;
-res += `<td style="border:1px solid #4a4a8a; padding:4px;"></td>`;
-res += `</tr>`;
-}
-return res;
-};
-
-html += buildRows('地図名1<br>PREFIX', prefixes);
-html += buildRows('地図名2<br>SUFFIX', suffixes);
-html += buildRows('地図名3<br>LOCALE', locales);
-html += '</table>';
-target.innerHTML = html;
-}
-</script>
+<div>
+<p style="margin-top:12px; color:#aaa;">地図名1</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">No</th>
+<th style="padding:4px;">英語</th>
+<th style="padding:4px;">日本語</th>
+<th style="padding:4px;">No</th>
+<th style="padding:4px;">英語</th>
+<th style="padding:4px;">日本語</th>
+</tr>
+<tr><td>1</td><td>Clay</td><td>はかなき</td><td>9</td><td>Steel</td><td>放たれし</td></tr>
+<tr><td>2</td><td>Rock</td><td>ちいさな</td><td>10</td><td>Silver</td><td>けだかき</td></tr>
+<tr><td>3</td><td>Granite</td><td>うす暗き</td><td>11</td><td>Gold</td><td>わななく</td></tr>
+<tr><td>4</td><td>Basalt</td><td>ゆらめく</td><td>12</td><td>Platinum</td><td>残された</td></tr>
+<tr><td>5</td><td>Graphite</td><td>ざわめく</td><td>13</td><td>Ruby</td><td>見えざる</td></tr>
+<tr><td>6</td><td>Iron</td><td>ねむれる</td><td>14</td><td>Emerald</td><td>あらぶる</td></tr>
+<tr><td>7</td><td>Copper</td><td>怒れる</td><td>15</td><td>Sapphire</td><td>とどろく</td></tr>
+<tr><td>8</td><td>Bronze</td><td>呪われし</td><td>16</td><td>Diamond</td><td>大いなる</td></tr>
+</table>
+<p style="margin-top:12px; color:#aaa;">地図名2</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">No</th>
+<th style="padding:4px;">英語</th>
+<th style="padding:4px;">日本語</th>
+<th style="padding:4px;">No</th>
+<th style="padding:4px;">英語</th>
+<th style="padding:4px;">日本語</th>
+</tr>
+<tr><td>1</td><td>Joy</td><td>花</td><td>9</td><td>Fear</td><td>運命</td></tr>
+<tr><td>2</td><td>Bliss</td><td>岩</td><td>10</td><td>Dread</td><td>魂</td></tr>
+<tr><td>3</td><td>Glee</td><td>風</td><td>11</td><td>Hurt</td><td>闇</td></tr>
+<tr><td>4</td><td>Doubt</td><td>空</td><td>12</td><td>Gloom</td><td>光</td></tr>
+<tr><td>5</td><td>Woe</td><td>獣</td><td>13</td><td>Doom</td><td>魔神</td></tr>
+<tr><td>6</td><td>Dolour</td><td>夢</td><td>14</td><td>Evil</td><td>星々</td></tr>
+<tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
+<tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr>
+</table>
+<p style="color:#aaa; margin-top:12px;">地図名3</p>
+<table class="h1t" style="margin-top:4px; font-size:11px;">
+<tr class="hdr">
+<th style="padding:4px;">No</th>
+<th style="padding:4px;">英語</th>
+<th style="padding:4px;">日本語</th>
+<th class="w" style="padding:4px;">X</th>
+<th style="padding:4px;">出現する地形</th>
+</tr>
+<tr><td>1</td><td>Cave</td><td>洞くつ</td><td>1</td><td>洞窟・氷・水・火山</td></tr>
+<tr><td>2</td><td>Tunnel</td><td>地下道</td><td>1</td><td>遺跡</td></tr>
+<tr><td>3</td><td>Mine</td><td>坑道</td><td>2</td><td>洞窟・遺跡・火山</td></tr>
+<tr><td>4</td><td>Crevasse</td><td>雪道</td><td>2</td><td>氷</td></tr>
+<tr><td>5</td><td>Marsh</td><td>沼地</td><td>2</td><td>水</td></tr>
+<tr><td>6</td><td>Lair</td><td>アジト</td><td>3</td><td>洞窟・遺跡</td></tr>
+<tr><td>7</td><td>Icepit</td><td>氷穴</td><td>3</td><td>氷</td></tr>
+<tr><td>8</td><td>Lake</td><td>地底湖</td><td>3</td><td>水</td></tr>
+<tr><td>9</td><td>Crater</td><td>火口</td><td>3</td><td>火山</td></tr>
+<tr><td>10</td><td>Path</td><td>道</td><td>4</td><td>洞窟・遺跡</td></tr>
+<tr><td>11</td><td>Snowhall</td><td>雪原</td><td>4</td><td>氷</td></tr>
+<tr><td>12</td><td>Moor</td><td>湿原</td><td>4</td><td>水</td></tr>
+<tr><td>13</td><td>Dungeon</td><td>牢ごく</td><td>4</td><td>火山</td></tr>
+<tr><td>14</td><td>Crypt</td><td>墓場</td><td>5</td><td>洞窟・遺跡・氷・水・火山</td></tr>
+<tr><td>15</td><td>Nest</td><td>巣</td><td>6</td><td>洞窟・火山</td></tr>
+<tr><td>16</td><td>Ruins</td><td>遺跡</td><td>6</td><td>遺跡</td></tr>
+<tr><td>17</td><td>Tundra</td><td>凍土</td><td>6</td><td>氷</td></tr>
+<tr><td>18</td><td>Waterway</td><td>水脈</td><td>6</td><td>水</td></tr>
+<tr><td>19</td><td>World</td><td>世界</td><td>7</td><td>洞窟・遺跡・氷・水・火山</td></tr>
+<tr><td>20</td><td>Abyss</td><td>奈落</td><td>8</td><td>洞窟</td></tr>
+<tr><td>21</td><td>Maze</td><td>迷宮</td><td>8</td><td>遺跡</td></tr>
+<tr><td>22</td><td>Glacier</td><td>氷河</td><td>8</td><td>氷</td></tr>
+<tr><td>23</td><td>Chasm</td><td>眠る地</td><td>8</td><td>水</td></tr>
+<tr><td>24</td><td>Void</td><td>じごく</td><td>8</td><td>火山</td></tr>
+</table>
+</div>
 </details>
 
-<h3 class="h1sec" style="margin-top:0;">場所</h3>
-<p style="margin-bottom:8px;">地図入口の場所。Final 値によって範囲が変わる：</p>
+<h3 class="h1sec" id="sec-location" style="margin-top:0;">場所</h3>
+<p style="margin-bottom:8px;">地図入口の場所。<a href="#sec-bq-fq" style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">Final 値</a> によって範囲が変わる：</p>
 
 <table class="h1t" style="width:100%; max-width:300px;">
 <tr class="hdr">
@@ -1851,7 +2018,7 @@ target.innerHTML = html;
 </p>
 </div>
 </details>
-<h3 class="h1sec">Rank、Seed</h3>
+<h3 class="h1sec" id="sec-rank-seed">Rank、Seed</h3>
 <p style="margin-bottom:12px; color:#aaa;">宝の地図は <span style="color:#fff;">地図名</span> で構成されているように見えるが、実際には <strong style="color:#0ff;">Rank</strong> と <strong style="color:#f8f;">Seed</strong> という 2 つの隠しパラメータで構成されている。<br>本ツールの基本的な使い方は、入力された各種の特徴から、各地図の「身分証明書番号」である Rank と Seed を特定することにある。</p>
 
 <div style="background:#112; border-left:3px solid #f8f; padding:8px 12px; margin-bottom:16px;">
@@ -1864,7 +2031,7 @@ target.innerHTML = html;
 </div>
 <div class="h1box2">
 <h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
-<p style="color:#ccc; margin-bottom:8px;">下記の <strong>Final 値</strong> を 12 区間に分けたもの。</p>
+<p style="color:#ccc; margin-bottom:8px;">下記の <a href="#sec-bq-fq" style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final 値</strong></a> を 12 区間に分けたもの。</p>
 
 <table class="h1t" style="font-size:11px;">
 <tr class="hdr2">
@@ -1887,19 +2054,19 @@ target.innerHTML = html;
 </table>
 </div>
 
-<h3 class="h1sec">Base 値、Final 値</h3>
+<h3 class="h1sec" id="sec-bq-fq">Base 値、Final 値</h3>
 
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base 値</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Base値 = 主人公の全職の最高Lv + 主人公の全職の最高転生回数×5 + 今潜っている地図Lv</code>
+<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Base値＝主人公の全職の最高Lv＋主人公の全職の最高転生回数×5＋今潜っている地図Lv</code>
 </div>
 
 <div style="margin-bottom:16px;">
 <strong style="color:#0ff;">Final 値</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Final値 = Base値±10%</code>
+<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Final値＝Base値±10%</code>
 <br><span style="color:#aaa;">最小値は 2、最大値は 248。地図の Final 値がどの区間に入るかで、その地図の Rank が決まる。</span>
 <br><br><span style="color:#aaa;">検索時、右側のボックスに Base 値 の具体値を入力する。</span>
-<br><span style="color:#aaa;">左側のドロップダウンで「1」を選ぶと、その地図を生成できる Base 値 が 1 つしかない地図を検索する。「1'」を選ぶと、少なくとも 1 つの場所でその地図を生成できる Base 値 が 1 つしかない地図を検索する。</span>
+<br><span style="color:#aaa;">左側のドロップダウンで「1」を選ぶと、全ての場所において Base 値 が 1 つしかない地図を検索する。「1'」を選ぶと、うち1つの場所において Base 値 が 1 つしかない地図を検索する。</span>
 </div>
 
 <details class="h1det">
@@ -1907,13 +2074,15 @@ target.innerHTML = html;
 <div>
 <ol style="padding-left:20px; color:#ccc; line-height:1.6;">
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">「±10%」の具体値を決める</strong></li>
-<li style="margin-bottom:8px;"><strong style="color:#0ca;">Seed を決める</strong></li>
-<li style="margin-bottom:8px;"><strong style="color:#0ca;">場所を決める</strong></li>
+<li style="margin-bottom:8px;">
+<strong style="color:#0ca;">Seed を決める</strong></li>
+<li style="margin-bottom:8px;">
+<strong style="color:#0ca;">場所を決める</strong></li>
 </ol>
-<p>全てを決めた後、65536 種類の地図の組合せが立ち上がる。その中から1枚を抽出するの所要時間は 1/521,875 秒——つまり 1 秒間に約 8 周回。人間にこの速度を制御できる反射神経を持たないため、人力で特定の地図を生成させることは実機上では不可能。</p>
+<p>地図 1 枚の処理時間は 1/521,875 秒、一周 65536 枚——つまり 1 秒間に約 8 周を処理した。人間にこの速度を制御できる反射神経を持たないため、人力で特定の地図を生成させることは実機上では不可能。</p>
 </div>
 </details>
-<h3 class="h1sec">地形</h3>
+<h3 class="h1sec" id="sec-terrain">地形</h3>
 
 <div class="h1box">
 <p style="margin-bottom:8px; color:#ccc;">地形は <strong style="color:#fa0;">洞窟・遺跡・氷・水・火山</strong> の 5 種類。確率は 洞窟 30%、遺跡 40%、その他各 10%。一部のクエストでは「指定された地形」と「指定された敵ランク」の地図を入手する必要がある。</p>
@@ -1927,11 +2096,11 @@ target.innerHTML = html;
 </ul>
 </div>
 
-<h3 class="h1sec">B1F 敵ランク、深さ、BOSS</h3>
+<h3 class="h1sec" id="sec-smr-depth-boss">B1F 敵ランク (SMR)、深さ、BOSS</h3>
 
 <div style="margin-bottom:12px; font-size:12px;">
 <strong style="color:#0ff;">特定フロアの敵ランク (FloorMR) の計算式：</strong><br>
-<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR = B1F敵ランク(SMR) + int[(フロア数-1)÷4]</code>
+<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR＝B1F敵ランク(SMR)＋int[(フロア数－1)÷4]</code>
 </div>
 
 <table class="h1t" style="100%; font-size:11px;">
@@ -2005,7 +2174,7 @@ target.innerHTML = html;
 </tr>
 </table>
 
-<details class="h1det">
+<details class="h1det" id="det-boss-names">
 <summary>📖 BOSS の名前</summary>
 <div>
 <table class="h1t" style="margin-top:8px;">
@@ -2030,7 +2199,7 @@ target.innerHTML = html;
 </div>
 </details>
 
-<h3 class="h1sec">ネタ地形</h3>
+<h3 class="h1sec" id="sec-bug-terrain">ネタ地形</h3>
 <p style="margin-bottom:12px; color:#ccc; font-size:12px;">DQ9 の地図を生成する時、特定のメカニズムにより、下記のような奇妙な現象が発生する。</p>
 
 <table class="h1t" style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
@@ -2040,7 +2209,7 @@ target.innerHTML = html;
 </tr>
 <tr>
 <td class="bug">乳首</td>
-<td class="bugd">壁の中に埋め込まれた宝箱。火山の場合、空中に浮いているように見えることがある。<br><span style="color:#888;">この名称は 5ch の<a href=https://kako.5ch.net/test/read.cgi/ff/1251713439 target=_blank style="color:#aaa;">元スレ</a>に由来する。スレ主 (ぬるぽ氏) が DS のタッチペンで宝箱をツンツンする話をしたとき、2の人が「俺の乳首もツンツンしてくれ」と茶化し、その空気の流れでスレ主の地図が「乳首」と名付けられた。以降、「宝箱が空中に浮いている」地図はすべて「乳首地図」と呼ばれるようになった。</span><br><span style="color:#996;">注：0000~7FFF の中、実機で空中に浮いている宝箱を見える Seed は以下 7 種類：07FE、1811、2416、2489、5808、623C、7930。</span></td>
+<td class="bugd">一部の火山マップに現れる「空中に浮いている」宝箱を指す呼び方だったが、その生成メカニズムが判明した後、「壁の中に封じ込められている」宝箱も同じカテゴリーに含めるようになった。1フロアに宝箱が1つしかなく、かつそれが壁内に封じ込められている場合は「箱無しフロア」と呼ぶ。<br><span style="color:#888;">この名称は 5ch の<a href=https://kako.5ch.net/test/read.cgi/ff/1251713439 target=_blank style="color:#aaa;">元スレ</a>に由来する。スレ主 (ぬるぽ氏) が DS のタッチペンで宝箱をツンツンする話をしたとき、2の人が「俺の乳首もツンツンしてくれ」と茶化し、その空気の流れでスレ主の地図が「乳首」と名付けられた。以降、「宝箱が空中に浮いている」地図はすべて「乳首地図」と呼ばれるようになった。</span><br><span style="color:#996;">注：0000~7FFF の中、実機で空中に浮いている宝箱を見える Seed は以下 7 種類：07FE、1811、2416、2489、5808、623C、7930。</span></td>
 </tr>
 <tr>
 <td class="bug">イケない通路</td>
@@ -2052,7 +2221,7 @@ target.innerHTML = html;
 </tr>
 <tr>
 <td class="bug">壁に埋まった階段</td>
-<td class="bugd">理論上は存在し得るが、実際には発生しない。原因は階段配置のメカニズムに関わる。</td>
+<td class="bugd">理論上は存在し得るが、実際には発生しない。その原因は階段配置のメカニズムに関わる。</td>
 </tr>
 <tr>
 <td class="bug">ゴースト階段</td>
@@ -2112,7 +2281,7 @@ target.innerHTML = html;
 <p style="margin-bottom:8px; text-align:justify;">　上記のメカニズムに基づき、あるフロアで 100 回連続で上り階段のチェックをパスできず、オーバーフローモードに入った場合、上り階段が壁の中に配置される可能性は理論上ある。しかし、100 回連続でチェックをパスできないフロアは極めて少なく、全部で 4 種 16 件の検索結果しかないため、実際にはこの現象は発生していない。</p>
 </div>
 </details>
-<h3 class="h1sec">特殊フロア (ElistOfs) と オンリーモンスター</h3>
+<h3 class="h1sec" id="sec-special-floor">特殊フロア (ElistOfs) と オンリーモンスター</h3>
 <table class="h1t" style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
 <tr class="hdr2">
 <th style="padding:6px; width:90px;">種別</th>
@@ -2160,8 +2329,8 @@ target.innerHTML = html;
 </ul>
 <h4 class="h1h4">「オンリー」を「敵無」「無無無」と誤判定した歴史</h4>
 <p style="margin-bottom:16px; text-align:justify;">　このメカニズムは <code>dq9tmap101.exe</code> の作者（43）氏によって最初に発見され、<strong style="color:#fff;">ElistOfs (Enemy List Offsets)</strong> と命名された。しかし、当時の作者は <strong>Flag0</strong> の存在に気づいておらず、Flag0 マスを持つすべての地図で算出された ElistOfs が実際の値より大幅に大きくなり、大量の誤判定を引き起こした（例：「敵減」が「オンリー」と誤判定し、「オンリー」が「敵無」と誤判定した）。
-<br>　さらに、作者はコーディング上のミスも犯していた——全ての白マスの隣接辺の合計値 ÷ 2 が 256 以上の場合、プログラムがなぜか 256 を減算しており、「ElistOfs = 1Exx〜1Fxx だが実際は特殊フロア」という深刻な誤判定が発生した（すなわち「敵無/敵減/オンリー を 無無無 として誤判定した」）。
-<br>　作者がその後 5ch ユーザーからハブられたことで <code>dq9tmap101.exe</code> の更新は停止し、この誤判定は 16 年間そのまま放置された。この間、<strong>Terence</strong> 氏が 2010 年 10 月に発表した <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#0ca;">Grotto Mechanics Guide</a> で白マス過多によるモンスターの出ない現象に簡単に触れたが、それ以上の調査は行われなかった。日本のプレイヤーコミュニティは地図を一枚ずつ発掘して照合し、データベースを構築した（例：<a href="https://w.atwiki.jp/dq9-only" target="_blank" style="color:#0ca;">オンリー敵減(2種) wiki</a>、<strong>ぶぶづけ</strong> 氏による <code>dq9tmap101.exe</code> 用 mapdata パッチ（サイトは 2026.3.31 に閉鎖）など）が、メカニズムの解明には至らなかった。
+<br>　さらに、全ての白マスの隣接辺の合計値 ÷ 2 が 256 以上の場合、プログラムがなぜか 256 を減算しており、「ElistOfs = 1Exx〜1Fxx だが実際は特殊フロア」という誤判定も発生した（すなわち「敵無/敵減/オンリー を 無無無 として誤判定した」）。
+<br>　作者がその後 5ch ユーザーからハブられたことで <code>dq9tmap101.exe</code> の更新は停止し、この誤判定は 16 年間そのまま放置された。この間、<strong>Terence</strong> 氏が 2010 年 10 月に発表した <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#0ca;">Grotto Mechanics Guide</a> で白マス過多によるモンスターの出ない現象に簡単に触れたが、それ以上の調査は行われなかった。日本のプレイヤーコミュニティは地図を一枚ずつ発掘して照合し、データベースを構築した（例：<a href="https://w.atwiki.jp/dq9-only" target="_blank" style="color:#0ca;">オンリー敵減(2種) wiki</a>、<strong>ぶぶづけ</strong> 氏による <code>dq9tmap101.exe</code> 用 mapdata パッチ（サイトは 2026.03.31 に閉鎖）など）が、メカニズムの解明には至らなかった。
 <br>　2025 年 12 月、本ツールの開発者が <strong>TKG</strong> 氏に依頼して <code>dq9tmap101.exe</code> を徹底的に分析した結果、ついに ElistOfs の真相が解明された：</p>
 <h4 class="h1h4">ElistOfs の計算式</h4>
 <ol style="padding-left:20px; margin-bottom:16px;"><li>Boundary = 4128 − 16W − 8X とする<br>W：そのフロアの白マス総数<br>X：左から右、上から下の順に各白マスを走査し、L + U の合計を求める（X = ΣL + ΣU）<br>L：左隣のマスも白マスなら L = 1、そうでなければ L = 0<br>U：上隣のマスも白マスなら U = 1、そうでなければ U = 0</li>
@@ -2239,12 +2408,9 @@ target.innerHTML = html;
 <p style="font-size:11px; color:#888;">フロア状態：(A) F = 7 (B) オンリーモンスターの ID が宝箱モンスターより前にある（例：はぐれメタル）</p>
 </div>
 </details>
+</div>
 
-</div>
-</div>
-</div>
-</div>
-</div>
+</div></div></div></div>
 
 <div id="h2Modal" class="modal-overlay" onclick="closeh2Modal(event)" style="z-index: 1002;">
 <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 650px;">
@@ -2294,7 +2460,7 @@ target.innerHTML = html;
 <ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
 <li>Find maps where you can obtain 2–3 specified items on the same floor by doing a <strong>Quickload</strong> (Solo or Party).</li>
 <li>For <strong>B9F items</strong>, search B9F; for all other items, search B3F or B4F.</li>
-<li><strong style="color:#f66;">⚠️ Note:</strong> This button is not for searching "Chest Monsters." (Defeatming a chest monster refreshes the internal timer, causing the next chest on this map that was supposed to spawn a chest monster to no longer do so.)</li>
+<li><strong style="color:#f66;">⚠️ Note:</strong> This button is not for searching "Chest Monsters." (Defeating a chest monster refreshes the internal timer, causing the next chest on this map that was supposed to spawn a chest monster to no longer do so.)</li>
 </ul>
 <h3 style="color:#ffd700;font-size:14px;margin:0 0 8px;">🔘 [Combo]</h3>
 <ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
@@ -2406,6 +2572,7 @@ target.innerHTML = html;
 <div id="h3TabJP" style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;" onclick="switchH3Tab('JP')">日本語</div>
 </div>
 <div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.7; color: #ccc;">
+
 <div id="h3ListTW" style="display: block;">
 <h3 class="h3sec" style="margin-top:0">🔍 搜尋模式</h3>
 <table class="h3t">
@@ -2522,6 +2689,14 @@ target.innerHTML = html;
 <li><strong>先制所需最小靈巧值：</strong>指定魯拉次數後，能於戰鬥中觸發「先制攻擊」所需的最低靈巧值門檻。</li>
 <li><strong>戰鬥中消耗的 AT 步數：</strong>在到達掉寶 Pattern 前，必須在戰鬥中手動消耗的 AT 步數。<span style="color:#aaa;">(依先制與否、怪物數量而變動；AT 搜尋必顯示，M 搜尋需指定 Pattern 後顯示)</span><br>消耗步數的手段：魔法、特技，以及可作道具使用的武器，詳見下表。</li>
 </ol>
+
+<details class="h1det" style="margin-bottom:16px;">
+<summary>📖 靈巧值計算公式</summary>
+<ul style="padding-left:16px; margin-bottom:4px;">
+<li><code>靈巧值＝ceil(AT÷32768×100-2)×20</code></li>
+<li>最小為 0 (顯示為 1)，若大於 999 則顯示為 1000</li>
+</ul>
+</details>
 
 <details class="h1det" style="margin-bottom:16px;">
 <summary>📖 戰鬥中消耗的 AT 步數「戰」的計算公式</summary>
@@ -2938,6 +3113,15 @@ target.innerHTML = html;
 </ul>
 <span style="color:#888;">※ 來源：TKG 反組譯解析</span>
 </div>
+
+<details class="h1det" style="margin-bottom:16px;">
+<summary>📖 掉寶判定的計算公式</summary>
+<ul style="padding-left:16px; margin-bottom:4px;">
+<li><strong>普通掉寶判定：</strong><code>AT≤掉寶率×32768</code></li>
+<li><strong>盜賊秘傳書判定：</strong><code>AT≤int[32767÷int(掉寶率的倒數×100÷Lv)]+1</code></li>
+</ul>
+</details>
+
 <h3 class="h3sec">即時查詢與懶人包</h3>
 <p style="margin-bottom:12px; font-size:12px; color:#ccc;">在完成搜尋後，手動改變以下三個面板選項，可以即時更新對應的顯示結果（無需重新搜尋）：</p>
 
@@ -2999,7 +3183,7 @@ target.innerHTML = html;
 <li>Find Map A that matches the filter criteria of this tool, then use methods (change the sort order / delete unwanted maps / unlock new maps, etc.) to sort it to the bottom of any page (i.e. the 8th map counting from the top, or the last map on the last page).</li>
 <li>Enter Map B — Map B itself does not match the filter criteria of this tool, but it provides the monster you want — that monster appears in the floor (1) matches your specified Type × FloorMR combination (2) contains an AT-frozen zone.</li>
 <li>Go to the AT-frozen zone, open the Grotto list as in step 1, flip to the page where Map A is located, and press the B button to close and exit.<br>For multiplayer connection, after closing with B, the host calls all guests at this point, and each guest must adjust their character's facing and position until they completely match the host's (any deviation in facing or position from any single guest will void the AT-frozen zone — except for the Flag0 zone on special floors).</li>
-<li>After completing step 4, stand still and use the Whistle skill to summon the monster designated by Map A, then enter battle directly.</li>
+<li>After completing step 4, stand still and use the Whistle skill to summon the kind of monster designated by Map A, then enter battle directly.</li>
 <li>Execute the skill combination specific to Map A, defeat all enemies, and obtain the drops.</li>
 <li>Repeat steps 4–6. When the drop count approaches 99, use them up; or leave the map, sell the items, and restart from step 3.</li>
 </ol>
@@ -3023,7 +3207,7 @@ target.innerHTML = html;
 <p style="margin-bottom:8px;">For the AT random value at step <strong>X</strong>, the judgment flow is:</p>
 <ol style="padding-left:20px; margin-bottom:0; line-height:1.6;">
 <li>First, judge the Rare probability of "Drop." ("D" for short in the following)</li>
-<li>If the Rare judgment succeeds, skip the Normal judgment for this slot and proceed from step <strong>X+1</strong> to judge the Rare of "B1." ("B1" means "Book 1". "Book" refers to Thief's Thory.)</li>
+<li>If the Rare judgment succeeds, skip the Normal judgment for this slot and proceed from step <strong>X+1</strong> to judge the Rare of "B1." ("B1" means "Book 1". "Book" refers to Thief's Theory.)</li>
 <li>If the Rare judgment fails, use step <strong>X+1</strong> to judge the Normal for this slot. Then regardless of result, use step <strong>X+2</strong> to judge the Rare of "B1." And so on.</li>
 </ol>
 </div>
@@ -3091,6 +3275,14 @@ target.innerHTML = html;
 <li><strong>Minimum Deftness for preemptive</strong>: The minimum Deftness threshold required to trigger a "preemptive strike" in battle for the specified Zoom count.</li>
 <li><strong>AT steps consumed in battle</strong>: The number of AT steps that must be manually consumed in battle before reaching the Drop Pattern. <span style="color:#aaa;">(Varies with preemptive status and monster count; always shown in AT search, shown in M search only after specifying a Pattern)</span><br>Methods of consumption: spells, skills, and weapons usable as items — see the table below.</li>
 </ol>
+
+<details class="h1det" style="margin-bottom:16px;">
+<summary>📖 Deftness Formula</summary>
+<ul style="padding-left:16px; margin-bottom:4px;">
+<li><code>Deftness = ceil(AT ÷ 32768 × 100 − 2) × 20</code></li>
+<li>Minimum is 0 (displayed as 1); values greater than 999 are displayed as 1000.</li>
+</ul>
+</details>
 
 <details class="h1det" style="margin-bottom:16px;">
 <summary>📖 Formula for "Bat." (AT steps consumed in battle)</summary>
@@ -3508,6 +3700,14 @@ target.innerHTML = html;
 <span style="color:#888;">※ Source: Disassembly analysis by TKG</span>
 </div>
 
+<details class="h1det" style="margin-bottom:16px;">
+<summary>📖 Drop Judgment Formula</summary>
+<ul style="padding-left:16px; margin-bottom:4px;">
+<li><strong>Normal Drop:</strong> <code>AT ≤ Drop Rate × 32768</code></li>
+<li><strong>Thief's Theory:</strong> <code>AT ≤ int[32767 ÷ int(Drop Rate<sup>-1</sup> × 100 ÷ Lv)] + 1</code></li>
+</ul>
+</details>
+
 <h3 class="h3sec">Quick Reference</h3>
 <p style="margin-bottom:12px; font-size:12px; color:#ccc;">After a search completes, manually changing any of the following three panel options instantly updates the corresponding display results (no re-search needed):</p>
 
@@ -3660,6 +3860,14 @@ target.innerHTML = html;
 <li><strong>先制に必要な最低きようさ：</strong>ルーラ回数を指定した上で、戦闘中に「先制攻撃」を発動させるための最低きようさ閾値。</li>
 <li><strong>戦闘中に消費すべき AT ステップ数：</strong>ドロップパターンに到達するまでに、戦闘中に手動で消費する必要がある AT ステップ数。<span style="color:#aaa;">（先制の有無やモンスター数によって変動；AT 検索では常に表示、M 検索では Pattern 指定後に表示）</span><br>消費手段：魔法、特技、および道具として使用可能な武器。詳細は下表を参照。</li>
 </ol>
+
+<details class="h1det" style="margin-bottom:16px;">
+<summary>📖 きようさの計算式</summary>
+<ul style="padding-left:16px; margin-bottom:4px;">
+<li><code>きようさ＝ceil(AT÷32768×100-2)×20</code></li>
+<li>最小は 0（1 と表示）；999 を超える場合は 1000 と表示</li>
+</ul>
+</details>
 
 <details class="h1det" style="margin-bottom:16px;">
 <summary>📖 戦闘中に消費する AT ステップ数「戦」の計算式</summary>
@@ -4077,6 +4285,14 @@ target.innerHTML = html;
 <span style="color:#888;">※ 出典：TKG による逆アセンブル解析</span>
 </div>
 
+<details class="h1det" style="margin-bottom:16px;">
+<summary>📖 ドロップ判定の計算式</summary>
+<ul style="padding-left:16px; margin-bottom:4px;">
+<li><strong>通常ドロップ判定 (落)：</strong><code>AT ≤ ドロップ率 × 32768</code></li>
+<li><strong>秘伝書のオート盗む判定 (盗) ：</strong><code>AT ≤ int[32767 ÷ int(ドロップ率の逆数 × 100 ÷ Lv)] + 1</code></li>
+</ul>
+</details>
+
 <h3 class="h3sec">リアルタイム更新とクイックリファレンス</h3>
 <p style="margin-bottom:12px; font-size:12px; color:#ccc;">検索完了後、以下の 3 つのパネルオプションを手動で変更すると、対応する表示結果が即座に更新される（再検索は不要）：</p>
 
@@ -4117,21 +4333,23 @@ target.innerHTML = html;
 </div>
 </div>
 </div>
-<div id="unified_search_panel" style="background:#111128;padding:20px;border-bottom:2px solid #4a4a8a;">
-<div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a;padding-bottom: 12px;margin-bottom: 16px;">
-<h3 style="color:#ffd700;margin: 0;font-size:16px;" data-i18n="G01"></h3>
-<div class="checkbox-field" style="background: #1a1a3a;padding:6px 12px;border-radius: 4px;border: 1px solid #335;">
+
+<div id="unified_search_panel" style="background:#111128; padding:20px; border-bottom:2px solid #4a4a8a;"> 
+<div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a; padding-bottom: 12px; margin-bottom: 16px;">
+<h3 style="color:#ffd700; margin: 0; font-size:16px;" data-i18n="G01"></h3>
+<div class="checkbox-field" style="background: #1a1a3a; padding: 6px 12px; border-radius: 4px; border: 1px solid #335;">
 <input type="checkbox" id="searchAllRanks" checked>
-<label for="searchAllRanks" data-i18n="F01"></label>
+<label for="searchAllRanks" data-i18n="F01"></label> 
 <input type="checkbox" id="searchOnlyWithD" style="margin-left: 10px;">
 <label for="searchOnlyWithD" data-i18n="F03"></label>
-<button id="btnExport" class="go" style="background:linear-gradient(135deg, #282, #050);padding:4px 16px;color:#fff;margin-left: 15px;font-size:12px;" onclick="exportSearchResults()" data-i18n="H06"></button>
+<button id="btnExport" class="go" style="background:linear-gradient(135deg, #282, #050); padding: 4px 16px; color:#fff; margin-left: 15px; font-size:12px;" onclick="exportSearchResults()" data-i18n="H06"></button>
 </div>
 </div>
-<div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;align-items:flex-start;">
-<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;flex:1 1 calc(60% - 16px);min-width:340px;margin:0;">
-<h4 style="color:#0ff;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
-<button onclick="openh1Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button></h4>
+
+<div style="display:flex; flex-wrap:wrap; gap:8px; width:100%; align-items:flex-start;">
+<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #4a4a8a; flex:1 1 calc(60% - 16px); min-width:340px; margin:0;">
+<h4 style="color:#0ff; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
+<button onclick="openh1Modal()" style="margin-left:6px; background:#224; color:#0ff; border:1px solid #4a4a8a; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;" onmouseover="this.style.background='#0ff'; this.style.color='#000';" onmouseout="this.style.background='#224'; this.style.color='#0ff';" title="Help">?</button></h4>
 <div class="us-grid">
 <div><label data-i18n="G03"></label><select id="cond_prefix"><option value="" data-i18n="G02"></option></select></div>
 <div><label data-i18n="G04"></label><select id="cond_suffix"><option value="" data-i18n="G02"></option></select></div>
@@ -4178,45 +4396,49 @@ target.innerHTML = html;
 <select id="cond_only_mon" style="color:#fcf;border-color:#c4a;">
 <option value="" data-i18n="G02"></option>
 </select></div>
-<div style="grid-column:span 2;display:flex;flex-direction:column;background:#1a0a1a;border:1px solid #525;border-radius:4px;padding:4px 8px;">
-<label style="color:#f8f;font-size:11px;margin-bottom:2px;" data-i18n="G15"></label>
-<div style="display:flex;align-items:center;gap: 6px;">
-<button class="go" onclick="startSearchATBug()" id="searchBtnBug" style="background:linear-gradient(135deg,#c0c,#606);color:#fff;padding:0 6px;font-size:10px;height:20px;border:none;border-radius:3px;font-weight:bold;cursor:pointer;" data-i18n="H05"></button>
-<label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
+<div style="grid-column:span 2; display:flex; flex-direction:column; background:#1a0a1a; border:1px solid #525; border-radius:4px; padding:4px 8px;">
+<label style="color:#f8f; font-size:11px; margin-bottom:2px;" data-i18n="G15"></label>
+<div style="display:flex; align-items:center; gap: 6px;">
+<button class="go" onclick="MultibugSearch()" id="searchBtnBug" style="background:linear-gradient(135deg,#c0c,#606); color:#fff; padding:0 6px; font-size:10px; height:20px; border:none; border-radius:3px; font-weight:bold; cursor:pointer;" data-i18n="H05"></button>
+<label style="color:#aaa; font-size:11px; display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
 <input type="checkbox" id="requireFloorIncrease" style="margin-right:2px;"><span data-i18n="F04"></span></label>
-<label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
+<label style="color:#aaa; font-size:11px; display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
 <input type="checkbox" id="requireBugFloorHit" style="margin-right:2px;">🍊</label>
 </div>
 </div>
 </div>
-<div style="background:#111;padding:6px;border-radius:4px;border:1px solid #4c4;margin-bottom:8px;">
-<div class="chest-count-row" style="display:flex;flex-wrap:wrap;font-size:12px;color:#fff;">
-<label>S <input type="number" id="cond_box_S" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>A <input type="number" id="cond_box_A" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>B <input type="number" id="cond_box_B" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>C <input type="number" id="cond_box_C" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>D <input type="number" id="cond_box_D" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>E <input type="number" id="cond_box_E" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>F <input type="number" id="cond_box_F" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>G <input type="number" id="cond_box_G" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>H <input type="number" id="cond_box_H" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
-<label>I <input type="number" id="cond_box_I" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+
+<div style="background:#111; padding:6px; border-radius:4px; border:1px solid #4c4; margin-bottom:8px;">
+<div class="chest-count-row" style="display:flex; flex-wrap:wrap; font-size:12px; color:#fff;">
+<label>S <input type="number" id="cond_box_S" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>A <input type="number" id="cond_box_A" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>B <input type="number" id="cond_box_B" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>C <input type="number" id="cond_box_C" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>D <input type="number" id="cond_box_D" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>E <input type="number" id="cond_box_E" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>F <input type="number" id="cond_box_F" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>G <input type="number" id="cond_box_G" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>H <input type="number" id="cond_box_H" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<label>I <input type="number" id="cond_box_I" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
 </div>
 </div>
-<div style="display:flex;width:100%;">
-<button id="searchBtnSpecific" class="go" style="flex:1;background:linear-gradient(135deg,#0ff,#08a);color:#000;font-size:15px;padding:8px;font-weight:bold;letter-spacing:2px;margin-right:8px;" onclick="startUltimateSearch()">🎯 Search</button>
-<button class="go" style="background:linear-gradient(135deg,#556,#334);color:#fff;font-size:15px;padding:8px 12px;font-weight:bold;border-radius:4px;border:1px solid #666;" onclick="clearUltimateSearch()" title="Clear">Clear</button>
+
+<div style="display:flex; width:100%;">
+<button id="searchBtnSpecific" class="go" style="flex:1; background:linear-gradient(135deg,#0ff,#08a); color:#000; font-size:15px; padding:8px; font-weight:bold; letter-spacing: 2px; margin-right:8px;" onclick="startUltimateSearch()">🎯 Search</button>
+<button class="go" style="background:linear-gradient(135deg,#556,#334); color:#fff; font-size:15px; padding:8px 12px; font-weight:bold; border-radius:4px; border:1px solid #666;" onclick="clearUltimateSearch()" title="Clear">Clear</button>
 </div>
 </div>
-<div style="display:flex;flex-direction:column;gap:8px;flex:1 1 calc(40% - 16px);min-width:320px;margin:0;">
-<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;margin:0;">
-<h4 style="color:#88b;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
-<button onclick="openh2Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button></h4>
-<div style="display: flex;flex-direction: column;gap:8px;">
-<div class="search-group" style="background:#111;border-color:#333;margin:0;">
+
+<div style="display:flex; flex-direction:column; gap:8px; flex:1 1 calc(40% - 16px); min-width:320px; margin:0;">
+<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #4a4a8a; margin:0;">
+<h4 style="color:#88b; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
+<button onclick="openh2Modal()" style="margin-left:6px; background:#224; color:#0ff; border:1px solid #4a4a8a; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;" onmouseover="this.style.background='#0ff'; this.style.color='#000';" onmouseout="this.style.background='#224'; this.style.color='#0ff';" title="Help">?</button></h4>
+
+<div style="display: flex; flex-direction: column; gap:8px;">
+<div class="search-group" style="background:#111; border-color:#333; margin:0;">
 <label data-i18n="G16"></label>
-<div class="search-input-row" style="display:flex;flex-wrap:nowrap;gap:4px;align-items:center;">
-<select id="searchItem" style="flex:1 1 auto;width:0;min-width:80px;height:26px;font-size:11px;padding:0 2px;">
+<div class="search-input-row" style="display:flex; flex-wrap:nowrap; gap:4px; align-items:center;">
+<select id="searchItem" style="flex:1 1 auto; width:0; min-width:80px; height:26px; font-size:11px; padding:0 2px;">
 <optgroup label="" id="og1">
 <option value="Ethereal stone" data-i18n="I_Ethereal stone"></option>
 <option value="Lucida shard" data-i18n="I_Lucida shard"></option>
@@ -4264,58 +4486,62 @@ target.innerHTML = html;
 <option value="Pandora's box" data-i18n="I_Pandora's box"></option>
 </optgroup>
 </select>
-<button class="go" onclick="startSearch()" id="searchBtn" style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;" data-i18n="H01"></button>
-<button class="go" onclick="TKSearch()" id="BtnTK" style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;" data-i18n="H02"></button>
-<button class="go" onclick="Box3Search()" id="searchBtnBox3" style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;" data-i18n="H03"></button>
+<button class="go" onclick="startSearch()" id="searchBtn" style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;" data-i18n="H01"></button>
+<button class="go" onclick="TKSearch()" id="BtnTK" style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;" data-i18n="H02"></button>
+<button class="go" onclick="Box3Search()" id="searchBtnBox3" style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;" data-i18n="H03"></button>
 </div>
 </div>
-<div class="search-group" style="background:#05111a;border-color:#134;margin: 0;">
+
+<div class="search-group" style="background:#05111a; border-color:#134; margin: 0;">
 <label style="color:#0ff;" data-i18n="G17"></label>
-<div style="display: flex;gap: 6px;margin-top: 4px;align-items: stretch;">
-<div id="fs_container" style="display:flex;flex-direction:column;gap:4px;flex: 1 1 auto;min-width: 0;"></div>
-<button class="go" onclick="FreeSearch()" id="btnFreeSearch" style="background:linear-gradient(135deg, #0088cc, #004488);color:#fff;padding:0 12px;font-size:12px;border:none;border-radius:4px;font-weight:bold;cursor:pointer;flex: 0 0 auto;min-width: 45px;">Free</button>
+<div style="display: flex; gap: 6px; margin-top: 4px; align-items: stretch;">
+<div id="fs_container" style="display:flex; flex-direction:column; gap:4px; flex: 1 1 auto; min-width: 0;"></div>
+<button class="go" onclick="FreeSearch()" id="btnFreeSearch" style="background:linear-gradient(135deg, #0088cc, #004488); color:#fff; padding:0 12px; font-size:12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; flex: 0 0 auto; min-width: 45px;">Free</button>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #055;margin-top:10px;box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
-<h4 style="color:#0ca;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">3️⃣ <span style="margin-left:8px" data-i18n="H04"></span>
-<button onclick="openh3Modal()" style="margin-left:6px;background:#001a1a;color:#0ca;border:1px solid #055;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ca';this.style.color='#000';" onmouseout="this.style.background='#001a1a';this.style.color='#0ca';" title="Help">?</button>
-<button class="go" onclick="openSeedInspector()" style="margin-left:6px;background:linear-gradient(135deg,#0aa,#044);color:#fff;padding:4px 8px;font-size:11px;height:28px;">Detail</button>
+
+<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #055; margin-top:10px; box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
+<h4 style="color:#0ca; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">3️⃣ <span style="margin-left:8px" data-i18n="H04"></span>
+<button onclick="openh3Modal()" style="margin-left:6px; background:#001a1a; color:#0ca; border:1px solid #055; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;" onmouseover="this.style.background='#0ca'; this.style.color='#000';" onmouseout="this.style.background='#001a1a'; this.style.color='#0ca';" title="Help">?</button>
+<button class="go" onclick="openSeedInspector()" style="margin-left:6px; background:linear-gradient(135deg,#0aa,#044); color:#fff; padding:4px 8px; font-size:11px; height:28px;">Detail</button>
 </h4>
 <div class="compact-search-row">
-<div class="search-group" style="background:#001a1a;border-color:#055;padding:8px;">
-<div class="search-input-row" style="align-items:center;flex-wrap:wrap;gap:2px;">
-<select id="at_env" onchange="atUpd()" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:55px;">
+<div class="search-group" style="background:#001a1a; border-color:#055; padding:8px;">
+<div class="search-input-row" style="align-items:center; flex-wrap:wrap; gap:2px;">
+<select id="at_env" onchange="atUpd()" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:55px;">
 <option value="1">洞窟</option><option value="2">遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5" selected>火山</option></select>
-<select id="at_mr" onchange="atUpd()" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:45px;">
+<select id="at_mr" onchange="atUpd()" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:45px;">
 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9" selected>9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
-<select id="at_mon" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:240px;"></select>
-<span style="color:#555;font-size:11px;" data-i18n="G18"></span>
-<input type="number" id="at_deft" oninput="updateBattleAT()" min="0" max="999" placeholder="" style="background:#000;color:#39C5BB;border:1px solid #555;padding:4px;font-size:12px;width:50px;text-align:center;">
-<span style="color:#555;font-size:11px;" data-i18n="G19"></span>
+<select id="at_mon" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:240px;"></select>
+<span style="color:#555; font-size:11px;" data-i18n="G18"></span>
+<input type="number" id="at_deft" oninput="updateBattleAT()" min="0" max="999" placeholder="" style="background:#000; color:#39C5BB; border:1px solid #555; padding:4px; font-size:12px; width:50px; text-align:center;">
+<span style="color:#555; font-size:11px;" data-i18n="G19"></span>
 <input type="checkbox" id="at_sortPOP" style="margin-right:2px;">
-<input type="number" id="at_n_input" oninput="updateBattleAT()" min="0" value="0" style="background:#000;color:#39C5BB;border:1px solid #555;padding:4px;font-size:12px;width:45px;text-align:center;">
-<span style="color:#555;font-size:11px;" id="at_lblSteps"></span>
-<input type="number" id="at_maxSteps" value="400" style="width:55px;background:#000;color:#0f0;border:1px solid #555;padding:4px;font-size:12px;text-align:center;">
-<select id="at_threshold" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:60px;">
+<input type="number" id="at_n_input" oninput="updateBattleAT()" min="0" value="0" style="background:#000; color:#39C5BB; border:1px solid #555; padding:4px; font-size:12px; width:45px; text-align:center;">
+<span style="color:#555; font-size:11px;" id="at_lblSteps"></span>
+<input type="number" id="at_maxSteps" value="400" style="width:55px; background:#000; color:#0f0; border:1px solid #555; padding:4px; font-size:12px; text-align:center;">
+<select id="at_threshold" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:60px;">
 <option value="128">1/256</option>
 <option value="256">1/128</option>
 <option value="512">1/64</option>
 <option value="1024">1/32</option>
 </select>
-<select id="at_pattern" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;"><option value="">--</option></select>
-<button class="go" onclick="atPtnSearch()" id="atPtnSchBtn" style="background:linear-gradient(135deg,#f80,#a30);color:#fff;padding:4px 8px;font-size:11px;height:28px;">AT</button>
-<button class="go" onclick="atSearch()" id="atSearchBtn" style="background:linear-gradient(135deg,#0ca,#065);color:#fff;padding:4px 8px;font-size:11px;height:28px;">M</button>
+<select id="at_pattern" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px;"><option value="">--</option></select>
+<button class="go" onclick="atPtnSearch()" id="atPtnSchBtn" style="background:linear-gradient(135deg,#f80,#a30); color:#fff; padding:4px 8px; font-size:11px; height:28px;">AT</button>
+<button class="go" onclick="atSearch()" id="atSearchBtn" style="background:linear-gradient(135deg,#0ca,#065); color:#fff; padding:4px 8px; font-size:11px; height:28px;">M</button>
 </div>
 </div>
 </div>
 </div>
-<div id="searchResults" style="margin-top:10px;padding:12px;background:#0a0a15;border:1px solid #4a4a8a;border-radius:6px;min-height:100px;">
-<div style="color:#666;font-size:13px;text-align:center;margin-top:12px;"></div>
+
+<div id="searchResults" style="margin-top:10px; padding:12px; background:#0a0a15; border:1px solid #4a4a8a; border-radius:6px; min-height:100px;">
+<div style="color:#666; font-size:13px; text-align:center; margin-top:12px;"></div>
 </div></div>
+
 <div id="result"></div>
 <hr>
 <div class="info-bar">
@@ -4324,8 +4550,8 @@ Based on research by DQ9 Lovers from 5ch / GameFAQs / The Quester's Rest / Other
 ElistOfs is introduced by 43 (DQ9TMAP101.exe's author) and fixed by TKG<br>
 Powered by Gemini and Claude<br>
 Produced by WWWild<br>
-Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX;Copyright Koichi Sugiyama<br>
-<span style="cursor:pointer;background:#224;color:#aaa;border:1px solid #4a4a8a;padding:4px 10px;border-radius:4px;margin-left:12px;display:inline-block;font-size:12px;transition:all 0.2s;" onclick="openDisclaimerModal()" onmouseover="this.style.borderColor='#ffd700';this.style.color='#ffd700';" onmouseout="this.style.borderColor='#4a4a8a';this.style.color='#aaa';">📜 Disclaimer</span>
+Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX; Copyright Koichi Sugiyama<br>
+<span style="cursor:pointer; background:#224; color:#aaa; border:1px solid #4a4a8a; padding:4px 10px; border-radius:4px; margin-left:12px; display:inline-block; font-size:12px; transition:all 0.2s;" onclick="openDisclaimerModal()" onmouseover="this.style.borderColor='#ffd700'; this.style.color='#ffd700';" onmouseout="this.style.borderColor='#4a4a8a'; this.style.color='#aaa';">📜 Disclaimer</span>
 </span>
 </div>
 </body>
