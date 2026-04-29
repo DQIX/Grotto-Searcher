@@ -17,12 +17,12 @@ if(finalQuality<=50)return 47;
 if(finalQuality<=80)return 131;
 return 150;
 }
-function calcFinalQuality(baseQ, r1){
-const modulo=Math.floor(baseQ / 10)*2+1;
-const offset=Math.trunc(r1 % modulo - baseQ / 10);
+function calcFinalQuality(baseQ,r1){
+const modulo=Math.floor(baseQ/10)*2+1;
+const offset=Math.trunc(r1%modulo-baseQ/10);
 let final=baseQ+offset;
-if(final<2) final=2;
-if(final>248) final=248;
+if(final<2)final=2;
+if(final>248)final=248;
 return final;
 }
 function formatRanges(nums){
@@ -238,40 +238,66 @@ if(mId&&MONSTER_DATA[mId]&&MONSTER_DATA[mId].en===conds.onlyMon)return true;
 }
 return false;
 }
-function checkElistAndD(searchEngine, conds, searchOnlyWithD, _onlyMonExpectedStr){
-let result ={match: true, specialHitDetails:[], jumpToFloor: -1, hasMatchedD: false};
+function checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr){
+let result={match:true,specialHitDetails:[],jumpToFloor:-1,hasMatchedD:false};
 if(!(conds.elist||conds.onlyMon||searchOnlyWithD))return result;
-let hasAnyD=false, elistMatched=!conds.elist, onlyMatched=!conds.onlyMon;
-let specialFloorCount=0, currentMapSpecials=[];
-for(let f=0;f<searchEngine.floorCount;f++){
-let info=getFloorElistInfo(searchEngine, f);
-if(!info.state) continue;
-if(info.dValue>0) hasAnyD=true;
+let hasAnyD=false,elistMatched=!conds.elist,onlyMatched=!conds.onlyMon;
+let specialFloorCount=0,currentMapSpecials=[];
+const envType=searchEngine._details[3];
+const baseMR=searchEngine._details[2];
+for (let f=0;f<searchEngine.floorCount;f++){
+let info=getFloorElistInfo(searchEngine,f);
+if(!info.state)continue;
+if(info.dValue>0)hasAnyD=true;
+let targetCount=0;
+if(info.state.includes(EL_4))targetCount=4;
+else if(info.state.includes(EL_3))targetCount=3;
+else if(info.state.includes(EL_2))targetCount=2;
+let monBadge='';
+if(targetCount>0&&conds.elist===targetCount.toString()){
+let floorMR=baseMR+(f>>2);
+if(floorMR>12)floorMR=12;
+let spawnDb=SPAWN_DB[envType][floorMR];
+if(spawnDb){
+let monNames=[];
+let isJP=(DISPLAY_LANG!=='EN');
+for(let i=0;i<spawnDb.length;i++){
+if(spawnDb[i].length>1){ 
+let mData=MONSTER_DATA[spawnDb[i][0]];
+if(mData) monNames.push(isJP?mData.jp:mData.en);
+if(monNames.length===targetCount)break; 
+}
+}
+if(monNames.length>0){
+monBadge=`<br><span style="display:inline-block; color:#aaa; font-size:11px;">${monNames.join(' + ')}</span>`;
+}
+}
+}
 specialFloorCount++;
-currentMapSpecials.push({f, state:info.state, dValue:info.dValue});
-let dBadge=info.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;">${info.dValue}</span>`:'';
+currentMapSpecials.push({f,state:info.state,dValue:info.dValue,monBadge});
+let dBadge=info.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 4px; border-radius:3px; font-size:10px;">${info.dValue}</span>` : '';
+let displayText=`B${f+1}F: ${info.state}${dBadge}${monBadge}`;
 if(conds.elist&&conds.elist!=='MULTI_SPECIAL'&&!elistMatched){
 let isElistHit=false;
-if(conds.elist==='PARTIAL_NONE'&&info.state.includes(EL_P)) isElistHit=true;
-else if(conds.elist==='4'&&info.state.includes(EL_4)) isElistHit=true;
-else if(conds.elist==='3'&&info.state.includes(EL_3)) isElistHit=true;
-else if(conds.elist==='2'&&info.state.includes(EL_2)) isElistHit=true;
-else if(conds.elist==='ONLY'&&(info.state.includes('only')||info.state.includes('オンリー'))) isElistHit=true;
-else if(conds.elist==='NONE'&&info.state.includes(EL_0)&&!info.state.includes(EL_P)) isElistHit=true;
+if(conds.elist==='PARTIAL_NONE'&&info.state.includes(EL_P))isElistHit=true;
+else if(conds.elist==='4'&&info.state.includes(EL_4))isElistHit=true;
+else if(conds.elist==='3'&&info.state.includes(EL_3))isElistHit=true;
+else if(conds.elist==='2'&&info.state.includes(EL_2))isElistHit=true;
+else if(conds.elist==='ONLY'&&(info.state.includes('only')||info.state.includes('オンリー')))isElistHit=true;
+else if(conds.elist==='NONE'&&info.state.includes(EL_0)&&!info.state.includes(EL_P))isElistHit=true;
 if(isElistHit){
 elistMatched=true;
-result.specialHitDetails.push(`B${f+1}F: ${info.state}${dBadge}`);
-if(result.jumpToFloor===-1) result.jumpToFloor=f;
-if(info.dValue>0) result.hasMatchedD=true;
+result.specialHitDetails.push(displayText);
+if(result.jumpToFloor===-1)result.jumpToFloor=f;
+if(info.dValue>0)result.hasMatchedD=true;
 }
 }
 if(conds.onlyMon&&!onlyMatched){
 if(info.state.includes(_onlyMonExpectedStr)){
 onlyMatched=true;
-let text=`B${f+1}F: ${info.state}${dBadge}`;
-if(!result.specialHitDetails.includes(text)) result.specialHitDetails.push(text);
-if(result.jumpToFloor===-1) result.jumpToFloor=f;
-if(info.dValue>0) result.hasMatchedD=true;
+if(!result.specialHitDetails.includes(displayText))result.specialHitDetails.push(displayText);
+if(result.jumpToFloor===-1)result.jumpToFloor=f;
+if(info.dValue>0)result.hasMatchedD=true;
 }
 }
 }
@@ -279,43 +305,43 @@ if(conds.elist==='MULTI_SPECIAL'){
 if(specialFloorCount>=2){
 elistMatched=true;
 currentMapSpecials.forEach(s=>{
-let dBadge=s.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;">${s.dValue}</span>`:'';
-let text=`B${s.f+1}F: ${s.state}${dBadge}`;
-if(!result.specialHitDetails.includes(text)) result.specialHitDetails.push(text);
-if(s.dValue>0) result.hasMatchedD=true;
+let dBadge=s.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 4px; border-radius:3px; font-size:10px;">${s.dValue}</span>` : '';
+let text=`B${s.f+1}F: ${s.state}${dBadge}${s.monBadge}`;
+if(!result.specialHitDetails.includes(text))result.specialHitDetails.push(text);
+if(s.dValue>0)result.hasMatchedD=true;
 });
-if(result.jumpToFloor===-1&&currentMapSpecials.length>0) result.jumpToFloor=currentMapSpecials[0].f;
-} else{elistMatched=false;}
+if(result.jumpToFloor===-1&&currentMapSpecials.length>0)result.jumpToFloor=currentMapSpecials[0].f;
+}else{elistMatched=false;}
 }
-if(searchOnlyWithD&&!hasAnyD) result.match=false;
-if(!elistMatched||!onlyMatched) result.match=false;
+if(searchOnlyWithD&&!hasAnyD)result.match=false;
+if(!elistMatched||!onlyMatched)result.match=false;
 if(searchOnlyWithD&&result.match){
 if((conds.elist||conds.onlyMon)&&conds.elist!=='MULTI_SPECIAL'){
-if(!result.hasMatchedD) result.match=false;
+if(!result.hasMatchedD)result.match=false;
 }
 }
 return result;
 }
 function checkLocationBQ(seed, conds, searchFilterLoc, targetRankKey){
-let targetLocNum=conds.location?parseInt(conds.location, 16):null;
+let targetLocNum=conds.location?parseInt(conds.location,16):null;
 let targetBqNum=conds.bq?parseInt(conds.bq):null;
 if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc)return{match: true};
-if(seed>0x7FFF||targetRankKey===null)return{match: false};
-_cachedLocData=calcLocations(seed, targetRankKey);
+if(seed>0x7FFF||targetRankKey===null)return{match:false};
+_cachedLocData=calcLocations(seed,targetRankKey);
 let locData=_cachedLocData;
-if(locData.outputOrder.length===0)return{match: false};
+if(locData.outputOrder.length===0)return{match:false};
 if(targetLocNum!==null){
-if(!locData.seenLocations[targetLocNum])return{match: false};
-if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))return{match: false};
+if(!locData.seenLocations[targetLocNum])return{match:false};
+if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))return{match:false};
 }else if(targetBqNum!==null){
 let bqFound=false;
 for(let loc in locData.seenLocations){if(locData.seenLocations[loc].has(targetBqNum)){bqFound=true;break;}}
-if(!bqFound)return{match: false};
+if(!bqFound)return{match:false};
 }
-return{match: true};
+return{match:true};
 }
-function checkAnomalies(searchEngine, conds){
-let result ={match: true, anomalyDetails:[], jumpToFloor: -1};
+function checkAnomalies(searchEngine,conds){
+let result ={match: true, anomalyDetails:[],jumpToFloor: -1};
 if(conds.anomaly==="")return result;
 let hasAnyChestAnomaly=false, hasAnyCorridorAnomaly=false, hasAnyStairAnomaly=false;
 let hasAnyNoChestAnomaly=false, hasAnyMultiRegionAnomaly=false, hasAnyChestCorridorCombo=false;
@@ -331,24 +357,24 @@ if(anom.hasIsolatedCorridor){hasAnyCorridorAnomaly=true;corridorFloorCount++;if(
 if(anom.hasGhostStair){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#555577;padding:1px 4px;border-radius:3px;border:1px solid #8888aa;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${anom.GhostStairs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
 if(anom.hasInaccessibleChest&&anom.hasIsolatedCorridor) hasAnyChestCorridorCombo=true;
 }
-if(conds.anomaly==='chest'&&!hasAnyChestAnomaly) result.match=false;
-else if(conds.anomaly==='nochest'&&!hasAnyNoChestAnomaly) result.match=false;
-else if(conds.anomaly==='corridor'&&!hasAnyCorridorAnomaly) result.match=false;
-else if(conds.anomaly==='stair'&&!hasAnyStairAnomaly) result.match=false;
-else if(conds.anomaly==='ghost'&&!hasAnyGhostAnomaly) result.match=false;
-else if(conds.anomaly==='all_invalid'&&!hasAnyAllInvalidAnomaly) result.match=false;
-else if(conds.anomaly==='chest_corridor'&&!hasAnyChestCorridorCombo) result.match=false;
-else if(conds.anomaly==='multi_corridor'&&corridorFloorCount<2) result.match=false;
-else if(conds.anomaly==='multi_region'&&!hasAnyMultiRegionAnomaly) result.match=false;
+if(conds.anomaly==='chest'&&!hasAnyChestAnomaly)result.match=false;
+else if(conds.anomaly==='nochest'&&!hasAnyNoChestAnomaly)result.match=false;
+else if(conds.anomaly==='corridor'&&!hasAnyCorridorAnomaly)result.match=false;
+else if(conds.anomaly==='stair'&&!hasAnyStairAnomaly)result.match=false;
+else if(conds.anomaly==='ghost'&&!hasAnyGhostAnomaly)result.match=false;
+else if(conds.anomaly==='all_invalid'&&!hasAnyAllInvalidAnomaly)result.match=false;
+else if(conds.anomaly==='chest_corridor'&&!hasAnyChestCorridorCombo)result.match=false;
+else if(conds.anomaly==='multi_corridor'&&corridorFloorCount<2)result.match=false;
+else if(conds.anomaly==='multi_region'&&!hasAnyMultiRegionAnomaly)result.match=false;
 if(result.match){
-if(conds.anomaly==='chest') result.jumpToFloor=firstChestFloor;
-else if(conds.anomaly==='nochest') result.jumpToFloor=firstNoChestFloor;
-else if(conds.anomaly==='corridor'||conds.anomaly==='multi_corridor') result.jumpToFloor=firstCorridorFloor;
-else if(conds.anomaly==='multi_region') result.jumpToFloor=firstMultiRegionFloor;
-else if(conds.anomaly==='stair') result.jumpToFloor=firstStairFloor;
-else if(conds.anomaly==='ghost') result.jumpToFloor=firstGhostFloor;
-else if(conds.anomaly==='all_invalid') result.jumpToFloor=firstAllInvalidFloor;
-else if(conds.anomaly==='chest_corridor') result.jumpToFloor=(firstChestFloor!==-1)?firstChestFloor:firstCorridorFloor;
+if(conds.anomaly==='chest')result.jumpToFloor=firstChestFloor;
+else if(conds.anomaly==='nochest')result.jumpToFloor=firstNoChestFloor;
+else if(conds.anomaly==='corridor'||conds.anomaly==='multi_corridor')result.jumpToFloor=firstCorridorFloor;
+else if(conds.anomaly==='multi_region')result.jumpToFloor=firstMultiRegionFloor;
+else if(conds.anomaly==='stair')result.jumpToFloor=firstStairFloor;
+else if(conds.anomaly==='ghost')result.jumpToFloor=firstGhostFloor;
+else if(conds.anomaly==='all_invalid')result.jumpToFloor=firstAllInvalidFloor;
+else if(conds.anomaly==='chest_corridor')result.jumpToFloor=(firstChestFloor!==-1)?firstChestFloor:firstCorridorFloor;
 }
 return result;
 }
@@ -777,9 +803,9 @@ let validRanks=ranks;
 for(let g of groups){
 if(g.allowedRanks.size>0){
 let offset=0;
-if(g.floor>=13) offset=3;
-else if(g.floor>=9) offset=2;
-else if(g.floor>=5) offset=1;
+if(g.floor>=13)offset=3;
+else if(g.floor>=9)offset=2;
+else if(g.floor>=5)offset=1;
 validRanks=filterMapRanksBySMRAndChest(validRanks, conds, [Array.from(g.allowedRanks)], offset);
 }
 }
@@ -1021,9 +1047,9 @@ return foundAny;
 };
 if(isMonsterBox){
 if(!checkWp(2))return{isHit:false};
-let c1Met=false, matDet="", b3Rank="";
+let c1Met=false,matDet="",b3Rank="";
 if(eng.floorCount>2&&eng.getBoxCount(2)>=3){
-b3Rank=CHEST_RANK[eng.getBoxInfo(2, 2).rank]||'?';
+b3Rank=CHEST_RANK[eng.getBoxInfo(2,2).rank]||'?';
 let foundSec=-1;
 for(let s=minSec;s<=maxSec;s++){
 if(eng.getBoxItem(2,2,s)[0]===targetItem){foundSec=s;break;}
@@ -1034,13 +1060,13 @@ matDet=`B3F ${b3Rank}3 (${foundSec+5}s): ${getDispItem(targetItem)}`;
 }
 }
 if(c1Met){
-let html=`${wpHits.join('<br>')}<br><span style="color:#ff6666;font-size:11px;font-weight:bold;">${matDet}</span>`;
-return{isHit:true, jumpFloor:2, displayHtml:html, specialStyle:"1px solid #ff6666"};
+let html=`${wpHits.join('<br>')}<br><span style="color:#f66;font-size:11px;font-weight:bold;">${matDet}</span>`;
+return{isHit:true, jumpFloor:2, displayHtml:html, specialStyle:"1px solid #f66"};
 }
 return{isHit:false};
 }
 if(!checkWp(2)) checkWp(3);
-if(!wpMet)return{isHit: false};
+if(!wpMet)return{isHit:false};
 let c1Met=false, c2Met=false, matDet="";
 let b3V=false, pB3="", b3Rank="";
 let b4V=false, pB4="", b4Rank="";
@@ -1079,7 +1105,7 @@ if(c1Met||c2Met){
 let html=`${wpHits.join('<br>')}<br><span style="color:#11F514;font-size:11px">${matDet}</span>`;
 return{isHit: true, jumpFloor: wpFloor, displayHtml: html, specialStyle: c2Met?"1px solid #fa0" :""};
 }
-return{isHit: false};
+return{isHit:false};
 }
 });
 }
@@ -1110,7 +1136,7 @@ if(t===STR_PARTY) color="#ffd700";
 c1Hits.push(`<span style="color:${color};font-size:11px">B9F S${b+1}: ${getDispItem("Sainted soma")} (${t})</span>`);
 }
 }
-if(!c1Met||(b9Boxes>=3&&partyNames[2]==="Sainted soma"))return{isHit: false};
+if(!c1Met||(b9Boxes>=3&&partyNames[2]==="Sainted soma"))return{isHit:false};
 let c2Met=false, c2Det="";
 const chk3=(fIdx, n)=>{
 if(eng.getBoxCount(fIdx)>=3&&eng.getBoxInfo(fIdx, 2).rank===10){
@@ -1136,7 +1162,7 @@ return{isHit:false};
 }
 });
 }
-async function startSearchATBug(){
+async function MultibugSearch(){
 if(isSearching){searchCancel=true;return;}
 isSearching=true;searchCancel=false;
 const btn=document.getElementById('searchBtnBug');
