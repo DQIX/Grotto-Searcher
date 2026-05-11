@@ -956,6 +956,72 @@
 <p style="font-size:11px; color:#888;">樓層狀態：(A) F = 7 (B) ONLY 怪物 ID 比 寶箱怪 靠前 (例: はぐれメタル)</p>
 </div>
 </details>
+
+<h3 class="h1sec" id="sec-multibug">4 人連線異變 (Multibug)</h3>
+
+<h4 class=h1h4 style="margin-top:8px;">Multibug 簡介</h4>
+<p style="margin-bottom:8px;"><strong>觸發條件</strong>：4 台機器連線時，3 名 Guest 同時加入 Host 的世界。第 2 位正在加入的時候，Host 狂按 A 鍵 (相當於高橋名人連打的速度) 進入地圖洞窟，成功進入的那一瞬間機率性觸發 (並非 100% 成功，若失敗，需要 3 名 Guest 全部返回自己的世界，重新連線再來一遍)。</p>
+<p style="margin-bottom:8px;"><strong>現象</strong>：Multibug 被觸發後，<strong style="color:#c8f;">一部分地圖參數受到 亂數+1 的影響</strong>，使 Host 的世界中</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li><strong style="color:#fa0;">變化</strong>：地圖名 (前綴、後綴、中間名、Lv)、樓層深度、Boss。</li>
+<li><strong style="color:#4f4;">不變</strong>：每層樓的佈局、樓梯位置、寶箱位置、出現怪物、寶箱等級。</li>
+</ul>
+<p style="margin-bottom:8px;">　如果 Multibug 觸發後的 樓層深度 比原來大，玩家就能進入原本被 樓層深度 這個上限截斷的額外樓層。</p>
+<p style="margin-bottom:16px;">　Host 能到達的最深樓層是 Multibug 觸發後的 樓層深度——Host 永遠無法突破這個上限。但如果 Multibug 使樓層增加，Host 走到增加的樓層後呼叫 Guest 加入，Guest 可以繼續往更深處走，最多到達 B16F (遊戲的絕對上限)。本工具源代碼中的「<strong style="color:#f4f;">強制 16 層</strong>」模式即是模擬這種情形。如果 Multibug 觸發後樓層不變或減少，則不存在「增加的樓層」供 Host 站立並呼叫 Guest，強制 16 層無法發生。</p>
+<h4 class=h1h4 style="margin-top:8px;">樓層增加 可以幹甚麼？</h4>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>某些地圖的 <strong style="color:#fa0;">Host 處增加的樓層</strong> 或 <strong style="color:#f6f;">強制 16 層</strong> 中有 <strong>ONLY、敵減</strong> 等特殊樓層 (比如 Multibug 狀態下的 ベホマスライム ONLY 等等)。</li>
+<li>某些地圖的 <strong style="color:#fa0;">Host 處增加的樓層</strong> 中有更多的<strong>高級寶箱</strong> (比如 Multibug 狀態下的 S9 等等)。</li>
+<li>在<strong style="color:#f6f;"> 強制 16 層 </strong>才有的 <strong>特殊樓層</strong> 的搜尋結果，用<strong style="color:#f6f;">紫紅字</strong>表示。</li>
+<li>在<strong style="color:#fa0;"> 增加的樓層 </strong>才有的 <strong>特殊樓層</strong> 的搜尋結果，用<strong style="color:#fa0;">橙字</strong>表示 (有一個橘子符號的打勾方框 就是用來限定搜尋 這種類型的地圖)。</li>
+<li>不管有沒增加樓層 都一定有 <strong>特殊樓層</strong> 的搜尋結果，用<strong style="color:#4f4;">綠字</strong>表示。</li>
+</ul>
+<h4 class=h1h4>甚麼情況下樓層會增加？</h4>
+<p style="margin-bottom:8px;">Multibug 觸發後造成的 <strong style="color:#c8f;">亂數+1</strong> 只改變亂數，不改變地圖 Rank，因此 樓層深度 能在同一個範圍內被重新計算：</p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">Rank</th><th style="border:1px solid #555; padding:4px 8px;">最小樓層數</th><th style="border:1px solid #555; padding:4px 8px;">最大樓層數</th><th style="border:1px solid #555; padding:4px 8px;">變動範圍</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">02</td><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">38~3D</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">4C~51</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">65</td><td style="border:1px solid #555; padding:4px 8px;">8</td><td style="border:1px solid #555; padding:4px 8px;">12</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">79</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">14</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">8D~A1</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">7</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">B5</td><td style="border:1px solid #555; padding:4px 8px;">11</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">6</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">C9</td><td style="border:1px solid #555; padding:4px 8px;">12</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">DD</td><td style="border:1px solid #555; padding:4px 8px;">14</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+</table>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>原來的 樓層深度 未達對應 Rank 的 最大樓層數 時，Multibug 觸發後 有機會變更高，玩家可進入額外樓層。</li>
+<li>變動範圍值越大的 Rank (如 8D~A1，共 7 個值)，樓層深度 變動的幅度越大，樓層增加的可能性越大。</li>
+<li>原來的 樓層深度 恰好等於 最小樓層數 時，Multibug 觸發後不可能減少，只會不變或增加。</li>
+</ul>
+<h4 class=h1h4>甚麼情況下樓層會不變或減少？</h4>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>原來的 樓層深度 已經等於該 Rank 的 最大樓層數 時 (例如 8D~A1 原本已是 B16F)，Multibug 觸發後不可能增加，只會不變或減少。</li>
+<li>變動範圍值較小的 Rank (如 02 和 DD，各只有 3 個值)，即使發生變動，幅度也很有限。</li>
+<li>亂數+1 重新計算出的值恰好等於原值時，樓層深度 不變。在變動範圍值為 N 的區間，不變的機率約為 1/N。</li>
+<li>樓層深度 減少代表可到達的樓層數比原來更少——對玩家而言通常沒有利用價值。</li>
+</ul>
+<h4 class=h1h4>Rank 02 / 38 / 3D 的結構性限制</h4>
+<p style="margin-bottom:4px;"><strong>Rank 02</strong> (樓層深度 2–4，SMR 1–3)：<strong style="color:#ac0;">Bug 樓層深度 = SMR+1</strong></p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">原始 SMR</th><th style="border:1px solid #555; padding:4px 8px;">Bug 樓層深度</th><th style="border:1px solid #555; padding:4px 8px;">結果</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">1</td><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px; color:#f84;">必定不增加（原始樓層深度 ≥ 2）</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">僅在原始樓層深度 = 2 時增加</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">原始樓層深度 = 2 或 3 時增加</td></tr>
+</table>
+<p style="margin-bottom:4px;"><strong>Rank 38 / 3D</strong> (樓層深度 4–6，SMR 2–4)：<strong style="color:#ac0;">Bug 樓層深度 = SMR+2</strong></p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">原始 SMR</th><th style="border:1px solid #555; padding:4px 8px;">Bug 樓層深度</th><th style="border:1px solid #555; padding:4px 8px;">結果</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px; color:#f84;">必定不增加（原始樓層深度 ≥ 4）</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">5</td><td style="border:1px solid #555; padding:4px 8px;">僅在原始樓層深度 = 4 時增加</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">原始樓層深度 = 4 或 5 時增加</td></tr>
+</table>
+<p style="margin-bottom:4px;">因此：</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li><strong>SMR＝1</strong> 的地圖，就算有 <strong style="color:#0ac;">Multibug ONLY / 敵減 的樓層</strong> 也<strong style="color:#f8f;">無法訪問</strong>。</li>
+<li><strong>SMR＝2</strong> 的地圖，只有 <strong style="color:#cf2;">Rank 02</strong> 才有機會訪問到 <strong style="color:#0ac;">Multibug ONLY / 敵減 的樓層</strong>，<strong style="color:#f8f;">Rank 38 / 3D 無法訪問</strong>。</li>
+</ul>
 </div>
 
 <div id="h1ListEN" style="display: none;">
@@ -1695,6 +1761,72 @@
 <p style="font-size:11px; color:#888;">Floor State: (A) F = 7 (B) ONLY monster ID is listed before trap monsters (e.g. Liquid Metal Slime)</p>
 </div>
 </details>
+
+<h3 class="h1sec" id="sec-multibug">4-player Multiplay Bug (Multibug)</h3>
+
+<h4 class=h1h4 style="margin-top:8px;">Multibug Overview</h4>
+<p style="margin-bottom:8px;"><strong>How To Trigger</strong>: With 4 consoles connected, 3 Guests join the Host's world simultaneously. While the 2nd Guest is joining, the Host rapidly presses A (at mashing speed) to enter the grotto entrance. The bug triggers probabilistically at the exact moment of entry (not guaranteed — if it fails, all 3 Guests must return to their own worlds and reconnect from scratch).</p>
+<p style="margin-bottom:8px;"><strong>Phenomenon</strong>: Once Multibug is triggered, <strong style="color:#c8f;">some map parameters are affected by RNG+1</strong>, causing the following in the Host's world:</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li><strong style="color:#fa0;">Changed</strong>: Grotto Name (Prefix, Suffix, Locale, Lv), Depth, Boss.</li>
+<li><strong style="color:#4f4;">Unchanged</strong>: Floor layouts, staircase positions, chest positions, monster types, chest ranks.</li>
+</ul>
+<p style="margin-bottom:8px;">　If the Multibugged Depth is deeper than original, player can access additional floors that were previously cut off by the depth limit.</p>
+<p style="margin-bottom:16px;">　The Host can only reach as deep as the Multibugged Depth — the Host can never exceed this limit. However, if Multibug increased the floor count, the Host can descend to one of the increased floors and <b>call-up a Guest</b>, who can then go deeper, exceed the Host's limit, up to B16F (the game's absolute maximum). The "<strong style="color:#f6f;">Force 16 Floors</strong>" mode in the tool's source code simulates this scenario. If Multibugged Depth is unchanged or decreased, there are no increased floors for the Host to stand on and call-up a Guest — <b>Force 16 Floors cannot occur</b>.</p>
+<h4 class=h1h4 style="margin-top:8px;">What Happens on Floor Increased?</h4>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>Some maps have <strong>ONLY or reduced-enemy</strong> floors within the <strong style="color:#fa0;">Host's increased floors</strong> or <strong style="color:#f6f;">Force 16 Floors</strong> (e.g. Cureslime-only under Multibug conditions).</li>
+<li>Some maps have more <strong>high-rank chests</strong> within the <strong style="color:#fa0;">Host's increased floors</strong> (e.g. S9 under Multibug conditions).</li>
+<li>Search results for <strong>special floors</strong> that only exist under <strong style="color:#f6f;">Force 16 Floors</strong> are shown in <strong style="color:#f6f;">magenta</strong>.</li>
+<li>Search results for <strong>special floors</strong> that only exist within <strong style="color:#fa0;">increased floors</strong> are shown in <strong style="color:#fa0;">orange</strong> (the Orange checkbox filter restricts the search to this type of map).</li>
+<li>Search results for <strong>special floors</strong> that exist regardless of floor increase are shown in <strong style="color:#4f4;">green</strong>.</li>
+</ul>
+<h4 class=h1h4>When Do Floors Increase?</h4>
+<p style="margin-bottom:8px;">Since <strong style="color:#c8f;">RNG+1</strong> doesn't change the grotto Rank, the Depth is re-generated within the same Range:</p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">Rank</th><th style="border:1px solid #555; padding:4px 8px;">Min Floor</th><th style="border:1px solid #555; padding:4px 8px;">Max Floor</th><th style="border:1px solid #555; padding:4px 8px;">Range</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">02</td><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">38~3D</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">4C~51</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">65</td><td style="border:1px solid #555; padding:4px 8px;">8</td><td style="border:1px solid #555; padding:4px 8px;">12</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">79</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">14</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">8D~A1</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">7</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">B5</td><td style="border:1px solid #555; padding:4px 8px;">11</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">6</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">C9</td><td style="border:1px solid #555; padding:4px 8px;">12</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">DD</td><td style="border:1px solid #555; padding:4px 8px;">14</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+</table>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>When the original Depth is smaller than the Rank's Max Floor, the Multibugged Depth may be deeper, granting access to <strong style="color:#fa0;">increased floors</strong> and <strong style="color:#f6f;">Force 16 Floors</strong>.</li>
+<li>Ranks with a larger Range (e.g. 8D, A1) have greater variation and a higher chance of floor increase.</li>
+<li>When the original Depth is the same as Min Floor, a decrease is impossible — it can only stay the same or increase.</li>
+</ul>
+<h4 class=h1h4>When Do Floors Stay the Same or Decrease?</h4>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>When the original Depth is already the same as Max Floor (e.g. a 8D~A1 grotto with B16F), an increase is impossible — it can only stay the same or decrease.</li>
+<li>Ranks with a smaller Range (e.g. 02, DD) limit the magnitude of any change.</li>
+<li>When the re-generated Depth equals to the original, Depth is unchanged. In a range of N values, this occurs with roughly 1/N.</li>
+<li>A Depth decrease means fewer accessible floors than the original — generally of no practical use.</li>
+</ul>
+<h4 class=h1h4>Structural Constraints of Rank 02 / 38 / 3D</h4>
+<p style="margin-bottom:4px;"><strong>Rank 02</strong> (Depth 2–4, SMR 1–3): <strong style="color:#ac0;">Bugged Depth = SMR+1</strong></p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">Orig. SMR</th><th style="border:1px solid #555; padding:4px 8px;">Bug Depth</th><th style="border:1px solid #555; padding:4px 8px;">Result</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">1</td><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px; color:#f84;">Never increases (original Depth ≥ 2)</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">Increases only if original Depth = 2</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">Increases if original Depth = 2 or 3</td></tr>
+</table>
+<p style="margin-bottom:4px;"><strong>Rank 38 / 3D</strong> (Depth 4–6, SMR 2–4): <strong style="color:#ac0;">Bugged Depth = SMR+2</strong></p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">Orig. SMR</th><th style="border:1px solid #555; padding:4px 8px;">Bug Depth</th><th style="border:1px solid #555; padding:4px 8px;">Result</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px; color:#f84;">Never increases (original Depth ≥ 4)</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">5</td><td style="border:1px solid #555; padding:4px 8px;">Increases only if original Depth = 4</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">Increases if original Depth = 4 or 5</td></tr>
+</table>
+<p style="margin-bottom:4px;">Therefore:</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>Maps with <strong>SMR = 1</strong> — even if they have <strong style="color:#0ac;">Multibug ONLY / reduced-enemy floors</strong>, those floors are <strong style="color:#f8f;">inaccessible</strong>.</li>
+<li>Maps with <strong>SMR = 2</strong> — only <strong style="color:#cf2;">Rank 02</strong> has a chance to access <strong style="color:#0ac;">Multibug ONLY / reduced-enemy floors</strong>; <strong style="color:#f8f;">Rank 38 / 3D cannot</strong>.</li>
+</ul>
 </div>
 
 <div id="h1ListJP" style="display: none;">
@@ -2427,6 +2559,72 @@
 <p style="font-size:11px; color:#888;">フロア状態：(A) F = 7 (B) オンリーモンスターの ID が宝箱モンスターより前にある（例：はぐれメタル）</p>
 </div>
 </details>
+
+<h3 class="h1sec" id="sec-multibug">4人マルチプレイによるバグ (マルチバグ)</h3>
+
+<h4 class=h1h4 style="margin-top:8px;">マルチバグの概要</h4>
+<p style="margin-bottom:8px;"><strong>発動条件</strong>：4 台の本体を繋げた状態で、ゲスト 3 名が同時にホストの世界に入る。2 人目が入っている最中、ホストが A ボタンを連打 (高橋名人レベルの速度) して、地図の入口に入った瞬間、確率的に発動する（100% 成功するわけではない。失敗した場合、ゲスト全員が自分の世界に戻り、もう一度接続しやり直す必要がある）。</p>
+<p style="margin-bottom:8px;"><strong>現象</strong>：マルチバグが発動すると、<strong style="color:#c8f;">一部の地図パラメータが 乱数+1 の影響を受け</strong>、ホストの世界で以下の変化が起きる：</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li><strong style="color:#fa0;">変わる</strong>：地図名1・地図名2・地図名3・Lv・階層数 (深さ)・ボス。</li>
+<li><strong style="color:#4f4;">変わらない</strong>：各フロアのレイアウト・階段の位置・宝箱の位置・出現モンスター・宝箱ランク。</li>
+</ul>
+<p style="margin-bottom:8px;">　マルチバグ発動後、地図の階層数が増加したり、減少したり、変わらなかったりする。</p>
+<p style="margin-bottom:8px;">　ホストのアクセスできる最深フロアは「バグで変わった階層数」まで——ホストはこの上限を超えることはできない。しかし、マルチバグにより階層数が増加した場合、ホストが増加したフロアまで降りた後にゲストを呼ぶと、ゲストはさらに深く進むことができ、最大 B16F (ゲームの絶対的な上限) まで到達可能。一方、階層数が変わらない、または減少した場合、ホストが立ってゲストを呼ぶための「増加したフロア」が存在せず、<strong style="color:#f6f;">強制 16 フロア</strong>は発生し得ない。</p>
+<h4 class=h1h4 style="margin-top:8px;">フロアの増加で何ができる？</h4>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>一部の地図では、<strong style="color:#fa0;">ホスト側の増えたフロア</strong>または<strong style="color:#f6f;">強制 16 フロア</strong>の中に <strong>オンリー・敵減</strong>フロア がある（例：マルチバグ状態の ベホマスライムオンリー など）。</li>
+<li>一部の地図では、<strong style="color:#fa0;">ホスト側の増えたフロア</strong>の中により多くの<strong>高ランク宝箱</strong>がある（例：マルチバグ状態の S9 など）。</li>
+<li><strong style="color:#f4f;">強制 16 フロア</strong>でのみ存在する<strong>特殊フロア</strong>の検索結果は<strong style="color:#f6f;">マゼンタ</strong>で表示される。</li>
+<li><strong style="color:#fa0;">増えたフロア</strong>でのみ存在する<strong>特殊フロア</strong>の検索結果は<strong style="color:#fa0;">オレンジ</strong>で表示される（オレンジのチェックボックスはこのタイプの地図に検索を限定するためのもの）。</li>
+<li>階層数増加の有無にかかわらず必ず存在する<strong>特殊フロア</strong>の検索結果は<strong style="color:#4f4;">緑</strong>で表示される。</li>
+</ul>
+<h4 class=h1h4>どんな場合にフロアが増える？</h4>
+<p style="margin-bottom:8px;">マルチバグによる<strong style="color:#c8f;">乱数+1</strong>は地図の Rank を変えないため、階層数は同じ範囲内で再計算される：</p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">Rank</th><th style="border:1px solid #555; padding:4px 8px;">最小階層数</th><th style="border:1px solid #555; padding:4px 8px;">最大階層数</th><th style="border:1px solid #555; padding:4px 8px;">変動範囲</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">02</td><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">38~3D</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">4C~51</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">65</td><td style="border:1px solid #555; padding:4px 8px;">8</td><td style="border:1px solid #555; padding:4px 8px;">12</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">79</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">14</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">8D~A1</td><td style="border:1px solid #555; padding:4px 8px;">10</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">7</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">B5</td><td style="border:1px solid #555; padding:4px 8px;">11</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">6</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">C9</td><td style="border:1px solid #555; padding:4px 8px;">12</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">5</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">DD</td><td style="border:1px solid #555; padding:4px 8px;">14</td><td style="border:1px solid #555; padding:4px 8px;">16</td><td style="border:1px solid #555; padding:4px 8px;">3</td></tr>
+</table>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>元の深さがその Rank の最大階層数未満であれば、マルチバグ発動後により高くなる可能性があり、追加されたフロアにアクセスできる。</li>
+<li>変動範囲の大きい Rank（例：8D~A1 の 7 個）ほど、深さの変動幅が大きく、階層数増加の可能性が高い。</li>
+<li>元の深さが最小階層数に等しい場合、減少は起こり得ず、不変または増加のみとなる。</li>
+</ul>
+<h4 class=h1h4>どんな場合にフロアが変わらない・減る？</h4>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li>元の深さが既にその Rank の最大階層数に等しい場合（例：8D~A1 の既に B16F になった地図）、増加は起こり得ず、不変または減少のみとなる。</li>
+<li>変動範囲の小さい Rank（例：02 と DD、各 3 個のみ）では、変動があっても幅が限られる。</li>
+<li><strong style="color:#c8f;">乱数+1</strong> で再計算された値がたまたま元と同じなら、深さは変わらない。変動範囲が N 個の場合、不変となる確率はおよそ 1/N。</li>
+<li>深さの減少は到達可能な階層が元より少なくなることを意味し、プレイヤーにとって通常利用価値はない。</li>
+</ul>
+<h4 class=h1h4>Rank 02 / 38 / 3D の構造的制約</h4>
+<p style="margin-bottom:4px;"><strong>Rank 02</strong>（深さ 2–4、SMR 1–3）：<strong style="color:#ac0;">Bug 深さ = SMR+1</strong></p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">元の SMR</th><th style="border:1px solid #555; padding:4px 8px;">Bug 深さ</th><th style="border:1px solid #555; padding:4px 8px;">結果</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">1</td><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px; color:#f84;">必ず増加しない (元の深さ ≥ 2)</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">元の深さ = 2 の場合のみ増加</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">元の深さ = 2 または 3 で増加</td></tr>
+</table>
+<p style="margin-bottom:4px;"><strong>Rank 38 / 3D</strong>（深さ 4–6、SMR 2–4）：<strong style="color:#ac0;">Bug 深さ = SMR+2</strong></p>
+<table class=h1t style="margin-top:4px; font-size:11px;">
+<tr class=hdr2><th style="border:1px solid #555; padding:4px 8px;">元の SMR</th><th style="border:1px solid #555; padding:4px 8px;">Bug 深さ</th><th style="border:1px solid #555; padding:4px 8px;">結果</th></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">2</td><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px; color:#f84;">必ず増加しない (元の深さ ≥ 4)</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">3</td><td style="border:1px solid #555; padding:4px 8px;">5</td><td style="border:1px solid #555; padding:4px 8px;">元の深さ = 4 の場合のみ増加</td></tr>
+<tr><td style="border:1px solid #555; padding:4px 8px;">4</td><td style="border:1px solid #555; padding:4px 8px;">6</td><td style="border:1px solid #555; padding:4px 8px;">元の深さ = 4 または 5 で増加</td></tr>
+</table>
+<p style="margin-bottom:4px;">したがって：</p>
+<ul style="padding-left:20px; margin-bottom:16px;">
+<li><strong>SMR＝1</strong> の地図は、<strong style="color:#0ac;">マルチバグオンリー・敵減フロア</strong>があっても<strong style="color:#f8f;">アクセス不可</strong>。</li>
+<li><strong>SMR＝2</strong> の地図は、<strong style="color:#cf2;">Rank 02</strong> でのみ<strong style="color:#0ac;">マルチバグオンリー・敵減フロア</strong>にアクセスできる可能性があり、<strong style="color:#f8f;">Rank 38 / 3D ではアクセス不可</strong>。</li>
+</ul>
 </div>
 
 </div></div></div></div>
