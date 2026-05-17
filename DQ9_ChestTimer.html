@@ -6,8 +6,9 @@
 <title>DQ9 Chest Timer (for Marathon)</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0a0a1a;color:#ccc;font-family:'Courier New',monospace;margin:0;overflow:hidden}
-.topbar{background:#111128;padding:8px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-bottom:2px solid #333}
+body{margin:0;overflow:hidden}
+#app{position:fixed;inset:0;background:#0a0a1a;color:#ccc;font-family:'Courier New',monospace;display:flex;flex-direction:column}
+.topbar{background:#111128;padding:8px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-bottom:2px solid #333;z-index:10}
 .topbar label{color:#88b;font-size:12px}
 .topbar input,.topbar select{background:#000;color:#ffd700;border:1px solid #555;padding:4px 6px;font-size:13px;font-family:inherit;border-radius:3px}
 .topbar input{width:60px;text-align:center}
@@ -23,7 +24,7 @@ body{background:#0a0a1a;color:#ccc;font-family:'Courier New',monospace;margin:0;
 .ctrl-btn.start.running{background:#600;color:#f88;border-color:#a00}
 .ctrl-btn.reset{background:#333;color:#888;border:2px solid #555;font-size:16px}
 .ctrl-btn.reset:active{background:#444}
-#mainArea{display:block;clear:both;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+#mainArea{display:block;flex:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 .vgrid{display:grid;width:max-content}
 .vhdr{position:sticky;top:0;z-index:4;background:#111128;padding:5px 6px;font-weight:bold;font-size:11px;white-space:nowrap;text-align:center;color:#88b;border-bottom:2px solid #333}
 .vhdr-rk{font-size:13px;font-weight:bold}
@@ -42,8 +43,7 @@ body{background:#0a0a1a;color:#ccc;font-family:'Courier New',monospace;margin:0;
 </style>
 </head>
 <body>
-<div class="topbar">
-<body>
+<div id="app">
 <div class="topbar">
 <label>Rank</label>
 <select id="inRank" onchange="onInputChange()">
@@ -76,7 +76,8 @@ body{background:#0a0a1a;color:#ccc;font-family:'Courier New',monospace;margin:0;
 <button class="ctrl-btn reset" id="btnReset" onclick="resetTimer()">⟲</button>
 </div>
 </div>
-<div class="main" id="mainArea"></div>
+<div id="mainArea"></div>
+</div>
 <script>
 // === Engine Code ===
 const TableA=new Uint8Array([1,30,0,0,2,40,0,0,3,10,0,0,4,10,0,0,5,10,0,0]);
@@ -1087,17 +1088,7 @@ function onInputChange() {
   compute();
 }
 
-function resizeMain() {
-  const tb = document.querySelector('.topbar');
-  const ma = document.getElementById('mainArea');
-  ma.style.height = (window.innerHeight - tb.offsetHeight) + 'px';
-}
-window.addEventListener('DOMContentLoaded', () => {
-  resizeMain();
-  window.addEventListener('resize', resizeMain);
-  compute();
-  updateStopwatch(-3000);
-});
+window.addEventListener('DOMContentLoaded', () => { compute(); updateStopwatch(-3000); });
 </script>
 </body>
 </html>
