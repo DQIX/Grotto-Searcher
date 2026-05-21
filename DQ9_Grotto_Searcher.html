@@ -50,13 +50,13 @@
 <div id="seedInspectorModal" class="modal-overlay" onclick="closeSeedInspector(event)">
 <div class="si-modal-content modal-content" onclick="event.stopPropagation()">
 <div class="si-header">
-<h3 style="color:#0ff; margin:0; font-size:14px;">AT Detail Search</h3>
+<h3 style="color:#0ff;margin:0;font-size:14px;">AT Detail Search</h3>
 <button class="modal-close" onclick="closeSeedInspector()">×</button>
 </div>
-<div class="modal-body" style="padding:12px; overflow-y:auto; max-height:85vh;">
+<div class="modal-body" style="padding:12px;overflow-y:auto;max-height:85vh;">
 <div class="si-section">
 <div class="si-grid">
-<div class="si-field"><label>Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px; text-transform:uppercase;" oninput="updateSeedInspector()"></div>
+<div class="si-field"><label>Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px;text-transform:uppercase;" oninput="updateSeedInspector()"></div>
 <div class="si-field"><label data-i18n="G07"></label><select id="si_env" style="width:65px;" onchange="updateSeedInspector()"><option value="1">洞窟</option><option value="2" selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
 <div class="si-field"><label data-i18n="G09"></label><select id="si_mr" onchange="updateSeedInspector()"></select></div>
 <div class="si-field"><label data-i18n="G18"></label><input type="number" id="si_deft" value=910 min=1 max=999 style="width:60px;" oninput="updateSeedInspector()"></div>
@@ -70,11 +70,11 @@
 <div class="si-grid" style="gap:6px;">
 <div class="si-field"><label data-i18n="G22"></label><select id="si_enemy_count" onchange="updateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
 <div class="si-field"><label data-i18n="G23"></label><select id="si_group_size" onchange="updateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label style="display:block; margin-bottom:5px; font-size:11px; color:#fa0;">2T</label><div style="display:flex; align-items:center; height:16px;"><input type="checkbox" id="si_2nd_turn" onchange="updateSeedInspector()" style="width:20px; height:20px; cursor:pointer;"></div></div>
+<div class="si-field"><label style="display:block;margin-bottom:5px;font-size:11px;color:#fa0;">2T</label><div style="display:flex;align-items:center;height:16px;"><input type="checkbox" id="si_2nd_turn" onchange="updateSeedInspector()" style="width:20px;height:20px;cursor:pointer;"></div></div>
 <div class="si-field"><label data-i18n="G24"></label><select id="si_rare_rate" style="width:60px;" onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256" selected>1/256</option></select></div>
 <div class="si-field"><label data-i18n="G25"></label><select id="si_norm_rate" style="width:60px;" onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128" selected>1/128</option></select></div>
 <div class="si-field"><label data-i18n="G26"></label>
-<div style="display:flex; gap:4px;">
+<div style="display:flex;gap:4px;">
 <select id="si_t1" onchange="updateSeedInspector()" style="width:45px;"></select>
 <select id="si_t2" onchange="updateSeedInspector()" style="width:45px;"></select>
 <select id="si_t3" onchange="updateSeedInspector()" style="width:45px;"></select>
@@ -84,8 +84,8 @@
 </div>
 </div>
 <div class="si-section">
-<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-<label style="color:#aaa; font-size:12px;">AT Debug</label>
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
+<label style="color:#aaa;font-size:12px;">AT Debug</label>
 <input type="number" id="si_target_step" value="35" min="1" style="width:65px;" oninput="updateSeedInspector()">
 </div>
 <div class="si-result-box" id="si_target_results" style="border-color:#f44;"></div>
@@ -4558,22 +4558,21 @@
 </div>
 </div>
 
-<div id="unified_search_panel" style="background:#111128; padding:20px; border-bottom:2px solid #4a4a8a;"> 
-<div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a; padding-bottom: 12px; margin-bottom: 16px;">
-<h3 style="color:#ffd700; margin: 0; font-size:16px;" data-i18n="G01"></h3>
-<div class="checkbox-field" style="background: #1a1a3a; padding: 6px 12px; border-radius: 4px; border: 1px solid #335;">
+<div id="unified_search_panel" style="background:#111128;padding:20px;border-bottom:2px solid #4a4a8a;">
+<div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a;padding-bottom: 12px;margin-bottom: 16px;">
+<h3 style="color:#ffd700;margin: 0;font-size:16px;" data-i18n="G01"></h3>
+<div class="checkbox-field" style="background: #1a1a3a;padding: 6px 12px;border-radius: 4px;border: 1px solid #335;">
 <input type="checkbox" id="searchAllRanks" checked>
-<label for="searchAllRanks" data-i18n="F01"></label> 
+<label for="searchAllRanks" data-i18n="F01"></label>
 <input type="checkbox" id="searchOnlyWithD" style="margin-left: 10px;">
 <label for="searchOnlyWithD" data-i18n="F03"></label>
-<button id="btnExport" class="go" style="background:linear-gradient(135deg, #282, #050); padding: 4px 16px; color:#fff; margin-left: 15px; font-size:12px;" onclick="exportSearchResults()" data-i18n="H06"></button>
+<button id="btnExport" class="go" style="background:linear-gradient(135deg, #282, #050);padding: 4px 16px;color:#fff;margin-left: 15px;font-size:12px;" onclick="exportSearchResults()" data-i18n="H06"></button>
 </div>
 </div>
-
-<div style="display:flex; flex-wrap:wrap; gap:8px; width:100%; align-items:flex-start;">
-<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #4a4a8a; flex:1 1 calc(60% - 16px); min-width:340px; margin:0;">
-<h4 style="color:#0ff; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
-<button onclick="openh1Modal()" style="margin-left:6px; background:#224; color:#0ff; border:1px solid #4a4a8a; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;" onmouseover="this.style.background='#0ff'; this.style.color='#000';" onmouseout="this.style.background='#224'; this.style.color='#0ff';" title="Help">?</button></h4>
+<div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;align-items:flex-start;">
+<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;flex:1 1 calc(60% - 16px);min-width:340px;margin:0;">
+<h4 style="color:#0ff;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
+<button onclick="openh1Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button></h4>
 <div class="us-grid">
 <div><label data-i18n="G03"></label><select id="cond_prefix"><option value="" data-i18n="G02"></option></select></div>
 <div><label data-i18n="G04"></label><select id="cond_suffix"><option value="" data-i18n="G02"></option></select></div>
@@ -4620,49 +4619,46 @@
 <select id="cond_only_mon" style="color:#fcf;border-color:#c4a;">
 <option value="" data-i18n="G02"></option>
 </select></div>
-<div style="grid-column:span 2; display:flex; flex-direction:column; background:#1a0a1a; border:1px solid #525; border-radius:4px; padding:4px 8px;">
-<label style="color:#f8f; font-size:11px; margin-bottom:2px;" data-i18n="G15"></label>
-<div style="display:flex; align-items:center; gap: 6px;">
-<button class="go" onclick="MultibugSearch()" id="searchBtnBug" style="background:linear-gradient(135deg,#c0c,#606); color:#fff; padding:0 6px; font-size:10px; height:20px; border:none; border-radius:3px; font-weight:bold; cursor:pointer;" data-i18n="H05"></button>
-<label style="color:#aaa; font-size:11px; display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
+<div style="grid-column:span 2;display:flex;flex-direction:column;background:#1a0a1a;border:1px solid #525;border-radius:4px;padding:4px 8px;">
+<label style="color:#f8f;font-size:11px;margin-bottom:2px;" data-i18n="G15"></label>
+<div style="display:flex;align-items:center;gap: 6px;">
+<button class="go" onclick="MultibugSearch()" id="searchBtnBug" style="background:linear-gradient(135deg,#c0c,#606);color:#fff;padding:0 6px;font-size:10px;height:20px;border:none;border-radius:3px;font-weight:bold;cursor:pointer;" data-i18n="H05"></button>
+<label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
 <input type="checkbox" id="requireFloorIncrease" style="margin-right:2px;"><span data-i18n="F04"></span></label>
-<label style="color:#aaa; font-size:11px; display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
+<label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
 <input type="checkbox" id="requireBugFloorHit" style="margin-right:2px;">🍊</label>
 </div>
 </div>
 </div>
-
-<div style="background:#111; padding:6px; border-radius:4px; border:1px solid #4c4; margin-bottom:8px;">
-<div class="chest-count-row" style="display:flex; flex-wrap:wrap; font-size:12px; color:#fff;">
-<label>S <input type="number" id="cond_box_S" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>A <input type="number" id="cond_box_A" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>B <input type="number" id="cond_box_B" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>C <input type="number" id="cond_box_C" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>D <input type="number" id="cond_box_D" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>E <input type="number" id="cond_box_E" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>F <input type="number" id="cond_box_F" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>G <input type="number" id="cond_box_G" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>H <input type="number" id="cond_box_H" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
-<label>I <input type="number" id="cond_box_I" min="0" max="40" style="width:40px; background:#000; color:#fff; border:1px solid #666;"></label>
+<div style="background:#111;padding:6px;border-radius:4px;border:1px solid #4c4;margin-bottom:8px;">
+<div class="chest-count-row" style="display:flex;flex-wrap:wrap;font-size:12px;color:#fff;">
+<label>S <input type="number" id="cond_box_S" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>A <input type="number" id="cond_box_A" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>B <input type="number" id="cond_box_B" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>C <input type="number" id="cond_box_C" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>D <input type="number" id="cond_box_D" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>E <input type="number" id="cond_box_E" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>F <input type="number" id="cond_box_F" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>G <input type="number" id="cond_box_G" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>H <input type="number" id="cond_box_H" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
+<label>I <input type="number" id="cond_box_I" min="0" max="40" style="width:40px;background:#000;color:#fff;border:1px solid #666;"></label>
 </div>
 </div>
-
-<div style="display:flex; width:100%;">
-<button id="searchBtnSpecific" class="go" style="flex:1; background:linear-gradient(135deg,#0ff,#08a); color:#000; font-size:15px; padding:8px; font-weight:bold; letter-spacing: 2px; margin-right:8px;" onclick="startUltimateSearch()">🎯 Search</button>
-<button class="go" style="background:linear-gradient(135deg,#556,#334); color:#fff; font-size:15px; padding:8px 12px; font-weight:bold; border-radius:4px; border:1px solid #666;" onclick="clearUltimateSearch()" title="Clear">Clear</button>
+<div style="display:flex;width:100%;">
+<button id="searchBtnSpecific" class="go" style="flex:1;background:linear-gradient(135deg,#0ff,#08a);color:#000;font-size:15px;padding:8px;font-weight:bold;letter-spacing: 2px;margin-right:8px;" onclick="startUltimateSearch()">🎯 Search</button>
+<button class="go" style="background:linear-gradient(135deg,#556,#334);color:#fff;font-size:15px;padding:8px 12px;font-weight:bold;border-radius:4px;border:1px solid #666;" onclick="clearUltimateSearch()" title="Clear">Clear</button>
 </div>
 </div>
-
-<div style="display:flex; flex-direction:column; gap:8px; flex:1 1 calc(40% - 16px); min-width:320px; margin:0;">
-<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #4a4a8a; margin:0;">
-<h4 style="color:#88b; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
-<button onclick="openh2Modal()" style="margin-left:6px; background:#224; color:#0ff; border:1px solid #4a4a8a; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;" onmouseover="this.style.background='#0ff'; this.style.color='#000';" onmouseout="this.style.background='#224'; this.style.color='#0ff';" title="Help">?</button></h4>
-
-<div style="display: flex; flex-direction: column; gap:8px;">
-<div class="search-group" style="background:#111; border-color:#333; margin:0;">
+<div style="display:flex;flex-direction:column;gap:8px;flex:1 1 calc(40% - 16px);min-width:320px;margin:0;">
+<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;margin:0;">
+<h4 style="color:#88b;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
+<button onclick="openh2Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button>
+<button onclick="mrtOpen()" style="margin-left:6px;background:linear-gradient(135deg, #c60, #840);color:#fff;border:none;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;font-family:inherit;" data-i18n="H07"></button></h4>
+<div style="display: flex;flex-direction: column;gap:8px;">
+<div class="search-group" style="background:#111;border-color:#333;margin:0;">
 <label data-i18n="G16"></label>
-<div class="search-input-row" style="display:flex; flex-wrap:nowrap; gap:4px; align-items:center;">
-<select id="searchItem" style="flex:1 1 auto; width:0; min-width:80px; height:26px; font-size:11px; padding:0 2px;">
+<div class="search-input-row" style="display:flex;flex-wrap:nowrap;gap:4px;align-items:center;">
+<select id="searchItem" style="flex:1 1 auto;width:0;min-width:80px;height:26px;font-size:11px;padding:0 2px;">
 <optgroup label="" id="og1">
 <option value="Ethereal stone" data-i18n="I_Ethereal stone"></option>
 <option value="Lucida shard" data-i18n="I_Lucida shard"></option>
@@ -4710,62 +4706,58 @@
 <option value="Pandora's box" data-i18n="I_Pandora's box"></option>
 </optgroup>
 </select>
-<button class="go" onclick="startSearch()" id="searchBtn" style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;" data-i18n="H01"></button>
-<button class="go" onclick="TKSearch()" id="BtnTK" style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;" data-i18n="H02"></button>
-<button class="go" onclick="Box3Search()" id="searchBtnBox3" style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;" data-i18n="H03"></button>
+<button class="go" onclick="startSearch()" id="searchBtn" style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;" data-i18n="H01"></button>
+<button class="go" onclick="TKSearch()" id="BtnTK" style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;" data-i18n="H02"></button>
+<button class="go" onclick="Box3Search()" id="searchBtnBox3" style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;" data-i18n="H03"></button>
 </div>
 </div>
-
-<div class="search-group" style="background:#05111a; border-color:#134; margin: 0;">
+<div class="search-group" style="background:#05111a;border-color:#134;margin: 0;">
 <label style="color:#0ff;" data-i18n="G17"></label>
-<div style="display: flex; gap: 6px; margin-top: 4px; align-items: stretch;">
-<div id="fs_container" style="display:flex; flex-direction:column; gap:4px; flex: 1 1 auto; min-width: 0;"></div>
-<button class="go" onclick="FreeSearch()" id="btnFreeSearch" style="background:linear-gradient(135deg, #0088cc, #004488); color:#fff; padding:0 12px; font-size:12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; flex: 0 0 auto; min-width: 45px;">Free</button>
+<div style="display: flex;gap: 6px;margin-top: 4px;align-items: stretch;">
+<div id="fs_container" style="display:flex;flex-direction:column;gap:4px;flex: 1 1 auto;min-width: 0;"></div>
+<button class="go" onclick="FreeSearch()" id="btnFreeSearch" style="background:linear-gradient(135deg, #0088cc, #004488);color:#fff;padding:0 12px;font-size:12px;border:none;border-radius:4px;font-weight:bold;cursor:pointer;flex: 0 0 auto;min-width: 45px;">Free</button>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-
-<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #055; margin-top:10px; box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
-<h4 style="color:#0ca; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">3️⃣ <span style="margin-left:8px" data-i18n="H04"></span>
-<button onclick="openh3Modal()" style="margin-left:6px; background:#001a1a; color:#0ca; border:1px solid #055; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;" onmouseover="this.style.background='#0ca'; this.style.color='#000';" onmouseout="this.style.background='#001a1a'; this.style.color='#0ca';" title="Help">?</button>
-<button class="go" onclick="openSeedInspector()" style="margin-left:6px; background:linear-gradient(135deg,#0aa,#044); color:#fff; padding:4px 8px; font-size:11px; height:28px;">Detail</button>
+<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #055;margin-top:10px;box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
+<h4 style="color:#0ca;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">3️⃣ <span style="margin-left:8px" data-i18n="H04"></span>
+<button onclick="openh3Modal()" style="margin-left:6px;background:#001a1a;color:#0ca;border:1px solid #055;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ca';this.style.color='#000';" onmouseout="this.style.background='#001a1a';this.style.color='#0ca';" title="Help">?</button>
+<button class="go" onclick="openSeedInspector()" style="margin-left:6px;background:linear-gradient(135deg,#0aa,#044);color:#fff;padding:4px 8px;font-size:11px;height:28px;">Detail</button>
 </h4>
 <div class="compact-search-row">
-<div class="search-group" style="background:#001a1a; border-color:#055; padding:8px;">
-<div class="search-input-row" style="align-items:center; flex-wrap:wrap; gap:2px;">
-<select id="at_env" onchange="atUpd()" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:55px;">
+<div class="search-group" style="background:#001a1a;border-color:#055;padding:8px;">
+<div class="search-input-row" style="align-items:center;flex-wrap:wrap;gap:2px;">
+<select id="at_env" onchange="atUpd()" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:55px;">
 <option value="1">洞窟</option><option value="2">遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5" selected>火山</option></select>
-<select id="at_mr" onchange="atUpd()" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:45px;">
+<select id="at_mr" onchange="atUpd()" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:45px;">
 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9" selected>9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
-<select id="at_mon" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:240px;"></select>
-<span style="color:#555; font-size:11px;" data-i18n="G18"></span>
-<input type="number" id="at_deft" oninput="updateBattleAT()" min="0" max="999" placeholder="" style="background:#000; color:#39C5BB; border:1px solid #555; padding:4px; font-size:12px; width:50px; text-align:center;">
-<span style="color:#555; font-size:11px;" data-i18n="G19"></span>
+<select id="at_mon" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:240px;"></select>
+<span style="color:#555;font-size:11px;" data-i18n="G18"></span>
+<input type="number" id="at_deft" oninput="updateBattleAT()" min="0" max="999" placeholder="" style="background:#000;color:#39C5BB;border:1px solid #555;padding:4px;font-size:12px;width:50px;text-align:center;">
+<span style="color:#555;font-size:11px;" data-i18n="G19"></span>
 <input type="checkbox" id="at_sortPOP" style="margin-right:2px;">
-<input type="number" id="at_n_input" oninput="updateBattleAT()" min="0" value="0" style="background:#000; color:#39C5BB; border:1px solid #555; padding:4px; font-size:12px; width:45px; text-align:center;">
-<span style="color:#555; font-size:11px;" id="at_lblSteps"></span>
-<input type="number" id="at_maxSteps" value="400" style="width:55px; background:#000; color:#0f0; border:1px solid #555; padding:4px; font-size:12px; text-align:center;">
-<select id="at_threshold" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:60px;">
+<input type="number" id="at_n_input" oninput="updateBattleAT()" min="0" value="0" style="background:#000;color:#39C5BB;border:1px solid #555;padding:4px;font-size:12px;width:45px;text-align:center;">
+<span style="color:#555;font-size:11px;" id="at_lblSteps"></span>
+<input type="number" id="at_maxSteps" value="400" style="width:55px;background:#000;color:#0f0;border:1px solid #555;padding:4px;font-size:12px;text-align:center;">
+<select id="at_threshold" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:60px;">
 <option value="128">1/256</option>
 <option value="256">1/128</option>
 <option value="512">1/64</option>
 <option value="1024">1/32</option>
 </select>
-<select id="at_pattern" style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px;"><option value="">--</option></select>
-<button class="go" onclick="atPtnSearch()" id="atPtnSchBtn" style="background:linear-gradient(135deg,#f80,#a30); color:#fff; padding:4px 8px; font-size:11px; height:28px;">AT</button>
-<button class="go" onclick="atSearch()" id="atSearchBtn" style="background:linear-gradient(135deg,#0ca,#065); color:#fff; padding:4px 8px; font-size:11px; height:28px;">M</button>
+<select id="at_pattern" style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;"><option value="">--</option></select>
+<button class="go" onclick="atPtnSearch()" id="atPtnSchBtn" style="background:linear-gradient(135deg,#f80,#a30);color:#fff;padding:4px 8px;font-size:11px;height:28px;">AT</button>
+<button class="go" onclick="atSearch()" id="atSearchBtn" style="background:linear-gradient(135deg,#0ca,#065);color:#fff;padding:4px 8px;font-size:11px;height:28px;">M</button>
 </div>
 </div>
 </div>
 </div>
-
-<div id="searchResults" style="margin-top:10px; padding:12px; background:#0a0a15; border:1px solid #4a4a8a; border-radius:6px; min-height:100px;">
-<div style="color:#666; font-size:13px; text-align:center; margin-top:12px;"></div>
+<div id="searchResults" style="margin-top:10px;padding:12px;background:#0a0a15;border:1px solid #4a4a8a;border-radius:6px;min-height:100px;">
+<div style="color:#666;font-size:13px;text-align:center;margin-top:12px;"></div>
 </div></div>
-
 <div id="result"></div>
 <hr>
 <div class="info-bar">
@@ -4774,9 +4766,46 @@ Based on research by DQ9 Lovers from 5ch / GameFAQs / The Quester's Rest / Other
 ElistOfs is introduced by 43 (DQ9TMAP101.exe's author) and fixed by TKG<br>
 Powered by Gemini and Claude<br>
 Produced by WWWild<br>
-Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX; Copyright Koichi Sugiyama<br>
-<span style="cursor:pointer; background:#224; color:#aaa; border:1px solid #4a4a8a; padding:4px 10px; border-radius:4px; margin-left:12px; display:inline-block; font-size:12px; transition:all 0.2s;" onclick="openDisclaimerModal()" onmouseover="this.style.borderColor='#ffd700'; this.style.color='#ffd700';" onmouseout="this.style.borderColor='#4a4a8a'; this.style.color='#aaa';">📜 Disclaimer</span>
+Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX;Copyright Koichi Sugiyama<br>
+<span style="cursor:pointer;background:#224;color:#aaa;border:1px solid #4a4a8a;padding:4px 10px;border-radius:4px;margin-left:12px;display:inline-block;font-size:12px;transition:all 0.2s;" onclick="openDisclaimerModal()" onmouseover="this.style.borderColor='#ffd700';this.style.color='#ffd700';" onmouseout="this.style.borderColor='#4a4a8a';this.style.color='#aaa';">📜 Disclaimer</span>
 </span>
+</div>
+<!-- Marathon Modal (Vertical Grid) -->
+<div id="marathonModal">
+<div class="mrt-topbar">
+<button class="mrt-close" onclick="mrtClose()">✕</button>
+<label>Rank</label>
+<select id="mrt_inRank" onchange="mrtInputChange()">
+<option value="02">02</option><option value="38">38</option><option value="3D">3D</option>
+<option value="4C">4C</option><option value="51">51</option><option value="65">65</option>
+<option value="79">79</option><option value="8D">8D</option><option value="A1">A1</option>
+<option value="B5">B5</option><option value="C9">C9</option><option value="DD" selected>DD</option>
+</select>
+<label>Seed</label>
+<input id="mrt_inSeed" value="263C" maxlength="4" inputmode="text" oninput="mrtInputChange()">
+<select id="mrt_presets" onchange="mrtApplyPreset()" style="color:#0ca;">
+<option value="">— Presets —</option>
+<option value="DD,263C">【あら風73】あらぶる風の巣Lv73（DD 263C）</option>
+<option value="B5,3CA2">【川崎ロッカー】あらぶる光の世界Lv86（B5 3CA2）</option>
+<option value="DD,2E7A">【ましゃ725ソーマ】残された空の道Lv70（DD 2E7A）</option>
+<option value="C9,7FE0">【ゆりっぺ】あらぶる夢の水脈Lv64（C9 7FE0）</option>
+<option value="C9,2AC6">【ゆりっぺ大富豪】見えざる獣の墓場Lv73（C9 2AC6）</option>
+<option value="DD,32BB">【ジャギ大富豪】大いなる岩の世界Lv63（DD 32BB）</option>
+<option value="DD,47D0">【御柱げんま】とどろく花のじごくLv67（DD 47D0）</option>
+</select>
+<span class="mrt-sep"></span>
+<button class="mrt-fbtn active" data-f="ALL" onclick="mrtSetFilter('ALL')">All</button>
+<button class="mrt-fbtn" data-f="SA" onclick="mrtSetFilter('SA')">SA</button>
+<button class="mrt-fbtn" data-f="AB" onclick="mrtSetFilter('AB')">AB</button>
+<button class="mrt-fbtn" id="mrt_btnLang" onclick="mrtToggleLang()" style="color:#0ca;border-color:#0ca;">JP</button>
+<span class="mrt-sep"></span>
+<div class="mrt-timer-box">
+<div class="mrt-timer-display" id="mrt_timerDisp"><span id="mrt_timerText">-03.00</span></div>
+<button class="mrt-ctrl start" id="mrt_btnStart" onclick="mrtToggleTimer()">▶</button>
+<button class="mrt-ctrl reset" id="mrt_btnReset" onclick="mrtResetTimer()">⟲</button>
+</div>
+</div>
+<div class="mrt-main" id="mrt_mainArea"></div>
 </div>
 </body>
 </html>

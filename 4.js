@@ -17,7 +17,7 @@ return val;
 }
 function getATPair(seed,N){
 let s=seed>>>0;
-for(let i=0;i<N;i++) s=lcg(s);
+for(let i=0;i<N;i++)s=lcg(s);
 const atN=(s>>>16)&0x7FFF;
 s=lcg(s);
 const atN1=(s>>>16)&0x7FFF;
@@ -42,9 +42,9 @@ sel.appendChild(opt);
 if(typeof updateATOnlyMonsters==='function') updateATOnlyMonsters();
 }
 if(document.readyState==='loading'){
-document.addEventListener('DOMContentLoaded',atinit);
+document.addEventListener('DOMContentLoaded', atinit);
 }else{
-setTimeout(atinit,0);
+setTimeout(atinit, 0);
 }
 function atinit(){
 atUpd();
@@ -60,7 +60,7 @@ patSel.appendChild(opt);
 const lbl=document.getElementById('at_lblSteps');
 if(lbl) lbl.textContent=T('Steps','步數','ｽﾃｯﾌﾟ');
 }
-function getMonsterNameByAT(atVal,envType,floorMR){
+function getMonsterNameByAT(atVal, envType, floorMR){
 const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
 if(!spawnList)return "?";
 for(const entry of spawnList){
@@ -77,7 +77,7 @@ const floorMR=parseInt(document.getElementById('at_mr').value);
 document.querySelectorAll('.at-dynamic-mon').forEach(el=>{
 const atVal=parseInt(el.getAttribute('data-at'));
 if(!isNaN(atVal)){
-el.textContent=getMonsterNameByAT(atVal,envType,floorMR);
+el.textContent=getMonsterNameByAT(atVal, envType, floorMR);
 }
 });
 }
@@ -88,9 +88,9 @@ let nInput=document.getElementById('at_n_input');
 let n=(nInput&&nInput.value!=='')?parseInt(nInput.value):0;
 document.querySelectorAll('.at-m-card').forEach(card=>{
 let seed=parseInt(card.getAttribute('data-seed'));
-let cN=35+(29 * n);
-const {atN,atN1}=getATPair(seed,cN);
-const {deft,color: deftColor,label: deftLabel}=formatDeftness(atN1);
+let cN=35+(29*n);
+const {atN, atN1}=getATPair(seed, cN);
+const {deft, color: deftColor, label: deftLabel}=formatDeftness(atN1);
 let atnLabel=card.querySelector('.at-m-atn-label');
 if(atnLabel){
 if(atnLabel.textContent.includes('AT[')) atnLabel.textContent=`AT[${cN}]: `;
@@ -100,11 +100,11 @@ let atnVal=card.querySelector('.at-m-atval');
 if(atnVal) atnVal.textContent=atN;
 let monStrong=card.querySelector('.at-dynamic-mon');
 if(monStrong){
-monStrong.setAttribute('data-at',atN);
+monStrong.setAttribute('data-at', atN);
 let envType=parseInt(document.getElementById('at_env').value);
 let floorMR=parseInt(document.getElementById('at_mr').value);
 if(typeof getMonsterNameByAT==='function'){
-monStrong.textContent=getMonsterNameByAT(atN,envType,floorMR);
+monStrong.textContent=getMonsterNameByAT(atN, envType, floorMR);
 }
 }
 let deftSpan=card.querySelector('.at-m-deft');
@@ -134,8 +134,8 @@ d4=target-(pop+5);
 el.textContent=`${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}`;
 });
 }
-function evaluateATPtn(pType,validCount,hb){
-let matched=false,extractLen=0;
+function evaluateATPtn(pType, validCount, hb){
+let matched=false, extractLen=0;
 switch (pType){
 case 1: if(validCount>=2&&(hb&3)===3){matched=true;extractLen=2;} break;
 case 2: if(validCount>=3&&(hb&15)===5){matched=true;extractLen=4;} break;
@@ -151,18 +151,18 @@ case 11: if(validCount>=10&&(hb&1023)===341){matched=true;extractLen=10;} break;
 case 12: if(validCount>=10){let v=hb&1023;if(v===337||v===325||v===277){matched=true;extractLen=10;}} break;
 case 13: if(validCount>=10){let v=hb&1023;if(v===321||v===324||v===276||v===273||v===261){matched=true;extractLen=10;}} break;
 }
-return{matched,extractLen};
+return{matched, extractLen};
 }
-function formatATPtnHTML(extractLen,step,valsBuffer,hb){
+function formatATPtnHTML(extractLen, step, valsBuffer, hb){
 let formattedVals=[];
 for(let i=extractLen-1;i>=0;i--){
 let sv=step-i;
 let v=valsBuffer[sv%10];
-let m=(hb&(1 << i))!==0;
+let m=(hb&(1<<i))!==0;
 if(m) formattedVals.push(`<strong style="color:#f44;">${v}</strong>`);
 else formattedVals.push(`<span style="color:#666;">${v}</span>`);
 }
-return formattedVals.join(',');
+return formattedVals.join(', ');
 }
 async function atSearch(){
 if(isSearching){searchCancel=true;return;}
@@ -174,9 +174,9 @@ const monFloorMR=parseInt(document.getElementById('at_mr').value);
 const monId=document.getElementById('at_mon').value;
 const nVal=parseInt(document.getElementById('at_n_input').value);
 if(isNaN(nVal)||nVal<0){isSearching=false;btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';return;}
-const N=35+29 * nVal;
+const N=35+29*nVal;
 const spawnList=SPAWN_DB[monEnvType]&&SPAWN_DB[monEnvType][monFloorMR];
-let atmin=-1,atmax=-1;
+let atmin=-1, atmax=-1;
 for(const entry of spawnList){
 if(entry[0]===monId&&entry.length>=3){
 atmin=entry[1];atmax=entry[2];break;
@@ -192,10 +192,10 @@ const baseRankStr=document.getElementById('rank').value;
 const maxSeed=0x7FFF;
 const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);isSearching=false;btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';return;}
-const {startSeed,endSeed}=rangeData;
+const {startSeed, endSeed}=rangeData;
 const rank=parseInt(baseRankStr);
-const rStr=rank.toString(16).toUpperCase().padStart(2,'0');
-const targetRankKey=RANKS[rStr]?rStr :(RANKS["0x"+rStr]?"0x"+rStr:null);
+const rStr=rank.toString(16).toUpperCase().padStart(2, '0');
+const targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:null);
 const deftInput=document.getElementById('at_deft').value.trim();
 const deftMax=deftInput!==''?parseInt(deftInput):-1;
 const atThreshold=parseInt(document.getElementById('at_threshold').value);
@@ -230,22 +230,22 @@ if(pType>0){
 const valsBuffer=new Int32Array(10);
 for(const [seed] of [...atMchSeeds]){
 let rng=seed;
-let historyBits=0,validCount=0;
+let historyBits=0, validCount=0;
 let foundOffsets=[];
 for(let step=1;step<=atMaxSteps;step++){
 rng=lcg(rng);
 let val=(rng>>>16)&0x7FFF;
 if(step<38)continue;
 let isMatch=(val<=atThreshold)?1:0;
-historyBits=((historyBits << 1) | isMatch)&1023;
+historyBits=((historyBits<<1)|isMatch)&1023;
 valsBuffer[step%10]=val;
 validCount++;
-let{matched,extractLen}=evaluateATPtn(pType,validCount,historyBits);
+let{matched, extractLen}=evaluateATPtn(pType, validCount, historyBits);
 if(matched){
-let startStep=step-extractLen+1;
+let startStep=step - extractLen+1;
 if(startStep>=N+3){
-let valsHtml=formatATPtnHTML(extractLen,step,valsBuffer,historyBits);
-foundOffsets.push({ start: startStep,valsHtml: valsHtml });
+let valsHtml=formatATPtnHTML(extractLen, step, valsBuffer, historyBits);
+foundOffsets.push({ start: startStep, valsHtml: valsHtml });
 }
 historyBits=0;validCount=0;
 }
@@ -271,41 +271,41 @@ const probSel2=document.getElementById('at_threshold');
 const patternName2=patSel2?patSel2.options[patSel2.selectedIndex].text:'';
 const probText2=probSel2?probSel2.options[probSel2.selectedIndex].text:'';
 try {
-for(const [seed,atinfo] of atMchSeeds){
+for(const [seed, atinfo] of atMchSeeds){
 if(searchCancel) break;
 if(processed%50===0){
 progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% ['+B04+''+hitCount+' '+B03+']';
-await new Promise(r=>setTimeout(r,0));
+await new Promise(r=>setTimeout(r, 0));
 }
 searchEngine.MapSeed=seed;
 searchEngine.MapRank=rank;
 _cachedLocData=null;
 searchEngine.calculateDetail(true);
-if(!checkBasicConds(searchEngine,conds)){processed++;continue;}
-if(!checkOnlyMonPossible(searchEngine,conds)){processed++;continue;}
+if(!checkBasicConds(searchEngine, conds)){processed++;continue;}
+if(!checkOnlyMonPossible(searchEngine, conds)){processed++;continue;}
 if(needMapGeneration) searchEngine.createDungeonDetail();
 let boxHtml="";
 if(hasBoxCond){
-let chestResult=ChestHtml(searchEngine,conds);
+let chestResult=ChestHtml(searchEngine, conds);
 if(!chestResult.isMatch){processed++;continue;}
 boxHtml=chestResult.html;
 }
-let elistResult=checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr);
+let elistResult=checkElistAndD(searchEngine, conds, searchOnlyWithD, _onlyMonExpectedStr);
 if(!elistResult.match){processed++;continue;}
-let locResult=checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey);
+let locResult=checkLocationBQ(seed, conds, searchFilterLoc, targetRankKey);
 if(!locResult.match){processed++;continue;}
-let anomResult=checkAnomalies(searchEngine,conds);
+let anomResult=checkAnomalies(searchEngine, conds);
 if(!anomResult.match){processed++;continue;}
 let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
 hitCount++;
 let itemNode=document.createElement('div');
 itemNode.className='search-result-item';
 if(elistResult.hasMatchedD) itemNode.dataset.hasD="true";
-let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
+let locHtml=getLocHtmlCached(seed, targetRankKey, conds);
 let specialHtml=elistResult.specialHitDetails.length>0?`<div style="margin-top:4px;">${elistResult.specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
 let anomalyHtml=anomResult.anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomResult.anomalyDetails.map(h=>h.replace('<span style="','<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
 let mapNameDisp=DISPLAY_LANG!=='EN'?searchEngine.mapNameJP:searchEngine.mapName;
-const {deft,color: deftColor,label: deftLabel}=formatDeftness(atinfo.atN1);
+const {deft, color: deftColor, label: deftLabel}=formatDeftness(atinfo.atN1);
 let diffsHtml='';
 let patHtml='';
 const patData=atPtnDetails.get(seed);
@@ -342,8 +342,8 @@ ${anomalyHtml}
 ${atHtml}
 ${patHtml}
 `;
-itemNode.onclick=makeResultClickHandler(seed,rStr,capturedJumpToFloor);
-allResults.push({ node: itemNode,pop: atinfo.atN });
+itemNode.onclick=makeResultClickHandler(seed, rStr, capturedJumpToFloor);
+allResults.push({ node: itemNode, pop: atinfo.atN });
 processed++;
 }
 const atSortPOP=document.getElementById('at_sortPOP').checked;
@@ -354,11 +354,11 @@ for(let res of allResults) fragment.appendChild(res.node);
 if(fragment.children.length>0) grid.appendChild(fragment);
 if(typeof updateATOnlyMonsters==='function') updateATOnlyMonsters();
 if(typeof updateBattleAT==='function') updateBattleAT();
-} catch (error){
-console.error("AT Monster Search error:",error);
+}catch(error){
+console.error("AT Monster Search error:", error);
 alert(A03);
 searchCancel=true;
-} finally {
+}finally{
 isSearching=false;
 btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';
 progressSpan.textContent=searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${B06?B06+' ':''}${hitCount} ${B03})`;
@@ -375,16 +375,16 @@ if(pType===0){alert(A01);isSearching=false;btn.textContent='AT';btn.style.backgr
 let maxSteps=parseInt(document.getElementById('at_maxSteps').value);
 if(isNaN(maxSteps)||maxSteps<38) maxSteps=400;
 const nVal=parseInt(document.getElementById('at_n_input').value);
-const POPIndex=(isNaN(nVal)||nVal<0)?35:35+29 * nVal;
+const POPIndex=(isNaN(nVal)||nVal<0)?35:35+29*nVal;
 if(maxSteps<POPIndex) maxSteps=POPIndex+1;
 const searchFilterLoc=true;
 const baseRankStr=document.getElementById('rank').value;
-const rStr=parseInt(baseRankStr).toString(16).toUpperCase().padStart(2,'0');
-const targetRankKey=RANKS[rStr]?rStr :(RANKS["0x"+rStr]?"0x"+rStr:null);
+const rStr=parseInt(baseRankStr).toString(16).toUpperCase().padStart(2, '0');
+const targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:null);
 const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);isSearching=false;btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';return;}
 const startSeed=rangeData.startSeed;
-const endSeed=searchFilterLoc?Math.min(rangeData.endSeed,0x7FFF):rangeData.endSeed;
+const endSeed=searchFilterLoc?Math.min(rangeData.endSeed, 0x7FFF):rangeData.endSeed;
 if(startSeed>endSeed){alert(A09);isSearching=false;btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';return;}
 const patSel=document.getElementById('at_pattern');
 const patternName=patSel.options[patSel.selectedIndex].text;
@@ -406,12 +406,12 @@ try {
 for(let seed=startSeed;seed<=endSeed;seed++){
 if(searchCancel) break;
 if(searchFilterLoc){
-let locData=calcLocations(seed,targetRankKey);
+let locData=calcLocations(seed, targetRankKey);
 if(locData.outputOrder.length===0){processed++;continue;}
 }
 if(processed%1000===0){
 progressSpan.textContent=Math.floor((processed/totalSeeds)*100)+'% (Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+B04+''+hitCount+' '+B03+']';
-await new Promise(r=>setTimeout(r,0));
+await new Promise(r=>setTimeout(r, 0));
 }
 processed++;
 let rng=seed;
@@ -423,32 +423,32 @@ let DefValue=null;
 for(let step=1;step<=maxSteps;step++){
 rng=lcg(rng);
 let val=(rng>>>16)&0x7FFF;
-if(step===POPIndex) POPValue=val;
-if(step===POPIndex+1) DefValue=val;
+if(step===POPIndex)POPValue=val;
+if(step===POPIndex+1)DefValue=val;
 if(step<38)continue;
 let isMatch=(val<=threshold)?1:0;
-historyBits=((historyBits << 1) | isMatch)&1023;
+historyBits=((historyBits<<1)|isMatch)&1023;
 valsBuffer[step%10]=val;
 validCount++;
-let{matched,extractLen }=evaluateATPtn(pType,validCount,historyBits);
+let{matched, extractLen }=evaluateATPtn(pType,validCount,historyBits);
 if(matched){
 let startStep=step-extractLen+1;
 if(startStep>=POPIndex+3){
 let valsHtml=formatATPtnHTML(extractLen,step,valsBuffer,historyBits);
-foundOffsets.push({ start: startStep,valsHtml: valsHtml });
+foundOffsets.push({start:startStep,valsHtml:valsHtml});
 }
 historyBits=0;validCount=0;
 }
 }
 if(foundOffsets.length>0){
 hitCount++;
-let seedHex=seed.toString(16).toUpperCase().padStart(4,'0');
+let seedHex=seed.toString(16).toUpperCase().padStart(4, '0');
 let offsetsHtml=foundOffsets.map(o =>
 `<span style="color:#0ff;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`
 ).join('<br>');
 let specificAtHtml='';
 if(POPValue!==null&&DefValue!==null){
-const {deft,color: deftColor,label: deftLabel}=formatDeftness(DefValue);
+const {deft,color:deftColor,label:deftLabel}=formatDeftness(DefValue);
 const diffsHtml=foundOffsets.map(o=>{
 const d1=o.start-(POPIndex+3);
 const d2=o.start-(POPIndex+4);
@@ -472,7 +472,7 @@ itemNode.innerHTML=`
 ${specificAtHtml}
 `;
 itemNode.onclick=makeResultClickHandler(seed,null);
-allATResults.push({ node: itemNode,pop: POPValue!==null?POPValue:99999 });
+allATResults.push({node:itemNode,pop:POPValue!==null?POPValue:99999});
 }
 }
 const atSortPOP=document.getElementById('at_sortPOP').checked;
@@ -480,33 +480,33 @@ if(atSortPOP){
 allATResults.sort((a,b)=>a.pop-b.pop);
 }
 for(let res of allATResults) fragment.appendChild(res.node);
-if(fragment.children.length>0) grid.appendChild(fragment);
+if(fragment.children.length>0)grid.appendChild(fragment);
 updateATOnlyMonsters();
 updateBattleAT();
-} catch (error){
+}catch(error){
 console.error("AT Pattern Search error:",error);
 alert(A03);
 searchCancel=true;
-} finally {
+}finally{
 isSearching=false;
 btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';
 progressSpan.textContent=searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${B06?B06+' ':''}${hitCount} ${B03})`;
 }
 }
 const SI_PATTERN_INDICES={
-'R2': [[1,2]],
-'R2_3': [[1,4]],
-'R3': [[1,2,3]],
-'R4': [[1,2,3,4]],
-'R5': [[1,2,3,4,5]],
-'4_in_6': [[1,2,3,6],[1,2,5,6],[1,4,5,6]],
-'3_in_7': [[1,2,5],[1,2,7],[1,4,5],[1,4,7],[1,6,7]],
-'N2': [[2,4]],
-'N3': [[2,4,6]],
-'N4': [[2,4,6,8]],
-'N5': [[2,4,6,8,10]],
-'4_in_10': [[2,4,6,10],[2,4,8,10],[2,6,8,10]],
-'3_in_10': [[2,4,8],[2,4,10],[2,6,8],[2,6,10],[2,8,10]]
+'R2':[[1,2]],
+'R2_3':[[1,4]],
+'R3':[[1,2,3]],
+'R4':[[1,2,3,4]],
+'R5':[[1,2,3,4,5]],
+'4_in_6':[[1,2,3,6],[1,2,5,6],[1,4,5,6]],
+'3_in_7':[[1,2,5],[1,2,7],[1,4,5],[1,4,7],[1,6,7]],
+'N2':[[2,4]],
+'N3':[[2,4,6]],
+'N4':[[2,4,6,8]],
+'N5':[[2,4,6,8,10]],
+'4_in_10':[[2,4,6,10],[2,4,8,10],[2,6,8,10]],
+'3_in_10':[[2,4,8],[2,4,10],[2,6,8],[2,6,10],[2,8,10]]
 };
 function siRunBattleSim(startRng,gSize,rRarity,nRarity,tLevels,recordSeq){
 let rng=startRng>>>0;
@@ -516,14 +516,14 @@ let normHits=[];
 let rngCount=0;
 let successRare=0;
 let successNorm=0;
-let threshR=rRarity>0?Math.floor(32768 / rRarity):-1;
-let threshN=nRarity>0?Math.floor(32768 / nRarity):-1;
+let threshR=rRarity>0?Math.floor(32768/rRarity):-1;
+let threshN=nRarity>0?Math.floor(32768/nRarity):-1;
 for(let m=0;m<gSize;m++){
 rng=lcg(rng);
 rngCount++;
 let vR=(rng>>>16)&0x7FFF;
 let okR=vR<=threshR;
-if(recordSeq) seq.push({val: vR,red: okR,type: `Group${m+1} Drop (R)`});
+if(recordSeq)seq.push({val:vR,red:okR,type:`Group${m+1} Drop (R)`});
 if(okR){
 successRare++;
 rareHits.push(rngCount);
@@ -532,7 +532,7 @@ rng=lcg(rng);
 rngCount++;
 let vN=(rng>>>16)&0x7FFF;
 let okN=vN<=threshN;
-if(recordSeq) seq.push({val: vN,red: okN,type: `Group${m+1} Drop (N)`});
+if(recordSeq)seq.push({val:vN,red:okN,type:`Group${m+1} Drop (N)`});
 if(okN){
 successNorm++;
 normHits.push(rngCount);
@@ -545,10 +545,10 @@ for(let m=0;m<gSize;m++){
 rng=lcg(rng);
 rngCount++;
 let vTR=(rng>>>16)&0x7FFF;
-let eRateR=Math.floor((rRarity * 100) / tLevels[b]);
-let thTR=Math.floor(32767 / eRateR)+1;
+let eRateR=Math.floor((rRarity*100)/tLevels[b]);
+let thTR=Math.floor(32767/eRateR)+1;
 let okTR=vTR<=thTR;
-if(recordSeq) seq.push({val: vTR,red: okTR,steal: true,type: `Book${b+1} Group${m+1} (R)`});
+if(recordSeq)seq.push({val:vTR,red:okTR,steal:true,type:`Book${b+1} Group${m+1} (R)`});
 if(okTR){
 successRare++;
 rareHits.push(rngCount);
@@ -556,10 +556,10 @@ rareHits.push(rngCount);
 rng=lcg(rng);
 rngCount++;
 let vTN=(rng>>>16)&0x7FFF;
-let eRateN=Math.floor((nRarity * 100) / tLevels[b]);
-let thTN=Math.floor(32767 / eRateN)+1;
+let eRateN=Math.floor((nRarity*100)/tLevels[b]);
+let thTN=Math.floor(32767/eRateN)+1;
 let okTN=vTN<=thTN;
-if(recordSeq) seq.push({val: vTN,red: okTN,steal: true,type: `Book${b+1} Group${m+1} (N)`});
+if(recordSeq)seq.push({val:vTN,red:okTN,steal:true,type:`Book${b+1} Group${m+1} (N)`});
 if(okTN){
 successNorm++;
 normHits.push(rngCount);
@@ -567,7 +567,7 @@ normHits.push(rngCount);
 }
 }
 }
-return {successRare,successNorm,seq,rareHits,normHits};
+return{successRare,successNorm,seq,rareHits,normHits};
 }
 function siMatchesPattern(hits,patterns){
 if(!patterns||patterns.length===0)return false;
@@ -575,7 +575,7 @@ for(let p of patterns){
 if(hits.length<p.length)continue;
 let match=true;
 for(let i=0;i<p.length;i++){
-if(hits[i]!==p[i]){ match=false;break;}
+if(hits[i]!==p[i]){match=false;break;}
 }
 if(match)return true;
 }
@@ -588,7 +588,7 @@ let fw=item.red?'bold':'normal';
 let bg=item.steal?'background:rgba(255,150,0,0.4);padding:0 2px;border-radius:3px;':'';
 return `<span style="color:${color};font-weight:${fw};${bg}" title="${item.type}">${item.val}</span>`;
 });
-return `<div style="margin-top:6px;font-size:11px;color:#aaa;line-height:1.6;">`+C24+`: [ ${items.join(',')} ]</div>`;
+return `<div style="margin-top:6px;font-size:11px;color:#aaa;line-height:1.6;">`+C24+`:[ ${items.join(', ')} ]</div>`;
 }
 function initSeedInspectorUI(){
 const mrSel=document.getElementById('si_mr');
@@ -646,12 +646,12 @@ const pTypeStr=pSelect.value;
 const pType=(typeof AT_PAT!=='undefined')?(AT_PAT[pTypeStr]||0):0;
 const pText=pSelect.options[pSelect.selectedIndex].text;
 if(isNaN(seed))return;
-const N=35+(29 * n);
-const {atN: atN_val,atN1: atN1_val}=getATPair(seed,N);
+const N=35+(29*n);
+const {atN:atN_val,atN1:atN1_val}=getATPair(seed,N);
 const monName=(typeof getMonsterNameByAT==='function')?getMonsterNameByAT(atN_val,envType,floorMR):'?';
 const mapDeft=(typeof calcDeftness==='function')?calcDeftness(atN1_val):0;
 let actualCost=(userDeft>=mapDeft)?3:4;
-let extraTurnCost=is2ndTurn?Math.floor(enemyCount / 2):0;
+let extraTurnCost=is2ndTurn?Math.floor(enemyCount/2):0;
 let totalStartCost=actualCost+extraTurnCost;
 let patternMsg="";
 let foundOffset=-1;
@@ -660,13 +660,13 @@ const isNormPat=pTypeStr.startsWith('N')||pTypeStr==='4_in_10'||pTypeStr==='3_in
 const targetPatterns=SI_PATTERN_INDICES[pTypeStr];
 if(pType>0&&scanMax>0&&targetPatterns){
 let baseRng=seed>>>0;
-for(let i=0;i<37;i++) baseRng=lcg(baseRng);
+for(let i=0;i<37;i++)baseRng=lcg(baseRng);
 for(let step=38;step<=N+scanMax;step++){
 const rngSnapshot=baseRng;
 let sim=siRunBattleSim(baseRng,groupSize,rareRarity,normRarity,tLvs,false);
 baseRng=lcg(baseRng);
 let currentHits=isNormPat?sim.normHits:sim.rareHits;
-if(siMatchesPattern(currentHits,targetPatterns)){
+if(siMatchesPattern(currentHits, targetPatterns)){
 if(step>=N+totalStartCost){
 foundOffset=step-(N+totalStartCost);
 foundSequence=siRunBattleSim(rngSnapshot,groupSize,rareRarity,normRarity,tLvs,true).seq;
@@ -692,21 +692,21 @@ let abs_2=abs_1+1;
 let abs_4=abs_1+2;
 let currentRng=seed>>>0;
 for(let i=0;i<abs_1-1;i++) currentRng=lcg(currentRng);
-let defaultSim=siRunBattleSim(currentRng,groupSize,rareRarity,normRarity,tLvs,true);
+let defaultSim=siRunBattleSim(currentRng, groupSize, rareRarity, normRarity, tLvs, true);
 seqHtml=siBuildSeqHtml(defaultSim.seq);
 battleStr=`${BATTLE_LABEL}: <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_1} / ${abs_2} / ${abs_4}</span> <span style="color:#888;font-size:11px;">`+C23+`</span> ${seqHtml}`;
 }
 let s_target=seed>>>0;
-for(let i=0;i<targetTotalStep;i++) s_target=lcg(s_target);
+for(let i=0;i<targetTotalStep;i++)s_target=lcg(s_target);
 const atTarget_val=(s_target>>>16)&0x7FFF;
-let DropThreshold=Math.floor(32768 / rareRarity);
+let DropThreshold=Math.floor(32768/rareRarity);
 let firstThiefLv=tLvs[0]>0?tLvs[0]:99;
-const effectiveRate=Math.floor((rareRarity * 100) / firstThiefLv);
-const ThiefThreshold=Math.floor(32767 / effectiveRate)+1;
+const effectiveRate=Math.floor((rareRarity*100)/firstThiefLv);
+const ThiefThreshold=Math.floor(32767/effectiveRate)+1;
 const resBox=document.getElementById('si_at_results');
 resBox.innerHTML=`
 <div style="display:flex;justify-content:space-between;">
-<span>POP: <span class="si-highlight">${N}</span> | AT ${N}: <span class="si-highlight">${atN_val}</span> (${monName})</span>
+<span>POP: <span class="si-highlight">${N}</span>|AT ${N}: <span class="si-highlight">${atN_val}</span> (${monName})</span>
 <span style="font-size:11px;">${patternMsg}</span>
 </div>
 <div>AT ${N+1}: <span style="color:#39C5BB;">${atN1_val}</span> ➔ `+G18+`: <span class="si-highlight">${mapDeft}</span></div>

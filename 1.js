@@ -1,5 +1,5 @@
 const DISPLAY_LANG='EN';
-const _L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
+const _L=(DISPLAY_LANG==='EN') ? 0 : (DISPLAY_LANG==='JP') ? 2 : 1;
 function T(en,tw,jp){return _L===0?en:(_L=== 2?jp:tw);}
 const A01=T('Please choose at least one condition.','請至少輸入一個搜尋條件！','少なくとも1つの条件を入力してください。');
 const A02=T('Sorry! Unable to search any result from these conditions.','條件衝突！您選擇的 Map Rank 無法產出符合所選條件的怪物。','条件が矛盾しています！選択した Map Rank では該当する結果が存在しません。');
@@ -22,7 +22,7 @@ const C01=T('Name','地圖名稱','地図名');
 const C02=T('Type','地形','地形');
 const C03=T('SMR','怪物等級','敵ランク');
 const C04=T('Depth','樓層數','深さ');
-const C05=T('Location & BQ','位置與 BQ','場所&Base値');
+const C05=T('Location & BQ','位置與 BQ','場所 & Base値');
 const C06=T('AT value','AT 判定值','AT 判定値');
 const C06b=T('AT Ptn','地圖法','地図法');
 const C07=T('📦 Total Chests:','📦 全圖寶箱分佈:','📦 宝箱:');
@@ -89,6 +89,7 @@ const H03=T('3rd','整列箱','整列箱');
 const H04=T('Map Method (AT) Search','地圖法 (AT) 搜尋','地図法 (AT) 検索');
 const H05=T('Multibug','Multibug','マルチバグ');
 const H06=T('📥 TXT Output','📥 匯出 TXT','📥 TXT 出力');
+const H07=T('Chest Timer','馬拉松工具','マラソンツール');
 const J01=T('Click to preview','點擊直接預覽此地圖','クリックでプレビュー');
 const J02=T('Waiting for searching...','等待執行搜尋...','検索待ち中...');
 const J03=T('Item Table','寶箱內容物','アイテムテーブル');
@@ -101,7 +102,7 @@ const STR_BOTH=T('Solo+Party','即+一人旅','即+一人旅');
 const TKB1_1=T('Nipple (Inaccessible chest)','乳首','乳首 (取れない宝箱)');
 const TKB2_1=T('Chamber','イケない通路','イケない通路');
 const TKB2_2=T('Chamber (Multi-floor)','イケない通路 (多層樓)','イケない通路 (複数階層)');
-const TKB2_3=T('Chamber (Same floor,multiple)','イケない通路 (同層多個)','イケない通路 (同じフロアに複数)');
+const TKB2_3=T('Chamber (Same floor, multiple)','イケない通路 (同層多個)','イケない通路 (同じフロアに複数)');
 const TKB1_2=T('Nipple+Chamber','チラリズム','チラリズム (イケない乳首)');
 const TKB1_3=T('Chestless','無寶箱樓層','箱無しフロア');
 const TKB3_0=T('Wall-Embedded Stair','被牆壁封死的樓梯','壁に埋まった階段');
@@ -125,7 +126,7 @@ const i18nDict={
 'F01':F01,'F03':F03,'F04':F04,
 'G01':G01,'G02':G02,'G03':G03,'G04':G04,'G05':G05,'G06':G06,'G07':G07,'G08':G08,'G09':G09,'G10':G10,'G11':G11,'G12':G12,'G13':G13,'G14':G14,'G15':G15,
 'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'GBQ':GBQ,
-'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,
+'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,'H07':H07,
 'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
 'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,
 'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
@@ -172,41 +173,41 @@ const TableO=new Uint8Array([0,14,28,41,55,71,88,108,125,141,162]);
 const TableP=new Uint8Array([10,10,5,10,10,8,5,8,10,10,2,8,2,2,8,8,10,2,10,10,10,10,8,8,10,2,2,2,10,10,10,10,10,10,10,1,10,10,5,2,2,5,15,15,12,10,15,12,2,5,5,1,1,1,1,5,15,10,15,1,1,1,1,1,1,10,10,1,12,1,15,10,15,15,15,10,6,1,1,10,1,10,1,1,1,1,1,1,10,10,10,10,10,15,6,2,2,15,1,1,1,1,1,1,1,1,1,1,5,13,13,10,15,15,15,5,1,1,1,1,1,1,1,1,1,10,10,10,10,10,15,10,10,8,1,1,1,1,1,1,1,15,10,10,10,15,10,8,5,5,1,1,1,1,1,1,1,1,1,1,1,1]);
 const TableQ=new Uint8Array([12,14,16,15,7,18,28,23,27,0,29,13,30,31,32,33,34,35,36,22,19,1,7,46,37,38,39,40,140,41,11,42,7,2,43,44,45,49,8,50,51,139,52,53,11,8,16,3,54,47,48,76,55,56,57,139,24,58,16,59,60,61,62,63,64,65,66,67,11,68,20,139,21,69,8,70,71,72,73,74,75,11,77,78,79,80,81,82,139,83,84,85,17,4,25,86,87,11,88,89,90,91,92,93,94,95,96,97,98,99,100,17,5,11,9,10,101,102,103,104,105,106,107,108,109,110,111,112,6,17,11,9,113,114,115,116,117,118,119,120,121,122,123,9,124,17,125,26,10,126,127,128,129,130,131,132,133,134,135,136,137,138]);
 const TableR=[
-["125G","125G"],["268G","268G"],["450G","450G"],["670G","670G"],["880G","880G"],["1500G","1500G"],["3000G","3000G"],
-["Gleeban groat","グビアナどうか"],["Gleeban guinea","グビアナぎんか"],["Gleeban gold piece","グビアナきんか"],["Gold bar","きんかい"],
-["Mini medal","ちいさなメダル"],["Medicinal herb","やくそう"],["Strong medicine","上やくそう"],["Evac-u-bell","おもいでのすず"],
-["Holy water","せいすい"],["Magic water","まほうのせいすい"],["Sage's elixir","けんじゃのせいすい"],["Antidotal herb","どくけしそう"],
-["Strong antidote","上どくけしそう"],["Narspicious","あやかしそう"],["Mystifying mixture","おかしなくすり"],["Superior medicine","いやしそう"],
-["Moonwort bulb","まんげつそう"],["Panacea","ばんのうくすり"],["Perfect panacea","超ばんのうくすり"],["Yggdrasil leaf","せかいじゅのは"],
-["Chimaera wing","キメラのつばさ"],["Oaken club","こんぼう"],["Pop socks","ニーソックス"],["Silver bracelets","ぎんのリスト"],
-["Bunny tail","うさぎのおまもり"],["Royal soil","まりょくの土"],["Lava lump","ようがんのカケラ"],["Angel bell","天使のすず"],
-["Silver platter","シルバートレイ"],["Fisticup","げんこつダケ"],["Iron nails","てつのクギ"],["Gold ring","きんのゆびわ"],
-["Gold bracer","きんのプレスレット"],["Iron mask","てっかめん"],["Toad oil","ガマのあぶら"],["Fisticup","げんこつダケ"],
-["Iron ore","てっこうせき"],["Slime shield","スライムトレイ"],["Corundum","ルビーのげんせき"],["Rockbomb shard","ばくだん石"],
-["Flintstone","つけもの石"],["Mirrorstone","かがみ石"],["Resurrock","命の石"],["Strength ring","ちからのゆびわ"],
-["Agility ring","はやてのリング"],["Manky mud","どくどくヘドロ"],["Nectar","花のみつ"],["Sorcerer's stone","ひらめきのジュエル"],
-["Glombolero","ふしぎなボレロ"],["Saint's ashes","せいじゃのはい"],["Malicite","うらみのほうじゅ"],["Hephaestus' flame","ヘパイトスのひだね"],
-["Muscle belt","あらくれベルト"],["Maid outfit","メイド服"],["Thug boots","あらくれブーツ"],["Thug's mug","あらくれマスク"],
-["Maid's mop","ヘッドドレス"],["Toughie trousers","あらくれズボン"],["Finessence","ぶどうエキス"],["Aggressence","とうこんエキス"],
-["Dangerous bustier","あぶないビスチェ"],["Brouhaha boomstick","まてきの杖"],["Hephaestus' flame","ヘパイトスのひだね"],["Astral plume","天使のはね"],
-["Densinium","ヘビーメタル"],["Riotous wristbands","ぶしんのリスト"],["Fingerless gloves","オープンフィンガー"],["Mythril ore","ミスリルこうせき"],
-["Veteran's gloves","古強者のグローブ"],["Fuddle bow","ゆうわくの弓"],["Oh-no bow","じごくの弓"],["Blessed boots","しんかんのブーツ"],
-["Skull ring","ドクロのゆびわ"],["Hela's hammer","まじんのかなづち"],["Hades' helm","サタンヘルム"],["Demon whip","あくまのムチ"],
-["Saint's ashes","せいじゃのはい"],["Densinium","ヘビーメタル"],["Lucida shard","ほしのカケラ"],["Depressing shoes","しわよせのくつ"],
-["Unhappy hat","しわよせのぼうし"],["Veteran's armour","古強者のよろい"],["Spellspadrilles","だいまどうシューズ"],["Veteran's boots","古強者のブーツ"],
-["Combat boots","ぶしんのブーツ"],["She-mage shoes","まじょのブーツ"],["Trinity tights","しんかんのタイツ"],["Ruinous shield","はめつの盾"],
-["Divine dress","さとりのワンピース"],["Skull helm","ドクロのかぶと"],["Matador's gloves","マタドールグラブ"],["Pandora's box","パンドラボックス"],
-["Enchanted stone","せいれいせき"],["Mythril ore","ミスリルこうせき"],["Hero spear","えいゆうのやり"],["Pruning knife","こがらしのダガー"],
-["Wyrmwand","ドラゴンの杖"],["Wizardly whip","カルベロビュート"],["Beast claws","まじゅうのツメ"],["Attribeauty","風林火山"],
-["Heavy hatchet","ふんさいのおおなた"],["Megaton hammer","メガトンハンマー"],["Pentarang","ペンタグラム"],["Pandora's box","パンドラボックス"],
-["Astral plume","天使のはね"],["Ethereal stone","げんませき"],["Reckless necklace","しにがみの首かざり"],["Orichalcum","オリハルコン"],
-["Metal slime sword","メタスラの剣"],["Metal slime spear","メタスラのやり"],["Metal slime shield","メタスラの盾"],["Metal slime armour","メタスラよろい"],
-["Metal slime helm","メタスラヘルム"],["Metal slime gauntlets","メタスラのこて"],["Metal slime sollerets","メタスラブーツ"],["Pandora's box","パンドラボックス"],
-["Reset stone","リサイクルストーン"],["Evac-u-bell","おもいでのすず"],["Sainted soma","天使のソーマ"],["Orichalcum","オリハルコン"],
-["Stardust sword","ほしくずのつるぎ"],["Poker","きしんのまそう"],["Deft dagger","サウザンドダガー"],["Bright staff","ひかりの杖"],
-["Gringham whip","グリンガムのムチ"],["Knockout rod","しゅらのこん"],["Dragonlord claws","竜王のツメ"],["Critical fan","ひっさつのおうぎ"],
-["Bad axe","グレートアックス"],["Groundbreaker","大地くだき"],["Meteorang","メテオエッジ"],["Angel's bow","天使の弓"],
-["Mimic","ミミック"],["Cannibox","ひとくいばこ"]
+["125G","125G"], ["268G","268G"], ["450G","450G"], ["670G","670G"], ["880G","880G"], ["1500G","1500G"], ["3000G","3000G"],
+["Gleeban groat","グビアナどうか"], ["Gleeban guinea","グビアナぎんか"], ["Gleeban gold piece","グビアナきんか"], ["Gold bar","きんかい"],
+["Mini medal","ちいさなメダル"], ["Medicinal herb","やくそう"], ["Strong medicine","上やくそう"], ["Evac-u-bell","おもいでのすず"],
+["Holy water","せいすい"], ["Magic water","まほうのせいすい"], ["Sage's elixir","けんじゃのせいすい"], ["Antidotal herb","どくけしそう"],
+["Strong antidote","上どくけしそう"], ["Narspicious","あやかしそう"], ["Mystifying mixture","おかしなくすり"], ["Superior medicine","いやしそう"],
+["Moonwort bulb","まんげつそう"], ["Panacea","ばんのうくすり"], ["Perfect panacea","超ばんのうくすり"], ["Yggdrasil leaf","せかいじゅのは"],
+["Chimaera wing","キメラのつばさ"], ["Oaken club","こんぼう"], ["Pop socks","ニーソックス"], ["Silver bracelets","ぎんのリスト"],
+["Bunny tail","うさぎのおまもり"], ["Royal soil","まりょくの土"], ["Lava lump","ようがんのカケラ"], ["Angel bell","天使のすず"],
+["Silver platter","シルバートレイ"], ["Fisticup","げんこつダケ"], ["Iron nails","てつのクギ"], ["Gold ring","きんのゆびわ"],
+["Gold bracer","きんのプレスレット"], ["Iron mask","てっかめん"], ["Toad oil","ガマのあぶら"], ["Fisticup","げんこつダケ"],
+["Iron ore","てっこうせき"], ["Slime shield","スライムトレイ"], ["Corundum","ルビーのげんせき"], ["Rockbomb shard","ばくだん石"],
+["Flintstone","つけもの石"], ["Mirrorstone","かがみ石"], ["Resurrock","命の石"], ["Strength ring","ちからのゆびわ"],
+["Agility ring","はやてのリング"], ["Manky mud","どくどくヘドロ"], ["Nectar","花のみつ"], ["Sorcerer's stone","ひらめきのジュエル"],
+["Glombolero","ふしぎなボレロ"], ["Saint's ashes","せいじゃのはい"], ["Malicite","うらみのほうじゅ"], ["Hephaestus' flame","ヘパイトスのひだね"],
+["Muscle belt","あらくれベルト"], ["Maid outfit","メイド服"], ["Thug boots","あらくれブーツ"], ["Thug's mug","あらくれマスク"],
+["Maid's mop","ヘッドドレス"], ["Toughie trousers","あらくれズボン"], ["Finessence","ぶどうエキス"], ["Aggressence","とうこんエキス"],
+["Dangerous bustier","あぶないビスチェ"], ["Brouhaha boomstick","まてきの杖"], ["Hephaestus' flame","ヘパイトスのひだね"], ["Astral plume","天使のはね"],
+["Densinium","ヘビーメタル"], ["Riotous wristbands","ぶしんのリスト"], ["Fingerless gloves","オープンフィンガー"], ["Mythril ore","ミスリルこうせき"],
+["Veteran's gloves","古強者のグローブ"], ["Fuddle bow","ゆうわくの弓"], ["Oh-no bow","じごくの弓"], ["Blessed boots","しんかんのブーツ"],
+["Skull ring","ドクロのゆびわ"], ["Hela's hammer","まじんのかなづち"], ["Hades' helm","サタンヘルム"], ["Demon whip","あくまのムチ"],
+["Saint's ashes","せいじゃのはい"], ["Densinium","ヘビーメタル"], ["Lucida shard","ほしのカケラ"], ["Depressing shoes","しわよせのくつ"],
+["Unhappy hat","しわよせのぼうし"], ["Veteran's armour","古強者のよろい"], ["Spellspadrilles","だいまどうシューズ"], ["Veteran's boots","古強者のブーツ"],
+["Combat boots","ぶしんのブーツ"], ["She-mage shoes","まじょのブーツ"], ["Trinity tights","しんかんのタイツ"], ["Ruinous shield","はめつの盾"],
+["Divine dress","さとりのワンピース"], ["Skull helm","ドクロのかぶと"], ["Matador's gloves","マタドールグラブ"], ["Pandora's box","パンドラボックス"],
+["Enchanted stone","せいれいせき"], ["Mythril ore","ミスリルこうせき"], ["Hero spear","えいゆうのやり"], ["Pruning knife","こがらしのダガー"],
+["Wyrmwand","ドラゴンの杖"], ["Wizardly whip","カルベロビュート"], ["Beast claws","まじゅうのツメ"], ["Attribeauty","風林火山"],
+["Heavy hatchet","ふんさいのおおなた"], ["Megaton hammer","メガトンハンマー"], ["Pentarang","ペンタグラム"], ["Pandora's box","パンドラボックス"],
+["Astral plume","天使のはね"], ["Ethereal stone","げんませき"], ["Reckless necklace","しにがみの首かざり"], ["Orichalcum","オリハルコン"],
+["Metal slime sword","メタスラの剣"], ["Metal slime spear","メタスラのやり"], ["Metal slime shield","メタスラの盾"], ["Metal slime armour","メタスラよろい"],
+["Metal slime helm","メタスラヘルム"], ["Metal slime gauntlets","メタスラのこて"], ["Metal slime sollerets","メタスラブーツ"], ["Pandora's box","パンドラボックス"],
+["Reset stone","リサイクルストーン"], ["Evac-u-bell","おもいでのすず"], ["Sainted soma","天使のソーマ"], ["Orichalcum","オリハルコン"],
+["Stardust sword","ほしくずのつるぎ"], ["Poker","きしんのまそう"], ["Deft dagger","サウザンドダガー"], ["Bright staff","ひかりの杖"],
+["Gringham whip","グリンガムのムチ"], ["Knockout rod","しゅらのこん"], ["Dragonlord claws","竜王のツメ"], ["Critical fan","ひっさつのおうぎ"],
+["Bad axe","グレートアックス"], ["Groundbreaker","大地くだき"], ["Meteorang","メテオエッジ"], ["Angel's bow","天使の弓"],
+["Mimic","ミミック"], ["Cannibox","ひとくいばこ"]
 ];
 const b3fThreeItems=["Mini medal","Sage's elixir","Iron nails","Hephaestus' flame"];
 function lcg(seed){return(Math.imul(seed,1103515245)+12345)>>>0;}

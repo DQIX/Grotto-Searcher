@@ -32,7 +32,7 @@ _anom_queue[qTail++]=nIdx;
 }
 return regionSize;
 }
-function getFloorAnomalies(engine,f,checkGhostStair=false){
+function getFloorAnomalies(engine, f, checkGhostStair=false){
 const di=engine.di[f];
 const width=di[2];
 const height=di[3];
@@ -81,7 +81,7 @@ GhostStairs.push(`(${x},${y})`);
 hasGhostStair=GhostStairs.length>0;
 }
 const isAllInvalidStair=engine.isStairOverflow[f];
-return{hasIsolatedCorridor,hasInaccessibleChest,hasInaccessibleStair,isolatedRegions,totalChests:boxes,hasGhostStair,GhostStairs,isAllInvalidStair};
+return{hasIsolatedCorridor, hasInaccessibleChest, hasInaccessibleStair, isolatedRegions, totalChests: boxes, hasGhostStair, GhostStairs, isAllInvalidStair};
 }
 const RANKS={
 "02":{fqMin:2,fqMax:55},
@@ -102,19 +102,19 @@ if(finalQuality<=50)return 47;
 if(finalQuality<=80)return 131;
 return 150;
 }
-function calcFinalQuality(baseQ,r1){
+function calcFinalQuality(baseQ, r1){
 const modulo=Math.floor(baseQ/10)*2+1;
 const offset=Math.trunc(r1%modulo-baseQ/10);
 let final=baseQ+offset;
-if(final<2)final=2;
-if(final>248)final=248;
+if(final<2) final=2;
+if(final>248) final=248;
 return final;
 }
 function formatRanges(nums){
 if(nums.length===0)return C16;
-const sorted=[...nums].sort((a,b)=>a-b);
+const sorted=[...nums].sort((a, b)=>a - b);
 const ranges=[];
-let start=sorted[0],end=sorted[0];
+let start=sorted[0], end=sorted[0];
 for(let i=1;i<sorted.length;i++){
 if(sorted[i]===end+1){
 end=sorted[i];
@@ -127,7 +127,7 @@ ranges.push(start===end?`${start}`:`${start}-${end}`);
 return ranges.join(',');
 }
 let SEED_TO_TIMERS_CACHE=null;
-function calcLocations(seed,rStr){
+function calcLocations(seed, rStr){
 const {fqMin,fqMax}=RANKS[rStr]||{fqMin:2,fqMax:248};
 const seenLocations={};
 const outputOrder=[];
@@ -137,7 +137,7 @@ for(let t=0;t<65536;t++){
 const x1=lcg(t);
 const x2=lcg(x1);
 const s=(x2>>>16)&0x7FFF;
-if(!SEED_TO_TIMERS_CACHE[s])SEED_TO_TIMERS_CACHE[s]=[];
+if(!SEED_TO_TIMERS_CACHE[s]) SEED_TO_TIMERS_CACHE[s]=[];
 SEED_TO_TIMERS_CACHE[s].push(t);
 }
 }
@@ -154,17 +154,17 @@ const finalQ=calcFinalQuality(baseQ,r1);
 if(finalQ<fqMin||finalQ>fqMax)continue;
 const locMax=getLocationMax(finalQ);
 const calcLoc=(r3%locMax)+1;
-if(!locToBq[calcLoc]) locToBq[calcLoc]=new Set();
+if(!locToBq[calcLoc])locToBq[calcLoc]=new Set();
 locToBq[calcLoc].add(baseQ);
 }
 for(const loc of Object.keys(locToBq).map(Number)){
 let minBq=255;
 for(const bq of locToBq[loc]){
-if(bq<minBq) minBq=bq;
+if(bq<minBq)minBq=bq;
 }
 if(!seenLocations[loc]){
 seenLocations[loc]=new Set();
-outputOrder.push({ timer,location: loc,minBq });
+outputOrder.push({timer,location:loc,minBq});
 }
 for(const bq of locToBq[loc]){
 seenLocations[loc].add(bq);
@@ -193,17 +193,17 @@ let minStr=document.getElementById('cond_seed_min')?document.getElementById('con
 let maxStr=document.getElementById('cond_seed_max')?document.getElementById('cond_seed_max').value.trim():"";
 let customMin=minStr?parseInt(minStr,16):0;
 let customMax=maxStr?parseInt(maxStr,16):0x7FFF;
-if(isNaN(customMin)||customMin<0) customMin=0;
-if(isNaN(customMax)||customMax>0x7FFF) customMax=0x7FFF;
-if(customMin>customMax){return {error: A08};}
+if(isNaN(customMin)||customMin<0)customMin=0;
+if(isNaN(customMax)||customMax>0x7FFF)customMax=0x7FFF;
+if(customMin>customMax){return{error:A08};}
 const searchFilterLoc=true;
 const startSeed=customMin;
-const endSeed=searchFilterLoc?Math.min(customMax,0x7FFF):customMax;
-if(startSeed>endSeed){return {error: A09};}
-return {startSeed,endSeed,searchFilterLoc};
+const endSeed=searchFilterLoc?Math.min(customMax, 0x7FFF):customMax;
+if(startSeed>endSeed){return{error:A09};}
+return{startSeed,endSeed,searchFilterLoc};
 }
 function getUltimateConds(){
-const getV=(id) =>{const el=document.getElementById(id);return el?el.value.trim():"";};
+const getV=(id)=>{const el=document.getElementById(id);return el?el.value.trim():"";};
 const reqBox={};
 ['I','H','G','F','E','D','C','B','A','S'].forEach((ch,i)=>{
 reqBox[i+1]=parseInt(getV('cond_box_'+ch))||0;
@@ -214,31 +214,31 @@ lv:getV('cond_lv'),location:getV('cond_location'),bq:getV('cond_bq'),bqCount:get
 env:getV('cond_env'),monster:getV('cond_monster'),depth:getV('cond_depth'),boss:getV('cond_boss'),
 seedMin:getV('cond_seed_min'),seedMax:getV('cond_seed_max'),elist:getV('cond_elist'),
 onlyMon:getV('cond_only_mon'),anomaly:getV('cond_anomaly'),
-reqBox: reqBox,hasBoxCond: Object.values(reqBox).some(v=>v>0)
+reqBox:reqBox,hasBoxCond:Object.values(reqBox).some(v=>v>0)
 };
 }
-function checkUltimateCondsMatch(engine,seed,targetRankKey,conds,searchFilterLoc){
+function checkUltimateCondsMatch(engine, seed, targetRankKey, conds, searchFilterLoc){
 _cachedLocData=null;
-if(conds.prefix&&engine._details[5] != conds.prefix)return false;
-if(conds.suffix&&engine._details[6] != conds.suffix)return false;
-if(conds.locale&&(engine.MapLocale) != conds.locale)return false;
-if(conds.lv&&engine._details[4] != conds.lv)return false;
-if(conds.env&&engine._details[3] != conds.env)return false;
-if(conds.monster&&engine._details[2] != conds.monster)return false;
-if(conds.depth&&engine._details[1] != conds.depth)return false;
-if(conds.boss&&engine._details[0] != conds.boss)return false;
-let targetLocNum=conds.location?parseInt(conds.location,16):null;
+if(conds.prefix&&engine._details[5]!=conds.prefix)return false;
+if(conds.suffix&&engine._details[6]!=conds.suffix)return false;
+if(conds.locale&&(engine.MapLocale)!=conds.locale)return false;
+if(conds.lv&&engine._details[4]!=conds.lv)return false;
+if(conds.env&&engine._details[3]!=conds.env)return false;
+if(conds.monster&&engine._details[2]!=conds.monster)return false;
+if(conds.depth&&engine._details[1]!=conds.depth)return false;
+if(conds.boss&&engine._details[0]!=conds.boss)return false;
+let targetLocNum=conds.location?parseInt(conds.location, 16):null;
 let targetBqNum=conds.bq?parseInt(conds.bq):null;
 let bqCountFilter=conds.bqCount||"";
 if(targetLocNum!==null||targetBqNum!==null||searchFilterLoc||bqCountFilter){
 if(targetRankKey!==null&&typeof calcLocations==='function'){
-let locData=calcLocations(seed,targetRankKey);
+let locData=calcLocations(seed, targetRankKey);
 _cachedLocData=locData;
 if(locData.outputOrder.length===0)return false;
 if(targetLocNum!==null){
 if(!locData.seenLocations[targetLocNum])return false;
 if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))return false;
-}else if(targetBqNum!==null){
+} else if(targetBqNum!==null){
 let bqFound=false;
 for(let loc in locData.seenLocations){
 if(locData.seenLocations[loc].has(targetBqNum)){bqFound=true;break;}
@@ -251,25 +251,25 @@ for(let loc in locData.seenLocations){
 for(let bq of locData.seenLocations[loc]) allBqs.add(bq);
 }
 if(allBqs.size!==1)return false;
-}else if(bqCountFilter==="1p"){
+} else if(bqCountFilter==="1p"){
 let found=false;
 for(let loc in locData.seenLocations){
 if(locData.seenLocations[loc].size===1){found=true;break;}
 }
 if(!found)return false;
 }
-}else if(bqCountFilter){
+} else if(bqCountFilter){
 return false;
 }
 }
 return true;
 }
 function ChestHtml(engine,conds){
-if(!conds.hasBoxCond)return {isMatch:true,html:""};
+if(!conds.hasBoxCond)return{isMatch:true,html:""};
 let boxStr=[];
 for(let r=10;r>=1;r--){
 if(conds.reqBox[r]>0){
-if(engine._details2[r-1]!==conds.reqBox[r])return {isMatch:false,html:""};
+if(engine._details2[r-1]!==conds.reqBox[r])return{isMatch:false,html:""};
 boxStr.push(`${CHEST_RANK[r]}${conds.reqBox[r]}`);
 }
 }return{
@@ -277,7 +277,7 @@ isMatch:true,
 html:`<span style="color:#ffcc00;font-size:11px;background:#420;padding:2px 4px;border-radius:3px;">${boxStr.join(' ')}</span>`
 };
 }
-function LocaHtmlFromData(locData,conds){
+function LocaHtmlFromData(locData, conds){
 if(!locData||locData.outputOrder.length===0)return "";
 let targetLocNum=conds.location?parseInt(conds.location,16):null;
 let targetBqNum=conds.bq?parseInt(conds.bq):null;
@@ -295,27 +295,27 @@ return `<span style="margin-left:4px;color:#ccc;font-size:10px;background:#222;p
 return "";
 }
 let _cachedLocData=null;
-function getLocHtmlCached(seed,targetRankKey,conds){
+function getLocHtmlCached(seed, targetRankKey, conds){
 if(!_cachedLocData&&seed<=0x7FFF&&targetRankKey!==null){
-_cachedLocData=calcLocations(seed,targetRankKey);
+_cachedLocData=calcLocations(seed, targetRankKey);
 }
-return _cachedLocData?LocaHtmlFromData(_cachedLocData,conds):"";
+return _cachedLocData?LocaHtmlFromData(_cachedLocData, conds):"";
 }
-function checkBasicConds(searchEngine,conds){
-if(conds.prefix&&searchEngine._details[5] != conds.prefix)return false;
-if(conds.suffix&&searchEngine._details[6] != conds.suffix)return false;
-if(conds.locale&&searchEngine.MapLocale != conds.locale)return false;
-if(conds.lv&&searchEngine._details[4] != conds.lv)return false;
-if(conds.env&&searchEngine._details[3] != conds.env)return false;
-if(conds.monster&&searchEngine._details[2] != conds.monster)return false;
-if(conds.depth&&searchEngine._details[1] != conds.depth)return false;
-if(conds.boss&&searchEngine._details[0] != conds.boss)return false;
+function checkBasicConds(searchEngine, conds){
+if(conds.prefix&&searchEngine._details[5]!=conds.prefix)return false;
+if(conds.suffix&&searchEngine._details[6]!=conds.suffix)return false;
+if(conds.locale&&searchEngine.MapLocale!=conds.locale)return false;
+if(conds.lv&&searchEngine._details[4]!=conds.lv)return false;
+if(conds.env&&searchEngine._details[3]!=conds.env)return false;
+if(conds.monster&&searchEngine._details[2]!=conds.monster)return false;
+if(conds.depth&&searchEngine._details[1]!=conds.depth)return false;
+if(conds.boss&&searchEngine._details[0]!=conds.boss)return false;
 return true;
 }
-function checkOnlyMonPossible(searchEngine,conds){
+function checkOnlyMonPossible(searchEngine, conds){
 if(!conds.onlyMon)return true;
 let baseMR=searchEngine.monsterRank;
-let maxFloorMR=Math.min(12,baseMR+Math.floor((searchEngine.floorCount-1) / 4));
+let maxFloorMR=Math.min(12, baseMR+Math.floor((searchEngine.floorCount - 1) / 4));
 let envMonsters=ONLY_MONSTERS[searchEngine._details[3]];
 if(envMonsters){
 for(let fMR=baseMR;fMR<=maxFloorMR;fMR++){
@@ -325,8 +325,8 @@ if(mId&&MONSTER_DATA[mId]&&MONSTER_DATA[mId].en===conds.onlyMon)return true;
 }
 return false;
 }
-function getElistMonsterBadge(envType,floorMR,targetCount,onlyMonNameStr){
-let result={badge:'',isCombinedHit:false};
+function getElistMonsterBadge(envType, floorMR, targetCount, onlyMonNameStr){
+let result={badge:'', isCombinedHit:false};
 let spawnDb=SPAWN_DB[envType][floorMR];
 if(!spawnDb)return result;
 let survivingNames=[];
@@ -351,10 +351,10 @@ result.badge=`<br><span style="display:inline-block;color:#aaa;font-size:11px;">
 }
 return result;
 }
-function checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr){
-let result={ match: true,specialHitDetails: [],jumpToFloor: -1,hasMatchedD: false };
+function checkElistAndD(searchEngine, conds, searchOnlyWithD, _onlyMonExpectedStr){
+let result={ match: true, specialHitDetails: [], jumpToFloor: -1, hasMatchedD: false };
 if(!(conds.elist||conds.onlyMon||searchOnlyWithD))return result;
-const isCombinedSearch=(['2','3','4','PARTIAL_NONE'].includes(conds.elist))&&!!conds.onlyMon;
+const isCombinedSearch=(['2', '3', '4', 'PARTIAL_NONE'].includes(conds.elist))&&!!conds.onlyMon;
 let hasAnyD=false;
 let elistMatched=!conds.elist;
 let onlyMatched=!conds.onlyMon;
@@ -362,13 +362,13 @@ if(isCombinedSearch){
 elistMatched=false;
 onlyMatched=false;
 }
-let specialFloorCount=0,currentMapSpecials=[];
+let specialFloorCount=0, currentMapSpecials=[];
 const envType=searchEngine._details[3];
 const baseMR=searchEngine._details[2];
 const isJP=(DISPLAY_LANG!=='EN');
 for(let f=0;f<searchEngine.floorCount;f++){
-let info=getFloorElistInfo(searchEngine,f);
-if(!info.state) continue;
+let info=getFloorElistInfo(searchEngine, f);
+if(!info.state)continue;
 if(info.dValue>0) hasAnyD=true;
 let targetCount=0;
 let isElistHit=false;
@@ -384,15 +384,15 @@ let monBadge='';
 let isCombinedMatchedThisFloor=false;
 let needSpawnDb=(targetCount>0&&conds.elist===targetCount.toString())||(isCombinedSearch&&isElistHit);
 if(needSpawnDb){
-let floorMR=Math.min(12,baseMR+(f >> 2));
-let badgeData=getElistMonsterBadge(envType,floorMR,targetCount,isCombinedSearch?conds.onlyMon:null);
+let floorMR=Math.min(12, baseMR+(f>>2));
+let badgeData=getElistMonsterBadge(envType, floorMR, targetCount, isCombinedSearch?conds.onlyMon:null);
 monBadge=badgeData.badge;
 isCombinedMatchedThisFloor=badgeData.isCombinedHit;
 }
 specialFloorCount++;
 let dBadge=info.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;">${info.dValue}</span>`:'';
 let displayText=`B${f+1}F: ${info.state}${dBadge}${monBadge}`;
-currentMapSpecials.push({f,state:info.state,dValue:info.dValue,monBadge});
+currentMapSpecials.push({f, state:info.state, dValue:info.dValue, monBadge});
 if(isCombinedSearch){
 if(isCombinedMatchedThisFloor&&!elistMatched){
 elistMatched=true;
@@ -437,39 +437,39 @@ if(!result.hasMatchedD) result.match=false;
 }
 return result;
 }
-function checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey){
-let targetLocNum=conds.location?parseInt(conds.location,16):null;
+function checkLocationBQ(seed, conds, searchFilterLoc, targetRankKey){
+let targetLocNum=conds.location?parseInt(conds.location, 16):null;
 let targetBqNum=conds.bq?parseInt(conds.bq):null;
 if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc)return{match:true};
 if(seed>0x7FFF||targetRankKey===null)return{match:false};
-_cachedLocData=calcLocations(seed,targetRankKey);
+_cachedLocData=calcLocations(seed, targetRankKey);
 let locData=_cachedLocData;
 if(locData.outputOrder.length===0)return{match:false};
 if(targetLocNum!==null){
 if(!locData.seenLocations[targetLocNum])return{match:false};
 if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))return{match:false};
-}else if(targetBqNum!==null){
+} else if(targetBqNum!==null){
 let bqFound=false;
 for(let loc in locData.seenLocations){if(locData.seenLocations[loc].has(targetBqNum)){bqFound=true;break;}}
 if(!bqFound)return{match:false};
 }
 return{match:true};
 }
-function checkAnomalies(searchEngine,conds){
-let result ={match: true,anomalyDetails: [],jumpToFloor: -1 };
+function checkAnomalies(searchEngine, conds){
+let result ={match: true, anomalyDetails: [], jumpToFloor: -1 };
 if(conds.anomaly==="")return result;
-let hasAnyChestAnomaly=false,hasAnyCorridorAnomaly=false,hasAnyStairAnomaly=false;
-let hasAnyNoChestAnomaly=false,hasAnyMultiRegionAnomaly=false,hasAnyChestCorridorCombo=false;
-let hasAnyGhostAnomaly=false,hasAnyAllInvalidAnomaly=false,corridorFloorCount=0;
-let firstChestFloor=-1,firstCorridorFloor=-1,firstStairFloor=-1;
-let firstNoChestFloor=-1,firstMultiRegionFloor=-1,firstGhostFloor=-1,firstAllInvalidFloor=-1;
+let hasAnyChestAnomaly=false, hasAnyCorridorAnomaly=false, hasAnyStairAnomaly=false;
+let hasAnyNoChestAnomaly=false, hasAnyMultiRegionAnomaly=false, hasAnyChestCorridorCombo=false;
+let hasAnyGhostAnomaly=false, hasAnyAllInvalidAnomaly=false, corridorFloorCount=0;
+let firstChestFloor=-1, firstCorridorFloor=-1, firstStairFloor=-1;
+let firstNoChestFloor=-1, firstMultiRegionFloor=-1, firstGhostFloor=-1, firstAllInvalidFloor=-1;
 for(let f=0;f<searchEngine.floorCount;f++){
-let anom=getFloorAnomalies(searchEngine,f,conds.anomaly==='ghost');
+let anom=getFloorAnomalies(searchEngine, f, conds.anomaly==='ghost');
 if(anom.isAllInvalidStair){hasAnyAllInvalidAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#cc0000;padding:1px 4px;border-radius:3px;border:1px solid #f44;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_2}</span>`);if(firstAllInvalidFloor===-1)firstAllInvalidFloor=f;}
 if(anom.hasInaccessibleStair){hasAnyStairAnomaly=true;result.anomalyDetails.push(`<span style="color:#ff0000;font-size:11px;font-weight:bold;background:#550000;padding:1px 4px;border-radius:3px;">B${f+1}F ${TKB3_0}</span>`);if(firstStairFloor===-1)firstStairFloor=f;}
 if(anom.hasInaccessibleChest){hasAnyChestAnomaly=true;if(anom.totalChests===1){hasAnyNoChestAnomaly=true;result.anomalyDetails.push(`<span style="color:#0ff;font-size:11px;font-weight:bold;background:#004466;padding:1px 4px;border-radius:3px;border:1px solid #08a;">B${f+1}F ${TKB1_3}</span>`);if(firstNoChestFloor===-1)firstNoChestFloor=f;}else{result.anomalyDetails.push(`<span style="color:#ff69b4;font-size:11px;font-weight:bold;">B${f+1}F ${TKB1_1}</span>`);} if(firstChestFloor===-1)firstChestFloor=f;}
 if(anom.hasIsolatedCorridor){hasAnyCorridorAnomaly=true;corridorFloorCount++;if(anom.isolatedRegions.length>=2){hasAnyMultiRegionAnomaly=true;if(firstMultiRegionFloor===-1)firstMultiRegionFloor=f;} let countBadges=anom.isolatedRegions.map(size=>`<span style="background:#ff6ec7;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;margin-left:4px;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">${size}</span>`).join('');result.anomalyDetails.push(`<span style="color:#fa0;font-size:11px;">B${f+1}F ${TKB2_1} ${countBadges}</span>`);if(firstCorridorFloor===-1)firstCorridorFloor=f;}
-if(anom.hasGhostStair){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#555577;padding:1px 4px;border-radius:3px;border:1px solid #8888aa;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${anom.GhostStairs.join(',')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
+if(anom.hasGhostStair){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#555577;padding:1px 4px;border-radius:3px;border:1px solid #8888aa;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${anom.GhostStairs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
 if(anom.hasInaccessibleChest&&anom.hasIsolatedCorridor) hasAnyChestCorridorCombo=true;
 }
 if(conds.anomaly==='chest'&&!hasAnyChestAnomaly) result.match=false;
@@ -499,19 +499,26 @@ let targetJpName=conds.onlyMon;
 for(let id in MONSTER_DATA){
 if(MONSTER_DATA[id].en===conds.onlyMon){targetJpName=MONSTER_DATA[id].jp;break;}
 }
-return(DISPLAY_LANG!=='EN'?targetJpName:conds.onlyMon)+(DISPLAY_LANG!=='EN'?"オンリー":" only");
+return (DISPLAY_LANG!=='EN'?targetJpName:conds.onlyMon)+(DISPLAY_LANG!=='EN'?"オンリー":" only");
 }
-function makeResultClickHandler(seed,rStr,jumpFloor){
-return()=>{
-document.getElementById('seed').value=seed.toString(16).toUpperCase().padStart(4,'0');
+function makeResultClickHandler(seed, rStr, jumpFloor){
+return ()=>{
+const seedHex=seed.toString(16).toUpperCase().padStart(4,'0');
+document.getElementById('seed').value=seedHex;
 if(rStr) document.getElementById('rank').value="0x"+rStr;
 calculate();
+const siSeed=document.getElementById('si_seed');
+if(siSeed) siSeed.value=seedHex;
+const mR=document.getElementById('mrt_inRank');
+const mS=document.getElementById('mrt_inSeed');
+if(mR&&rStr) mR.value=rStr;
+if(mS) mS.value=seedHex;
 document.getElementById('result').scrollIntoView({behavior:'smooth'});
 if(jumpFloor!==undefined&&jumpFloor!==null&&jumpFloor!==-1){
 setTimeout(()=>{
 const tab=document.querySelectorAll('.floor-tab')[jumpFloor];
 if(tab) tab.click();
-},50);
+}, 50);
 }
 };
 }
@@ -519,10 +526,10 @@ async function executeSharedSearch(config){
 if(isSearching){searchCancel=true;return;}
 const conds=getUltimateConds();
 const searchFilterLoc=true;
-if(config.validateConds&&!config.validateConds(conds,searchFilterLoc)){return;}
+if(config.validateConds&&!config.validateConds(conds, searchFilterLoc)){return;}
 const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);return;}
-const {startSeed,endSeed}=rangeData;
+const {startSeed, endSeed}=rangeData;
 isSearching=true;searchCancel=false;
 const btn=document.getElementById(config.btnId);
 if(btn){
@@ -544,28 +551,28 @@ isSearching=false;
 if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.style.color=config.btnColor||'#fff';}
 return;
 }
-let totalCombos=ranksToSearch.length*(endSeed-startSeed+1);
+let totalCombos=ranksToSearch.length*(endSeed - startSeed+1);
 let processed=0;
 let hitCount=0;
 let searchEngine=new GrottoDetail();
-if(config.setupEngine) config.setupEngine(searchEngine,conds);
+if(config.setupEngine) config.setupEngine(searchEngine, conds);
 let fragment=document.createDocumentFragment();
 try{
 for(let rank of ranksToSearch){
-if(searchCancel)break;
-let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
-let targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr :(RANKS[rank]?rank:null));
+if(searchCancel) break;
+let rStr=rank.toString(16).toUpperCase().padStart(2, '0');
+let targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:(RANKS[rank]?rank:null));
 for(let seed=startSeed;seed<=endSeed;seed++){
 if(searchCancel) break;
 if(seed%250===0){
-progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% ('+B02+' '+rStr+',Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+B04+''+hitCount+' '+B03+']';
-if(fragment.children.length>0)grid.appendChild(fragment);
-await new Promise(r=>setTimeout(r,0));
+progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% ('+B02+' '+rStr+', Seed '+seed.toString(16).toUpperCase().padStart(4,'0')+') ['+B04+''+hitCount+' '+B03+']';
+if(fragment.children.length>0) grid.appendChild(fragment);
+await new Promise(r=>setTimeout(r, 0));
 }
 searchEngine.MapSeed=seed;
 searchEngine.MapRank=rank;
 _cachedLocData=null;
-let itemNode=config.processSeed(searchEngine,seed,rStr,targetRankKey,conds,searchFilterLoc);
+let itemNode=config.processSeed(searchEngine, seed, rStr, targetRankKey, conds, searchFilterLoc);
 if(itemNode){
 hitCount++;
 fragment.appendChild(itemNode);
@@ -573,9 +580,9 @@ fragment.appendChild(itemNode);
 processed++;
 }
 }
-if(fragment.children.length>0)grid.appendChild(fragment);
+if(fragment.children.length>0) grid.appendChild(fragment);
 }catch(error){
-console.error("搜尋過程發生錯誤：",error);
+console.error("搜尋過程發生錯誤：", error);
 alert(A03);
 searchCancel=true;
 }finally{
@@ -584,19 +591,19 @@ if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.sty
 progressSpan.textContent=searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${B06?B06+' ':''}${hitCount} ${B03})`;
 }
 }
-function getRankSMRInfo(rank,conds){
-let rStr=rank.toString(16).toUpperCase().padStart(2,'0');
+function getRankSMRInfo(rank, conds){
+let rStr=rank.toString(16).toUpperCase().padStart(2, '0');
 if(conds&&conds.bq){
 let baseQ=parseInt(conds.bq);
 let modulo=Math.floor(baseQ/10)*2+1;
 let minOffset=Math.trunc(0-baseQ/10);
 let maxOffset=Math.trunc((modulo-1)-baseQ/10);
-let minFinalQ=Math.max(2,baseQ+minOffset);
-let maxFinalQ=Math.min(248,baseQ+maxOffset);
+let minFinalQ=Math.max(2, baseQ+minOffset);
+let maxFinalQ=Math.min(248, baseQ+maxOffset);
 let rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax))return null;
 }
-let minSMR=1,maxSMR=9;
+let minSMR=1, maxSMR=9;
 for(let i=0;i<8;i++){
 if(rank>=TableC[i*4]&&rank<=TableC[i*4+1]){
 minSMR=TableC[i*4+2];
@@ -615,39 +622,56 @@ maxFloorCount=TableB[i*4+3];
 break;
 }
 }
-if(conds&&conds.depth)maxFloorCount=parseInt(conds.depth);
-return {minSMR,maxSMR,maxFloorCount};
+if(conds&&conds.depth) maxFloorCount=parseInt(conds.depth);
+return{minSMR, maxSMR, maxFloorCount};
 }
 function sharedRankFilter(ranksToSearch,conds,isBugSearch=false){
-if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix){
+if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix){
 return ranksToSearch;
 }
 return ranksToSearch.filter(rank=>{
-const info=getRankSMRInfo(rank,conds);
+const info=getRankSMRInfo(rank, conds);
 if(!info)return false;
-const {minSMR,maxSMR,maxFloorCount}=info;
+const {minSMR, maxSMR, maxFloorCount}=info;
 if(conds.prefix){
 const p=parseInt(conds.prefix);
-let prefixPossible=false;
-for(let smr=minSMR;smr<=maxSMR&&!prefixPossible;smr++){
+let ok=false;
+for(let smr=minSMR;smr<=maxSMR&&!ok;smr++){
 for(let j=0;j<5;j++){
 if(smr>=TableH[j*4]&&smr<=TableH[j*4+1]){
-if(p>=TableH[j*4+2]&&p<=TableH[j*4+3])prefixPossible=true;
+if(p>=TableH[j*4+2]&&p<=TableH[j*4+3]) ok=true;
 break;
 }
 }
 }
-if(!prefixPossible)return false;
+if(!ok)return false;
 }
-let maxOffset=isBugSearch?3:Math.floor((maxFloorCount-1)/4);
+if(conds.suffix){
+const sf=parseInt(conds.suffix);
+let ok=false;
+for(let i=0;i<9&&!ok;i++){
+if(rank>=TableD[i*4]&&rank<=TableD[i*4+1]){
+for(let b=TableD[i*4+2];b<=TableD[i*4+3]&&!ok;b++){
+for(let j=0;j<4;j++){
+if(b>=TableI[j*4]&&b<=TableI[j*4+1]){
+if(sf>=TableI[j*4+2]&&sf<=TableI[j*4+3]) ok=true;
+break;
+}
+}
+}
+}
+}
+if(!ok)return false;
+}
+let maxOffset=isBugSearch?3:Math.floor((maxFloorCount - 1) / 4);
 if(conds.hasBoxCond){
-let maxPossibleNum=Math.min(12,maxSMR+maxOffset);
+let maxPossibleNum=Math.min(12, maxSMR+maxOffset);
 for(let r=10;r>=1;r--){
 if(conds.reqBox[r]>0){
 let canDrop=false;
 for(let num=minSMR;num<=maxPossibleNum;num++){
-let cMin=TableF[(num-1)*4+1];
-let cMax=TableF[(num-1)*4+2];
+let cMin=TableF[(num - 1)*4+1];
+let cMax=TableF[(num - 1)*4+2];
 if(r>=cMin&&r<=cMax){
 canDrop=true;
 break;
@@ -658,10 +682,12 @@ if(!canDrop)return false;
 }
 }
 if(conds.onlyMon){
+let isCombinedSearch=['2', '3', '4', 'PARTIAL_NONE'].includes(conds.elist);
+if(!isCombinedSearch){
 let targetEnv=conds.env?parseInt(conds.env):0;
 let isPossible=false;
 for(let env=1;env<=5;env++){
-if(targetEnv&&env!==targetEnv) continue;
+if(targetEnv&&env!==targetEnv)continue;
 for(let fMR=1;fMR<=12;fMR++){
 let mId=ONLY_MONSTERS[env][fMR];
 if(mId&&MONSTER_DATA[mId]&&MONSTER_DATA[mId].en===conds.onlyMon){
@@ -674,11 +700,12 @@ break;
 }
 }
 }
-if(isPossible)break;
+if(isPossible) break;
 }
-if(isPossible)break;
+if(isPossible) break;
 }
 if(!isPossible)return false;
+}
 }
 return true;
 });
@@ -699,32 +726,32 @@ let expectedSuffix=(DISPLAY_LANG!=='EN')?"オンリー":" only";
 _onlyMonExpectedStr=expectedName+expectedSuffix;
 }
 executeSharedSearch({
-btnId:'searchBtnSpecific',
-btnText:'🎯 Search',
-btnBg:'linear-gradient(135deg,#0ff,#08a)',
-btnColor:'#000',
-stopText:'🛑 STOP',
+btnId: 'searchBtnSpecific',
+btnText: '🎯 Search',
+btnBg: 'linear-gradient(135deg,#0ff,#08a)',
+btnColor: '#000',
+stopText: '🛑 STOP',
 emptyRankMsg: B07,
-validateConds:(conds,searchFilterLoc)=>{
+validateConds:(conds, searchFilterLoc)=>{
 const hasBasicCond=Object.keys(conds).some(k=>k!=='reqBox'&&k!=='hasBoxCond'&&conds[k]!=="");
 if(!hasBasicCond&&!conds.hasBoxCond&&!searchFilterLoc){alert(A01);return false;}
 return true;
 },
-filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
-setupEngine:(eng,conds)=>{
+filterRanks:(ranksToSearch, conds)=>sharedRankFilter(ranksToSearch, conds, false),
+setupEngine:(eng, conds)=>{
 eng.trackOverflow=(conds.anomaly==='all_invalid'||conds.anomaly==='ghost');
 },
-processSeed:(searchEngine,seed,rStr,targetRankKey,conds,searchFilterLoc)=>{
+processSeed:(searchEngine, seed, rStr, targetRankKey, conds, searchFilterLoc)=>{
 const searchOnlyWithD=document.getElementById('searchOnlyWithD').checked;
 const needMapGeneration=conds.hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="";
 searchEngine.calculateDetail(true);
-if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,searchFilterLoc))return null;
+if(!checkUltimateCondsMatch(searchEngine, seed, targetRankKey, conds, searchFilterLoc))return null;
 if(conds.onlyMon){
-let isCombinedSearch=['2','3','4','PARTIAL_NONE'].includes(conds.elist);
+let isCombinedSearch=['2', '3', '4', 'PARTIAL_NONE'].includes(conds.elist);
 if(!isCombinedSearch){
 let possible=false;
 let baseMR=searchEngine.monsterRank;
-let maxFloorMR=Math.min(12,baseMR+Math.floor((searchEngine.floorCount-1)/4));
+let maxFloorMR=Math.min(12, baseMR+Math.floor((searchEngine.floorCount-1)/4));
 let envMonsters=ONLY_MONSTERS[searchEngine._details[3]];
 if(envMonsters){
 for(let fMR=baseMR;fMR<=maxFloorMR;fMR++){
@@ -738,13 +765,13 @@ if(!possible)return null;
 if(needMapGeneration) searchEngine.createDungeonDetail();
 let boxHtml="";
 if(conds.hasBoxCond){
-let chestResult=ChestHtml(searchEngine,conds);
+let chestResult=ChestHtml(searchEngine, conds);
 if(!chestResult.isMatch)return null;
 boxHtml=chestResult.html;
 }
-let elistResult=checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr);
+let elistResult=checkElistAndD(searchEngine, conds, searchOnlyWithD, _onlyMonExpectedStr);
 if(!elistResult.match)return null;
-let anomResult=checkAnomalies(searchEngine,conds);
+let anomResult=checkAnomalies(searchEngine, conds);
 if(!anomResult.match)return null;
 let specialHitDetails=elistResult.specialHitDetails;
 let anomalyDetails=anomResult.anomalyDetails;
@@ -753,9 +780,9 @@ let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.
 let itemNode=document.createElement('div');
 itemNode.className='search-result-item';
 if(hasMatchedD) itemNode.dataset.hasD="true";
-let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
+let locHtml=getLocHtmlCached(seed, targetRankKey, conds);
 let specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
-let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html=>html.replace('<span style="','<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
+let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html=>html.replace('<span style="', '<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
 let mapNameDisp=DISPLAY_LANG!=='EN'?searchEngine.mapNameJP:searchEngine.mapName;
 itemNode.innerHTML=`
 <span style="color:#ffd700;font-weight:bold">${seed.toString(16).toUpperCase().padStart(4,'0')}</span>
@@ -765,7 +792,7 @@ itemNode.innerHTML=`
 ${specialHtml}
 ${anomalyHtml}
 `;
-itemNode.onclick=makeResultClickHandler(seed,rStr,jumpToFloor);
+itemNode.onclick=makeResultClickHandler(seed, rStr, jumpToFloor);
 return itemNode;
 }
 });
@@ -775,7 +802,7 @@ const conds=getUltimateConds();
 const cond_elist=conds.elist;
 const cond_only_mon=conds.onlyMon;
 const _onlyMonExpectedStr=buildOnlyMonExpectedStr(conds);
-const isCombinedSearch=(['2','3','4','PARTIAL_NONE'].includes(cond_elist))&&!!cond_only_mon;
+const isCombinedSearch=(['2', '3', '4', 'PARTIAL_NONE'].includes(cond_elist))&&!!cond_only_mon;
 let effectiveElistCond=cond_elist;
 const searchOnlyWithDNode=document.getElementById('searchOnlyWithD');
 const searchOnlyWithD=searchOnlyWithDNode?searchOnlyWithDNode.checked:false;
@@ -783,23 +810,23 @@ if(!cond_elist&&!cond_only_mon&&!searchOnlyWithD&&!conds.hasBoxCond){
 effectiveElistCond='ONLY';
 }
 executeSharedSearch({
-btnId:'searchBtnBug',
+btnId: 'searchBtnBug',
 btnText: H05,
-btnBg:'linear-gradient(135deg,#c0c,#606)',
-btnColor:'#fff',
-stopText:'STOP',
+btnBg: 'linear-gradient(135deg,#c0c,#606)',
+btnColor: '#fff',
+stopText: 'STOP',
 emptyRankMsg: B07,
-filterRanks:(ranksToSearch,conds)=>{
-return sharedRankFilter(ranksToSearch,conds,true);
+filterRanks:(ranksToSearch, conds)=>{
+return sharedRankFilter(ranksToSearch, conds, true);
 },
-processSeed:(searchEngine,seed,rStr,targetRankKey,conds,searchFilterLoc)=>{
+processSeed:(searchEngine, seed, rStr, targetRankKey, conds, searchFilterLoc)=>{
 const requireFloorIncrease=document.getElementById('requireFloorIncrease').checked;
 const requireBugFloorHitNode=document.getElementById('requireBugFloorHit');
 const requireBugFloorHit=requireBugFloorHitNode?requireBugFloorHitNode.checked:false;
 searchEngine._at_offset=0;
 searchEngine._force_16_floors=false;
 searchEngine.calculateDetail(true);
-if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,searchFilterLoc))return null;
+if(!checkUltimateCondsMatch(searchEngine, seed, targetRankKey, conds, searchFilterLoc))return null;
 let origFloors=searchEngine.floorCount;
 let origBoss=DISPLAY_LANG!=='EN'?searchEngine.bossNameJP:searchEngine.bossName;
 let origName=DISPLAY_LANG!=='EN'?searchEngine.mapNameJP:searchEngine.mapName;
@@ -841,8 +868,8 @@ let foundSpecialFloors=[];
 let specialHitCount=0;
 let hasAnyD=false;
 for(let f=2;f<16;f++){
-let elistInfo=getFloorElistInfo(searchEngine,f);
-let val=parseInt(elistInfo.hex,16);
+let elistInfo=getFloorElistInfo(searchEngine, f);
+let val=parseInt(elistInfo.hex, 16);
 if(elistInfo.dValue>0) hasAnyD=true;
 let isElistHit=false;
 let isOnlyHit=false;
@@ -861,12 +888,12 @@ let tgtCount=0;
 if(elistInfo.state.includes(EL_4)) tgtCount=4;
 else if(elistInfo.state.includes(EL_3)) tgtCount=3;
 else if(elistInfo.state.includes(EL_2)) tgtCount=2;
-let fMR=searchEngine._details[2]+(f >> 2);
+let fMR=searchEngine._details[2]+(f>>2);
 if(fMR>12) fMR=12;
 let spList=(SPAWN_DB[searchEngine._details[3]]&&SPAWN_DB[searchEngine._details[3]][fMR])||[];
 let norms=spList.filter(e=>e.length===3);
 let limit=tgtCount>0?tgtCount:norms.length;
-let survivingNamesEn=norms.slice(0,limit).map(e=>MONSTER_DATA[e[0]]?MONSTER_DATA[e[0]].en:'');
+let survivingNamesEn=norms.slice(0, limit).map(e=>MONSTER_DATA[e[0]]?MONSTER_DATA[e[0]].en:'');
 if(survivingNamesEn.includes(cond_only_mon)){
 isOnlyHit=true;
 }
@@ -874,7 +901,7 @@ isOnlyHit=true;
 }else{
 if(!cond_only_mon){
 isOnlyHit=true;
-}else if(elistInfo.state.includes(_onlyMonExpectedStr)){
+} else if(elistInfo.state.includes(_onlyMonExpectedStr)){
 isOnlyHit=true;
 }
 }
@@ -883,7 +910,7 @@ let isSpecialMatch=(isElistHit&&isOnlyHit&&val>=0x2B00&&val<=0x2BBC&&elistInfo.s
 if(isSpecialMatch){specialHitCount++;}
 if((val>=0x2B00&&elistInfo.state)||(searchOnlyWithD&&elistInfo.dValue>0)){
 if(!foundSpecialFloors.some(x=>x.floor===f+1)){
-let fMR=searchEngine._details[2]+(f >> 2);
+let fMR=searchEngine._details[2]+(f>>2);
 if(fMR>12) fMR=12;
 foundSpecialFloors.push({
 floor: f+1,
@@ -931,7 +958,7 @@ let stateColor="#888";
 if(info.state!==EL_NORMAL){
 if(info.floor<=origFloors){
 stateColor="#4f4";
-}else if(info.floor<=bugFloors){
+} else if(info.floor<=bugFloors){
 stateColor="#fa0";
 }else{
 stateColor="#f8f";
@@ -948,7 +975,7 @@ let shouldShowMonBadge=(surviveCount>0&&cond_elist===surviveCount.toString())||(
 if(shouldShowMonBadge){
 const spList=(SPAWN_DB[info.envType]&&SPAWN_DB[info.envType][info.floorMR])||[];
 const norms=spList.filter(e=>e.length===3);
-const names=norms.slice(0,surviveCount).map(e=>{
+const names=norms.slice(0, surviveCount).map(e=>{
 const md=MONSTER_DATA[e[0]];
 return md?(isJP_mb?md.jp:md.en):'?';
 });
@@ -969,7 +996,7 @@ itemNode.innerHTML=`
 </div>${boxHtml}
 <div style="padding-top:2px;">${elistHtmlStr}</div>
 `;
-itemNode.onclick=makeResultClickHandler(seed,rStr);
+itemNode.onclick=makeResultClickHandler(seed, rStr);
 searchEngine._force_16_floors=false;
 return itemNode;
 }
@@ -980,8 +1007,8 @@ const inputIds=[
 'cond_prefix','cond_suffix','cond_locale','cond_lv','cond_location',
 'cond_bq','cond_bq_count','cond_env','cond_monster','cond_depth','cond_boss',
 'cond_seed_min','cond_seed_max','cond_elist','cond_only_mon','cond_anomaly',
-'cond_box_S','cond_box_A','cond_box_B','cond_box_C','cond_box_D',
-'cond_box_E','cond_box_F','cond_box_G','cond_box_H','cond_box_I'
+'cond_box_S', 'cond_box_A', 'cond_box_B', 'cond_box_C', 'cond_box_D',
+'cond_box_E', 'cond_box_F', 'cond_box_G', 'cond_box_H', 'cond_box_I'
 ];
 inputIds.forEach(id=>{
 let el=document.getElementById(id);

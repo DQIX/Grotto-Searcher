@@ -1,13 +1,13 @@
 const TILE_SIZE=22;
 const COLORS={
-0: '#f5f0e0',
-1: '#000',
-2: '#e8e0c8',
-3: '#000',
-4: '#4c4',
-5: '#f44',
-6: '#ffd700',
-8: '#ccd8c0',
+0:'#f5f0e0',
+1:'#000',
+2:'#e8e0c8',
+3:'#000',
+4:'#4c4',
+5:'#f44',
+6:'#ffd700',
+8:'#ccd8c0',
 };
 const WALL_COLOR='#000';
 let mapData=null;
@@ -17,7 +17,7 @@ const safeZone=document.getElementById('controls_container');
 const controlsDiv=document.getElementById('single_map_controls');
 if(safeZone&&controlsDiv){safeZone.appendChild(controlsDiv);}
 const seedStr=document.getElementById('seed').value.trim();
-const seed=parseInt(seedStr, 16);
+const seed=parseInt(seedStr,16);
 const rank=parseInt(document.getElementById('rank').value);
 if(isNaN(seed)||seed<0||seed>0x7FFF||!/^[0-9a-fA-F]{1,4}$/.test(seedStr)){
 document.getElementById('result').innerHTML='<div class="error">'+C17+'</div>';
@@ -37,13 +37,13 @@ const MAX=400;
 let rng=seed>>>0;
 const v=[];
 for(let i=0;i<MAX+4;i++){rng=lcg(rng);v.push((rng>>>16)&0x7FFF);}
-let r2=-1, r2_3=-1, n2=-1;
+let r2=-1,r2_3=-1,n2=-1;
 for(let i=0;i<MAX;i++){
-if(r2===-1&&v[i]<threshR&&v[i+1]<threshR) r2=i+1;
-if(r2_3===-1&&v[i]<threshR&&i+3<v.length&&v[i+3]<threshR) r2_3=i+1;
-if(n2===-1&&i+3<v.length&&v[i]>=threshR&&v[i+1]<threshN&&v[i+2]>=threshR&&v[i+3]<threshN) n2=i+1;
+if(r2===-1&&v[i]<threshR&&v[i+1]<threshR)r2=i+1;
+if(r2_3===-1&&v[i]<threshR&&i+3<v.length&&v[i+3]<threshR)r2_3=i+1;
+if(n2===-1&&i+3<v.length&&v[i]>=threshR&&v[i+1]<threshN&&v[i+2]>=threshR&&v[i+3]<threshN)n2=i+1;
 }
-return {r2, r2_3, n2};
+return{r2,r2_3,n2};
 }
 function renderResult(){
 const el=document.getElementById('result');
@@ -58,7 +58,7 @@ let locHtmlString='';
 if(locData.outputOrder.length>0){
 const locStrings=locData.outputOrder.map(item=>{
 const bqs=Array.from(locData.seenLocations[item.location]);
-return `${item.location.toString(16).toUpperCase().padStart(2, '0')} (${formatRanges(bqs)})`;
+return `${item.location.toString(16).toUpperCase().padStart(2,'0')} (${formatRanges(bqs)})`;
 });
 locHtmlString=locStrings.join('<br>');
 }else{
@@ -83,10 +83,10 @@ let boxCountHtmlArr=[];
 for(let r=10;r>=1;r--){
 if(boxCounts[r]>0){
 let color="#aaa";
-if(r===10) color="#ffd700";
-else if(r>=8) color="#f44";
-else if(r>=4) color="#4c4";
-else if(r===3) color="#62a1ff";
+if(r===10)color="#ffd700";
+else if(r>=8)color="#f44";
+else if(r>=4)color="#4c4";
+else if(r===3)color="#62a1ff";
 boxCountHtmlArr.push(`<span style="margin-right:14px;display:inline-block;background:#000;padding:2px 8px;border-radius:4px;border:1px solid #333;"><strong style="color:${color};font-size:14px;text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff;font-weight:bold;">${boxCounts[r]}</span></span>`);
 }
 }
@@ -155,13 +155,13 @@ const map=mapData.getFloorMap(f);
 const up=mapData.getUpStair(f);
 const down=mapData.getDownStair(f);
 const boxCount=mapData.getBoxCount(f);
-const canvasW=w * TILE_SIZE;
-const canvasH=h * TILE_SIZE;
+const canvasW=w*TILE_SIZE;
+const canvasH=h*TILE_SIZE;
 let infoHtml='<div class="floor-info">';
 infoHtml+=`<h3>B${f+1}F</h3>`;
 infoHtml+='<table>';
 infoHtml+=`<tr><td>${C10}</td><td>${w} × ${h}</td></tr>`;
-if(f<mapData.floorCount-1)
+if(f<mapData.floorCount - 1)
 infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　▼ (${down.x}, ${down.y})</td></tr>`;
 else
 infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　Boss (${down.x}, ${down.y})</td></tr>`;
@@ -170,19 +170,19 @@ let stateHtml=elistInfo.state?` <span style="background:#f4c;color:#fff;padding:
 let dHtml=elistInfo.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px;white-space:nowrap;">${elistInfo.dValue}</span>`:'';
 infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
 const envType=mapData._details[3];
-let floorMR=mapData._details[2]+(f >> 2);
-if(floorMR>12) floorMR=12;
+let floorMR=mapData._details[2]+(f>>2);
+if(floorMR>12)floorMR=12;
 const spawnList=(SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR])||[];
 const normals=spawnList.filter(e=>e.length===3);
 const isJP=(DISPLAY_LANG!=='EN');
 const st=elistInfo.state||'';
 let grayFrom=normals.length;
-if(st.includes(EL_4)) grayFrom=4;
-else if(st.includes(EL_3)) grayFrom=3;
-else if(st.includes(EL_2)) grayFrom=2;
-else if(st.includes('only')||st.includes('オンリー')) grayFrom=-1;
-else if(st.includes(EL_0)&&!st.includes(EL_P)) grayFrom=0;
-if(grayFrom<0) grayFrom=0;
+if(st.includes(EL_4))grayFrom=4;
+else if(st.includes(EL_3))grayFrom=3;
+else if(st.includes(EL_2))grayFrom=2;
+else if(st.includes('only')||st.includes('オンリー'))grayFrom=-1;
+else if(st.includes(EL_0)&&!st.includes(EL_P))grayFrom=0;
+if(grayFrom<0)grayFrom=0;
 const onlyMonId=(ONLY_MONSTERS[envType]&&ONLY_MONSTERS[envType][floorMR])||'';
 const isOnlyMode=(st.includes('only')||st.includes('オンリー'));
 let monsterSpans=normals.map((entry, i)=>{
@@ -235,15 +235,15 @@ document.querySelector('.map-container').style.position='relative';
 const mapCanvas=document.getElementById('mapCanvas');
 mapCanvas.addEventListener('mousemove', (e)=>{
 const rect=mapCanvas.getBoundingClientRect();
-const mx=Math.floor((e.clientX-rect.left) / TILE_SIZE);
-const my=Math.floor((e.clientY-rect.top) / TILE_SIZE);
+const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
+const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
 const coordEl=document.getElementById('coordDisplay');
 if(mx>=0&&mx<w&&my>=0&&my<h){
 const tNames={0:D01,1:D02,2:D03,3:D02,4:C11,5:C11,6:D07,8:D04};
 const tile=map[my][mx];
 let label=tNames[tile]||`tile:${tile}`;
-if(mx===up.x&&my===up.y) label=D05+'▲';
-if(mx===down.x&&my===down.y) label=(f<mapData.floorCount-1)?D06+'▼':'Boss▼';
+if(mx===up.x&&my===up.y)label=D05+'▲';
+if(mx===down.x&&my===down.y)label=(f<mapData.floorCount-1)?D06+'▼':'Boss▼';
 coordEl.textContent=`(${mx},${my}) ${label}`;
 mapCanvas.style.cursor=boxPositions.has(mx+','+my)?'pointer':'default';
 }else{
@@ -258,39 +258,39 @@ boxPositions.set(b.x+','+b.y, i+1);
 }
 mapCanvas.addEventListener('click', (e)=>{
 const rect=mapCanvas.getBoundingClientRect();
-const mx=Math.floor((e.clientX-rect.left) / TILE_SIZE);
-const my=Math.floor((e.clientY-rect.top) / TILE_SIZE);
+const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
+const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
 if(boxPositions&&boxPositions.has(mx+','+my)){
 const boxNum=boxPositions.get(mx+','+my);
-showChestTimer(f, boxNum-1, mx, my);
+showChestTimer(f,boxNum-1,mx,my);
 }
 });
 const canvas=document.getElementById('mapCanvas');
 const ctx=canvas.getContext('2d');
 ctx.fillStyle='#000';
-ctx.fillRect(0, 0, canvasW, canvasH);
+ctx.fillRect(0,0,canvasW,canvasH);
 for(let y=0;y<h;y++){
 for(let x=0;x<w;x++){
 let tile=map[y][x];
-const px=x * TILE_SIZE;
-const py=y * TILE_SIZE;
+const px=x*TILE_SIZE;
+const py=y*TILE_SIZE;
 const isUpStair=(x===up.x&&y===up.y);
 const isDownStair=(x===down.x&&y===down.y);
 const boxNum=boxPositions.get(x+','+y)||0;
 const isBox=boxNum>0;
 let displayTile=tile;
-if(isUpStair) displayTile=4;
-else if(isDownStair) displayTile=5;
-else if(isBox) displayTile=6;
-else if(tile===4||tile===5||tile===6) displayTile=0;
+if(isUpStair)displayTile=4;
+else if(isDownStair)displayTile=5;
+else if(isBox)displayTile=6;
+else if(tile===4||tile===5||tile===6)displayTile=0;
 if(displayTile===1||displayTile===3){
 ctx.fillStyle=WALL_COLOR;
-ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
 }else{
 ctx.fillStyle=COLORS[displayTile]||COLORS[0];
-ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
 ctx.strokeStyle='rgba(0,0,0,0.08)';
-ctx.strokeRect(px+0.5, py+0.5, TILE_SIZE-1, TILE_SIZE-1);
+ctx.strokeRect(px+0.5,py+0.5,TILE_SIZE-1,TILE_SIZE-1);
 }
 ctx.textAlign='center';
 ctx.textBaseline='middle';
@@ -331,7 +331,7 @@ let [currentItemEN, currentItemJP]=mapData.getBoxItem(floorIndex, boxIndex, 0);
 for(let s=1;s<=255;s++){
 let [itemEN, itemJP]=mapData.getBoxItem(floorIndex, boxIndex, s);
 if(itemEN!==currentItemEN){
-results.push({ start: currentStart, end: s-1, itemEN: currentItemEN, itemJP: currentItemJP });
+results.push({ start: currentStart, end: s - 1, itemEN: currentItemEN, itemJP: currentItemJP });
 currentStart=s;
 currentItemEN=itemEN;
 currentItemJP=itemJP;
@@ -400,8 +400,8 @@ function closeChestModal(){
 const modal=document.getElementById('chestModal');
 if(modal) modal.style.display='none';
 }
-function switchTab(prefix, lang, activeColor, activeBorder, inactiveBg, inactiveColor, inactiveBorder){
-const keys=['TW', 'EN', 'JP', 'SP'];
+function switchTab(prefix,lang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
+const keys=['TW','EN','JP','SP'];
 keys.forEach(key=>{
 let tab=document.getElementById(prefix+'Tab'+key);
 let list=document.getElementById(prefix+'List'+key);
@@ -417,24 +417,24 @@ function openModal(modalId, tabPrefix, activeColor, activeBorder, inactiveBg, in
 const modal=document.getElementById(modalId);
 if(modal){
 modal.style.display='flex';
-const targetLang=['TW', 'EN', 'JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW';
-switchTab(tabPrefix, targetLang, activeColor, activeBorder, inactiveBg, inactiveColor, inactiveBorder);
+const targetLang=['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW';
+switchTab(tabPrefix,targetLang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder);
 }
 }
-function openDisclaimerModal(){openModal('disclaimerModal', 'disc', '#ffd700', '#4a4a8a', '#224', '#888', '#333');}
+function openDisclaimerModal(){openModal('disclaimerModal','disc','#ffd700','#4a4a8a','#224','#888','#333');}
 function closeDisclaimerModal(){document.getElementById('disclaimerModal').style.display='none';}
-function switchDisclaimerTab(lang){switchTab('disc', lang, '#ffd700', '#4a4a8a', '#224', '#888', '#333');}
-function openh1Modal(){openModal('h1Modal', 'h1', '#0ff', '#4a4a8a', '#224', '#888', '#333');}
+function switchDisclaimerTab(lang){switchTab('disc',lang,'#ffd700','#4a4a8a','#224','#888','#333');}
+function openh1Modal(){openModal('h1Modal','h1','#0ff','#4a4a8a','#224','#888','#333');}
 function closeh1Modal(){document.getElementById('h1Modal').style.display='none';}
-function switchH1Tab(lang){switchTab('h1', lang, '#0ff', '#4a4a8a', '#224', '#888', '#333');}
-function openh2Modal(){openModal('h2Modal', 'h2', '#0ff', '#4a4a8a', '#224', '#888', '#333');}
+function switchH1Tab(lang){switchTab('h1',lang,'#0ff','#4a4a8a','#224','#888','#333');}
+function openh2Modal(){openModal('h2Modal','h2','#0ff','#4a4a8a','#224','#888','#333');}
 function closeh2Modal(){document.getElementById('h2Modal').style.display='none';}
-function switchH2Tab(lang){switchTab('h2', lang, '#0ff', '#4a4a8a', '#224', '#888', '#333');}
-function openh3Modal(){openModal('h3Modal', 'h3', '#0ca', '#055', '#001a1a', '#598', '#033');}
+function switchH2Tab(lang){switchTab('h2',lang,'#0ff','#4a4a8a','#224','#888','#333');}
+function openh3Modal(){openModal('h3Modal','h3','#0ca','#055','#001a1a','#598','#033');}
 function closeh3Modal(){document.getElementById('h3Modal').style.display='none';}
-function switchH3Tab(lang){switchTab('h3', lang, '#0ca', '#055', '#001a1a', '#598', '#033');}
-window.addEventListener('DOMContentLoaded', ()=>{
-function populateDropdownObj(selectId, dataObj, nameIdx1, nameIdx2){
+function switchH3Tab(lang){switchTab('h3',lang,'#0ca','#055','#001a1a','#598','#033');}
+window.addEventListener('DOMContentLoaded',()=>{
+function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
 let selectElement=document.getElementById(selectId);
 if(!selectElement)return;
 Object.keys(dataObj).forEach(key=>{
@@ -445,11 +445,11 @@ option.text=`${item[nameIdx1]} ${item[nameIdx2]}`;
 selectElement.appendChild(option);
 });
 }
-if(typeof PREFIX_NAMES!=='undefined') populateDropdownObj('cond_prefix', PREFIX_NAMES, 0, 1);
-if(typeof SUFFIX_NAMES!=='undefined') populateDropdownObj('cond_suffix', SUFFIX_NAMES, 0, 1);
-if(typeof LOCALE_NAMES!=='undefined') populateDropdownObj('cond_locale', LOCALE_NAMES, 0, 1);
-if(typeof ENV_NAMES!=='undefined') populateDropdownObj('cond_env', ENV_NAMES, 0, 1);
-if(typeof BOSS_NAMES!=='undefined') populateDropdownObj('cond_boss', BOSS_NAMES, 0, 2);
+if(typeof PREFIX_NAMES!=='undefined')populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
+if(typeof SUFFIX_NAMES!=='undefined')populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
+if(typeof LOCALE_NAMES!=='undefined')populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
+if(typeof ENV_NAMES!=='undefined')populateDropdownObj('cond_env',ENV_NAMES,0,1);
+if(typeof BOSS_NAMES!=='undefined')populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
 const atCountSel=document.getElementById('atConsecutiveCount');
 if(atCountSel&&typeof AT_O!=='undefined'){
 AT_O.forEach(pair=>{
@@ -503,12 +503,12 @@ el.textContent=text;
 }
 });
 const _setOg=(id, t) =>{const el=document.getElementById(id);if(el) el.label=t;};
-_setOg('og1', T('Materials','素材/消耗品','素材/消耗品'));
-_setOg('ogS', T('B9F Items','B9F物品','B9Fアイテム'));
-_setOg('og2', T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'));
-_setOg('og3', T('Cursed Equipment','詛咒裝備','呪い装備'));
-_setOg('og4', T('Other Equipment','其他裝備','その他の装備'));
-_setOg('og5', T('Chest Monsters','寶箱怪','宝箱モンスター'));
+_setOg('og1',T('Materials','素材/消耗品','素材/消耗品'));
+_setOg('ogS',T('B9F Items','B9F物品','B9Fアイテム'));
+_setOg('og2',T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'));
+_setOg('og3',T('Cursed Equipment','詛咒裝備','呪い装備'));
+_setOg('og4',T('Other Equipment','其他裝備','その他の装備'));
+_setOg('og5',T('Chest Monsters','寶箱怪','宝箱モンスター'));
 const stepsLbl=document.getElementById('lblSteps');
 if(stepsLbl) stepsLbl.textContent=T('Steps','步數','歩');
 const srDiv=document.getElementById('searchResults');
@@ -520,12 +520,12 @@ const onlyMonEl=document.getElementById('cond_only_mon');
 const seedInput=document.getElementById('seed');
 const rankSelect=document.getElementById('rank');
 if(seedInput){
-seedInput.addEventListener('keydown', (e)=>{
+seedInput.addEventListener('keydown',(e)=>{
 if(e.key==='Enter') calculate();
 });
 }
 if(rankSelect){
-rankSelect.addEventListener('change', ()=>{
+rankSelect.addEventListener('change',()=>{
 if(mapData) calculate();
 });
 }
@@ -585,7 +585,7 @@ itemOpts+=`<option disabled>──────</option>`;
 let validItems=[];
 if(typeof TableR!=='undefined'&&typeof TableO!=='undefined'&&typeof TableQ!=='undefined'){
 if(r===0){
-TableR.forEach(p =>{if(!seen.has(p[0])){seen.add(p[0]);validItems.push(p[0]);} });
+TableR.forEach(p=>{if(!seen.has(p[0])){seen.add(p[0]);validItems.push(p[0]);}});
 }else{
 let startIdx=TableO[r-1];
 let endIdx=(TableO[r]!==undefined)?TableO[r]:TableQ.length;
@@ -611,7 +611,7 @@ container.innerHTML+=`
 <select id="fs_b_${i}" style="width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${boxOpts}</select>
 <select id="fs_r_${i}" onchange="updateFSItems(${i})" style="width:40px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${rankOpts}</select>
 <select id="fs_i_${i}" style="flex:1;width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-overflow:ellipsis;"></select>
-<input type="number" inputmode="numeric" id="fs_t_${i}" value="7" min="5" placeholder="sec" style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
+<input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
 </div>`;
 }
 for(let i=1;i<=3;i++){
@@ -671,7 +671,7 @@ txtContent+=`${rank},${seed},${resultText},D\n`;
 txtContent+=`${rank},${seed},${resultText}\n`;
 }
 });
-const blob=new Blob([txtContent],{type: 'text/plain;charset=utf-8' });
+const blob=new Blob([txtContent],{type:'text/plain;charset=utf-8' });
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');
 a.href=url;
@@ -680,8 +680,8 @@ document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
 URL.revokeObjectURL(url);
-} catch (error){
+}catch(error){
 alert(A07+error.message);
-console.error("匯出錯誤詳細資訊：", error);
+console.error("匯出錯誤詳細資訊：",error);
 }
 }
