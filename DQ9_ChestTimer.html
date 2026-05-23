@@ -70,6 +70,9 @@ body{margin:0;overflow:hidden}
 <button class="filter-btn" data-f="AB" onclick="setFilter('AB')">AB</button>
 <button class="filter-btn" id="btnLang" onclick="toggleLang()" style="color:#0ca;border-color:#0ca;">JP</button>
 <span class="sep"></span>
+<select id="customHL1" onchange="applyCustomHL()" style="background:#801;color:#fff;max-width:120px;font-size:11px;"><option value="">— HL1 —</option></select>
+<select id="customHL2" onchange="applyCustomHL()" style="background:#3f48cc;color:#fff;max-width:120px;font-size:11px;"><option value="">— HL2 —</option></select>
+<span class="sep"></span>
 <div class="timer-box">
 <div class="timer-display" id="timerDisp"><span id="timerText">-03.00</span></div>
 <button class="ctrl-btn start" id="btnStart" onclick="toggleTimer()">▶</button>
@@ -1059,6 +1062,7 @@ function setFilter(f) {
 function toggleLang() {
   displayLang = displayLang === 'en' ? 'jp' : 'en';
   document.getElementById('btnLang').textContent = displayLang.toUpperCase();
+  populateCustomHL();
   buildTable();
   renderRows();
 }
@@ -1088,7 +1092,51 @@ function onInputChange() {
   compute();
 }
 
-window.addEventListener('DOMContentLoaded', () => { compute(); updateStopwatch(-3000); });
+const CUSTOM_HL1 = {bg:'#801',fg:'#fff',bd:'#c24'};
+const CUSTOM_HL2 = {bg:'#3f48cc',fg:'#fff',bd:'#66f'};
+let customHL1Item = '';
+let customHL2Item = '';
+const BUILTIN_HL = {};
+function saveBuiltinHL() { for (const k in ITEM_HL) BUILTIN_HL[k] = ITEM_HL[k]; }
+
+function populateCustomHL() {
+  const seen = {};
+  const items = [];
+  TableR.forEach(r => {
+    if (!seen[r[0]]) { seen[r[0]] = true; items.push({en:r[0], jp:r[1]}); }
+  });
+  const isJP = displayLang === 'jp';
+  items.sort((a,b) => isJP ? a.jp.localeCompare(b.jp,'ja') : a.en.localeCompare(b.en));
+  ['customHL1','customHL2'].forEach(id => {
+    const sel = document.getElementById(id);
+    const prev = sel.value;
+    const label = id === 'customHL1' ? '— HL1 —' : '— HL2 —';
+    let html = '<option value="">' + label + '</option>';
+    items.forEach(it => {
+      const text = isJP ? it.jp : it.en;
+      html += '<option value="' + it.en + '">' + text + '</option>';
+    });
+    sel.innerHTML = html;
+    sel.value = prev;
+  });
+}
+
+function applyCustomHL() {
+  // Restore previous selections to original state
+  [customHL1Item, customHL2Item].forEach(name => {
+    if (!name) return;
+    if (BUILTIN_HL[name]) ITEM_HL[name] = BUILTIN_HL[name];
+    else delete ITEM_HL[name];
+  });
+  // Apply new selections
+  customHL1Item = document.getElementById('customHL1').value;
+  customHL2Item = document.getElementById('customHL2').value;
+  if (customHL1Item) ITEM_HL[customHL1Item] = CUSTOM_HL1;
+  if (customHL2Item) ITEM_HL[customHL2Item] = CUSTOM_HL2;
+  renderRows();
+}
+
+window.addEventListener('DOMContentLoaded', () => { saveBuiltinHL(); populateCustomHL(); compute(); updateStopwatch(-3000); });
 </script>
 </body>
 </html>
