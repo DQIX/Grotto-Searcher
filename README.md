@@ -14,7 +14,7 @@ For details, please see help documents & Disclaimer inside the tool.
 
 Ultimate search
 - Grotto Name, Level
-- Environment, SMR (B1 Monster Rank), Depth, Boss
+- Terrain Type, SMR (B1 Monster Rank), Depth, Boss
 - Location, Base Quality
 - Chest amount in each Chest rank
 - Wandering Monster bugged floor status (ElistOfs)
@@ -22,11 +22,14 @@ Ultimate search
 - Nipple Map (inaccessible chest), Chamber Map (inaccessible area), Softlock, etc.
 - 4-player Multiplay Bug (Multibug)
 
-Other searches
+Chest Timer related search
 - Quickload B3/B4/B9 same item x2 (QL)
 - Quickload + 3rd Chest same item (Combo)
 - 3rd Chest same item x2 (3rd)
 - Chest free search (up to 3 chests)
+- Chest Timer Marathon Tool (support both Japanese and English)
+
+Map Method (AT) search
 - AT search (1) List all map Seeds of selected item drop pattern
 - AT search (2) List all map Seeds for specific Whistle-summoned monster
 - AT search (Detail) Enter map Seed to check details
@@ -42,12 +45,12 @@ Chest Timer Search
 Map Method (AT) Search
 - Map Method mechanics
 
-All other languages are AI translated from Traditional Chinese version.
+All other languages are AI translated from Traditional Chinese version and manually fixed by the tool author (WIP).
 
 # Requirements
 
 iOS 10.3+ / Android 6.0+ / Windows 7+ / Any other OS which can run:
 
-Chrome 55+ / Firefox 52+ / Edge 15+ / Safari 10.1+
+Chrome 57+ / Firefox 52+ / Edge 15+ / Safari 10.1+
 
-CPU with high single thread efficiency (I didn't use Web Worker)
+CPU with high single thread efficiency (The tool author doesn't use Web Worker)
