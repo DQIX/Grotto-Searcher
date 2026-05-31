@@ -114,7 +114,6 @@ if(customMin>customMax){const t=customMin;customMin=customMax;customMax=t;docume
 const searchFilterLoc=true;
 const startSeed=customMin;
 const endSeed=searchFilterLoc?Math.min(customMax,0x7FFF):customMax;
-if(startSeed>endSeed){return{error:A09};}
 return{startSeed,endSeed,searchFilterLoc};
 }
 function validateHex(id,minVal,maxVal,padLen,errMsg){

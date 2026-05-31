@@ -385,7 +385,6 @@ const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);isSearching=false;btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';return;}
 const startSeed=rangeData.startSeed;
 const endSeed=searchFilterLoc?Math.min(rangeData.endSeed,0x7FFF):rangeData.endSeed;
-if(startSeed>endSeed){alert(A09);isSearching=false;btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';return;}
 const patSel=document.getElementById('at_pattern');
 const patternName=patSel.options[patSel.selectedIndex].text;
 const probSel=document.getElementById('at_threshold');
