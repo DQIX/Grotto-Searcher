@@ -51,14 +51,14 @@ if(!mapData||mapData.floorCount===0){
 el.innerHTML='<div class="error">'+C18+'</div>';
 return;
 }
-const seedHex=mapData.MapSeed.toString(16).toUpperCase().padStart(4,'0');
-const rStr=mapData.MapRank.toString(16).toUpperCase().padStart(2,'0');
-const locData=calcLocations(mapData.MapSeed, rStr);
+const seedHex=hex4(mapData.MapSeed);
+const rStr=hex2(mapData.MapRank);
+const locData=calcLocations(mapData.MapSeed,rStr);
 let locHtmlString='';
 if(locData.outputOrder.length>0){
 const locStrings=locData.outputOrder.map(item=>{
 const bqs=Array.from(locData.seenLocations[item.location]);
-return `${item.location.toString(16).toUpperCase().padStart(2,'0')} (${formatRanges(bqs)})`;
+return`${hex2(item.location)} (${formatRanges(bqs)})`;
 });
 locHtmlString=locStrings.join('<br>');
 }else{
@@ -87,44 +87,35 @@ if(r===10)color="#ffd700";
 else if(r>=8)color="#f44";
 else if(r>=4)color="#4c4";
 else if(r===3)color="#62a1ff";
-boxCountHtmlArr.push(`<span style="margin-right:14px;display:inline-block;background:#000;padding:2px 8px;border-radius:4px;border:1px solid #333;"><strong style="color:${color};font-size:14px;text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff;font-weight:bold;">${boxCounts[r]}</span></span>`);
+boxCountHtmlArr.push(`<span style="margin-right:6px; display:inline-block; background:#000; padding:2px 6px; border-radius:4px; border:1px solid #333;"><strong style="color:${color}; font-size:14px; text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff; font-weight:bold;">${boxCounts[r]}</span></span>`);
 }
 }
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
 let html=`<div class="info-bar">
-<span>Rank: <strong>${rStr}</strong></span>
-<span>Seed: <strong>${seedHex}</strong></span>
-<span>${C01}: <strong style="display:inline-block;vertical-align:top;">
-<span style="display:block;color:#ffd700">${mapData.mapName}</span>
-<span style="display:block;color:#ffd700">${mapData.mapNameJP}</span>
-</strong></span>
-<span>${C02}: <strong style="display:inline-block;vertical-align:top;">
-<span style="display:block;color:#ffd700">${mapData.mapTypeName}</span>
-<span style="display:block;color:#ffd700">${mapData.mapTypeNameJP}</span>
-</strong></span>
-<span>${C03}: <strong>${mapData.monsterRank}</strong></span>
-<span>${C04}: <strong>${mapData.floorCount}</strong></span>
-<span>Boss: <strong style="display:inline-block;vertical-align:top;">
-<span style="display:block;color:#ffd700">${mapData.bossName}</span>
-<span style="display:block;color:#ffd700">${mapData.bossNameJP}</span>
-</strong></span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C05}:
-<strong style="display:block;color:#0ff;font-family:monospace;font-size:12px;margin-top:2px;">${locHtmlString}</strong>
+<span>Rank:<strong>${rStr}</strong></span>
+<span>Seed:<strong>${seedHex}</strong></span>
+<span style="display:inline-flex;align-items:flex-start;"><span>${C01}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapName}</span><span style="display:block;color:#ffd700">${mapData.mapNameJP}</span></strong></span>
+<span style="display:inline-flex;align-items:flex-start;"><span>${C02}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapTypeName}</span><span style="display:block;color:#ffd700">${mapData.mapTypeNameJP}</span></strong></span>
+<span>${C03}:<strong>${mapData.monsterRank}</strong></span>
+<span>${C04}:<strong>${mapData.floorCount}</strong></span>
+<span style="display:inline-flex;align-items:flex-start;"><span>Boss:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.bossName}</span><span style="display:block;color:#ffd700">${mapData.bossNameJP}</span></strong></span>
+<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C05}:
+<strong style="display:block; color:#0ff; font-family:monospace; font-size:12px; margin-top:2px;">${locHtmlString}</strong>
 </span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C06}:
-<strong style="display:block;color:#4c4;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${atHtmlString}</strong>
+<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C06}:
+<strong style="display:block; color:#4c4; font-family:monospace; font-size:12px; margin-top:2px; text-align:left;">${atHtmlString}</strong>
 </span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C06b}:
-<strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
+<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C06b}:
+<strong style="display:block; font-family:monospace; font-size:12px; margin-top:2px; text-align:left;">${rnHtml}</strong>
 </span>
 </div>
-<div class="info-bar" style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding: 10px 20px;">
-<span style="color:#88b;font-weight:bold;margin-right:10px;">${C07}</span>
-<div style="display:flex;flex-wrap:wrap;align-items:center;flex:1;">
+<div class="info-bar"style="align-items:center; background:#16162a; border-bottom:1px solid #4a4a8a; padding:8px 14px; gap:6px;">
+<span style="color:#88b; font-weight:bold; white-space:nowrap;">${C07}</span>
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px; flex:1; min-width:0;">
 ${boxString}
-<span style="margin-left:auto;padding-left:12px;border-left:2px solid #4a4a8a;color:#8cc8ff;font-weight:bold;margin-right:15px;">${totalBoxes} ${C08}</span>
-<div id="controls_target_area"></div>
 </div>
+<span style="white-space:nowrap; padding-left:8px; border-left:2px solid #4a4a8a; color:#8cc8ff; font-weight:bold;">${totalBoxes}${C08}</span>
+<div id="controls_target_area"style="display:flex; align-items:center;"></div>
 </div>`;
 setTimeout(()=>{
 const target=document.getElementById('controls_target_area');
@@ -144,7 +135,7 @@ renderFloor(activeFloor);
 }
 function switchFloor(f){
 activeFloor=f;
-document.querySelectorAll('.floor-tab').forEach((t,i)=>t.classList.toggle('active', i===f));
+document.querySelectorAll('.floor-tab').forEach((t,i)=>t.classList.toggle('active',i===f));
 renderFloor(f);
 }
 function renderFloor(f){
@@ -161,13 +152,13 @@ let infoHtml='<div class="floor-info">';
 infoHtml+=`<h3>B${f+1}F</h3>`;
 infoHtml+='<table>';
 infoHtml+=`<tr><td>${C10}</td><td>${w} × ${h}</td></tr>`;
-if(f<mapData.floorCount - 1)
+if(f<mapData.floorCount-1)
 infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　▼ (${down.x}, ${down.y})</td></tr>`;
 else
 infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　Boss (${down.x}, ${down.y})</td></tr>`;
-const elistInfo=getFloorElistInfo(mapData, f);
-let stateHtml=elistInfo.state?` <span style="background:#f4c;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:6px;white-space:nowrap;">${elistInfo.state}</span>`:'';
-let dHtml=elistInfo.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px;white-space:nowrap;">${elistInfo.dValue}</span>`:'';
+const elistInfo=getFloorElistInfo(mapData,f);
+let stateHtml=elistInfo.state?` <span style="background:#f4c; color:#fff; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:6px; white-space:nowrap;">${elistInfo.state}</span>`:'';
+let dHtml=elistInfo.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:4px; white-space:nowrap;">${elistInfo.dValue}</span>`:'';
 infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
 const envType=mapData._details[3];
 let floorMR=mapData._details[2]+(f>>2);
@@ -185,9 +176,9 @@ else if(st.includes(EL_0)&&!st.includes(EL_P))grayFrom=0;
 if(grayFrom<0)grayFrom=0;
 const onlyMonId=(ONLY_MONSTERS[envType]&&ONLY_MONSTERS[envType][floorMR])||'';
 const isOnlyMode=(st.includes('only')||st.includes('オンリー'));
-let monsterSpans=normals.map((entry, i)=>{
+let monsterSpans=normals.map((entry,i)=>{
 const md=MONSTER_DATA[entry[0]];
-if(!md)return '';
+if(!md)return'';
 const name=isJP?md.jp:md.en;
 let isGray;
 if(isOnlyMode){
@@ -197,7 +188,7 @@ isGray=(i>=grayFrom);
 }
 const bg=isGray?'#1a1a2e':'#2a2a4a';
 const fg=isGray?'#555':'#ddd';
-return `<span class="mon-pill" style="color:${fg};background:${bg};">${name}</span>`;
+return`<span class="mon-pill" style="color:${fg};background:${bg};">${name}</span>`;
 }).filter(Boolean);
 if(monsterSpans.length>0){
 infoHtml+=`<tr><td>${C12}</td><td class="mon-td">${monsterSpans.join('')}</td></tr>`;
@@ -205,16 +196,16 @@ infoHtml+=`<tr><td>${C12}</td><td class="mon-td">${monsterSpans.join('')}</td></
 if(boxCount>0){
 infoHtml+=`<tr><td>${C13}</td><td>${boxCount} <font color=#666>${C14}</font></td></tr>`;
 for(let i=0;i<boxCount;i++){
-const box=mapData.getBoxInfo(f, i);
+const box=mapData.getBoxInfo(f,i);
 const rn=CHEST_RANK[box.rank]||box.rank;
-const [soloEN, soloJP]=mapData.getBoxItem(f,i,1).map(v=>v||'?');
-const [partyEN, partyJP]=mapData.getBoxItem(f,i,2).map(v=>v||'?');
+const[soloEN,soloJP]=mapData.getBoxItem(f,i,1).map(v=>v||'?');
+const[partyEN,partyJP]=mapData.getBoxItem(f,i,2).map(v=>v||'?');
 const dispSolo=DISPLAY_LANG!=='EN'?soloJP:soloEN;
 const dispParty=DISPLAY_LANG!=='EN'?partyJP:partyEN;
 infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
-<div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span> (${box.x}, ${box.y})</div>
-<div class="chest-item"><span class="chest-item-solo">Item (${STR_SOLO}): ${dispSolo}</span></div>
-<div class="chest-item"><span class="chest-item-party">Item (${STR_PARTY}): ${dispParty}</span></div>
+<div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span>(${box.x},${box.y})</div>
+<div class="chest-item"><span class="chest-item-solo">Item(${STR_SOLO}):${dispSolo}</span></div>
+<div class="chest-item"><span class="chest-item-party">Item(${STR_PARTY}):${dispParty}</span></div>
 </td></tr>`;
 }
 }else{
@@ -233,7 +224,7 @@ infoHtml+='</div></div>';
 container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${canvasW}" height="${canvasH}" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div>${infoHtml}`;
 document.querySelector('.map-container').style.position='relative';
 const mapCanvas=document.getElementById('mapCanvas');
-mapCanvas.addEventListener('mousemove', (e)=>{
+mapCanvas.addEventListener('mousemove',(e)=>{
 const rect=mapCanvas.getBoundingClientRect();
 const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
 const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
@@ -253,10 +244,10 @@ mapCanvas.style.cursor='default';
 });
 const boxPositions=new Map();
 for(let i=0;i<boxCount;i++){
-const b=mapData.getBoxInfo(f, i);
-boxPositions.set(b.x+','+b.y, i+1);
+const b=mapData.getBoxInfo(f,i);
+boxPositions.set(b.x+','+b.y,i+1);
 }
-mapCanvas.addEventListener('click', (e)=>{
+mapCanvas.addEventListener('click',(e)=>{
 const rect=mapCanvas.getBoundingClientRect();
 const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
 const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
@@ -297,15 +288,15 @@ ctx.textBaseline='middle';
 if(isUpStair){
 ctx.fillStyle='#000';
 ctx.font='bold 12px sans-serif';
-ctx.fillText('▲', px+TILE_SIZE/2, py+TILE_SIZE/2);
+ctx.fillText('▲',px+TILE_SIZE/2,py+TILE_SIZE/2);
 }else if(isDownStair){
 ctx.fillStyle='#000';
 ctx.font='bold 12px sans-serif';
-ctx.fillText('▼', px+TILE_SIZE/2, py+TILE_SIZE/2);
+ctx.fillText('▼',px+TILE_SIZE/2,py+TILE_SIZE/2);
 }else if(isBox){
 ctx.fillStyle='#000';
 ctx.font='bold 11px sans-serif';
-ctx.fillText(boxNum, px+TILE_SIZE/2, py+TILE_SIZE/2);
+ctx.fillText(boxNum,px+TILE_SIZE/2,py+TILE_SIZE/2);
 }
 }
 }
@@ -313,45 +304,45 @@ ctx.fillStyle='rgba(0,0,0,0.3)';
 ctx.font='9px monospace';
 ctx.textAlign='center';
 ctx.textBaseline='top';
-for(let x=0;x<w;x++) ctx.fillText(x, x*TILE_SIZE+TILE_SIZE/2, 2);
+for(let x=0;x<w;x++)ctx.fillText(x,x*TILE_SIZE+TILE_SIZE/2,2);
 ctx.textBaseline='middle';
 ctx.textAlign='left';
-for(let y=0;y<h;y++) ctx.fillText(y, 2, y*TILE_SIZE+TILE_SIZE/2);
+for(let y=0;y<h;y++)ctx.fillText(y,2,y*TILE_SIZE+TILE_SIZE/2);
 }
-function showChestTimer(floorIndex, boxIndex, x, y){
+function showChestTimer(floorIndex,boxIndex,x,y){
 const modal=document.getElementById('chestModal');
 const title=document.getElementById('chestModalTitle');
 const body=document.getElementById('chestModalBody');
-const boxInfo=mapData.getBoxInfo(floorIndex, boxIndex);
+const boxInfo=mapData.getBoxInfo(floorIndex,boxIndex);
 const rn=CHEST_RANK[boxInfo.rank]||boxInfo.rank;
 title.textContent=`B${floorIndex+1}F ${C15} ${boxIndex+1} (Rank ${rn}) @ (${x}, ${y})`;
 let results=[];
 let currentStart=0;
-let [currentItemEN, currentItemJP]=mapData.getBoxItem(floorIndex, boxIndex, 0);
+let[currentItemEN,currentItemJP]=mapData.getBoxItem(floorIndex,boxIndex,0);
 for(let s=1;s<=255;s++){
-let [itemEN, itemJP]=mapData.getBoxItem(floorIndex, boxIndex, s);
+let[itemEN,itemJP]=mapData.getBoxItem(floorIndex,boxIndex,s);
 if(itemEN!==currentItemEN){
-results.push({ start: currentStart, end: s - 1, itemEN: currentItemEN, itemJP: currentItemJP });
+results.push({start:currentStart,end:s-1,itemEN:currentItemEN,itemJP:currentItemJP});
 currentStart=s;
 currentItemEN=itemEN;
 currentItemJP=itemJP;
 }
 }
-results.push({ start: currentStart, end: 255, itemEN: currentItemEN, itemJP: currentItemJP });
+results.push({start:currentStart,end:255,itemEN:currentItemEN,itemJP:currentItemJP});
 let htmlEN='';
 let htmlJP='';
 results.forEach(res=>{
-const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3, '0'):`${(res.start+5).toString().padStart(3, '0')} ~ ${(res.end+5).toString().padStart(3, '0')}`;
+const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3,'0'):`${(res.start + 5).toString().padStart(3, '0')} ~ ${(res.end + 5).toString().padStart(3, '0')}`;
 const isHighlight=(res.start<=2&&res.end>=1);
-const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15);border-left: 3px solid #ffd700;padding-left: 8px;':'';
-const textStyle=isHighlight?'color: #ffd700;font-weight: bold;':'';
+const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15); border-left: 3px solid #ffd700; padding-left: 8px;':'';
+const textStyle=isHighlight?'color: #ffd700; font-weight: bold;':'';
 htmlEN+=`<div class="timer-row" style="${rowStyle}">
-<span class="timer-range" style="${textStyle}">${rangeStr}</span>
-<span class="timer-item" style="${textStyle}">${res.itemEN}</span>
+<span class="timer-range"style="${textStyle}">${rangeStr}</span>
+<span class="timer-item"style="${textStyle}">${res.itemEN}</span>
 </div>`;
 htmlJP+=`<div class="timer-row" style="${rowStyle}">
-<span class="timer-range" style="${textStyle}">${rangeStr}</span>
-<span class="timer-item" style="${textStyle}">${res.itemJP}</span>
+<span class="timer-range"style="${textStyle}">${rangeStr}</span>
+<span class="timer-item"style="${textStyle}">${res.itemJP}</span>
 </div>`;
 });
 body.style.padding='0';
@@ -359,12 +350,12 @@ body.style.overflowY='hidden';
 body.style.display='flex';
 body.style.flexDirection='column';
 body.innerHTML=`<div class="modal-tabs">
-<div id="tabEN" style="padding: 6px 16px;background: #1a1a3a;color: #ffd700;border: 1px solid #4a4a8a;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;" onclick="switchTimerTab('EN')">English</div>
-<div id="tabJP" style="padding: 6px 16px;background: #224;color: #888;border: 1px solid #333;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;" onclick="switchTimerTab('JP')">日本語</div>
+<div id="tabEN"style="padding: 6px 16px; background: #1a1a3a; color: #ffd700; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchTimerTab('EN')">English</div>
+<div id="tabJP"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchTimerTab('JP')">日本語</div>
 </div>
-<div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
-<div id="listEN" style="display: block;">${htmlEN}</div>
-<div id="listJP" style="display: none;">${htmlJP}</div>
+<div style="padding: 12px 16px; overflow-y: auto; flex: 1;">
+<div id="listEN"style="display: block;">${htmlEN}</div>
+<div id="listJP"style="display: none;">${htmlJP}</div>
 </div>
 `;
 modal.style.display='flex';
@@ -398,7 +389,7 @@ listEN.style.display='none';
 }
 function closeChestModal(){
 const modal=document.getElementById('chestModal');
-if(modal) modal.style.display='none';
+if(modal)modal.style.display='none';
 }
 function switchTab(prefix,lang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
 const keys=['TW','EN','JP','SP'];
@@ -413,7 +404,7 @@ tab.style.background=inactiveBg;tab.style.color=inactiveColor;tab.style.borderCo
 }
 });
 }
-function openModal(modalId, tabPrefix, activeColor, activeBorder, inactiveBg, inactiveColor, inactiveBorder){
+function openModal(modalId,tabPrefix,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
 const modal=document.getElementById(modalId);
 if(modal){
 modal.style.display='flex';
@@ -460,17 +451,8 @@ atCountSel.appendChild(opt);
 });
 }
 let topIds=["0B5","01B","0B9"];
-let orderedRemainingIds=[];
+let seenIds=new Set(topIds);
 let envOrder=[1,2,3,4,5];
-envOrder.forEach(env=>{
-if(ONLY_MONSTERS[env]){
-ONLY_MONSTERS[env].forEach(id=>{
-if(id&&!topIds.includes(id)&&!orderedRemainingIds.includes(id)){
-orderedRemainingIds.push(id);
-}
-});
-}
-});
 let sel=document.getElementById('cond_only_mon');
 if(sel){
 const createOpt=(id)=>{
@@ -480,39 +462,41 @@ opt.value=data.en;
 opt.textContent=`${data.en} ${data.jp}`;
 return opt;
 };
+const addSep=()=>{
+let s=document.createElement('option');
+s.disabled=true;
+s.textContent="──────────";
+sel.appendChild(s);
+};
 topIds.forEach(id=>sel.appendChild(createOpt(id)));
-let separator=document.createElement('option');
-separator.disabled=true;
-separator.textContent="──────────";
-sel.appendChild(separator);
-orderedRemainingIds.forEach(id=>sel.appendChild(createOpt(id)));
+addSep();
+envOrder.forEach((env,idx)=>{
+if(ONLY_MONSTERS[env]){
+let added=false;
+ONLY_MONSTERS[env].forEach(id=>{
+if(id&&!seenIds.has(id)){
+seenIds.add(id);
+sel.appendChild(createOpt(id));
+added=true;
+}
+});
+if(added&&idx<envOrder.length-1)addSep();
+}
+});
 }
 if(typeof TableR!=='undefined'){
-TableR.forEach(pair =>{i18nDict['I_'+pair[0]]=T(pair[0], pair[1], pair[1]);});
+TableR.forEach(pair=>{i18nDict['I_'+pair[0]]=T(pair[0],pair[1],pair[1]);});
 }
-Object.assign(i18nDict, {
-"I_Millionaire": T("Millionaire","大富豪","大富豪"),
-"I_S weapon": T("S weapon","S武器","S武器")
+Object.assign(i18nDict,{
+"I_Millionaire":T("Millionaire","大富豪","大富豪"),
+"I_S weapon":T("S weapon","S武器","S武器")
 });
-document.querySelectorAll('[data-i18n]').forEach(el=>{
-const key=el.getAttribute('data-i18n');
-let text=i18nDict[key];
-if(text){
-if(el.tagName==='OPTION'&&b3fThreeItems.includes(el.value)){text+=T(' (3)', ' (3)', ' (3)');}
-el.textContent=text;
-}
+refreshI18n();
+document.querySelectorAll('.lang-sw').forEach(b=>{
+if(b.dataset.lang===DISPLAY_LANG){b.style.background='#00A2E8';b.style.color='#fff';b.style.borderColor='#00A2E8';}
 });
-const _setOg=(id, t) =>{const el=document.getElementById(id);if(el) el.label=t;};
-_setOg('og1',T('Materials','素材/消耗品','素材/消耗品'));
-_setOg('ogS',T('B9F Items','B9F物品','B9Fアイテム'));
-_setOg('og2',T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'));
-_setOg('og3',T('Cursed Equipment','詛咒裝備','呪い装備'));
-_setOg('og4',T('Other Equipment','其他裝備','その他の装備'));
-_setOg('og5',T('Chest Monsters','寶箱怪','宝箱モンスター'));
-const stepsLbl=document.getElementById('lblSteps');
-if(stepsLbl) stepsLbl.textContent=T('Steps','步數','歩');
 const srDiv=document.getElementById('searchResults');
-if(srDiv&&srDiv.children.length<=1) srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
+if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666; font-size:13px; text-align:center; margin-top:20px;">'+J02+'</div>';
 const prefixEl=document.getElementById('cond_prefix');
 const suffixEl=document.getElementById('cond_suffix');
 const elistEl=document.getElementById('cond_elist');
@@ -521,19 +505,19 @@ const seedInput=document.getElementById('seed');
 const rankSelect=document.getElementById('rank');
 if(seedInput){
 seedInput.addEventListener('keydown',(e)=>{
-if(e.key==='Enter') calculate();
+if(e.key==='Enter')calculate();
 });
 }
 if(rankSelect){
 rankSelect.addEventListener('change',()=>{
-if(mapData) calculate();
+if(mapData)calculate();
 });
 }
 function initFreeSearchUI(){
 const container=document.getElementById('fs_container');
 if(!container)return;
 let floorOpts=`<option value="0">---</option>`;
-for(let i=3;i<=16;i++) floorOpts+=`<option value="${i}">B${i}F</option>`;
+for(let i=3;i<=16;i++)floorOpts+=`<option value="${i}">B${i}F</option>`;
 let boxOpts=`
 <option value="-1">---</option>
 <option value="0">1</option>
@@ -542,7 +526,7 @@ let boxOpts=`
 <option value="3">${T('Non-3','非整列','非整列')}</option>
 `;
 let rankOpts=`<option value="0">---</option>`;
-['S','A','B','C','D','E','F','G','H','I'].forEach((r,idx) =>{rankOpts+=`<option value="${10-idx}">${r}</option>`;});
+['S','A','B','C','D','E','F','G','H','I'].forEach((r,idx)=>{rankOpts+=`<option value="${10-idx}">${r}</option>`;});
 window.updateFSItems=function(groupId){
 let rankSelect=document.getElementById(`fs_r_${groupId}`);
 let itemSelect=document.getElementById(`fs_i_${groupId}`);
@@ -594,7 +578,7 @@ let itemName=TableR[TableQ[i]][0];
 if(!seen.has(itemName)){seen.add(itemName);validItems.push(itemName);}
 }
 }
-validItems.forEach(en =>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
+validItems.forEach(en=>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
 }
 itemSelect.innerHTML=itemOpts;
 if(itemSelect.querySelector(`option[value="${currentVal}"]`)){
@@ -605,13 +589,13 @@ itemSelect.value="ANY";
 };
 for(let i=1;i<=3;i++){
 container.innerHTML+=`
-<div style="display:flex;gap:2px;align-items:center;">
-<span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
-<select id="fs_f_${i}" style="width:45px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${floorOpts}</select>
-<select id="fs_b_${i}" style="width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${boxOpts}</select>
-<select id="fs_r_${i}" onchange="updateFSItems(${i})" style="width:40px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${rankOpts}</select>
-<select id="fs_i_${i}" style="flex:1;width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-overflow:ellipsis;"></select>
-<input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
+<div style="display:flex; gap:2px; align-items:center;">
+<span style="color:#0ff; font-size:10px; width:10px; text-align:center;">${i}</span>
+<select id="fs_f_${i}"style="width:45px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${floorOpts}</select>
+<select id="fs_b_${i}"style="width:50px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${boxOpts}</select>
+<select id="fs_r_${i}"onchange="updateFSItems(${i})"style="width:40px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${rankOpts}</select>
+<select id="fs_i_${i}"style="flex:1; width:50px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555; text-overflow:ellipsis;"></select>
+<input type="number"id="fs_t_${i}"value="7"min="5"placeholder="sec"style="width:35px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555; text-align:center;">
 </div>`;
 }
 for(let i=1;i<=3;i++){
@@ -624,16 +608,16 @@ calculate();
 });
 let isModalDragging=false;
 const allModalIds=['chestModal','disclaimerModal','h1Modal','h2Modal','h3Modal'];
-window.addEventListener('mousedown', (e)=>{
+window.addEventListener('mousedown',(e)=>{
 if(allModalIds.includes(e.target.id)){isModalDragging=false;}
-else {isModalDragging=true;}
+else{isModalDragging=true;}
 });
-window.addEventListener('mouseup', (e)=>{
+window.addEventListener('mouseup',(e)=>{
 if(!isModalDragging&&allModalIds.includes(e.target.id)){e.target.style.display='none';}
 isModalDragging=false;
 });
 function exportSearchResults(){
-try {
+try{
 const items=document.querySelectorAll('#searchGrid .search-result-item, #atSearchGrid .search-result-item');
 if(items.length===0){
 alert(A06);
@@ -647,9 +631,9 @@ let firstLine=lines[0];
 let seed="";
 let rank="--";
 let seedMatch=firstLine.match(/^([0-9A-F]{4})/i);
-if(seedMatch) seed=seedMatch[1].toUpperCase();
+if(seedMatch)seed=seedMatch[1].toUpperCase();
 let rankMatch=firstLine.match(/\(Rank\s*([0-9A-F]{2})\)/i);
-if(rankMatch) rank=rankMatch[1].toUpperCase();
+if(rankMatch)rank=rankMatch[1].toUpperCase();
 let resultLines=lines.slice(1).filter(line=>{
 if(/Lv\.?\s*\d+/i.test(line))return false;
 if(/^(Caves|Ruins|Ice|Water|Fire|洞窟|遺跡|氷|水|火山)$/i.test(line))return false;
@@ -671,7 +655,7 @@ txtContent+=`${rank},${seed},${resultText},D\n`;
 txtContent+=`${rank},${seed},${resultText}\n`;
 }
 });
-const blob=new Blob([txtContent],{type:'text/plain;charset=utf-8' });
+const blob=new Blob([txtContent],{type:'text/plain;charset=utf-8'});
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');
 a.href=url;
