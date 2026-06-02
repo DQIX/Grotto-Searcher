@@ -626,10 +626,10 @@ mrtTimerLoop();
 }
 function mrtResetTimer(){
 if(mrtRunning){cancelAnimationFrame(mrtRAF);mrtRAF=null;mrtRunning=false;}
-mrtRealSec=-3;mrtElapsedMs=-3000;
+mrtRealSec=0;mrtElapsedMs=0;
 document.getElementById('mrt_btnStart').textContent='\u25B6';
 document.getElementById('mrt_btnStart').classList.remove('running');
-mrtUpdateStopwatch(-3000);
+mrtUpdateStopwatch(0);
 mrtRenderRows();
 }
 function mrtSetFilter(f){
