@@ -513,8 +513,29 @@ const MRT_PRESETS={
 'DD,5C43':{custom:{3:[0,1],4:[0],5:[1],6:[0],9:[0],10:[0],11:[0],13:[0,1],14:[1]}},
 'DD,47D0':{custom:{3:[0,1],4:[1],5:[0],6:[0],7:[0,1,2],8:[0]}},
 };
-let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null;
-let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=-3,mrtElapsedMs=-3000;
+let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null,mrtHiddenChests=new Set(),mrtRankWidths={};
+function mrtMeasureRankWidths(){
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const isMobile=window.innerWidth<=600;
+const isEN=mrtLang!=='jp';
+ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'"Hiragino Sans","PingFang TC",sans-serif');
+mrtRankWidths={};
+const ranks=new Set(mrtChests.map(cd=>cd.rank));
+for(const rank of ranks){
+const sample=mrtChests.find(cd=>cd.rank === rank);
+if(!sample)continue;
+let maxW=0;
+for(let s=0;s<300;s++){
+const [en,jp]=mrtEngine.getBoxItem(sample.floor,sample.box,s);
+const name=isEN?(en||'\u2014'):(jp||en||'\u2014');
+const w=ctx.measureText(name).width;
+if(w>maxW)maxW=w;
+}
+mrtRankWidths[rank]=Math.ceil(maxW)+12;
+}
+}
+let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=0,mrtElapsedMs=0;
 function mrtInternalSec(){return mrtRealSec-5;}
 function mrtGetItem(f,b,s){return s>=0?mrtEngine.getBoxItem(f,b,s):[null,null];}
 function mrtOpen(){
@@ -550,6 +571,7 @@ const info=mrtEngine.getBoxInfo(f,b);
 mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:MRT_RK_NAMES[info.rank]||'?'});
 }
 }
+mrtMeasureRankWidths();
 mrtBuildTable();
 mrtRenderRows();
 }
@@ -559,19 +581,29 @@ if(mrtFilter==='SA')return cd.rank>=9;
 if(mrtFilter==='AB')return cd.rank===9||cd.rank===8;
 return true;
 }
-function mrtBuildTable(){
+function mrtBuildTable(keepScroll){
 const area=document.getElementById('mrt_mainArea');
+const savedScroll=keepScroll?area.scrollLeft :0;
 area.scrollLeft=0;area.scrollTop=0;
-mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd));
+mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd)&&!mrtHiddenChests.has(cd.floor+':'+cd.box));
 if(!mrtVisChests.length){area.innerHTML='<p style="color:#555;padding:20px;text-align:center">No chests</p>';return;}
 const cols=mrtVisChests.length;
-const gridCols='42px repeat('+cols+', minmax(80px, auto))';
+const gridCols='42px '+mrtVisChests.map(cd=>(mrtRankWidths[cd.rank]||100)+'px').join(' ');
 let hdr='<div class="mrt-vhdr-time">sec</div>';
-for(const cd of mrtVisChests){
+for(let ci=0;ci<mrtVisChests.length;ci++){
+const cd=mrtVisChests[ci];
 const clr=MRT_RK_COLORS[cd.rank]||'#888';
-hdr+='<div class="mrt-vhdr"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
+hdr+='<div class="mrt-vhdr" data-ck="'+cd.floor+':'+cd.box+'" style="cursor:pointer"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
 }
 area.innerHTML='<div class="mrt-vgrid" style="grid-template-columns:'+gridCols+'">'+hdr+'<div id="mrt_vbody" style="display:contents"></div></div>';
+area.querySelector('.mrt-vgrid').addEventListener('click',function(e){
+const cell=e.target.closest('[data-ck]');
+if(!cell)return;
+mrtHiddenChests.add(cell.dataset.ck);
+document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));
+mrtBuildTable(true);mrtRenderRows();
+});
+if(savedScroll)area.scrollLeft=savedScroll;
 }
 function mrtRenderRows(){
 const vb=document.getElementById('mrt_vbody');
@@ -579,17 +611,18 @@ if(!vb||!mrtVisChests.length)return;
 const is=mrtInternalSec();
 const st=Math.max(0,is),ed=Math.max(st+MRT_PREVIEW_ROWS,is+MRT_PREVIEW_ROWS);
 const isEN=mrtLang!=='jp';
-const cellCls=isEN?'mrt-vcell mrt-vcell-en':'mrt-vcell';
+const cellCls=isEN?'mrt-vcell mrt-vcell-en' :'mrt-vcell';
 let html='';
 for(let s=st;s<=ed;s++){
 const cur=(s===is),rCls=cur?' mrt-vrow-cur':'';
 html+='<div class="mrt-vtime'+rCls+'">'+String(s+5).padStart(3,'0')+'</div>';
-for(const cd of mrtVisChests){
-const[en,jp]=(s>=0)?mrtGetItem(cd.floor,cd.box,s):[null,null];
+for(let ci=0;ci<mrtVisChests.length;ci++){
+const cd=mrtVisChests[ci];
+const [en,jp]=(s>=0)?mrtGetItem(cd.floor,cd.box,s):[null,null];
 const hl=en?MRT_HL[en]:null;
-const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+'"':'';
+const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+';cursor:pointer"' :' style="cursor:pointer"';
 const label=mrtLang==='jp'?(jp||en||'\u2014'):(en||'\u2014');
-html+='<div class="'+cellCls+rCls+'"'+style+'>'+label+'</div>';
+html+='<div class="'+cellCls+rCls+'" data-ck="'+cd.floor+':'+cd.box+'"'+style+'>'+label+'</div>';
 }
 }
 vb.innerHTML=html;
@@ -616,7 +649,7 @@ mrtRunning=false;
 if(mrtRAF){cancelAnimationFrame(mrtRAF);mrtRAF=null;}
 document.getElementById('mrt_btnStart').textContent='\u25B6';
 document.getElementById('mrt_btnStart').classList.remove('running');
-}else{
+} else {
 mrtOrigin=Date.now()-mrtElapsedMs;
 mrtRunning=true;
 document.getElementById('mrt_btnStart').textContent='\u23F8';
@@ -633,13 +666,14 @@ mrtUpdateStopwatch(0);
 mrtRenderRows();
 }
 function mrtSetFilter(f){
-mrtFilter=f;mrtCustom=null;
+mrtFilter=f;mrtCustom=null;mrtHiddenChests.clear();
 document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
 mrtBuildTable();mrtRenderRows();
 }
 function mrtToggleLang(){
 mrtLang=mrtLang==='en'?'jp':'en';
 document.getElementById('mrt_btnLang').textContent=mrtLang.toUpperCase();
+mrtMeasureRankWidths();
 mrtBuildTable();mrtRenderRows();
 }
 function mrtApplyPreset(){
@@ -653,7 +687,7 @@ if(pd&&pd.custom){mrtFilter='CUSTOM';mrtCustom=pd.custom;document.querySelectorA
 mrtResetTimer();mrtCompute();sel.selectedIndex=0;
 }
 function mrtInputChange(){
-mrtCustom=null;mrtFilter='ALL';
+mrtCustom=null;mrtFilter='ALL';mrtHiddenChests.clear();
 document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f==='ALL'));
 mrtResetTimer();mrtCompute();
 }
