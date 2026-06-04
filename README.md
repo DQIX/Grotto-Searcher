@@ -13,8 +13,8 @@ For details, please see help documents & Disclaimer inside the tool.
 # Available Search Functions
 
 Overall
-- You can manually type "?id=RRSSSS" to jump to your specified map
-  For example: https://dqix.github.io/Grotto-Searcher/?id=797854 for Silver Marsh of Bane Lv.58
+- You can manually type "?id=RRSSSS" to specify a map
+- For example: https://dqix.github.io/Grotto-Searcher/?id=797854 for jumping to Silver Marsh of Bane Lv.58
 
 Ultimate search
 - Grotto Name, Level
