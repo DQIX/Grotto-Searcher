@@ -24,8 +24,7 @@ const C04=T('Depth','樓層數','深さ');
 const C05=T('Location & BQ','位置與 BQ','場所 & Base値');
 const C06=T('AT value','AT 判定值','AT 判定値');
 const C06b=T('AT Ptn','地圖法','地図法');
-const C07=T('📦 Chests:','📦 寶箱:','📦 宝箱:');
-const C08=T('Chests','箱','箱');
+const C07=T('Chests:','寶箱:','宝箱:');
 const C09=T('No Chest','無寶箱','箱無し');
 const C10=T('Size','地圖大小','サイズ');
 const C11=T('Stairs','樓梯','階段');
@@ -520,14 +519,7 @@ const above=d[i3+((d[index1+1]-1)<<4)+792];
 if(above===1||above===8)continue;
 const random1=this.gRNGRange(0,num2);
 const num9=i3-1;
-for(let i4=0;i4<random1&&
-d[i3+((d[index1+1]+i4)<<4)+792]!==8&&
-d[i3+((d[index1+1]+i4+1)<<4)+792]!==1&&
-(d[((d[index1+1]+i4)<<4)+i3+1+792]===1||
-d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1)&&
-(d[((d[index1+1]+i4)<<4)+num9+792]===1||
-d[num9+((d[index1+1]+i4+1)<<4)+792]!==1);
-i4++)
+for(let i4=0;i4<random1&&d[i3+((d[index1+1]+i4)<<4)+792]!==8&&d[i3+((d[index1+1]+i4+1)<<4)+792]!==1&&(d[((d[index1+1]+i4)<<4)+i3+1+792]===1||d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1)&&(d[((d[index1+1]+i4)<<4)+num9+792]===1||d[num9+((d[index1+1]+i4+1)<<4)+792]!==1);i4++)
 d[i3+((d[index1+1]+i4)<<4)+792]=1;
 }
 }else{
@@ -552,14 +544,7 @@ const below=d[i7+((d[index1+3]+1)<<4)+792];
 if(below===1||below===8)continue;
 const random3=this.gRNGRange(0,num2);
 const num11=i7-1;
-for(let i9=0;i9<random3&&
-d[i7+((d[index1+3]-i9)<<4)+792]!==8&&
-d[i7+((d[index1+3]-i9-1)<<4)+792]!==1&&
-(d[((d[index1+3]-i9)<<4)+i7+1+792]===1||
-d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1)&&
-(d[num11+((d[index1+3]-i9)<<4)+792]===1||
-d[num11+((d[index1+3]-i9-1)<<4)+792]!==1);
-i9++)
+for(let i9=0;i9<random3&&d[i7+((d[index1+3]-i9)<<4)+792]!==8&&d[i7+((d[index1+3]-i9-1)<<4)+792]!==1&&(d[((d[index1+3]-i9)<<4)+i7+1+792]===1||d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1)&&(d[num11+((d[index1+3]-i9)<<4)+792]===1||d[num11+((d[index1+3]-i9-1)<<4)+792]!==1);i9++)
 d[i7+((d[index1+3]-i9)<<4)+792]=1;
 }
 }
@@ -578,14 +563,7 @@ const left=d[(i10<<4)+792+d[index1]-1];
 if(left===1||left===8)continue;
 const random4=this.gRNGRange(0,num1);
 const num13=i10-1;
-for(let i12=0;i12<random4&&
-d[i12+(i10<<4)+d[index1]+792]!==8&&
-d[i12+(i10<<4)+d[index1]+792+1]!==1&&
-(d[i12+((i10+1)<<4)+d[index1]+792]===1||
-d[i12+((i10+1)<<4)+d[index1]+792+1]!==1)&&
-(d[i12+(num13<<4)+d[index1]+792]===1||
-d[i12+(num13<<4)+d[index1]+792+1]!==1);
-i12++)
+for(let i12=0;i12<random4&&d[i12+(i10<<4)+d[index1]+792]!==8&&d[i12+(i10<<4)+d[index1]+792+1]!==1&&(d[i12+((i10+1)<<4)+d[index1]+792]===1||d[i12+((i10+1)<<4)+d[index1]+792+1]!==1)&&(d[i12+(num13<<4)+d[index1]+792]===1||d[i12+(num13<<4)+d[index1]+792+1]!==1);i12++)
 d[i12+(i10<<4)+d[index1]+792]=1;
 }
 }
@@ -604,14 +582,7 @@ const right=d[d[index1+1]+(i13<<4)+792+1];
 if(right===1||right===8)continue;
 const random5=this.gRNGRange(0,num1);
 const num15=i13-1;
-for(let i15=0;i15<random5&&
-d[(i13<<4)+792+d[index1+2]-i15]!==8&&
-d[(i13<<4)+792+d[index1+2]-i15-1]!==1&&
-(d[((i13+1)<<4)+792+d[index1+2]-i15]===1||
-d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1)&&
-(d[(num15<<4)+792+d[index1+2]-i15]===1||
-d[(num15<<4)+792+d[index1+2]-i15-1]!==1);
-i15++)
+for(let i15=0;i15<random5&&d[(i13<<4)+792+d[index1+2]-i15]!==8&&d[(i13<<4)+792+d[index1+2]-i15-1]!==1&&(d[((i13+1)<<4)+792+d[index1+2]-i15]===1||d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1)&&(d[(num15<<4)+792+d[index1+2]-i15]===1||d[(num15<<4)+792+d[index1+2]-i15-1]!==1);i15++)
 d[(i13<<4)+792+d[index1+2]-i15]=1;
 }
 }
@@ -1305,9 +1276,7 @@ const isIce10_12=(envType===3&&floorMR>=10&&floorMR<=12);
 const isRuins3=(envType===2&&floorMR===3);
 const isIce1=(envType===3&&floorMR===1);
 const F=(isIce10_12||isRuins3||isIce1)?7:8;
-const C=A+4+(B*8)+(D*4);
-const E=C+(F*20);
-const ElistOfs=E+(F*8)+G;
+const ElistOfs=A+4+(B*8)+(D*4)+(F*28)+G;
 const val=ElistOfs;
 let state=null;
 if(val<=0x2B30){
