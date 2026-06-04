@@ -16,10 +16,10 @@
 <button class="lang-sw" data-lang="JP" onclick="switchUILang('JP')">日本語</button>
 </div>
 </div>
-<div id="controls_container" style="display:flex; justify-content:center; padding-bottom: 20px; border-bottom: 2px solid #4a4a8a;">
-<div id="single_map_controls" style="display:flex; align-items:center; background:#0a0a15; padding:6px 12px; border-radius:6px; border:1px solid #335;">
-<label style="color:#aaa; font-size:13px; font-weight:bold;">Rank</label>
-<select id="rank" style="background:#000; color:#0f0; border:1px solid #555; padding:4px; font-size:14px; width:65px;">
+<div id="controls_container" style="display:flex;justify-content:center;padding-bottom: 20px;border-bottom: 2px solid #4a4a8a;">
+<div id="single_map_controls" style="display:flex;align-items:center;background:#0a0a15;padding:6px 12px;border-radius:6px;border:1px solid #335;">
+<label style="color:#aaa;font-size:13px;font-weight:bold;">Rank</label>
+<select id="rank" style="background:#000;color:#0f0;border:1px solid #555;padding:4px;font-size:14px;width:65px;">
 <option value="0x02">02</option>
 <option value="0x38">38</option>
 <option value="0x3D">3D</option>
@@ -33,9 +33,9 @@
 <option value="0xC9">C9</option>
 <option value="0xDD" selected>DD</option>
 </select>
-<label style="color:#aaa; font-size:13px; font-weight:bold; margin-left:4px;">Seed</label>
-<input type="text" id="seed" value="263C" maxlength="4" placeholder="Hex" style="text-transform:uppercase; font-family:monospace; font-size:14px; width:60px; text-align:center; background:#000; color:#0f0; border:1px solid #555; padding:4px;">
-<button class="go" onclick="calculate()" style="background:linear-gradient(135deg,#0ff,#08a); color:#000; border:none; padding:6px 16px; font-size:13px; font-weight:bold; border-radius:4px; cursor:pointer; margin-left:8px;">Go</button>
+<label style="color:#aaa;font-size:13px;font-weight:bold;margin-left:4px;">Seed</label>
+<input type="text" id="seed" value="263C" maxlength="4" placeholder="Hex" style="text-transform:uppercase;font-family:monospace;font-size:14px;width:60px;text-align:center;background:#000;color:#0f0;border:1px solid #555;padding:4px;">
+<button class="go" onclick="calculate()" style="background:linear-gradient(135deg,#0ff,#08a);color:#000;border:none;padding:6px 16px;font-size:13px;font-weight:bold;border-radius:4px;cursor:pointer;margin-left:8px;">Go</button>
 </div>
 </div>
 <script src=1.js></script>
@@ -94,13 +94,13 @@
 <div id="seedInspectorModal"class="modal-overlay"onclick="closeSeedInspector(event)">
 <div class="si-modal-content modal-content"onclick="event.stopPropagation()">
 <div class="si-header">
-<h3 style="color:#0ff; margin:0; font-size:14px;">AT Detail Search</h3>
+<h3 style="color:#0ff;margin:0;font-size:14px;">AT Detail Search</h3>
 <button class="modal-close"onclick="closeSeedInspector()">×</button>
 </div>
-<div class="modal-body"style="padding:12px; overflow-y:auto; max-height:85vh;">
+<div class="modal-body"style="padding:12px;overflow-y:auto;max-height:85vh;">
 <div class="si-section">
 <div class="si-grid">
-<div class="si-field"><label>Seed</label><input type="text"id="si_seed"value="7340"maxlength="4"style="width:65px; text-transform:uppercase;"oninput="updateSeedInspector()"></div>
+<div class="si-field"><label>Seed</label><input type="text"id="si_seed"value="7340"maxlength="4"style="width:65px;text-transform:uppercase;"oninput="updateSeedInspector()"></div>
 <div class="si-field"><label data-i18n="G07"></label><select id="si_env"style="width:65px;"onchange="updateSeedInspector()"><option value="1">洞窟</option><option value="2"selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
 <div class="si-field"><label data-i18n="G09"></label><select id="si_mr"onchange="updateSeedInspector()"></select></div>
 <div class="si-field"><label data-i18n="G18"></label><input type="number"id="si_deft"value=910 min=1 max=999 style="width:60px;"oninput="updateSeedInspector()"></div>
@@ -114,11 +114,11 @@
 <div class="si-grid"style="gap:6px;">
 <div class="si-field"><label data-i18n="G22"></label><select id="si_enemy_count"onchange="updateSeedInspector()"style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
 <div class="si-field"><label data-i18n="G23"></label><select id="si_group_size"onchange="updateSeedInspector()"style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label style="display:block; margin-bottom:5px; font-size:11px; color:#fa0;">2T</label><div style="display:flex; align-items:center; height:16px;"><input type="checkbox"id="si_2nd_turn"onchange="updateSeedInspector()"style="width:20px; height:20px; cursor:pointer;"></div></div>
+<div class="si-field"><label style="display:block;margin-bottom:5px;font-size:11px;color:#fa0;">2T</label><div style="display:flex;align-items:center;height:16px;"><input type="checkbox"id="si_2nd_turn"onchange="updateSeedInspector()"style="width:20px;height:20px;cursor:pointer;"></div></div>
 <div class="si-field"><label data-i18n="G24"></label><select id="si_rare_rate"style="width:60px;"onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256"selected>1/256</option></select></div>
 <div class="si-field"><label data-i18n="G25"></label><select id="si_norm_rate"style="width:60px;"onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128"selected>1/128</option></select></div>
 <div class="si-field"><label data-i18n="G26"></label>
-<div style="display:flex; gap:4px;">
+<div style="display:flex;gap:4px;">
 <select id="si_t1"onchange="updateSeedInspector()"style="width:45px;"></select>
 <select id="si_t2"onchange="updateSeedInspector()"style="width:45px;"></select>
 <select id="si_t3"onchange="updateSeedInspector()"style="width:45px;"></select>
@@ -128,8 +128,8 @@
 </div>
 </div>
 <div class="si-section">
-<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-<label style="color:#aaa; font-size:12px;">AT Debug</label>
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
+<label style="color:#aaa;font-size:12px;">AT Debug</label>
 <input type="number"id="si_target_step"value="35"min="1"style="width:65px;"oninput="updateSeedInspector()">
 </div>
 <div class="si-result-box"id="si_target_results"style="border-color:#f44;"></div>
@@ -137,129 +137,126 @@
 </div>
 </div>
 </div>
-<div id="disclaimerModal"class="modal-overlay"onclick="closeDisclaimerModal(event)"style="z-index: 1001;">
-<div class="modal-content"onclick="event.stopPropagation()"style="max-width: 600px;">
+<div id="disclaimerModal" class="modal-overlay" onclick="closeDisclaimerModal(event)" style="z-index:1001;">
+<div class="modal-content" onclick="event.stopPropagation()" style="max-width:600px;">
 <div class="modal-header">
-<h3 id="disclaimerModalTitle">聲明/Credits&amp;Disclaimer</h3>
-<button class="modal-close"onclick="closeDisclaimerModal()">×</button>
+<h3 id="disclaimerModalTitle">聲明 / Credits &amp;Disclaimer</h3>
+<button class="modal-close" onclick="closeDisclaimerModal()">×</button>
 </div>
-<div class="modal-body"id="disclaimerModalBody"style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 70vh;">
+<div class="modal-body" id="disclaimerModalBody" style="padding:0;display:flex;flex-direction:column;overflow-y:hidden;max-height:70vh;">
 <div class="modal-tabs">
-<div id="discTabTW"style="padding: 6px 16px; background: #1a1a3a; color: #ffd700; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchDisclaimerTab('TW')">繁體中文</div>
-<div id="discTabEN"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchDisclaimerTab('EN')">English</div>
-<div id="discTabJP"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchDisclaimerTab('JP')">日本語</div>
+<div id="discTabTW" style="padding:6px 16px;background:#1a1a3a;color:#ffd700;border:1px solid #4a4a8a;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:bold;margin-bottom:-2px;transition:all 0.2s;" onclick="switchDisclaimerTab('TW')">繁體中文</div>
+<div id="discTabEN" style="padding:6px 16px;background:#224;color:#888;border:1px solid #333;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:bold;margin-bottom:-2px;transition:all 0.2s;" onclick="switchDisclaimerTab('EN')">English</div>
+<div id="discTabJP" style="padding:6px 16px;background:#224;color:#888;border:1px solid #333;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:bold;margin-bottom:-2px;transition:all 0.2s;" onclick="switchDisclaimerTab('JP')">日本語</div>
 </div>
-<div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.6; color: #ccc;">
-<div id="discListTW"style="display: block;">
+<div style="padding:16px 20px;overflow-y:auto;flex:1;font-size:13px;line-height:1.6;color:#ccc;">
+<div id="discListTW" style="display:block;">
 <p>本專案為非商業性質的 Dragon Quest IX 藏寶圖玩家工具，不隸屬於、不獲授權於 Square Enix。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">社群公知的 DQ9 遊戲解析知識</h3>
-<p>由玩家社群長期研究所累積的公共成果。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">TKG 的貢獻</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">社群公知的 DQ9 遊戲知識</h3>
+<p>由玩家社群長期研究所累積的公共成果。除遊戲解析外、亦包括地圖用法與地圖價值判斷的規則。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">TKG 的貢獻</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">
 <li>對 dq9tmap101.exe 進行反編譯，發現 ElistOfs 的計算公式</li>
-<li>透過記憶體檢查修正公式，並依據 Terence(2010)於<a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank"style="color:#8cc8ff;">Grotto Mechanics Guide</a>2.3.3 小節中之記載，補足了原作者遺漏的機制：超大特殊樓層的右下角，存在因記憶體溢出而導致鄰接邊數被強制當作零來處理的白方格</li>
+<li>透過記憶體檢查修正公式，並依據 Terence (2010) 於 <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#8cc8ff;">Grotto Mechanics Guide</a> 2.3.3 小節中之記載，補足了原作者遺漏的機制：超大特殊樓層的右下角，存在因記憶體溢出而導致鄰接邊數被強制當作零來處理的白方格</li>
 <li>整理並列出完整邏輯供後續實作</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">dq9tmap101.exe 的 ElistOfs 邏輯（僅抽取邏輯，非代碼移植）</h3>
-<p>原作者為匿名人士(2ch ID:43)，曾明確表示無權阻止他人重新上傳本工具。概念名稱 ElistOfs 予以沿用，以便曾使用過 dq9tmap101.exe 的用戶理解其含義與來源。如有版權疑問，歡迎聯絡本專案。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">一個反編譯資料庫</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">依原作者條款使用：
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">dq9tmap101.exe 的 ElistOfs 邏輯（僅抽取邏輯，非代碼移植）</h3>
+<p>原作者為匿名人士 (2ch ID:43)，曾明確表示無權阻止他人重新上傳本工具。概念名稱 ElistOfs 予以沿用，以便曾使用過 dq9tmap101.exe 的用戶理解其含義與來源。如有版權疑問，歡迎聯絡本專案。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">一個反編譯資料庫</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">依原作者條款使用：
 <li>已轉換為 JavaScript</li>
 <li>不主張對來源的原創性</li>
 <li>非商業用途</li>
 <li>已賦予非獨佔性使用許可證</li>
 <li>作者不要求署名</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">「危険？ハマる地図」對應樓層(5BC7,DF70)的樓梯與寶箱位置修正</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">「危険？ハマる地図」對應樓層 (5BC7, DF70) 的樓梯與寶箱位置修正</h3>
 <p>原反編譯資料庫對此二樓層的資料有誤。本專案作者委託 Claude 解謎，完成修正。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">實作分工</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">實作分工</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">
 <li>反編譯資料庫的轉譯：由 Claude 執行，本專案作者負責 debug</li>
 <li>ElistOfs 相關邏輯：本專案作者轉述 TKG 整理的邏輯，由 Gemini 實作</li>
-<li>其餘所有功能及代碼：由 Gemini 實作，本專案作者負責提供想法和 debug</li>
-<li>說明書：本專案作者製作繁體中文版的原稿，由 Claude 校正及翻譯為其他語言</li>
+<li>其餘所有功能及代碼：主要由 Gemini 實作，本專案作者負責提供想法和 debug</li>
+<li>說明書：本專案作者製作繁體中文版，由 Claude 校正及翻譯為其他語言</li>
 </ul>
-<p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本專案不主張對以上任何來源的原創性。本專案採<strong><a href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant target=_blank style="color:#8cc8ff;">CC BY-NC-SA 4.0(創用 CC 姓名標示-非商業性-相同方式分享)</a></strong>授權，代碼嚴禁任何形式之商業使用。</small></p>
+<p style="color:#888;border-top:1px dashed #333;padding-top:8px;"><small>本專案不主張對以上任何來源的原創性。本專案採 <strong><a href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant target=_blank style="color:#8cc8ff;">CC BY-NC-SA 4.0 (創用 CC 姓名標示-非商業性-相同方式分享)</a></strong> 授權，代碼嚴禁任何形式之商業使用。</small></p>
 </div>
-<div id="discListEN"style="display: none;">
-<p>This is a non-commercial fan tool for Grottoes(treasure maps)from Dragon Quest IX:Sentinels of the Starry Skies.It is not affiliated with or endorsed by Square Enix Co.Ltd.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Community-documented DQ9 game mechanics</h3>
-<p>Public knowledge accumulated through long-term research by the player community.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Contributions by TKG</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
-<li>Reverse-engineered dq9tmap101.exe to recover the ElistOfs calculation formula.</li>
-<li>Corrected the formula through memory inspection and supplemented a mechanic overlooked by the original author,based on the documentation in Section 2.3.3 of Terence's <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#8cc8ff;">Grotto Mechanics Guide</a> (2010): the existence of white tiles in the bottom-right of extra-large special floors where the number of adjacent edges is non-zero, but is forced to be treated as zero due to a memory overflow.</li>
-<li>Compiled and documented the complete logic for implementation.</li>
+<div id="discListEN" style="display:none;">
+<p>This is a non-commercial fan-made tool for Dragon Quest IX grottoes. It is not made by, or endorsed by, Square Enix.</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">DQ9 game knowledge from the community</h3>
+<p>This is what the DQ9 player community has figured out over many years. It covers not only the game mechanism, but also grotto usages &amp;valuations.</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">Contributions by TKG</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">
+<li>Reverse-engineered dq9tmap101.exe and found how ElistOfs is calculated.</li>
+<li>Fixed the formula through the memory inspection. Also found a missing piece that the dq9tmap101.exe's original author missed — based on Section 2.3.3 of Terence's <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#8cc8ff;">Grotto Mechanics Guide</a> (2010):on extra-large special floors, some tiles in the bottom-right area have their neighbor count forced to zero because of a memory overflow.</li>
+<li>Wrote down the full logic so it could be turned into code.</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">ElistOfs logic derived from dq9tmap101.exe(logic only—not a code port)</h3>
-<p>The original author posted anonymously on 2ch(ID:43)and explicitly stated that they had no right to stop others from re-uploading the tool.The concept name ElistOfs is retained from the original so that former users of dq9tmap101.exe can recognize its meaning and origin.Please contact this project if you have copyright concerns.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">A reverse-engineered database</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">Used under the original author's terms:
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">ElistOfs logic from dq9tmap101.exe (logic only — not a code transport)</h3>
+<p>The original author posted it anonymously on 2ch (ID:43) and said that he/she had no right to stop anyone from re-uploading the tool. We keep the name "ElistOfs" so that people who used dq9tmap101.exe before can understand what it means. If you have any copyright concerns, please contact us.</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">A reverse-engineered database</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">Used under the original author's terms:
 <li>Converted to JavaScript</li>
-<li>No claim of originality</li>
-<li>Non-commercial use</li>
+<li>We do not claim it as our own work</li>
+<li>Non-commercial use only</li>
 <li>Granted a non-exclusive license</li>
-<li>No attribution required</li>
+<li>The author does not ask for credit</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Staircase and treasure chest position fix for Softlock floors(5BC7,DF70)</h3>
-<p>The reverse-engineered database contained incorrect data for these two floors.The project author engaged Claude to solve the discrepancy,producing the corrected data.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Implementation breakdown</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
-<li>Reverse-engineered database's translation: performed by Claude; project author handled debugging</li>
-<li>ElistOfs-related logic:project author transcribed TKG's logic in their own words; implemented in JavaScript by Gemini</li>
-<li>All other functions&amp;code:implemented by Gemini;project author proposed ideas and handled debugging</li>
-<li>Documents:project author created T-Chinese version,Claude translated them to other languages</li>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">Fix for Softlock floors (5BC7, DF70)</h3>
+<p>The reverse-engineered database had wrong data for these two floors. The project author asked Claude to figure out the problem, and the fix was made.</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">Contributions</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">
+<li>Database conversion: Claude did the work, project author debugged it</li>
+<li>ElistOfs logic: project author explained TKG's logic in his own words, Gemini wrote the code</li>
+<li>Everything else: mostly built by Gemini, project author came up with the ideas and did the debugging</li>
+<li>User guide: project author wrote the Traditional Chinese version, Claude translated it to other languages</li>
 </ul>
-<p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>No claim of originality is made over any of the above sources.This project is licensed under<strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en"target="_blank"style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong>.Commercial use is strictly prohibited.</small></p>
+<p style="color:#888;border-top:1px dashed #333;padding-top:8px;"><small>We do not claim originality over any of the above sources. This project is licensed under <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong>. Commercial use of the code is strictly prohibited.</small></p>
 </div>
-<div id="discListJP"style="display: none;">
-<p>本プロジェクトは『ドラゴンクエストIX 星空の守り人』の宝の地図に関するファンツールです。株式会社スクウェア・エニックスとは無関係であり、公式に認定・許諾されたものではありません。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">コミュニティに広く知られているDQ9のゲーム解析知識</h3>
-<p>プレイヤーコミュニティが長年にわたって積み重ねてきた公共の知識です。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">TKG 氏の貢献</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
-<li>dq9tmap101.exe をリバースエンジニアリングし、ElistOfs の計算式を発見</li>
-<li>メモリチェックにより計算式を修正し、Terence 氏の<a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff;">Grotto Mechanics Guide</a>2.3.3 小節目の記述に基づいて、原作者が見落とした下記現象のメカニズムを補足：超大型特殊フロアの右下隅には、隣接辺数がゼロでないにもかかわらず、メモリオーバーフローによってゼロとして処理される白マスが存在する</li>
-<li>後続の実装に向けて、全ロジックを整理・文書化</li>
+<div id="discListJP" style="display:none;">
+<p>このツールは、『ドラゴンクエストIX 星空の守り人』の宝の地図関連の無料のファンツールです。株式会社スクウェア・エニックスとは無関係であり、公式に認定・許諾されたものでもありません。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">コミュニティが積み上げてきたDQ9の知識</h3>
+<p>長年に渡って蓄積されたDQ9のプレイヤーコミュニティの知識です。ゲームのメカニズムだけでなく、地図の使い方や、地図の価値の判定基準も含まれています。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">TKG 氏の貢献</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">
+<li>dq9tmap101.exe をリバースエンジニアリングし、ElistOfs の計算式を発見した</li>
+<li>メモリチェックにより計算式を修正し、Terence 氏の <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff;">Grotto Mechanics Guide</a>（2010）の 2.3.3 節をもとに、原作者の見落とした現象を補足：超大型特殊フロアの右下に、隣り合うマスの数がゼロでないにもかかわらず、メモリオーバーフローによりゼロとして処理されてしまった「白マス」が存在すること</li>
+<li>全てのロジックを整理して文書化</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">dq9tmap101.exe の ElistOfs ロジック（ロジック抽出のみ、コードの移植ではありません）</h3>
-<p>原作者は匿名の投稿者（2ch ID:43）であり、<a href=https://kako.5ch.io/test/read.cgi/gameurawaza/1249835333/414 target=_blank style="color:#8cc8ff;">「ツールを再アップロードする者を止める権利は自分にはない」</a>と明言しました。概念名である ElistOfs は、かつて dq9tmap101.exe を使用したことのあるユーザーがその意味を理解しやすいように、そのまま引き継いでいます。著作権に関するご懸念がある場合は、本プロジェクトまでお問い合わせください。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">あるリバースエンジニアリングされたデータベース</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">原作者の定めた条件に従い使用：
-<li>リバースエンジニアリングの結果をそのまま流用せず、JavaScriptに変換して使用</li>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">dq9tmap101.exe の ElistOfs ロジック（ロジックだけを抽出したもので、コードのコピーではありません）</h3>
+<p>原作者は 2ch に匿名で投稿した者（ID:43）で、<a href=https://kako.5ch.io/test/read.cgi/gameurawaza/1249835333/414 target=_blank style="color:#8cc8ff;">「ツールを再アップロードする者を止める権利は自分にはない」</a>と明言しました。かつての dq9tmap101.exe ユーザーがすぐ分かるようにするため、本ツールは「ElistOfs」という名称は継続して使用しています。著作権に関する懸念がある場合、本プロジェクトの作者までご連絡ください。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">リバースエンジニアリングされたデータベース</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">原作者の定めた条件に従って使用：
+<li>JavaScript に変換して使用</li>
 <li>独自の成果として主張しない</li>
 <li>商業利用しない</li>
 <li>独占的ライセンスを付与しない</li>
 <li>原作者のサイトへの言及は不要</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">「危険？ハマる地図」該当フロア(5BC7,DF70)の階段および宝箱の位置修正</h3>
-<p>リバースエンジニアリングされたデータベースには、これら2つのフロアのデータに誤りが含まれていました。本プロジェクトの作者が Claude に解析を依頼し、修正を完了しました。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">実装の分担</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
-<li>データベースの変換：Claude が実行し、本プロジェクトの作者がデバッグを担当</li>
-<li>ElistOfs 関連ロジック：本プロジェクトの作者が TKG 氏のロジックを自身の言葉で伝え、Gemini が JavaScript で実装</li>
-<li>その他すべての機能・コード：Gemini が実装し、本プロジェクトの作者がアイデアの提供とデバッグを担当</li>
-<li>説明書：本プロジェクトの作者が繁体中国語版の原稿を作成し、Claudeが英語・日本語版を翻訳</li>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">「危険？ハマる地図」関連フロア（5BC7, DF70）の階段・宝箱の位置を修正</h3>
+<p>リバースエンジニアリングされたデータベースには、この2つのフロアのデータに間違いがありました。本プロジェクトの作者が Claude に調査を頼み、修正しました。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px;">役割分担</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff;">
+<li>データベースの変換：Claude が実行し、本プロジェクトの作者がデバッグ</li>
+<li>ElistOfs のロジック：本プロジェクトの作者が TKG 氏のロジックを自身の言葉で伝え、Gemini がコードを書く</li>
+<li>それ以外の全機能・コード：主に Gemini の担当作業。本プロジェクトの作者がアイデアを提供し、デバッグ</li>
+<li>説明書：本プロジェクトの作者が中国語 (繁体字) を作成し、Claude が英語・日本語に翻訳</li>
 </ul>
-<p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本プロジェクトは、上記のいかなる情報源に対してもオリジナリティを主張しません。本プロジェクトは<strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja"target="_blank"style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong>ライセンスのもとで公開されており、商業目的での使用は禁じられています。</small></p>
+<p style="color:#888;border-top:1px dashed #333;padding-top:8px;"><small>本プロジェクトは、上記のいかなる情報源に対してもオリジナリティを主張しません。本プロジェクトは <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong> ライセンスのもとで公開されており、商業目的での使用は禁じられています。</small></p>
 </div>
-</div>
-</div>
-</div>
-</div>
+</div></div></div></div>
 <div id="h1Modal"class="modal-overlay"onclick="closeh1Modal(event)"style="z-index: 1002;">
 <div class="modal-content"onclick="event.stopPropagation()"style="max-width: 600px;">
 <div class="modal-header">
 <h3 style="color:#0ff;"data-i18n="K01"></h3>
 <button class="modal-close"onclick="closeh1Modal()">×</button>
 </div>
-<div class="modal-body"style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 75vh;">
+<div class="modal-body"style="padding: 0;display: flex;flex-direction: column;overflow-y: hidden;max-height: 75vh;">
 <div class="modal-tabs">
-<div id="h1TabTW"style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;"onclick="switchH1Tab('TW')">繁體中文</div>
-<div id="h1TabEN"style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;"onclick="switchH1Tab('EN')">English</div>
-<div id="h1TabJP"style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;"onclick="switchH1Tab('JP')">日本語</div>
+<div id="h1TabTW"style="padding: 6px 16px;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;"onclick="switchH1Tab('TW')">繁體中文</div>
+<div id="h1TabEN"style="padding: 6px 16px;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;"onclick="switchH1Tab('EN')">English</div>
+<div id="h1TabJP"style="padding: 6px 16px;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;"onclick="switchH1Tab('JP')">日本語</div>
 </div>
-<div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.7; color: #ccc;">
+<div style="padding: 16px 20px;overflow-y: auto;flex: 1;font-size: 13px;line-height: 1.7;color: #ccc;">
 <div id="h1ListTW"style="display: block;">
 <h3 class="h1sec"id="sec-mapname"style="margin-top:0;">地圖名稱</h3>
 <table class=h1t>
@@ -296,18 +293,18 @@
 </table>
 <h3 class="h1sec"id="sec-naming">前綴・中間名・後綴・Lv</h3>
 <div class="h1box">
-<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<ul style="padding-left:20px;color:#aaa;line-height:1.7;">
 <li><strong style="color:#39C5BB;">前綴：</strong>由<span style="color:#cff;">B1F 怪物等級(SMR)</span>決定。</li>
 <li><strong style="color:#39C5BB;">後綴：</strong>由<span style="color:#cff;">BOSS 種類</span>決定。</li>
 <li><strong style="color:#39C5BB;">中間名：</strong>由<span style="color:#cff;">樓層深度</span>與<span style="color:#cff;">地形</span>共同決定。</li>
 <li><strong style="color:#39C5BB;">Lv</strong>＝<code style="color:#fa0;">(樓層深度＋B1F怪物等級(SMR)＋BOSS種類－4)×3±5</code>。最小為 1，最大為 99。</li>
 </ul>
-<p style="margin-top:8px; color:#ccc;">SMR、BOSS、樓層深度、地形 將在後續中詳述。</p>
+<p style="margin-top:8px;color:#ccc;">SMR、BOSS、樓層深度、地形 將在後續中詳述。</p>
 </div>
 <details class="h1det"id="det-prefix">
 <summary>📖名稱對照</summary>
-<p style="margin-top:12px; color:#aaa;">前綴：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="margin-top:12px;color:#aaa;">前綴：</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>編號</th>
 <th>英文</th>
@@ -325,8 +322,8 @@
 <tr><td>7</td><td>Copper</td><td>怒れる</td><td>15</td><td>Sapphire</td><td>とどろく</td></tr>
 <tr><td>8</td><td>Bronze</td><td>呪われし</td><td>16</td><td>Diamond</td><td>大いなる</td></tr>
 </table>
-<p style="margin-top:12px; color:#aaa;">後綴：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="margin-top:12px;color:#aaa;">後綴：</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>編號</th>
 <th>英文</th>
@@ -344,8 +341,8 @@
 <tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
 <tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr>
 </table>
-<p style="color:#aaa; margin-top:12px;">中間名：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="color:#aaa;margin-top:12px;">中間名：</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>編號</th>
 <th>英文</th>
@@ -380,8 +377,8 @@
 </table>
 </details>
 <h3 class="h1sec"id="sec-location"style="margin-top:0;">位置</h3>
-<p style="margin-bottom:8px;">地圖入口的所在位置。<a href="#sec-bq-fq"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">FQ(Final Quality)</a>能改變它的最大取值範圍：</p>
-<table class=h1t style="width:100%; max-width:300px;">
+<p style="margin-bottom:8px;">地圖入口的所在位置。<a href="#sec-bq-fq"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">FQ(Final Quality)</a>能改變它的最大取值範圍：</p>
+<table class=h1t style="width:100%;max-width:300px;">
 <tr class="hdr">
 <th>FQ 範圍</th>
 <th>位置的候補(16進位)</th>
@@ -392,9 +389,9 @@
 </table>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖位置與遊戲中地區的關係</summary>
-<div style="margin-top:12px; overflow-y:auto;">
+<div style="margin-top:12px;overflow-y:auto;">
 <table class=h1t style="font-size:11px;">
-<thead class=hdr2 style="position:sticky; top:0;">
+<thead class=hdr2 style="position:sticky;top:0;">
 <tr>
 <th style="width:125px;">地區名(JP/EN)</th>
 <th style="width:40px;">位置</th>
@@ -555,19 +552,19 @@
 <tr><td class="loc">85</td><td>◯</td><td></td></tr>
 </tbody>
 </table>
-<p style="font-size:11px; color:#888;">◎:怪物不會在那個地方出現<br>◯:(站在入口不動時)不會被怪物撞到<br>△:(站在入口不動時)偶爾有機會被怪物撞到<br>×:(站在入口不動時)會被怪物撞到<br><u>橫線</u>:火車不能直接降落在該處<br><i>斜體</i>:需要坐船才能到達<br><b>粗字</b>:需要坐火車才能到達</p>
-<p style="font-size:11px; color:#888;">參考文獻:
-<a href="https://w.atwiki.jp/gaoodq9/pages/56.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">がおちゃさんwiki</a>、
-<a href="https://w.atwiki.jp/airu_ob/pages/56.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">永遠の旅人さんwiki</a>、
-<a href="https://w.atwiki.jp/midori7188/pages/136.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">天龍さんwiki</a>
+<p style="font-size:11px;color:#888;">◎:怪物不會在那個地方出現<br>◯:(站在入口不動時)不會被怪物撞到<br>△:(站在入口不動時)偶爾有機會被怪物撞到<br>×:(站在入口不動時)會被怪物撞到<br><u>橫線</u>:火車不能直接降落在該處<br><i>斜體</i>:需要坐船才能到達<br><b>粗字</b>:需要坐火車才能到達</p>
+<p style="font-size:11px;color:#888;">參考文獻:
+<a href="https://w.atwiki.jp/gaoodq9/pages/56.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">がおちゃさんwiki</a>、
+<a href="https://w.atwiki.jp/airu_ob/pages/56.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">永遠の旅人さんwiki</a>、
+<a href="https://w.atwiki.jp/midori7188/pages/136.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">天龍さんwiki</a>
 </p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-rank-seed">Rank、Seed</h3>
-<p style="margin-bottom:12px; color:#aaa;">藏寶圖表面上是由<span style="color:#fff;">地圖名稱</span>組成，實際上是由<strong style="color:#0ff;">Rank</strong>和<strong style="color:#f8f;">Seed</strong>兩個隱藏參數構成。<br>本工具的核心運作原理，就是透過您輸入的各種表面特徵，查出 Rank 與 Seed 這兩個代表每張地圖的「身分證號」。</p>
-<div style="background:#112; border-left:3px solid #f8f; padding:8px 12px; margin-bottom:16px;">
-<h4 style="color:#f8f; margin:0 0 6px; font-size:13px;">Seed</h4>
-<ul style="padding-left:16px; margin:0; color:#ccc;">
+<p style="margin-bottom:12px;color:#aaa;">藏寶圖表面上是由<span style="color:#fff;">地圖名稱</span>組成，實際上是由<strong style="color:#0ff;">Rank</strong>和<strong style="color:#f8f;">Seed</strong>兩個隱藏參數構成。<br>本工具的核心運作原理，就是透過您輸入的各種表面特徵，查出 Rank 與 Seed 這兩個代表每張地圖的「身分證號」。</p>
+<div style="background:#112;border-left:3px solid #f8f;padding:8px 12px;margin-bottom:16px;">
+<h4 style="color:#f8f;margin:0 0 6px;font-size:13px;">Seed</h4>
+<ul style="padding-left:16px;margin:0;color:#ccc;">
 <li>合法取值範圍為<strong style="color:#fff;">0000~7FFF</strong>。</li>
 <li>雖然系統中存在<span style="color:#888;">8000~FFFF</span>的 Seed，但在正常遊戲中沒有合法的生成手段。</li>
 <li>即使在合法範圍內，仍有<strong>302 個</strong>特定 Seed 無法被正常生成。</li>
@@ -575,8 +572,8 @@
 </ul>
 </div>
 <div class="h1box2">
-<h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
-<p style="color:#ccc; margin-bottom:8px;">將下方提到的<a href="#sec-bq-fq"style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final Quality(FQ)</strong></a>劃分為 12 個區間，是為 Rank。</p>
+<h4 style="color:#0ca;margin:0 0 6px;font-size:13px;">Rank</h4>
+<p style="color:#ccc;margin-bottom:8px;">將下方提到的<a href="#sec-bq-fq"style="text-decoration:none;"><strong style="color:#0ff;border-bottom:1px solid #055;">Final Quality(FQ)</strong></a>劃分為 12 個區間，是為 Rank。</p>
 <table class=h1t style="font-size:11px;">
 <tr class=hdr2>
 <th>Rank</th>
@@ -596,15 +593,16 @@
 <tr><td class="w">C9</td><td class="loc">C9~DC</td><td class="g">201~220</td></tr>
 <tr><td class="w">DD</td><td class="loc">DD~F8</td><td class="g">221~248</td></tr>
 </table>
+<p>本工具可以在 URL 後面輸入 ?id=RRSSSS 來快速跳轉至用戶指定的 Rank 和 Seed。</p>
 </div>
 <h3 class="h1sec"id="sec-bq-fq">Base Quality(BQ)、Final Quality(FQ)</h3>
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base Quality(BQ)</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">BQ＝主角全職業最高Lv＋主角全職業最高轉生次數×5＋正在攻略的地圖Lv</code>
+<code style="background:#000;padding:2px 6px;color:#fcf;border:1px solid #333;border-radius:3px;">BQ＝主角全職業最高Lv＋主角全職業最高轉生次數×5＋正在攻略的地圖Lv</code>
 </div>
 <div style="margin-bottom:16px;">
 <strong style="color:#0ff;">Final Quality(FQ)</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">FQ＝BQ±10%</code>
+<code style="background:#000;padding:2px 6px;color:#fcf;border:1px solid #333;border-radius:3px;">FQ＝BQ±10%</code>
 <br><span style="color:#aaa;">FQ 最小為 2，最大為 248。地圖的 FQ 數值落在哪個區間，該地圖的 Rank 就是多少。</span>
 <br><br><span style="color:#aaa;">搜尋時，右邊的方框填 BQ 具體數值。</span>
 <br><span style="color:#aaa;">左邊的下拉選單 選「1」搜尋「只有一個 BQ 能發掘到它」的地圖，選「1'」則搜尋「只有一個 BQ 能發掘到它其中一個位置」的地圖。</span>
@@ -612,8 +610,8 @@
 <details class="h1det">
 <summary>📖地圖生成的步驟</summary>
 <div>
-<p style="color:#aaa; margin-bottom:8px;">遊戲生成地圖時，會使用一個隨時間跳動的<strong style="color:#cff;">Timer</strong>，並將其送入亂數，連續推進 3 步：
-<ol style="padding-left:20px; color:#ccc; line-height:1.6;">
+<p style="color:#aaa;margin-bottom:8px;">遊戲生成地圖時，會使用一個隨時間跳動的<strong style="color:#cff;">Timer</strong>，並將其送入亂數，連續推進 3 步：
+<ol style="padding-left:20px;color:#ccc;line-height:1.6;">
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">決定 FQ ±10% 的具體值</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">決定地圖 Seed</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">決定地圖的入口位置</strong></li>
@@ -623,19 +621,19 @@
 </details>
 <h3 class="h1sec"id="sec-terrain">地形</h3>
 <div class="h1box">
-<p style="margin-bottom:8px; color:#ccc;">地形共分為<strong style="color:#fa0;">洞窟、遺跡、冰、水、火山</strong>五種。生成機率分別為：洞窟佔 30%，遺跡佔 40%，其餘各佔 10%。部分 QUEST 需要獲取「指定地形」與「指定 FloorMR」的地圖才能達成。</p>
-<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<p style="margin-bottom:8px;color:#ccc;">地形共分為<strong style="color:#fa0;">洞窟、遺跡、冰、水、火山</strong>五種。生成機率分別為：洞窟佔 30%，遺跡佔 40%，其餘各佔 10%。部分 QUEST 需要獲取「指定地形」與「指定 FloorMR」的地圖才能達成。</p>
+<ul style="padding-left:20px;color:#aaa;line-height:1.7;">
 <li><strong style="color:#39C5BB;">遺跡：</strong>通道入口出現怪物時<span style="color:#f88;">極易被堵死</span>。</li>
 <li><strong style="color:#39C5BB;">洞窟&水：</strong>廣闊空間的邊緣有突出結構，會讓玩家多走一點腳程。</li>
 <li><strong style="color:#39C5BB;">洞窟&冰&火山：</strong>廣闊空間有像小石子一樣的障礙物，移動時需注意避開。</li>
 <li><strong style="color:#39C5BB;">洞窟(FloorMR 10-11)：</strong>會出現能把所有路口、通道<span style="color:#f8f;">全部堵死</span>的「だいおうクジラ」，嚴重影響玩家從入口快速走到 BOSS 面前的體驗，其他地形問題沒那麼嚴重。</li>
-<li><strong style="color:#39C5BB;">BOSS 樓層所需時間：</strong>從樓層入口到 BOSS 跟前的所需時間也有地形差別：<span style="color:#0ff;">遺跡 6.6秒</span>，<span style="color:#f88;">火山 7.4秒</span>，<span style="color:#ddd;">其餘皆為 7.2秒</span>。這微小的差距足以改變部分低Lv發掘用地圖的排名。(來源:<a href="https://w.atwiki.jp/masha-masha/181.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
+<li><strong style="color:#39C5BB;">BOSS 樓層所需時間：</strong>從樓層入口到 BOSS 跟前的所需時間也有地形差別：<span style="color:#0ff;">遺跡 6.6秒</span>，<span style="color:#f88;">火山 7.4秒</span>，<span style="color:#ddd;">其餘皆為 7.2秒</span>。這微小的差距足以改變部分低Lv發掘用地圖的排名。(來源:<a href="https://w.atwiki.jp/masha-masha/181.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
 </ul>
 </div>
 <h3 class="h1sec"id="sec-smr-depth-boss">B1F 怪物等級、樓層深度、BOSS</h3>
-<div style="margin-bottom:12px; font-size:12px;">
+<div style="margin-bottom:12px;font-size:12px;">
 <strong style="color:#0ff;">具體某一層樓的怪物等級(FloorMR)的計算公式：</strong><br>
-<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR＝B1F怪物等級(SMR)＋int[(樓層數－1)÷4]</code>
+<code style="background:#000;padding:2px 6px;color:#cff;border:1px solid #333;border-radius:3px;display:inline-block;margin-top:4px;">FloorMR＝B1F怪物等級(SMR)＋int[(樓層數－1)÷4]</code>
 </div>
 <table class=h1t style="font-size:11px;">
 <tr class=hdr2>
@@ -710,7 +708,7 @@
 <details class="h1det"id="det-boss-names">
 <summary>📖BOSS 名稱對照</summary>
 <div>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>縮寫</th>
 <th>英文全名</th>
@@ -732,8 +730,8 @@
 </div>
 </details>
 <h3 class="h1sec"id="sec-bug-terrain">Bug 地形</h3>
-<p style="margin-bottom:12px; color:#ccc; font-size:12px;">DQ9 生成地圖時，因為某些機制，而出現下述匪夷所思的現象。</p>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
+<p style="margin-bottom:12px;color:#ccc;font-size:12px;">DQ9 生成地圖時，因為某些機制，而出現下述匪夷所思的現象。</p>
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;text-align:left;">
 <tr class=hdr2>
 <th style="width:130px;">現象名稱</th>
 <th>說明</th>
@@ -768,21 +766,21 @@
 <div>
 <h4 class=h1h4 style="margin-top:8px;">乳首、イケない通路、チラリズム</h4>
 <p style="margin-bottom:8px;">樓層生成的流程如下：</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li><strong style="color:#39C5BB;">二元空間分割(BSP)</strong>：系統用此法將樓層劃分為多個區域，並在每個區域中生成一個房間。</li>
 <li><strong style="color:#39C5BB;">「侵蝕」階段</strong>：針對房間邊緣的每個格子，根據其周圍牆壁的數量，決定它是被保留為地板，還是填回成牆壁。雖然侵蝕機制會刻意避開覆蓋「門」，但<strong style="color:#f88;">它可能會在門的內側（後方）直接生成牆壁，將房間內部完全堵死。</strong></li>
 <li><strong style="color:#39C5BB;">走廊生成</strong>：系統會繪製走廊來連接所有房間的門。走廊確實能成功連接到門上，但無法穿透在侵蝕階段所生成的牆壁。</li>
 <li><strong style="color:#39C5BB;">寶箱配置</strong>：在房間邊界內隨機抽取座標，只跳過已經放置了階梯或寶箱的格子，<strong style="color:#f88;">不檢查它「是不是牆壁」，或者「玩家能不能到達」。</strong></li>
 </ol>
 <p style="margin-bottom:8px;">上述機制導致了以下現象的發生：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong>乳首</strong>：寶箱被放置在四面皆牆的位置，嵌在牆壁中。玩家或完全看不見，或在某些火山地圖看到它懸浮在半空中。</li>
 <li><strong>イケない通路</strong>：「侵蝕」堵死了門的內側，導致相連的房間（或房間的某個部分）變成完全無法進入的封閉空間。</li>
 <li><strong>チラリズム</strong>：一段 1x2 或以上的「イケない通路」裡面有寶箱。</li>
 </ul>
 <h4 class=h1h4>幽靈樓梯、危険？ハマるフロア</h4>
 <p style="margin-bottom:8px;">放置樓梯的流程如下：</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li>隨機抽取一個上樓梯候選位置，通過所有檢查後寫入地圖。</li>
 <li>抽取對應的下樓梯候選位置。</li>
 <li>下樓梯檢查通過→樓梯配置完成。</li>
@@ -790,13 +788,13 @@
 <strong style="color:#f88;">但上一次寫入的上樓梯不會被清除。</strong>它以「幽靈樓梯」的形式殘留在地圖中：外觀是普通地板，底層數據卻是樓梯。</li>
 </ol>
 <p style="margin-bottom:8px;">大部分情況下幽靈樓梯只是無害的殘留。問題在於地圖結構極端受限時：</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li>100 次連續檢查全部失敗→系統進入溢出模式。</li>
 <li>溢出模式：跳過所有檢查，直接放置上樓梯，將計數器歸零，然後進行下樓梯檢查。</li>
 <li>下樓梯檢查也失敗→回到步驟 1。由於地圖限制，再次累積 99 次失敗(共 100 次)，再次觸發溢出。</li>
 </ol>
 <p style="margin-bottom:8px;">也就是說，在會發生溢出的地圖上：</p>
-<ul style="padding-left:20px; margin-bottom:12px;">
+<ul style="padding-left:20px;margin-bottom:12px;">
 <li>每<strong>100 次</strong>嘗試才放置一個上樓梯。</li>
 <li>每<strong>100 次</strong>嘗試就殘留一個幽靈樓梯。</li>
 <li>由於樓層結構的限制(全部廣域空間都是 2x2)，幾乎所有候選位置的檢查都會持續失敗。</li>
@@ -804,11 +802,11 @@
 <p style="margin-bottom:16px;">　當最終定案的上樓梯位置緊鄰寶箱時，形成一道玩家無法穿越的障壁，把地圖分成兩個不連通的區域——走下去就被困住，走上去就回不來。這就是「危険？ハマるフロア」。</p>
 <p style="margin-bottom:16px;">　並不是每一個這種類型的樓層都會產生樓梯與寶箱緊鄰的佈局。5BC3 B4F/5BC4 B3F 會產生這種佈局實在是非常特殊。</p>
 <h4 class=h1h4>被封在牆壁中的樓梯</h4>
-<p style="margin-bottom:8px; text-align:justify;">　根據上述機制，如果一個樓層 100 次上樓梯候選全部無法通過檢查，進入溢出模式後跳過所有檢查，就有可能把上樓梯也放進牆壁。但由於 100 次候選全部無法通過檢查的樓層實在太少，總共就 4 種 16 個搜尋結果，實際上這種情形並沒有發生。</p>
+<p style="margin-bottom:8px;text-align:justify;">　根據上述機制，如果一個樓層 100 次上樓梯候選全部無法通過檢查，進入溢出模式後跳過所有檢查，就有可能把上樓梯也放進牆壁。但由於 100 次候選全部無法通過檢查的樓層實在太少，總共就 4 種 16 個搜尋結果，實際上這種情形並沒有發生。</p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-special-floor">特殊樓層(ElistOfs)與 指定 ONLY 怪物</h3>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;text-align:left;">
 <tr class=hdr2>
 <th style="width:90px;">類型</th>
 <th>說明</th>
@@ -834,7 +832,7 @@
 <td class="bugd">一張地圖有<strong style="color:#fff;">2 個或以上</strong>的特殊樓層</td>
 </tr>
 <tr>
-<td class="bug">Flag0<br><span style="font-size:10px; color:#888;">(D 值)</span></td>
+<td class="bug">Flag0<br><span style="font-size:10px;color:#888;">(D 值)</span></td>
 <td class="bugd">特殊樓層右下角，不出現任何怪物的區域中的白方格數<br><span style="color:#39C5BB;">※此區域可使用「地圖法秘技」來精準操縱怪物掉寶</span></td>
 </tr>
 </table>
@@ -845,21 +843,21 @@
 <summary>📖實際機制 與 dq9tmap101.exe 誤判的歷史</summary>
 <div>
 <h4 class=h1h4>記憶體溢出 導致超大面積樓層的出現怪物減少</h4>
-<p style="margin-bottom:12px; text-align:justify;">　DQ9 如果一層樓面積特別大、白方格特別多，會使樓層面積的數據變得龐大，過度佔據記憶體，而把每層樓末端的數據從記憶體中「擠出去」。由於末端數據剛好用來存放該樓層的「怪物生成列表(Enemy List)」，一旦被擠掉，能出現的怪物種類就會變少。少了一種或幾種叫做<strong style="color:#f8f;">敵減</strong>，少到僅剩一種叫做<strong style="color:#f8f;">ONLY</strong>，全部被擠掉叫做<strong style="color:#f8f;">敵無</strong>。</p>
+<p style="margin-bottom:12px;text-align:justify;">　DQ9 如果一層樓面積特別大、白方格特別多，會使樓層面積的數據變得龐大，過度佔據記憶體，而把每層樓末端的數據從記憶體中「擠出去」。由於末端數據剛好用來存放該樓層的「怪物生成列表(Enemy List)」，一旦被擠掉，能出現的怪物種類就會變少。少了一種或幾種叫做<strong style="color:#f8f;">敵減</strong>，少到僅剩一種叫做<strong style="color:#f8f;">ONLY</strong>，全部被擠掉叫做<strong style="color:#f8f;">敵無</strong>。</p>
 <h4 class=h1h4>衍生 BUG</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li style="margin-bottom:6px;"><strong>寶箱怪消失 BUG：</strong>寶箱怪佔了數據位置但不在地圖上出現。若有怪物 ID 排在寶箱怪之前(例如<code>はぐれメタル</code>)，則會導致在這些 ONLY 地圖中出現寶箱怪「一生成就立即消失」的奇異現象。</li>
 <li style="margin-bottom:6px;"><strong>吹口哨失敗 BUG：</strong>使用戰士技能「くちぶえ」時，如果系統抽到的怪物剛好是「被擠掉的那幾種」，就會發生呼叫不出怪物的判定失敗。</li>
 <li style="margin-bottom:6px;"><strong>Flag0 方格 與 掉寶操縱：</strong>某些大面積樓層因白方格過多，導致白方格專用的記憶體空間也發生溢出。這會使該樓層右下角出現「上下左右鄰接四邊不為零，卻被強制當作零處理」的白方格(即 Flag0)。在此方格內不會出現怪物，怪物也不會走進來（除非追蹤玩家）。但若在此處使用「くちぶえ」，不僅能正常呼叫怪物，<strong style="color:#fa0;">且 AT 亂數在進入戰鬥後會保持停止狀態。</strong>這個特質被極致運用於「地圖法秘技」來精準操縱怪物掉寶。</li>
 </ul>
 <h4 class=h1h4>「ONLY」誤判為「敵無」「無無無」的歷史</h4>
-<p style="margin-bottom:16px; text-align:justify;">　此機制最初由<code>dq9tmap101.exe</code>的作者(43)發現，並命名為<strong style="color:#fff;">ElistOfs(Enemy List Offsets)</strong>。但當時作者並未發現<strong>Flag0</strong>的存在，導致所有帶 Flag0 的地圖算出來的 ElistOfs 比真實值大很多，產生了大量的誤判（例如「敵減」被誤判為「ONLY」，「ONLY」被誤判為「敵無」）。
+<p style="margin-bottom:16px;text-align:justify;">　此機制最初由<code>dq9tmap101.exe</code>的作者(43)發現，並命名為<strong style="color:#fff;">ElistOfs(Enemy List Offsets)</strong>。但當時作者並未發現<strong>Flag0</strong>的存在，導致所有帶 Flag0 的地圖算出來的 ElistOfs 比真實值大很多，產生了大量的誤判（例如「敵減」被誤判為「ONLY」，「ONLY」被誤判為「敵無」）。
 <br>　除此之外，作者還犯了一個人為錯誤——當所有白方格鄰接四邊之和的總數÷2≧256 時，程式莫名其妙地把它減去 256，造成了「ElistOfs=1Exx~1Fxx 但卻是特殊樓層」的嚴重誤判(也就是「敵無/敵減/ONLY 誤判為 無無無」)。
 <br>　由於作者後來遭到 5ch 網友排擠，<code>dq9tmap101.exe</code>停止更新，這個誤判就這樣存在了 16 年。在此期間，<strong>Terence</strong>於 2010 年 10 月發表的<a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank"style="color:#0ca;">Grotto Mechanics Guide</a>
 初步提到了白方格過多導致的怪物不生成現象，但沒有進一步研究。而日本玩家群則靠著一張張地圖打出來比對，建立了不少資料庫(例如<a href="https://w.atwiki.jp/dq9-only"target="_blank"style="color:#0ca;">オンリー敵減(2種)wiki</a>，<strong>ぶぶづけ</strong>為<code>dq9tmap101.exe</code>做的 mapdata patch(他的<a href=http://bubudzuke.pa.land.to target="_blank"style="color:#0ca;">網站</a>已於 2026.03.31 關閉)等)，但沒人從機制上探索。
 <br>　2025年12月，本工具的開發者委託<strong>TKG</strong>徹底分析了<code>dq9tmap101.exe</code>，終於把 ElistOfs 的真相找出來了：</p>
 <h4 class=h1h4>ElistOfs 計算公式</h4>
-<ol style="padding-left:20px; margin-bottom:16px;"><li>令 Boundary=4128-16W-8X<br>W：該樓層白方格總數<br>X：從左到右、從上到下 逐一檢查該樓層每個白方格 得到的 L+U 的總和(即 X=L+U)<br>L：若該白方格的左邊一格也是白方格，L=1，否則 L=0<br>U：若該白方格的上邊一格也是白方格，U=1，否則 U=0</li>
+<ol style="padding-left:20px;margin-bottom:16px;"><li>令 Boundary=4128-16W-8X<br>W：該樓層白方格總數<br>X：從左到右、從上到下 逐一檢查該樓層每個白方格 得到的 L+U 的總和(即 X=L+U)<br>L：若該白方格的左邊一格也是白方格，L=1，否則 L=0<br>U：若該白方格的上邊一格也是白方格，U=1，否則 U=0</li>
 <li>Boundary≥0 時，A=4896+16W+8X<br>Boundary＜0 時，A=4896+16W+8B<br>B=(9016-4896-16W)÷8=(4120-16W)÷8=515−2W</li>
 <li>C=A+4+8B+4D
 <br>D：令 D 的初始值為 0，B_pool 的初始值為 B
@@ -872,7 +870,7 @@
 <li>E=C+20F<br>F：該樓層出現的怪物種類數(冰 1/10~12、遺跡 3：F=7，其他：F=8)</li>
 <li>ElistOfs=E+8F+G+海外版 Padding<br>G：該樓層出現的怪物 的固有值之和<br>海外版 Padding：海外版 DQ9 為 128，日本版 DQ9 為 0</li></ol>
 <h4 class=h1h4>ElistOfs 與 特殊樓層 的對應關係(忽略海外版 Padding)</h4>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6;">
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;">
 <tr class=hdr2>
 <th style="width:90px;">ElistOfs</th>
 <th style="width:40px;">怪數</th>
@@ -911,41 +909,41 @@
 <td class="cy">2B84~2B94</td>
 <td class="fw">3</td>
 <td colspan="2"class="c">敵無</td>
-<td class="r4">ONLY<span style="font-size:10px; color:#88b; font-weight:normal;">(Pandora's Box 消失)</span></td>
+<td class="r4">ONLY<span style="font-size:10px;color:#88b;font-weight:normal;">(Pandora's Box 消失)</span></td>
 </tr>
 <tr>
 <td class="cy">2B98~2BA8</td>
 <td class="fw">2</td>
-<td colspan="2"class="c">敵無<span style="font-size:10px; color:#88b;">(Pandora's Box 消失)</span></td>
-<td class="r4">ONLY<span style="font-size:10px; color:#88b; font-weight:normal;">(Mimic 消失)</span></td>
+<td colspan="2"class="c">敵無<span style="font-size:10px;color:#88b;">(Pandora's Box 消失)</span></td>
+<td class="r4">ONLY<span style="font-size:10px;color:#88b;font-weight:normal;">(Mimic 消失)</span></td>
 </tr>
 <tr>
 <td class="cy">2BAC~2BBC</td>
 <td class="fw">1</td>
-<td colspan="2"class="c">敵無<span style="font-size:10px; color:#88b;">(Mimic 消失)</span></td>
-<td class="r4">ONLY<span style="font-size:10px; color:#88b; font-weight:normal;">(Cannibox 消失)</span></td>
+<td colspan="2"class="c">敵無<span style="font-size:10px;color:#88b;">(Mimic 消失)</span></td>
+<td class="r4">ONLY<span style="font-size:10px;color:#88b;font-weight:normal;">(Cannibox 消失)</span></td>
 </tr>
 <tr>
 <td class="cy">2BC0~</td>
 <td class="fw">0</td>
-<td colspan="3"class="c">敵無<span style="font-size:10px; color:#88b;">(所有寶箱怪消失)</span></td>
+<td colspan="3"class="c">敵無<span style="font-size:10px;color:#88b;">(所有寶箱怪消失)</span></td>
 </tr>
 </table>
-<p style="font-size:11px; color:#888;">樓層狀態：(A) F=7 (B) ONLY 怪物 ID 比 寶箱怪 靠前 (例:はぐれメタル)</p>
+<p style="font-size:11px;color:#888;">樓層狀態：(A) F=7 (B) ONLY 怪物 ID 比 寶箱怪 靠前 (例:はぐれメタル)</p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-multibug">4 人連線異變(Multibug)</h3>
 <h4 class=h1h4 style="margin-top:8px;">Multibug 簡介</h4>
 <p style="margin-bottom:8px;"><strong>觸發條件</strong>：4 台機器連線時，3 名 Guest 同時加入 Host 的世界。第 2 位正在加入的時候，Host 狂按 A 鍵(相當於高橋名人連打的速度)進入地圖洞窟，成功進入的那一瞬間機率性觸發(並非 100%成功，若失敗，需要 3 名 Guest 全部返回自己的世界，重新連線再來一遍)。</p>
 <p style="margin-bottom:8px;"><strong>現象</strong>：Multibug 被觸發後，<strong style="color:#c8f;">一部分地圖參數受到 亂數+1 的影響</strong>，使 Host 的世界中</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong style="color:#fa0;">變化</strong>：地圖名(前綴、後綴、中間名、Lv)、樓層深度、Boss。</li>
 <li><strong style="color:#4f4;">不變</strong>：每層樓的佈局、樓梯位置、寶箱位置、出現怪物、寶箱等級。</li>
 </ul>
 <p style="margin-bottom:8px;">　如果 Multibug 觸發後的 樓層深度 比原來大，玩家就能進入原本被 樓層深度 這個上限截斷的額外樓層。</p>
 <p style="margin-bottom:16px;">　Host 能到達的最深樓層是 Multibug 觸發後的 樓層深度——Host 永遠無法突破這個上限。但如果 Multibug 使樓層增加，Host 走到增加的樓層後呼叫 Guest 加入，Guest 可以繼續往更深處走，最多到達 B16F(遊戲的絕對上限)。本工具源代碼中的「<strong style="color:#f4f;">強制 16 層</strong>」模式即是模擬這種情形。如果 Multibug 觸發後樓層不變或減少，則不存在「增加的樓層」供 Host 站立並呼叫 Guest，強制 16 層無法發生。</p>
 <h4 class=h1h4 style="margin-top:8px;">樓層增加 可以幹甚麼？</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>某些地圖的<strong style="color:#fa0;">Host 處增加的樓層</strong>或<strong style="color:#f6f;">強制 16 層</strong>中有<strong>ONLY、敵減</strong>等特殊樓層(比如 Multibug 狀態下的 ベホマスライム ONLY 等等)。</li>
 <li>某些地圖的<strong style="color:#fa0;">Host 處增加的樓層</strong>中有更多的<strong>高級寶箱</strong>(比如 Multibug 狀態下的 S9 等等)。</li>
 <li>在<strong style="color:#f6f;">強制 16 層</strong>才有的<strong>特殊樓層</strong>的搜尋結果，用<strong style="color:#f6f;">紫紅字</strong>表示。</li>
@@ -954,7 +952,7 @@
 </ul>
 <h4 class=h1h4>甚麼情況下樓層會增加？</h4>
 <p style="margin-bottom:8px;">Multibug 觸發後造成的<strong style="color:#c8f;">亂數+1</strong>只改變亂數，不改變地圖 Rank，因此 樓層深度 能在同一個範圍內被重新計算：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>Rank</th><th>最小樓層數</th><th>最大樓層數</th><th>變動範圍</th></tr>
 <tr><td>02</td><td>2</td><td>4</td><td>3</td></tr>
 <tr><td>38~3D</td><td>4</td><td>6</td><td>3</td></tr>
@@ -966,13 +964,13 @@
 <tr><td>C9</td><td>12</td><td>16</td><td>5</td></tr>
 <tr><td>DD</td><td>14</td><td>16</td><td>3</td></tr>
 </table>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>原來的 樓層深度 未達對應 Rank 的 最大樓層數 時，Multibug 觸發後 有機會變更高，玩家可進入額外樓層。</li>
 <li>變動範圍值越大的 Rank(如 8D~A1，共 7 個值)，樓層深度 變動的幅度越大，樓層增加的可能性越大。</li>
 <li>原來的 樓層深度 恰好等於 最小樓層數 時，Multibug 觸發後不可能減少，只會不變或增加。</li>
 </ul>
 <h4 class=h1h4>甚麼情況下樓層會不變或減少？</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>原來的 樓層深度 已經等於該 Rank 的 最大樓層數 時(例如 8D~A1 原本已是 B16F)，Multibug 觸發後不可能增加，只會不變或減少。</li>
 <li>變動範圍值較小的 Rank(如 02 和 DD，各只有 3 個值)，即使發生變動，幅度也很有限。</li>
 <li>亂數+1 重新計算出的值恰好等於原值時，樓層深度 不變。在變動範圍值為 N 的區間，不變的機率約為 1/N。</li>
@@ -981,21 +979,21 @@
 <details class="h1det">
 <summary>📖Rank 02/38/3D 的結構性限制</summary>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 02</strong>(樓層深度 2–4，SMR 1–3)：<strong style="color:#ac0;">Bug 樓層深度=SMR+1</strong></p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>原始 SMR</th><th>Bug 樓層深度</th><th>結果</th></tr>
 <tr><td>1</td><td>2</td><td style="color:#f84;">必定不增加（原始樓層深度≥2）</td></tr>
 <tr><td>2</td><td>3</td><td>僅在原始樓層深度=2 時增加</td></tr>
 <tr><td>3</td><td>4</td><td>原始樓層深度=2 或 3 時增加</td></tr>
 </table>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 38/3D</strong>(樓層深度 4–6，SMR 2–4)：<strong style="color:#ac0;">Bug 樓層深度=SMR+2</strong></p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>原始 SMR</th><th>Bug 樓層深度</th><th>結果</th></tr>
 <tr><td>2</td><td>4</td><td style="color:#f84;">必定不增加（原始樓層深度≥4）</td></tr>
 <tr><td>3</td><td>5</td><td>僅在原始樓層深度=4 時增加</td></tr>
 <tr><td>4</td><td>6</td><td>原始樓層深度=4 或 5 時增加</td></tr>
 </table>
 <p style="margin-bottom:4px;">因此：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong style="color:#cff;">SMR＝1</strong>的地圖，就算有<strong style="color:#0ac;">Multibug ONLY/敵減 的樓層</strong>也<strong style="color:#f8f;">無法訪問</strong>。</li>
 <li><strong style="color:#cff;">SMR＝2</strong>的地圖，只有<strong style="color:#cf2;">Rank 02</strong>才有機會訪問到<strong style="color:#0ac;">Multibug ONLY/敵減 的樓層</strong>，<strong style="color:#f8f;">Rank 38/3D 無法訪問</strong>。</li>
 </ul>
@@ -1037,18 +1035,18 @@
 </table>
 <h3 class="h1sec"id="sec-naming">Prefix/Locale/Suffix/Lv</h3>
 <div class="h1box">
-<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<ul style="padding-left:20px;color:#aaa;line-height:1.7;">
 <li><strong style="color:#39C5BB;">Prefix:</strong>determined by<span style="color:#cff;">B1F Monster Rank(SMR)</span>.</li>
 <li><strong style="color:#39C5BB;">Locale:</strong>determined by<span style="color:#cff;">Depth</span>and<span style="color:#cff;">Terrain Type (Type)</span>together.</li>
 <li><strong style="color:#39C5BB;">Suffix:</strong>determined by<span style="color:#cff;">Boss</span>.</li>
 <li><strong style="color:#39C5BB;">Lv:</strong>＝<code style="color:#fa0;">(Depth＋SMR＋Boss－4)×3±5</code>. Min 1, Max 99.</li>
 </ul>
-<p style="margin-top:8px; color:#ccc;">SMR,Depth,Terrain Type and Boss are described in detail in later sections.</p>
+<p style="margin-top:8px;color:#ccc;">SMR,Depth,Terrain Type and Boss are described in detail in later sections.</p>
 </div>
 <details class="h1det"id="det-prefix">
 <summary>📖 Name List</summary>
-<p style="margin-top:12px; color:#aaa;">Prefix:</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="margin-top:12px;color:#aaa;">Prefix:</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>No.</th>
 <th>English</th>
@@ -1066,8 +1064,8 @@
 <tr><td>7</td><td>Copper</td><td>怒れる</td><td>15</td><td>Sapphire</td><td>とどろく</td></tr>
 <tr><td>8</td><td>Bronze</td><td>呪われし</td><td>16</td><td>Diamond</td><td>大いなる</td></tr>
 </table>
-<p style="margin-top:12px; color:#aaa;">Suffix:</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="margin-top:12px;color:#aaa;">Suffix:</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>No.</th>
 <th>English</th>
@@ -1085,8 +1083,8 @@
 <tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
 <tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr>
 </table>
-<p style="color:#aaa; margin-top:12px;">Locale:</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="color:#aaa;margin-top:12px;">Locale:</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>No.</th>
 <th>English</th>
@@ -1121,8 +1119,8 @@
 </table>
 </details>
 <h3 class="h1sec"id="sec-location"style="margin-top:0;">Location</h3>
-<p style="margin-bottom:8px;">Location is the spot that the map entrance located on the overworld.<br><a href="#sec-bq-fq"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">FQ(Final Quality)</a>determines the maximum range of possible locations:</p>
-<table class=h1t style="width:100%; max-width:300px;">
+<p style="margin-bottom:8px;">Location is the spot that the map entrance located on the overworld.<br><a href="#sec-bq-fq"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">FQ(Final Quality)</a>determines the maximum range of possible locations:</p>
+<table class=h1t style="width:100%;max-width:300px;">
 <tr class="hdr">
 <th>FQ Range</th>
 <th>Location Range</th>
@@ -1133,9 +1131,9 @@
 </table>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖Relationship between Location codes and in-game areas</summary>
-<div style="margin-top:12px; overflow-y:auto;">
+<div style="margin-top:12px;overflow-y:auto;">
 <table class=h1t style="font-size:11px;">
-<thead class=hdr2 style="position:sticky; top:0;">
+<thead class=hdr2 style="position:sticky;top:0;">
 <tr>
 <th style="width:125px;">Area</th>
 <th style="width:40px;">Loc</th>
@@ -1296,19 +1294,19 @@
 <tr><td class="loc">85</td><td>◯</td><td></td></tr>
 </tbody>
 </table>
-<p style="font-size:11px; color:#888;">◎:No monsters appear at that location<br>◯:(Standing still at the entrance)will not be hit by monsters<br>△:(Standing still at the entrance)occasionally may be hit by monsters<br>×:(Standing still at the entrance)will be hit by monsters<br><u>Underline</u>:The Starflight Express cannot land directly at that location<br><i>Italic</i>:Requires a ship to reach<br><b>Bold</b>:Requires the Starflight Express to reach</p>
-<p style="font-size:11px; color:#888;">References:
-<a href="https://w.atwiki.jp/gaoodq9/pages/56.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">がおちゃさんwiki</a>、
-<a href="https://w.atwiki.jp/airu_ob/pages/56.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">永遠の旅人さんwiki</a>、
-<a href="https://w.atwiki.jp/midori7188/pages/136.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">天龍さんwiki</a>
+<p style="font-size:11px;color:#888;">◎:No monsters appear at that location<br>◯:(Standing still at the entrance)will not be hit by monsters<br>△:(Standing still at the entrance)occasionally may be hit by monsters<br>×:(Standing still at the entrance)will be hit by monsters<br><u>Underline</u>:The Starflight Express cannot land directly at that location<br><i>Italic</i>:Requires a ship to reach<br><b>Bold</b>:Requires the Starflight Express to reach</p>
+<p style="font-size:11px;color:#888;">References:
+<a href="https://w.atwiki.jp/gaoodq9/pages/56.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">がおちゃさんwiki</a>、
+<a href="https://w.atwiki.jp/airu_ob/pages/56.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">永遠の旅人さんwiki</a>、
+<a href="https://w.atwiki.jp/midori7188/pages/136.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">天龍さんwiki</a>
 </p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-rank-seed">Rank&amp;Seed</h3>
-<p style="margin-bottom:12px; color:#aaa;">A treasure map is nominally defined by its<span style="color:#fff;">grotto name</span>,but internally it is constructed from two hidden parameters:<strong style="color:#0ff;">Rank</strong>and<strong style="color:#f8f;">Seed</strong>.<br>The core principle of this tool is to determine the Rank and Seed—the"ID number"of each map—based on the various nominal features you input.</p>
-<div style="background:#112; border-left:3px solid #f8f; padding:8px 12px; margin-bottom:16px;">
-<h4 style="color:#f8f; margin:0 0 6px; font-size:13px;">Seed</h4>
-<ul style="padding-left:16px; margin:0; color:#ccc;">
+<p style="margin-bottom:12px;color:#aaa;">A treasure map is nominally defined by its<span style="color:#fff;">grotto name</span>,but internally it is constructed from two hidden parameters:<strong style="color:#0ff;">Rank</strong>and<strong style="color:#f8f;">Seed</strong>.<br>The core principle of this tool is to determine the Rank and Seed—the"ID number"of each map—based on the various nominal features you input.</p>
+<div style="background:#112;border-left:3px solid #f8f;padding:8px 12px;margin-bottom:16px;">
+<h4 style="color:#f8f;margin:0 0 6px;font-size:13px;">Seed</h4>
+<ul style="padding-left:16px;margin:0;color:#ccc;">
 <li>The valid range is<strong style="color:#fff;">0000~7FFF</strong>.</li>
 <li>Although Seeds in the range<span style="color:#888;">8000~FFFF</span>exist in the system,there is no legitimate way to generate them during normal gameplay.</li>
 <li>Even within the valid range,there are still<strong>302</strong>specific Seeds cannot be generated.</li>
@@ -1316,8 +1314,8 @@
 </ul>
 </div>
 <div class="h1box2">
-<h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
-<p style="color:#ccc; margin-bottom:8px;">The<a href="#sec-bq-fq"style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final Quality(FQ)</strong></a>mentioned below is divided into 12 intervals,which define the Rank.</p>
+<h4 style="color:#0ca;margin:0 0 6px;font-size:13px;">Rank</h4>
+<p style="color:#ccc;margin-bottom:8px;">The<a href="#sec-bq-fq"style="text-decoration:none;"><strong style="color:#0ff;border-bottom:1px solid #055;">Final Quality(FQ)</strong></a>mentioned below is divided into 12 intervals,which define the Rank.</p>
 <table class=h1t style="font-size:11px;">
 <tr class=hdr2>
 <th>Rank</th>
@@ -1337,18 +1335,19 @@
 <tr><td class="w">C9</td><td class="loc">C9~DC</td><td class="g">201~220</td></tr>
 <tr><td class="w">DD</td><td class="loc">DD~F8</td><td class="g">221~248</td></tr>
 </table>
+<p>This tool supports typing ?id=RRSSSS after the URL to jump to the grotto with specified Rank &amp; Seed. (e.g. ?id=797854 makes it jump to Silver Marsh of Bane Lv.58)</p>
 </div>
 <h3 class="h1sec"id="sec-bq-fq">Base Quality(BQ)&amp;Final Quality(FQ)</h3>
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base Quality(BQ)</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">BQ=HeroLv+HeroRev×5+MapLv</code>
+<code style="background:#000;padding:2px 6px;color:#fcf;border:1px solid #333;border-radius:3px;">BQ=HeroLv+HeroRev×5+MapLv</code>
 <br>HeroLv=Hero's highest Lv across all vocations
 <br>HeroRev=Hero's highest revocation count across all vocations
 <br>MapLv=Lv of the map currently being cleared
 </div>
 <div style="margin-bottom:16px;">
 <strong style="color:#0ff;">Final Quality(FQ)</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">FQ=BQ±10%</code>
+<code style="background:#000;padding:2px 6px;color:#fcf;border:1px solid #333;border-radius:3px;">FQ=BQ±10%</code>
 <br><span style="color:#aaa;">FQ has a minimum of 2 and a maximum of 248.The Rank of a map is determined by which interval its FQ value falls into.</span>
 <br><br><span style="color:#aaa;">When searching,enter the specific BQ value in the box on the right.</span>
 <br><span style="color:#aaa;">For the dropdown on the left searches:</span>
@@ -1358,8 +1357,8 @@
 <details class="h1det">
 <summary>📖Map generation process in detail</summary>
 <div>
-<p style="color:#aaa; margin-bottom:8px;">When the game generates a map,it uses a <strong style="color:#cff;">Timer</strong> and puts it into the RNG for 3 consecutive steps:
-<ol style="padding-left:20px; color:#ccc; line-height:1.6;">
+<p style="color:#aaa;margin-bottom:8px;">When the game generates a map,it uses a <strong style="color:#cff;">Timer</strong> and puts it into the RNG for 3 consecutive steps:
+<ol style="padding-left:20px;color:#ccc;line-height:1.6;">
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Determine the actual value of±10%</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Determine the map Seed</strong><br></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Determine the map entrance location</strong></li>
@@ -1369,19 +1368,19 @@
 </details>
 <h3 class="h1sec"id="sec-terrain">Type</h3>
 <div class="h1box">
-<p style="margin-bottom:8px; color:#ccc;">There are<strong style="color:#fa0;">5 terrain types:Caves,Ruins,Ice,Water,and Fire</strong>.Caves has 30%,Ruins has 40%,and the rest have 10%each.Certain quests require maps with a specific terrain type and a specific FloorMR to complete.</p>
-<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<p style="margin-bottom:8px;color:#ccc;">There are<strong style="color:#fa0;">5 terrain types:Caves,Ruins,Ice,Water,and Fire</strong>.Caves has 30%,Ruins has 40%,and the rest have 10%each.Certain quests require maps with a specific terrain type and a specific FloorMR to complete.</p>
+<ul style="padding-left:20px;color:#aaa;line-height:1.7;">
 <li><strong style="color:#39C5BB;">Ruins:</strong>When a monster spawns at the corridor entrance,it is<span style="color:#f88;">easy to get blocked</span>.</li>
 <li><strong style="color:#39C5BB;">Caves&Water:</strong>The edges of open areas have protruding structures,forcing the player to walk a bit.</li>
 <li><strong style="color:#39C5BB;">Caves&Ice&Fire:</strong>Open areas have small pebble-like obstacles that require careful avoidance when moving.</li>
 <li><strong style="color:#39C5BB;">Caves(FloorMR 10-11):</strong>The monster Stale Whale can<span style="color:#f8f;">completely block all junctions and corridors</span>,severely hindering the player's ability to quickly reach the BOSS from the entrance. Other types have less severe issues.</li>
-<li><strong style="color:#39C5BB;">BOSS floor travel time:</strong>The time from the floor entrance to the BOSS also varies by terrain type:<span style="color:#0ff;">Ruins 6.6s</span>,<span style="color:#f88;">Fire 7.4s</span>,<span style="color:#ddd;">all others 7.2s</span>.This small difference is enough to affect the ranking of some low-Lv excavation maps.(Source:<a href="https://w.atwiki.jp/masha-masha/181.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
+<li><strong style="color:#39C5BB;">BOSS floor travel time:</strong>The time from the floor entrance to the BOSS also varies by terrain type:<span style="color:#0ff;">Ruins 6.6s</span>,<span style="color:#f88;">Fire 7.4s</span>,<span style="color:#ddd;">all others 7.2s</span>.This small difference is enough to affect the ranking of some low-Lv excavation maps.(Source:<a href="https://w.atwiki.jp/masha-masha/181.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
 </ul>
 </div>
 <h3 class="h1sec"id="sec-smr-depth-boss">SMR,Depth,Boss</h3>
-<div style="margin-bottom:12px; font-size:12px;">
+<div style="margin-bottom:12px;font-size:12px;">
 <strong style="color:#0ff;">Formula for a specific floor's Monster Rank (FloorMR):</strong><br>
-<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR=B1F Monster Rank(SMR)+int[(Floor Number-1)÷4]</code>
+<code style="background:#000;padding:2px 6px;color:#cff;border:1px solid #333;border-radius:3px;display:inline-block;margin-top:4px;">FloorMR=B1F Monster Rank(SMR)+int[(Floor Number-1)÷4]</code>
 </div>
 <table class=h1t style="font-size:11px;">
 <tr class=hdr2>
@@ -1456,7 +1455,7 @@
 <details class="h1det"id="det-boss-names">
 <summary>📖Boss Name</summary>
 <div>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>Abb.</th>
 <th>English</th>
@@ -1478,8 +1477,8 @@
 </div>
 </details>
 <h3 class="h1sec"id="sec-bug-terrain">Bug Terrain</h3>
-<p style="margin-bottom:12px; color:#ccc; font-size:12px;">Due to certain mechanisms in DQ9's map generation, the following bizarre phenomena can occur.</p>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
+<p style="margin-bottom:12px;color:#ccc;font-size:12px;">Due to certain mechanisms in DQ9's map generation, the following bizarre phenomena can occur.</p>
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;text-align:left;">
 <tr class=hdr2>
 <th style="width:130px;">Phenomenon</th>
 <th>Description</th>
@@ -1514,21 +1513,21 @@
 <div>
 <h4 class=h1h4 style="margin-top:8px;">Nipple,Chamber,チラリズム</h4>
 <p style="margin-bottom:8px;">Floor generation proceeds as follows:</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li><strong style="color:#39C5BB;">Binary Space Partitioning(BSP)</strong>divides the floor into multiple regions,carving out a room in each.</li>
 <li><strong style="color:#39C5BB;">"Erosion"phase</strong>:For tiles along the room's edges, the system evaluates the surrounding walls to decide whether to keep the tile as floor or fill it back in as wall. While erosion explicitly avoids overwriting doors, <strong style="color:#f88;">it may generate walls directly behind a door, completely blocking the room's interior.</strong>
 <li><strong style="color:#39C5BB;">Corridor generation</strong>:Corridors are drawn to connect all rooms via their doors.They successfully reach the doors,but cannot bypass the walls created during the erosion phase.</li>
-<li><strong style="color:#39C5BB;">Chest placement</strong>:Coordinates are randomly chosen within a room's boundary. The system only skips tiles that already contain stairs or chests; <strong style="color:#f88;">whether the tile is a wall, or whether the player can reach it, is never checked.</strong></li>
+<li><strong style="color:#39C5BB;">Chest placement</strong>:Coordinates are randomly chosen within a room's boundary. The system only skips tiles that already contain stairs or chests;<strong style="color:#f88;">whether the tile is a wall, or whether the player can reach it, is never checked.</strong></li>
 </ol>
 <p style="margin-bottom:8px;">The above flow produces the following phenomena:</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong>Nipple(乳首)</strong>:A chest is placed on a tile surrounded by walls on all four sides,becoming embedded in the wall.It is completely invisible in-game,or appears to float in mid-air on Fire terrain.</li>
 <li><strong>Chamber(イケない通路)</strong>:An unreachable space created when erosion blocks the interior side of a door,rendering the connected room(or a section of it)completely inaccessible.</li>
 <li><strong>チラリズム</strong>:A state where a 1x2 or larger Chamber contains a chest inside it.</li>
 </ul>
 <h4 class=h1h4>Ghost Stairs,Softlock(危険？ハマるフロア)</h4>
 <p style="margin-bottom:8px;">Staircase placement proceeds as follows:</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li>An up-staircase candidate tile is randomly selected and,if it passes all checks,written to the map.</li>
 <li>The corresponding down-staircase candidate is then selected.</li>
 <li>Down-staircase check passes→staircase placement complete.</li>
@@ -1536,13 +1535,13 @@
 <strong style="color:#f88;">However,the previously written up-staircase is not erased.</strong>It remains in the map as a"Ghost Staircase":it looks like an ordinary floor tile,but the underlying data says it is stairs.</li>
 </ol>
 <p style="margin-bottom:8px;">Normally,ghost staircases are just harmless remnants.The problem arises when the map structure is extremely constrained:</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li>100 consecutive up-staircase checks fail→the system enters overflow mode.</li>
 <li>Overflow mode:all checks are skipped,the up-staircase is placed directly,the counter is reset to zero,and the down-staircase check proceeds.</li>
 <li>If the down-staircase check also fails→return to step 1.Due to map constraints,another 99 failures occur(100 total),triggering overflow again.</li>
 </ol>
 <p style="margin-bottom:8px;">In other words,on maps where overflow occurs:</p>
-<ul style="padding-left:20px; margin-bottom:12px;">
+<ul style="padding-left:20px;margin-bottom:12px;">
 <li>An up-staircase is placed only<strong>1 in every 100</strong>attempts.</li>
 <li>A ghost staircase is left behind<strong>1 in every 100</strong>attempts.</li>
 <li>The inherently constrained floor structure(all open areas are 2x2)causes nearly every candidate position to keep failing checks.</li>
@@ -1550,11 +1549,11 @@
 <p style="margin-bottom:16px;">　When the final placement puts an up-staircase right next to a chest,it forms an impassable barrier that splits the map into two disconnected areas—going down traps you,going up leaves no way back.This is<b>Softlock(危険？ハマるフロア)</b>.</p>
 <p style="margin-bottom:16px;">　However,not every floor meeting this condition produces this layout.The fact that 5BC3 B4F/5BC4 B3F produce it is an exceptional case.</p>
 <h4 class=h1h4>Wall-Embedded Stairs</h4>
-<p style="margin-bottom:8px; text-align:justify;">　Based on the mechanism above,if all 100 up-staircase candidates on a floor fail the checks and the system enters overflow mode,it would theoretically be possible for an up-staircase to be placed inside a wall.However,since floors where all 100 candidates fail are extremely rare—only 4 layout types yielding 16 search results in total—this situation has never actually occurred.</p>
+<p style="margin-bottom:8px;text-align:justify;">　Based on the mechanism above,if all 100 up-staircase candidates on a floor fail the checks and the system enters overflow mode,it would theoretically be possible for an up-staircase to be placed inside a wall.However,since floors where all 100 candidates fail are extremely rare—only 4 layout types yielding 16 search results in total—this situation has never actually occurred.</p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-special-floor">Special Floors(ElistOfs)and ONLY Monsters</h3>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;text-align:left;">
 <tr class=hdr2>
 <th style="width:90px;">Type</th>
 <th>Description</th>
@@ -1568,7 +1567,7 @@
 <td class="bugd">Only<strong style="color:#fff;">1</strong>type of monster appears on that floor</td>
 </tr>
 <tr>
-<td class="bug">Reduced<br><span style="font-size:10px; color:#888;">2/3/4-enemy</span></td>
+<td class="bug">Reduced<br><span style="font-size:10px;color:#888;">2/3/4-enemy</span></td>
 <td class="bugd"><strong style="color:#fff;">2–4</strong>types of monsters appear on that floor</td>
 </tr>
 <tr>
@@ -1580,7 +1579,7 @@
 <td class="bugd">A single map has<strong style="color:#fff;">2 or more</strong>special floors</td>
 </tr>
 <tr>
-<td class="bug">Flag0<br><span style="font-size:10px; color:#888;">(D value)</span></td>
+<td class="bug">Flag0<br><span style="font-size:10px;color:#888;">(D value)</span></td>
 <td class="bugd">The number of white tiles in the"no-spawn zone"at the bottom-right of a special floor<br><span style="color:#39C5BB;">※Monster items can be dropped into this zone using the"Map Method"</span></td>
 </tr>
 </table>
@@ -1592,8 +1591,8 @@
 <div>
 <h4 class=h1h4>Why special floors exist:memory overflow</h4>
 <p style="text-align:justify;">In DQ9 grotto maps,floor data is organized as"Layout"→"Monster List".</p>
-<p style="margin-bottom:12px; text-align:justify;">When a floor is very large and has many white tiles:</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<p style="margin-bottom:12px;text-align:justify;">When a floor is very large and has many white tiles:</p>
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>The layout data swells in size</li>
 <li>The total data size exceeds the"memory limit for floor data"</li>
 <li>As a result,the<strong>"Monster List"at the tail of the data</strong>gets<strong style="color:#f88;">pushed out of memory</strong></li>
@@ -1601,18 +1600,18 @@
 <li>Losing a few types is called<strong style="color:#f8f;">Reduced</strong>,being left with only one is<strong style="color:#f8f;">ONLY</strong>,and losing all of them is<strong style="color:#f8f;">No-enemy</strong></li>
 </ul>
 <h4 class=h1h4>Derived bugs</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li style="margin-bottom:6px;"><strong>Trap monster vanishing bug:</strong>Every floor's "Monster List" contains <strong style="color:#f88;">trap monsters (Cannibox, Mimic, Pandora's Box)</strong>,but they don't appear on the map.<br>Normally a trap monster sits at the front of the "Monster List", but 8 monsters such as <code>Liquid Metal Slime</code> are ordered ahead of the trap monsters. So on a Liquid-Metal-Slime ONLY floor or a No-enemy floor, the odd phenomenon occurs where a trap monster "vanishes the instant it spawns".</li>
 <li style="margin-bottom:6px;"><strong>"Whistle"failure bug:</strong>When using the Warrior's Bravery skill "Whistle", if the monster it tries to summon is one that has been "pushed out", the summon fails with "But nothing happened!".</li>
 <li style="margin-bottom:6px;"><strong>Flag0 tiles&the Map Method:</strong>On some large floors,there are so many white tiles that the"memory limit for layout data alone"is also exceeded.As a result,white tiles in the bottom-right enter a state where they are"forced to be treated as zero even though their top/bottom/left/right adjacency edges are not zero"(so-called Flag0 tiles).<br>No monsters spawn inside these tiles,and monsters spawned outside won't enter them (except while chasing the player). However, using "Whistle" inside a Flag0 tile can correctly summon a "non-pushed-out monster", and <strong style="color:#fa0;">the AT stays frozen even after entering battle (normally the AT advances rapidly once a battle begins)</strong>. This property is used in the "3rd-generation Map Method" to manipulate item drops from monsters inside grotto dungeons.</li>
 </ul>
 <h4 class=h1h4>The history of dq9tmap101.exe's misjudgments</h4>
-<p style="margin-bottom:16px; text-align:justify;">　This mechanism was discovered by 43,the author of<code>dq9tmap101.exe</code>,who named it<strong style="color:#fff;">ElistOfs(Enemy List Offsets)</strong>.However,the author was unaware of the existence of<strong>Flag0</strong>and overestimated the ElistOfs value for every map containing Flag0 tiles.As a result,<strong style="color:#fff;">"ONLY and Reduced"were frequently misjudged as"No-enemy"</strong>.
+<p style="margin-bottom:16px;text-align:justify;">　This mechanism was discovered by 43,the author of<code>dq9tmap101.exe</code>,who named it<strong style="color:#fff;">ElistOfs(Enemy List Offsets)</strong>.However,the author was unaware of the existence of<strong>Flag0</strong>and overestimated the ElistOfs value for every map containing Flag0 tiles.As a result,<strong style="color:#fff;">"ONLY and Reduced"were frequently misjudged as"No-enemy"</strong>.
 <br>　Furthermore,when the sum of all white tiles' adjacency edges ÷ 2 was 256 or more, <code>dq9tmap101.exe</code> for some reason subtracted 256, producing the misjudgment "ElistOfs = 1Exx–1Fxx but actually a special floor" (i.e. <strong style="color:#fff;">"No-enemy / Reduced / ONLY" misjudged as "Triple None"</strong>).
 <br>　Because the author was later shunned by 5ch users,updates to<code>dq9tmap101.exe</code>stopped,and these misjudgments were left untouched for 16 years.During that time,<strong>Terence</strong>briefly touched on the phenomenon of monsters not appearing due to excessive white tiles in the<a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank"style="color:#0ca;">Grotto Mechanics Guide</a>published in October 2010,but no further investigation was done.Japanese players built sites such as the<a href="https://w.atwiki.jp/dq9-only"target="_blank"style="color:#0ca;">ONLY/Reduced(2-type)wiki</a>and<a href="https://w.atwiki.jp/dq9only-seed"target="_blank"style="color:#0ca;">plain No-enemy maps</a>,trying to complete a database by digging up and verifying maps one by one,but no one cared to uncover the cause of the misjudgments.(Those manual corrections did spread as a mapdata patch for<code>dq9tmap101.exe</code>made by<strong>ぶぶづけ</strong>,but the author's site was closed on 2026.03.31.)
 <br>　In December 2025,this tool's developer commissioned <strong>TKG</strong> to thoroughly analyze <code>dq9tmap101.exe</code> and finally uncovered the truth behind these misjudgments.</p>
 <h4 class=h1h4>ElistOfs calculation formula</h4>
-<ol style="padding-left:20px; margin-bottom:16px;"><li>Let Boundary=4128−16W−8X<br>W:Total number of white tiles on the floor<br>X:Scan every white tile left-to-right,top-to-bottom,and take the sum of L+U(X=Σ<sub>L</sub>+Σ<sub>U</sub>)<br>L:If the tile to the left is also white,L=1;otherwise L=0<br>U:If the tile above is also white,U=1;otherwise U=0</li>
+<ol style="padding-left:20px;margin-bottom:16px;"><li>Let Boundary=4128−16W−8X<br>W:Total number of white tiles on the floor<br>X:Scan every white tile left-to-right,top-to-bottom,and take the sum of L+U(X=Σ<sub>L</sub>+Σ<sub>U</sub>)<br>L:If the tile to the left is also white,L=1;otherwise L=0<br>U:If the tile above is also white,U=1;otherwise U=0</li>
 <li>If Boundary≥0:A=4896+16W+8X<br>If Boundary<0:A=4896+16W+8B<br>B=(9016−4896−16W)÷8=(4120−16W)÷8=515−2W</li>
 <li>C=A+4+8B+4D
 <br>D:Initialize D=0 and B_pool=B
@@ -1625,7 +1624,7 @@
 <li>E=C+20F<br>F:Number of monster types on the floor(Ice MR 1/10–12,Ruins MR 3:F=7;otherwise F=8)</li>
 <li>ElistOfs=E+8F+G+International Padding<br>G:Sum of the intrinsic values of the monsters appearing on the floor<br>International Padding:128 for non-JP DQ9,0 for JP DQ9</li></ol>
 <h4 class=h1h4>Relationship between ElistOfs and special floors(ignoring International Padding)</h4>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6;">
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;">
 <tr class=hdr2>
 <th style="width:90px;">ElistOfs</th>
 <th style="width:40px;">MonC</th>
@@ -1664,41 +1663,41 @@
 <td class="cy">2B84~2B94</td>
 <td class="fw">3</td>
 <td colspan="2"class="c">No-enemy</td>
-<td class="r4">ONLY<span style="font-size:10px; color:#88b; font-weight:normal;">(Pandora's Box vanishes)</span></td>
+<td class="r4">ONLY<span style="font-size:10px;color:#88b;font-weight:normal;">(Pandora's Box vanishes)</span></td>
 </tr>
 <tr>
 <td class="cy">2B98~2BA8</td>
 <td class="fw">2</td>
-<td colspan="2"class="c">No-enemy<span style="font-size:10px; color:#88b;">(Pandora's Box vanishes)</span></td>
-<td class="r4">ONLY<span style="font-size:10px; color:#88b; font-weight:normal;">(Mimic vanishes)</span></td>
+<td colspan="2"class="c">No-enemy<span style="font-size:10px;color:#88b;">(Pandora's Box vanishes)</span></td>
+<td class="r4">ONLY<span style="font-size:10px;color:#88b;font-weight:normal;">(Mimic vanishes)</span></td>
 </tr>
 <tr>
 <td class="cy">2BAC~2BBC</td>
 <td class="fw">1</td>
-<td colspan="2"class="c">No-enemy<span style="font-size:10px; color:#88b;">(Mimic vanishes)</span></td>
-<td class="r4">ONLY<span style="font-size:10px; color:#88b; font-weight:normal;">(Cannibox vanishes)</span></td>
+<td colspan="2"class="c">No-enemy<span style="font-size:10px;color:#88b;">(Mimic vanishes)</span></td>
+<td class="r4">ONLY<span style="font-size:10px;color:#88b;font-weight:normal;">(Cannibox vanishes)</span></td>
 </tr>
 <tr>
 <td class="cy">2BC0~</td>
 <td class="fw">0</td>
-<td colspan="3"class="c">No-enemy<span style="font-size:10px; color:#88b;">(all trap monsters vanish)</span></td>
+<td colspan="3"class="c">No-enemy<span style="font-size:10px;color:#88b;">(all trap monsters vanish)</span></td>
 </tr>
 </table>
-<p style="font-size:11px; color:#888;">Floor State: (A) F=7 (B) the ONLY monster's ID is ahead of the trap monsters (e.g. Liquid Metal Slime)</p>
+<p style="font-size:11px;color:#888;">Floor State: (A) F=7 (B) the ONLY monster's ID is ahead of the trap monsters (e.g. Liquid Metal Slime)</p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-multibug">4-player Multiplay Bug(Multibug)</h3>
 <h4 class=h1h4 style="margin-top:8px;">Multibug Overview</h4>
 <p style="margin-bottom:8px;"><strong>How To Trigger</strong>:With 4 consoles connected,3 Guests join the Host's world simultaneously. While the 2nd Guest is joining, the Host rapidly presses A (at mashing speed) to enter the grotto entrance. The bug triggers probabilistically at the exact moment of entry (not guaranteed — if it fails, all 3 Guests must return to their own worlds and reconnect from scratch).</p>
 <p style="margin-bottom:8px;"><strong>Phenomenon</strong>:Once Multibug is triggered,<strong style="color:#c8f;">some map parameters are affected by RNG+1</strong>,causing the following in the Host's world:</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong style="color:#fa0;">Changed</strong>:Grotto Name(Prefix,Suffix,Locale,Lv),Depth,Boss.</li>
 <li><strong style="color:#4f4;">Unchanged</strong>:Floor layouts,staircase positions,chest positions,monster types,chest ranks.</li>
 </ul>
 <p style="margin-bottom:8px;">　If the Multibugged Depth is deeper than original,player can access additional floors that were previously cut off by the depth limit.</p>
 <p style="margin-bottom:16px;">　The Host can only reach as deep as the Multibugged Depth—the Host can never exceed this limit.However,if Multibug increased the floor count,the Host can descend to one of the increased floors and<b>call-up a Guest</b>,who can then go deeper,exceed the Host's limit, up to B16F (the game's absolute maximum).The"<strong style="color:#f6f;">Force 16 Floors</strong>"mode in the tool's source code simulates this scenario. If Multibugged Depth is unchanged or decreased, there are no increased floors for the Host to stand on and call-up a Guest — <b>Force 16 Floors cannot occur</b>.</p>
 <h4 class=h1h4 style="margin-top:8px;">What Happens on Floor Increased?</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>Some maps have<strong>ONLY or reduced-enemy</strong>floors within the<strong style="color:#fa0;">Host's increased floors</strong> or <strong style="color:#f6f;">Force 16 Floors</strong> (e.g. Cureslime-only under Multibug conditions).</li>
 <li>Some maps have more<strong>high-rank chests</strong>within the<strong style="color:#fa0;">Host's increased floors</strong> (e.g. S9 under Multibug conditions).</li>
 <li>Search results for<strong>special floors</strong>that only exist under<strong style="color:#f6f;">Force 16 Floors</strong>are shown in<strong style="color:#f6f;">magenta</strong>.</li>
@@ -1707,7 +1706,7 @@
 </ul>
 <h4 class=h1h4>When Do Floors Increase?</h4>
 <p style="margin-bottom:8px;">Since<strong style="color:#c8f;">RNG+1</strong>doesn't change the grotto Rank, the Depth is re-generated within the same Range:</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>Rank</th><th>Min Floor</th><th>Max Floor</th><th>Range</th></tr>
 <tr><td>02</td><td>2</td><td>4</td><td>3</td></tr>
 <tr><td>38~3D</td><td>4</td><td>6</td><td>3</td></tr>
@@ -1719,13 +1718,13 @@
 <tr><td>C9</td><td>12</td><td>16</td><td>5</td></tr>
 <tr><td>DD</td><td>14</td><td>16</td><td>3</td></tr>
 </table>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>When the original Depth is smaller than the Rank's Max Floor, the Multibugged Depth may be deeper, granting access to <strong style="color:#fa0;">increased floors</strong> and <strong style="color:#f6f;">Force 16 Floors</strong>.</li>
 <li>Ranks with a larger Range(e.g.8D,A1)have greater variation and a higher chance of floor increase.</li>
 <li>When the original Depth is the same as Min Floor,a decrease is impossible—it can only stay the same or increase.</li>
 </ul>
 <h4 class=h1h4>When Do Floors Stay the Same or Decrease?</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>When the original Depth is already the same as Max Floor(e.g.a 8D~A1 grotto with B16F),an increase is impossible—it can only stay the same or decrease.</li>
 <li>Ranks with a smaller Range(e.g.02,DD)limit the magnitude of any change.</li>
 <li>When the re-generated Depth equals to the original,Depth is unchanged.In a range of N values,this occurs with roughly 1/N.</li>
@@ -1734,21 +1733,21 @@
 <details class="h1det">
 <summary>📖Structural Constraints of Rank 02/38/3D</summary>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 02</strong>(Depth 2–4,SMR 1–3):<strong style="color:#ac0;">Bugged Depth=SMR+1</strong></p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>Orig.SMR</th><th>Bug Depth</th><th>Result</th></tr>
 <tr><td>1</td><td>2</td><td style="color:#f84;">Never increases(original Depth≥2)</td></tr>
 <tr><td>2</td><td>3</td><td>Increases only if original Depth=2</td></tr>
 <tr><td>3</td><td>4</td><td>Increases if original Depth=2 or 3</td></tr>
 </table>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 38/3D</strong>(Depth 4–6,SMR 2–4):<strong style="color:#ac0;">Bugged Depth=SMR+2</strong></p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>Orig.SMR</th><th>Bug Depth</th><th>Result</th></tr>
 <tr><td>2</td><td>4</td><td style="color:#f84;">Never increases(original Depth≥4)</td></tr>
 <tr><td>3</td><td>5</td><td>Increases only if original Depth=4</td></tr>
 <tr><td>4</td><td>6</td><td>Increases if original Depth=4 or 5</td></tr>
 </table>
 <p style="margin-bottom:4px;">Therefore:</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>Maps with<strong>SMR=1</strong>—even if they have<strong style="color:#0ac;">Multibug ONLY/reduced-enemy floors</strong>,those floors are<strong style="color:#f8f;">inaccessible</strong>.</li>
 <li>Maps with<strong>SMR=2</strong>—only<strong style="color:#cf2;">Rank 02</strong>has a chance to access<strong style="color:#0ac;">Multibug ONLY/reduced-enemy floors</strong>;<strong style="color:#f8f;">Rank 38/3D cannot</strong>.</li>
 </ul>
@@ -1790,18 +1789,18 @@
 </table>
 <h3 class="h1sec"id="sec-naming">地図名 解説</h3>
 <div class="h1box">
-<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<ul style="padding-left:20px;color:#aaa;line-height:1.7;">
 <li><strong style="color:#39C5BB;">地図名1：</strong><span style="color:#cff;">B1F 敵ランク(SMR)</span>により決められる。</li>
 <li><strong style="color:#39C5BB;">地図名2：</strong><span style="color:#cff;">BOSS の種類</span>により決められる。</li>
 <li><strong style="color:#39C5BB;">地図名3：</strong><span style="color:#cff;">深さ</span>と<span style="color:#cff;">地形</span>により決められる。</li>
 <li><strong style="color:#39C5BB;">Lv</strong>＝<code style="color:#fa0;">(深さ＋SMR＋BOSS種類－4)×3±5</code>。最小は1、最大は99。</li>
 </ul>
-<p style="margin-top:8px; color:#ccc;">B1F 敵ランク(SMR)、BOSS、深さ、地形 については後述。</p>
+<p style="margin-top:8px;color:#ccc;">B1F 敵ランク(SMR)、BOSS、深さ、地形 については後述。</p>
 </div>
 <details class="h1det"id="det-prefix">
 <summary>📖名称一覧</summary>
-<p style="margin-top:12px; color:#aaa;">地図名1：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="margin-top:12px;color:#aaa;">地図名1：</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>No</th>
 <th>英語</th>
@@ -1819,8 +1818,8 @@
 <tr><td>7</td><td>Copper</td><td>怒れる</td><td>15</td><td>Sapphire</td><td>とどろく</td></tr>
 <tr><td>8</td><td>Bronze</td><td>呪われし</td><td>16</td><td>Diamond</td><td>大いなる</td></tr>
 </table>
-<p style="margin-top:12px; color:#aaa;">地図名2：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="margin-top:12px;color:#aaa;">地図名2：</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>No</th>
 <th>英語</th>
@@ -1838,8 +1837,8 @@
 <tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
 <tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr>
 </table>
-<p style="color:#aaa; margin-top:12px;">地図名3：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<p style="color:#aaa;margin-top:12px;">地図名3：</p>
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>No</th>
 <th>英語</th>
@@ -1874,8 +1873,8 @@
 </table>
 </details>
 <h3 class="h1sec"id="sec-location"style="margin-top:0;">場所</h3>
-<p style="margin-bottom:8px;">地図入口の場所。<a href="#sec-bq-fq"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">Final 値</a>によって範囲が変わる：</p>
-<table class=h1t style="width:100%; max-width:300px;">
+<p style="margin-bottom:8px;">地図入口の場所。<a href="#sec-bq-fq"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">Final 値</a>によって範囲が変わる：</p>
+<table class=h1t style="width:100%;max-width:300px;">
 <tr class="hdr">
 <th>Final 値</th>
 <th>場所候補(16進数)</th>
@@ -1886,9 +1885,9 @@
 </table>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖場所とゲームエリアの関係</summary>
-<div style="margin-top:12px; overflow-y:auto;">
+<div style="margin-top:12px;overflow-y:auto;">
 <table class=h1t style="font-size:11px;">
-<thead class=hdr2 style="position:sticky; top:0;">
+<thead class=hdr2 style="position:sticky;top:0;">
 <tr>
 <th style="width:125px;">エリア名(JP/EN)</th>
 <th style="width:40px;">場所</th>
@@ -2049,27 +2048,27 @@
 <tr><td class="loc">85</td><td>◯</td><td></td></tr>
 </tbody>
 </table>
-<p style="font-size:11px; color:#888;">◎:その場所にモンスターが出現しない<br>◯:(入口で放置する場合)モンスターにぶつからない(当たらない)<br>△:(入口で放置する場合)たまにモンスターにぶつかることがある(稀に当たる)<br>×:(入口で放置する場合)モンスターにぶつかる(当たる)<br><u>下線</u>:天の箱舟で直接着陸できず、遠回りが必要<br><i>斜体</i>:船でしか行けない<br><b>太字</b>:天の箱舟でしか行けない</p>
-<p style="font-size:11px; color:#888;">参考文献:
-<a href="https://w.atwiki.jp/gaoodq9/pages/56.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">がおちゃさんwiki</a>、
-<a href="https://w.atwiki.jp/airu_ob/pages/56.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">永遠の旅人さんwiki</a>、
-<a href="https://w.atwiki.jp/midori7188/pages/136.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #055;">天龍さんwiki</a>
+<p style="font-size:11px;color:#888;">◎:その場所にモンスターが出現しない<br>◯:(入口で放置する場合)モンスターにぶつからない(当たらない)<br>△:(入口で放置する場合)たまにモンスターにぶつかることがある(稀に当たる)<br>×:(入口で放置する場合)モンスターにぶつかる(当たる)<br><u>下線</u>:天の箱舟で直接着陸できず、遠回りが必要<br><i>斜体</i>:船でしか行けない<br><b>太字</b>:天の箱舟でしか行けない</p>
+<p style="font-size:11px;color:#888;">参考文献:
+<a href="https://w.atwiki.jp/gaoodq9/pages/56.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">がおちゃさんwiki</a>、
+<a href="https://w.atwiki.jp/airu_ob/pages/56.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">永遠の旅人さんwiki</a>、
+<a href="https://w.atwiki.jp/midori7188/pages/136.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #055;">天龍さんwiki</a>
 </p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-rank-seed">Rank、Seed</h3>
-<p style="margin-bottom:12px; color:#aaa;">宝の地図は<span style="color:#fff;">地図名</span>で構成されているように見えるが、実際には<strong style="color:#0ff;">Rank</strong>と<strong style="color:#f8f;">Seed</strong>という 2 つの隠しパラメータで構成されている。<br>本ツールの基本的な使い方は、入力された各種の特徴から、各地図の「身分証明書番号」である Rank と Seed を特定することにある。</p>
-<div style="background:#112; border-left:3px solid #f8f; padding:8px 12px; margin-bottom:16px;">
-<h4 style="color:#f8f; margin:0 0 6px; font-size:13px;">Seed</h4>
-<ul style="padding-left:16px; margin:0; color:#ccc;">
+<p style="margin-bottom:12px;color:#aaa;">宝の地図は<span style="color:#fff;">地図名</span>で構成されているように見えるが、実際には<strong style="color:#0ff;">Rank</strong>と<strong style="color:#f8f;">Seed</strong>という 2 つの隠しパラメータで構成されている。<br>本ツールの基本的な使い方は、入力された各種の特徴から、各地図の「身分証明書番号」である Rank と Seed を特定することにある。</p>
+<div style="background:#112;border-left:3px solid #f8f;padding:8px 12px;margin-bottom:16px;">
+<h4 style="color:#f8f;margin:0 0 6px;font-size:13px;">Seed</h4>
+<ul style="padding-left:16px;margin:0;color:#ccc;">
 <li>範囲は<strong style="color:#fff;">0000~7FFF</strong>。</li>
 <li>データ上<span style="color:#888;">8000~FFFF</span>の Seed も存在するが、通常プレイで生成される手段は無い。</li>
 <li>上記の範囲内でも、<strong>302 個</strong>の Seed は通常プレイで生成されない。</li>
 <li>通常プレイで生成されない地図は、本ツールで「場所候補なし」と表示される。</li></ul>
 </div>
 <div class="h1box2">
-<h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
-<p style="color:#ccc; margin-bottom:8px;">下記の<a href="#sec-bq-fq"style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final 値</strong></a>を 12 区間に分けたもの。</p>
+<h4 style="color:#0ca;margin:0 0 6px;font-size:13px;">Rank</h4>
+<p style="color:#ccc;margin-bottom:8px;">下記の<a href="#sec-bq-fq"style="text-decoration:none;"><strong style="color:#0ff;border-bottom:1px solid #055;">Final 値</strong></a>を 12 区間に分けたもの。</p>
 <table class=h1t style="font-size:11px;">
 <tr class=hdr2>
 <th>Rank</th>
@@ -2089,15 +2088,16 @@
 <tr><td class="w">C9</td><td class="loc">C9~DC</td><td class="g">201~220</td></tr>
 <tr><td class="w">DD</td><td class="loc">DD~F8</td><td class="g">221~248</td></tr>
 </table>
+<p>本ツールは URL の後に ?id=RRSSSS を入力すれば、指定された Rank と Seed の地図に飛ばされる。(例：?id=B50E5C で 見えざる魔神の道Lv87 (まさゆきの地図) に飛ばされる)</p>
 </div>
 <h3 class="h1sec"id="sec-bq-fq">Base 値、Final 値</h3>
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base 値</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Base値＝主人公の全職の最高Lv＋主人公の全職の最高転生回数×5＋今潜っている地図Lv</code>
+<code style="background:#000;padding:2px 6px;color:#fcf;border:1px solid #333;border-radius:3px;">Base値＝主人公の全職の最高Lv＋主人公の全職の最高転生回数×5＋今潜っている地図Lv</code>
 </div>
 <div style="margin-bottom:16px;">
 <strong style="color:#0ff;">Final 値</strong><br>
-<code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Final値＝Base値±10%</code>
+<code style="background:#000;padding:2px 6px;color:#fcf;border:1px solid #333;border-radius:3px;">Final値＝Base値±10%</code>
 <br><span style="color:#aaa;">最小値は 2、最大値は 248。地図の Final 値がどの区間に入るかで、その地図の Rank が決まる。</span>
 <br><br><span style="color:#aaa;">検索時、右側のボックスに Base 値 の具体値を入力する。</span>
 <br><span style="color:#aaa;">左側のドロップダウンで「1」を選ぶと、全ての場所において Base 値 が 1 つしかない地図を検索する。「1'」を選ぶと、うち1つの場所において Base 値 が 1 つしかない地図を検索する。</span>
@@ -2105,8 +2105,8 @@
 <details class="h1det">
 <summary>📖地図生成のステップ</summary>
 <div>
-<p style="color:#aaa; margin-bottom:8px;">ゲームが地図を生成する際、時間とともに変動する<strong>タイマー</strong>で乱数を 3 回推進する：
-<ol style="padding-left:20px; color:#ccc; line-height:1.6;">
+<p style="color:#aaa;margin-bottom:8px;">ゲームが地図を生成する際、時間とともに変動する<strong>タイマー</strong>で乱数を 3 回推進する：
+<ol style="padding-left:20px;color:#ccc;line-height:1.6;">
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">「±10%」の具体値を決める</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">Seed を決める</strong></li>
 <li style="margin-bottom:8px;"><strong style="color:#0ca;">場所を決める</strong></li>
@@ -2116,21 +2116,21 @@
 </details>
 <h3 class="h1sec"id="sec-terrain">地形</h3>
 <div class="h1box">
-<p style="margin-bottom:8px; color:#ccc;">地形は<strong style="color:#fa0;">洞窟・遺跡・氷・水・火山</strong>の 5 種類。確率は 洞窟 30%、遺跡 40%、その他各 10%。一部のクエストでは「指定された地形」と「指定された敵ランク」の地図を入手する必要がある。</p>
-<ul style="padding-left:20px; color:#aaa; line-height:1.7;">
+<p style="margin-bottom:8px;color:#ccc;">地形は<strong style="color:#fa0;">洞窟・遺跡・氷・水・火山</strong>の 5 種類。確率は 洞窟 30%、遺跡 40%、その他各 10%。一部のクエストでは「指定された地形」と「指定された敵ランク」の地図を入手する必要がある。</p>
+<ul style="padding-left:20px;color:#aaa;line-height:1.7;">
 <li><strong style="color:#39C5BB;">遺跡：</strong>十字路・通路入口でモンスターに<span style="color:#f88;">塞がれやすい</span>。</li>
 <li><strong style="color:#39C5BB;">洞窟&水：</strong>広い空間の壁に突起構造があり、プレイヤーの移動距離をやや増やせる。</li>
 <li><strong style="color:#39C5BB;">洞窟&氷&火山：</strong>広い空間に小石のような障害物があり、移動時に避ける必要がある。</li>
 <li><strong style="color:#39C5BB;">洞窟(敵ランク10-11)：</strong>すべての通路・交差点を<span style="color:#f8f;">完全に塞ぐ</span>「だいおうクジラ」が出現し、プレイヤーの地図潜りに嫌な体験を与える。他の地形ではこのような問題があまりない。</li>
-<li><strong style="color:#39C5BB;">ボスフロアの所要時間：</strong>フロア入口からボスまでの所要時間にも地形差がある：<span style="color:#0ff;">遺跡 6.6秒</span>、<span style="color:#f88;">火山 7.4秒</span>、<span style="color:#ddd;">その他はすべて 7.2秒</span>。この僅かな差が一部の低 Lv 発掘用地図のランキングを実際に変えた。(出典:<a href="https://w.atwiki.jp/masha-masha/181.html"target="_blank"style="color:#0ca; text-decoration:none; border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
+<li><strong style="color:#39C5BB;">ボスフロアの所要時間：</strong>フロア入口からボスまでの所要時間にも地形差がある：<span style="color:#0ff;">遺跡 6.6秒</span>、<span style="color:#f88;">火山 7.4秒</span>、<span style="color:#ddd;">その他はすべて 7.2秒</span>。この僅かな差が一部の低 Lv 発掘用地図のランキングを実際に変えた。(出典:<a href="https://w.atwiki.jp/masha-masha/181.html"target="_blank"style="color:#0ca;text-decoration:none;border-bottom:1px solid #0ca;">勇気ある旅人さんwiki</a>)</li>
 </ul>
 </div>
 <h3 class="h1sec"id="sec-smr-depth-boss">B1F 敵ランク(SMR)、深さ、BOSS</h3>
-<div style="margin-bottom:12px; font-size:12px;">
+<div style="margin-bottom:12px;font-size:12px;">
 <strong style="color:#0ff;">特定フロアの敵ランク(FloorMR)の計算式：</strong><br>
-<code style="background:#000; padding:2px 6px; color:#cff; border:1px solid #333; border-radius:3px; display:inline-block; margin-top:4px;">FloorMR＝B1F敵ランク(SMR)＋int[(フロア数－1)÷4]</code>
+<code style="background:#000;padding:2px 6px;color:#cff;border:1px solid #333;border-radius:3px;display:inline-block;margin-top:4px;">FloorMR＝B1F敵ランク(SMR)＋int[(フロア数－1)÷4]</code>
 </div>
-<table class=h1t style="100%; font-size:11px;">
+<table class=h1t style="100%;font-size:11px;">
 <tr class=hdr2>
 <th>Rank</th>
 <th>B1F 敵ランク</th>
@@ -2203,7 +2203,7 @@
 <details class="h1det"id="det-boss-names">
 <summary>📖BOSS の名前</summary>
 <div>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class="hdr">
 <th>略称</th>
 <th>英語名</th>
@@ -2225,8 +2225,8 @@
 </div>
 </details>
 <h3 class="h1sec"id="sec-bug-terrain">ネタ地形</h3>
-<p style="margin-bottom:12px; color:#ccc; font-size:12px;">DQ9 の地図を生成する時、特定のメカニズムにより、下記のような奇妙な現象が発生する。</p>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
+<p style="margin-bottom:12px;color:#ccc;font-size:12px;">DQ9 の地図を生成する時、特定のメカニズムにより、下記のような奇妙な現象が発生する。</p>
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;text-align:left;">
 <tr class=hdr2>
 <th style="width:130px;">現象</th>
 <th>説明</th>
@@ -2261,21 +2261,21 @@
 <div>
 <h4 class=h1h4 style="margin-top:8px;">乳首、イケない通路、チラリズム</h4>
 <p style="margin-bottom:8px;">フロアの生成は以下の流れで行われる：</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li><strong style="color:#39C5BB;">バイナリ空間分割法(BSP)</strong>でフロアを複数の区画に分割し、各区画に部屋を作成する。</li>
 <li><strong style="color:#39C5BB;">「侵食」フェーズ</strong>：部屋の外周の各マスについて、周囲にある壁の数に基づき、床として残すか壁に埋め戻すかを決定する。侵食処理は「扉」自体を上書きすることは避けるが、<strong style="color:#f88;">扉の内側（裏側）に直接壁を生成してしまい、部屋の内部を完全に塞いでしまうことがある。</strong></li>
 <li><strong>通路の生成</strong>:全ての部屋の扉を繋ぐように通路が引かれる。通路自体は正常に扉まで到達するが、侵食フェーズで生成された壁を貫通することはできない。</li>
 <li><strong style="color:#39C5BB;">宝箱の配置</strong>：部屋の境界内からランダムに座標を選ぶ。既に階段や宝箱があるマスのみスキップする。<strong style="color:#f88;">そのマスが「壁」であるか、あるいは「プレイヤーが到達可能か」を一切チェックしない。</strong></li>
 </ol>
 <p style="margin-bottom:8px;">上記の流れにより、以下の現象が発生する：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong>乳首：</strong>宝箱が四周を壁に囲まれたマスに配置され、壁の中に埋め込まれる。ゲーム内では完全に見えず、あるいは火山地形で空中に浮いているように見える。</li>
 <li><strong>イケない通路：</strong>侵食によって扉の内側が塞がれ、繋がっているはずの部屋（またはその一部）が完全に進入不可能となった空間。</li>
 <li><strong>チラリズム：</strong>1x2 以上の「イケない通路」の中に宝箱がある状態。</li>
 </ul>
 <h4 class=h1h4>ゴースト階段、危険？ハマるフロア</h4>
 <p style="margin-bottom:8px;">階段の配置は以下の流れで行われる：</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li>上り階段の候補マスをランダムに選び、全てのチェックをパスしたらマップに書き込む。</li>
 <li>その上り階段に対応する下り階段の候補マスを選ぶ。</li>
 <li>下り階段のチェックが成功→階段配置完了。</li>
@@ -2283,13 +2283,13 @@
 <strong style="color:#f88;">ただし、前回書き込んだ上り階段は消されない。</strong>これが「ゴースト階段」として残留する：見た目は普通の床マスだが、内部データは階段のままである。</li>
 </ol>
 <p style="margin-bottom:8px;">通常、ゴースト階段は無害な残留物に過ぎない。問題はマップ構造が極端に制限されている場合に起きる：</p>
-<ol style="padding-left:20px; margin-bottom:12px;">
+<ol style="padding-left:20px;margin-bottom:12px;">
 <li>100 回連続で上り階段のチェックをパスできない→システムはオーバーフローモードに入る。</li>
 <li>オーバーフローモード：全てのチェックをスキップし、直接に上り階段を配置する。カウンターをゼロにリセットし、下り階段のチェックに進む。</li>
 <li>下り階段のチェックも失敗→ステップ 1 に戻る。マップ構造の制限により、また 99 回失敗し（合計 100 回）、再びオーバーフローが発生する。</li>
 </ol>
 <p style="margin-bottom:8px;">つまり、オーバーフローが起きるマップでは：</p>
-<ul style="padding-left:20px; margin-bottom:12px;">
+<ul style="padding-left:20px;margin-bottom:12px;">
 <li>上り階段を配置するチャンスは<strong>100 回に 1 回</strong>。</li>
 <li>ゴースト階段が残るのも<strong>100 回に 1 回</strong>。</li>
 <li>フロア構造自体の制約（全ての広い空間が 2x2）により、ほぼ全ての候補位置でチェックが失敗し続ける。</li>
@@ -2297,11 +2297,11 @@
 <p style="margin-bottom:16px;">　最終的な配置で上り階段が宝箱の真隣りに来ると、プレイヤーが通過できない障壁となり、マップが 2 つの行き来できないエリアに分断される——下に行けば閉じ込められ、上に行けば戻れない。これが<b>「危険？ハマるフロア」</b>。</p>
 <p style="margin-bottom:16px;">　ただし、この条件を満たすフロアの全てがこのレイアウトを生成するわけではない。5BC3 B4F/5BC4 B3F で発生するのは極めて特殊なケースである。</p>
 <h4 class=h1h4>壁に埋まった階段</h4>
-<p style="margin-bottom:8px; text-align:justify;">　上記のメカニズムに基づき、あるフロアで 100 回連続で上り階段のチェックをパスできず、オーバーフローモードに入った場合、上り階段が壁の中に配置される可能性は理論上ある。しかし、100 回連続でチェックをパスできないフロアは極めて少なく、全部で 4 種 16 件の検索結果しかないため、実際にはこの現象は発生していない。</p>
+<p style="margin-bottom:8px;text-align:justify;">　上記のメカニズムに基づき、あるフロアで 100 回連続で上り階段のチェックをパスできず、オーバーフローモードに入った場合、上り階段が壁の中に配置される可能性は理論上ある。しかし、100 回連続でチェックをパスできないフロアは極めて少なく、全部で 4 種 16 件の検索結果しかないため、実際にはこの現象は発生していない。</p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-special-floor">特殊フロア(ElistOfs)と オンリーモンスター</h3>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6; text-align:left;">
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;text-align:left;">
 <tr class=hdr2>
 <th style="width:90px;">種別</th>
 <th>説明</th>
@@ -2327,7 +2327,7 @@
 <td class="bugd">その地図に<strong style="color:#fff;">2 つ以上</strong>の特殊フロアがある</td>
 </tr>
 <tr>
-<td class="bug">Flag0<br><span style="font-size:10px; color:#888;">(D 値)</span></td>
+<td class="bug">Flag0<br><span style="font-size:10px;color:#888;">(D 値)</span></td>
 <td class="bugd">特殊フロアの右下、「モンスターの出ないエリア」にある白マスの数<br><span style="color:#39C5BB;">※このエリアに「地図法」でモンスターのアイテムをドロップさせることができる</span></td>
 </tr>
 </table>
@@ -2339,8 +2339,8 @@
 <div>
 <h4 class=h1h4>特殊フロアの存在理由：メモリオーバーフロー</h4>
 <p style="text-align:justify;">DQ9 宝の地図のフロアデータは、「レイアウト」→「モンスターリスト」という形で組成する。</p>
-<p style="margin-bottom:12px; text-align:justify;">もしあるフロアの面積が非常に大きく、白マスが多い場合になると：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<p style="margin-bottom:12px;text-align:justify;">もしあるフロアの面積が非常に大きく、白マスが多い場合になると：</p>
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>レイアウトデータが肥大化する</li>
 <li>全体データの大きさが「フロアデータ全般のメモリ上限」を超える</li>
 <li>その結果、<strong>データ末端の「モンスターリスト」</strong>が<strong style="color:#f88;">メモリに押し出されてしまう</strong></li>
@@ -2348,18 +2348,18 @@
 <li>数種類減ったものを<strong style="color:#f8f;">敵減</strong>、1 種類だけ残ったものを<strong style="color:#f8f;">オンリー</strong>、全てが押し出されたものを<strong style="color:#f8f;">敵無</strong>と呼ぶ</li>
 </ul>
 <h4 class=h1h4>派生バグ</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li style="margin-bottom:6px;"><strong>トラップモンスター消失バグ</strong>：全てのフロアの「モンスターリスト」に<strong style="color:#f88;">トラップモンスター(ひとくいばこ、ミミック、パンドラボックス)</strong>が存在するものの、マップ上には出現しない。<br>一般的に「モンスターリスト」の先頭にいるのはトラップモンスターだが、<code>はぐれメタル</code>等 8 種類のモンスターの順番はトラップモンスターよりも先である。その結果、はぐれメタルオンリーフロア、もしくは敵無フロアの場合、トラップモンスターが「出た瞬間に消滅する」という奇妙な現象が発生する。</li>
 <li style="margin-bottom:6px;"><strong>「くちぶえ」失敗バグ</strong>：戦士の「ゆうかん」スキル「くちぶえ」を使うとき、もし呼び出されるモンスターが「押し出されたモンスター」であれば、「しかし なにもおこらなかった！」という呼び出し判定の失敗が発生する。</li>
 <li style="margin-bottom:6px;"><strong>Flag0 マスと地図法：</strong>一部の大面積フロアでは、白マスが多すぎるため、「レイアウトデータ専用のメモリ上限」も超えてしまう。その結果、右下の白マスが「上下左右の隣接辺がゼロでないにもかかわらず、強制的にゼロとしてみなされる」状態になる(いわゆる Flag0 マス)。<br>このマスの中にはモンスターが出現せず、外で湧いたモンスターも入ってこない(プレイヤーを追跡中の場合を除く)。しかし、Flag0 マスの中で「くちぶえ」を使うと、「押し出されないモンスター」を正常に呼び出すことができる上で、<strong style="color:#fa0;">戦闘に突入した後も AT が止まっている状態を維持する(普段では戦闘に突入すると AT が高速で進む)</strong>。この特徴は「第 3 世代地図法」に利用され、宝の地図ダンジョン内のモンスターのアイテムドロップに活用されている。</li>
 </ul>
 <h4 class=h1h4>dq9tmap101.exe の誤判定の歴史</h4>
-<p style="margin-bottom:16px; text-align:justify;">　このメカニズムは<code>dq9tmap101.exe</code>の作者 43 氏に発見され、<strong style="color:#fff;">ElistOfs(Enemy List Offsets)</strong>として命名された。しかし、当時の作者さんは<strong>Flag0</strong>の存在に気づいておらず、Flag0 マスを持つ全ての地図の ElistOfs 値を過大算出してしまった。その結果、<strong style="color:#fff;">「オンリー や 敵減」を「敵無」として間違い判定するケースが大量に発生した</strong>。
+<p style="margin-bottom:16px;text-align:justify;">　このメカニズムは<code>dq9tmap101.exe</code>の作者 43 氏に発見され、<strong style="color:#fff;">ElistOfs(Enemy List Offsets)</strong>として命名された。しかし、当時の作者さんは<strong>Flag0</strong>の存在に気づいておらず、Flag0 マスを持つ全ての地図の ElistOfs 値を過大算出してしまった。その結果、<strong style="color:#fff;">「オンリー や 敵減」を「敵無」として間違い判定するケースが大量に発生した</strong>。
 <br>　さらに、全ての白マスの隣接辺の合計値÷2 が 256 以上の場合、<code>dq9tmap101.exe</code>がなぜか 256 を減算しており、「ElistOfs=1Exx〜1Fxx だが実際には特殊フロア」という誤判定も発生した（すなわち<strong style="color:#fff;">「敵無/敵減/オンリー」を「無無無」として間違い判定された</strong>）。
 <br>　作者はその後 5ch ユーザーからハブられたことで<code>dq9tmap101.exe</code>の更新を停止した故、この誤判定は 16 年間ずっと放置されていた。その間、<strong>Terence</strong>氏が 2010 年 10 月に発表した<a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank"style="color:#0ca;">Grotto Mechanics Guide</a>で白マス過多によるモンスターの出ない現象に簡単に触れたが、それ以上の調査は行われなかった。日本のプレイヤー達は<a href="https://w.atwiki.jp/dq9-only"target="_blank"style="color:#0ca;">オンリー敵減(2種)wiki</a>や<a href="https://w.atwiki.jp/dq9only-seed"target="_blank"style="color:#0ca;">ただの敵無し地図</a>といったサイトを建て、地図を一枚ずつ発掘して照合することで、データベースを完成しようとしたが、誤判定の原因には誰も解明する気がなかった。(一応、その人力修正の結果は<strong>ぶぶづけ</strong>氏で作り上げた<code>dq9tmap101.exe</code>用 mapdata パッチとして広まったが、作者さんのサイトは 2026.03.31 に閉鎖された)
 <br>　2025 年 12 月、本ツールの開発者が<strong>TKG</strong>氏に依頼して<code>dq9tmap101.exe</code>を徹底的に分析し、この誤判定の真相を解明した。</p>
 <h4 class=h1h4>ElistOfs の計算式</h4>
-<ol style="padding-left:20px; margin-bottom:16px;"><li>Boundary=4128−16W−8X とする<br>W：そのフロアの白マス総数<br>X：左から右、上から下の順に各白マスを走査して、L+U の合計値を求める(X=Σ<sub>L</sub>+Σ<sub>U</sub>)<br>L：左隣のマスも白マスなら L=1、そうでなければ L=0<br>U：上隣のマスも白マスなら U=1、そうでなければ U=0</li>
+<ol style="padding-left:20px;margin-bottom:16px;"><li>Boundary=4128−16W−8X とする<br>W：そのフロアの白マス総数<br>X：左から右、上から下の順に各白マスを走査して、L+U の合計値を求める(X=Σ<sub>L</sub>+Σ<sub>U</sub>)<br>L：左隣のマスも白マスなら L=1、そうでなければ L=0<br>U：上隣のマスも白マスなら U=1、そうでなければ U=0</li>
 <li>Boundary≥0 の場合：A=4896+16W+8X<br>Boundary<0 の場合：A=4896+16W+8B<br>B=(9016−4896−16W)÷8=(4120−16W)÷8=515−2W</li>
 <li>C=A+4+8B+4D
 <br>D：D の初期値を 0、B_pool の初期値を B とする
@@ -2372,7 +2372,7 @@
 <li>E=C+20F<br>F：そのフロアに出現するモンスター種類数(氷1/10〜12、遺跡3:F=7、その他:F=8)</li>
 <li>ElistOfs=E+8F+G+海外版 Padding<br>G：そのフロアに出現するモンスターの固有値の合計<br>海外版 Padding：海外版 DQ9 は 128、日本版 DQ9 は 0</li></ol>
 <h4 class=h1h4>ElistOfs と 特殊フロア の関係(海外版 Padding を無視)</h4>
-<table class=h1t style="width:100%; font-size:11px; line-height:1.6;">
+<table class=h1t style="width:100%;font-size:11px;line-height:1.6;">
 <tr class=hdr2>
 <th style="width:90px;">ElistOfs</th>
 <th style="width:40px;">モン数</th>
@@ -2411,41 +2411,41 @@
 <td class="cy">2B84~2B94</td>
 <td class="fw">3</td>
 <td colspan="2"class="c">敵無</td>
-<td class="r4">オンリー<span style="font-size:10px; color:#88b; font-weight:normal;">(パンドラボックス消滅)</span></td>
+<td class="r4">オンリー<span style="font-size:10px;color:#88b;font-weight:normal;">(パンドラボックス消滅)</span></td>
 </tr>
 <tr>
 <td class="cy">2B98~2BA8</td>
 <td class="fw">2</td>
-<td colspan="2"class="c">敵無<span style="font-size:10px; color:#88b;">(パンドラボックス消滅)</span></td>
-<td class="r4">オンリー<span style="font-size:10px; color:#88b; font-weight:normal;">(ミミック消滅)</span></td>
+<td colspan="2"class="c">敵無<span style="font-size:10px;color:#88b;">(パンドラボックス消滅)</span></td>
+<td class="r4">オンリー<span style="font-size:10px;color:#88b;font-weight:normal;">(ミミック消滅)</span></td>
 </tr>
 <tr>
 <td class="cy">2BAC~2BBC</td>
 <td class="fw">1</td>
-<td colspan="2"class="c">敵無<span style="font-size:10px; color:#88b;">(ミミック消滅)</span></td>
-<td class="r4">オンリー<span style="font-size:10px; color:#88b; font-weight:normal;">(ひとくいばこ消滅)</span></td>
+<td colspan="2"class="c">敵無<span style="font-size:10px;color:#88b;">(ミミック消滅)</span></td>
+<td class="r4">オンリー<span style="font-size:10px;color:#88b;font-weight:normal;">(ひとくいばこ消滅)</span></td>
 </tr>
 <tr>
 <td class="cy">2BC0~</td>
 <td class="fw">0</td>
-<td colspan="3"class="c">敵無<span style="font-size:10px; color:#88b;">(すべての宝箱モンスター消滅)</span></td>
+<td colspan="3"class="c">敵無<span style="font-size:10px;color:#88b;">(すべての宝箱モンスター消滅)</span></td>
 </tr>
 </table>
-<p style="font-size:11px; color:#888;">フロア状態：(A)F=7(B)オンリーモンスターの ID が宝箱モンスターより前にある（例：はぐれメタル）</p>
+<p style="font-size:11px;color:#888;">フロア状態：(A)F=7(B)オンリーモンスターの ID が宝箱モンスターより前にある（例：はぐれメタル）</p>
 </div>
 </details>
 <h3 class="h1sec"id="sec-multibug">4人マルチプレイによるバグ(マルチバグ)</h3>
 <h4 class=h1h4 style="margin-top:8px;">マルチバグの概要</h4>
 <p style="margin-bottom:8px;"><strong>発動条件</strong>：4 台の DS 本体を繋げた状態で、ゲスト 3 名が同時にホストの世界に入る。2 人目が入っている最中、ホストが A ボタンを連打(高橋名人レベルの速度)して、地図の入口に入った瞬間、確率的に発動する（100%成功するわけではない。失敗した場合、ゲスト全員が自分の世界に戻り、もう一度接続しやり直す必要がある）。</p>
 <p style="margin-bottom:8px;"><strong>現象</strong>：マルチバグが発動すると、<strong style="color:#c8f;">一部の地図パラメータが 乱数+1 の影響を受け</strong>、ホストの世界で以下の変化が起きる：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong style="color:#fa0;">変わる</strong>：地図名1・地図名2・地図名3・Lv・階層数(深さ)・ボス。</li>
 <li><strong style="color:#4f4;">変わらない</strong>：各フロアのレイアウト・階段の位置・宝箱の位置・出現モンスター・宝箱ランク。</li>
 </ul>
 <p style="margin-bottom:8px;">　マルチバグ発動後、地図の階層数が増加したり、減少したり、変わらなかったりする。</p>
 <p style="margin-bottom:8px;">　ホストのアクセスできる最深フロアは「バグで変わった階層数」まで——ホストはこの上限を超えることはできない。しかし、マルチバグにより階層数が増加した場合、ホストが増加したフロアまで降りた後にゲストを呼ぶと、ゲストはさらに深く進むことができ、最大 B16F(ゲームの絶対的な上限)まで到達可能。一方、階層数が変わらない、または減少した場合、ホストが立ってゲストを呼ぶための「増加したフロア」が存在せず、<strong style="color:#f6f;">強制 16 フロア</strong>は発生し得ない。</p>
 <h4 class=h1h4 style="margin-top:8px;">フロアの増加で何ができる？</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>一部の地図では、<strong style="color:#fa0;">ホスト側の増えたフロア</strong>または<strong style="color:#f6f;">強制 16 フロア</strong>の中に<strong>オンリー・敵減</strong>フロア がある（例：マルチバグ状態の ベホマスライムオンリー など）。</li>
 <li>一部の地図では、<strong style="color:#fa0;">ホスト側の増えたフロア</strong>の中により多くの<strong>高ランク宝箱</strong>がある（例：マルチバグ状態の S9 など）。</li>
 <li><strong style="color:#f4f;">強制 16 フロア</strong>でのみ存在する<strong>特殊フロア</strong>の検索結果は<strong style="color:#f6f;">マゼンタ</strong>で表示される。</li>
@@ -2454,7 +2454,7 @@
 </ul>
 <h4 class=h1h4>どんな場合にフロアが増える？</h4>
 <p style="margin-bottom:8px;">マルチバグによる<strong style="color:#c8f;">乱数+1</strong>は地図の Rank を変えないため、階層数は同じ範囲内で再計算される：</p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>Rank</th><th>最小階層数</th><th>最大階層数</th><th>変動範囲</th></tr>
 <tr><td>02</td><td>2</td><td>4</td><td>3</td></tr>
 <tr><td>38~3D</td><td>4</td><td>6</td><td>3</td></tr>
@@ -2466,13 +2466,13 @@
 <tr><td>C9</td><td>12</td><td>16</td><td>5</td></tr>
 <tr><td>DD</td><td>14</td><td>16</td><td>3</td></tr>
 </table>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>元の深さがその Rank の最大階層数未満であれば、マルチバグ発動後により高くなる可能性があり、追加されたフロアにアクセスできる。</li>
 <li>変動範囲の大きい Rank（例：8D~A1 の 7 個）ほど、深さの変動幅が大きく、階層数増加の可能性が高い。</li>
 <li>元の深さが最小階層数に等しい場合、減少は起こり得ず、不変または増加のみとなる。</li>
 </ul>
 <h4 class=h1h4>どんな場合にフロアが変わらない・減る？</h4>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>元の深さが既にその Rank の最大階層数に等しい場合（例：8D~A1 の既に B16F になった地図）、増加は起こり得ず、不変または減少のみとなる。</li>
 <li>変動範囲の小さい Rank（例：02 と DD、各 3 個のみ）では、変動があっても幅が限られる。</li>
 <li><strong style="color:#c8f;">乱数+1</strong>で再計算された値がたまたま元と同じなら、深さは変わらない。変動範囲が N 個の場合、不変となる確率はおよそ 1/N。</li>
@@ -2481,21 +2481,21 @@
 <details class="h1det">
 <summary>📖Rank 02/38/3D の構造的制約</summary>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 02</strong>（深さ 2–4、SMR 1–3）：<strong style="color:#ac0;">Bug 深さ=SMR+1</strong></p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>元の SMR</th><th>Bug 深さ</th><th>結果</th></tr>
 <tr><td>1</td><td>2</td><td style="color:#f84;">必ず増加しない(元の深さ≥2)</td></tr>
 <tr><td>2</td><td>3</td><td>元の深さ=2 の場合のみ増加</td></tr>
 <tr><td>3</td><td>4</td><td>元の深さ=2 または 3 で増加</td></tr>
 </table>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 38/3D</strong>（深さ 4–6、SMR 2–4）：<strong style="color:#ac0;">Bug 深さ=SMR+2</strong></p>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>元の SMR</th><th>Bug 深さ</th><th>結果</th></tr>
 <tr><td>2</td><td>4</td><td style="color:#f84;">必ず増加しない(元の深さ≥4)</td></tr>
 <tr><td>3</td><td>5</td><td>元の深さ=4 の場合のみ増加</td></tr>
 <tr><td>4</td><td>6</td><td>元の深さ=4 または 5 で増加</td></tr>
 </table>
 <p style="margin-bottom:4px;">したがって：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li><strong style="color:#cff;">SMR＝1</strong>の地図は、<strong style="color:#0ac;">マルチバグオンリー・敵減フロア</strong>があっても<strong style="color:#f8f;">アクセス不可</strong>。</li>
 <li><strong style="color:#cff;">SMR＝2</strong>の地図は、<strong style="color:#cf2;">Rank 02</strong>でのみ<strong style="color:#0ac;">マルチバグオンリー・敵減フロア</strong>にアクセスできる可能性があり、<strong style="color:#f8f;">Rank 38/3D ではアクセス不可</strong>。</li>
 </ul>
@@ -2508,19 +2508,19 @@
 <h3 id="h2ModalTitle"style="color:#0ff;"data-i18n="K02"></h3>
 <button class="modal-close"onclick="closeh2Modal()">×</button>
 </div>
-<div class="modal-body"style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 75vh;">
+<div class="modal-body"style="padding: 0;display: flex;flex-direction: column;overflow-y: hidden;max-height: 75vh;">
 <div class="modal-tabs">
-<div id="h2TabTW"style="padding: 6px 16px; background: #1a1a3a; color: #0ff; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s; white-space:nowrap;"onclick="switchH2Tab('TW')">繁體中文</div>
-<div id="h2TabEN"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s; white-space:nowrap;"onclick="switchH2Tab('EN')">English</div>
-<div id="h2TabJP"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s; white-space:nowrap;"onclick="switchH2Tab('JP')">日本語</div>
-<div id="h2TabSP"style="padding: 6px 8px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s; white-space:nowrap;"onclick="switchH2Tab('SP')">SP</div>
+<div id="h2TabTW"style="padding: 6px 16px;background: #1a1a3a;color: #0ff;border: 1px solid #4a4a8a;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;white-space:nowrap;"onclick="switchH2Tab('TW')">繁體中文</div>
+<div id="h2TabEN"style="padding: 6px 16px;background: #224;color: #888;border: 1px solid #333;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;white-space:nowrap;"onclick="switchH2Tab('EN')">English</div>
+<div id="h2TabJP"style="padding: 6px 16px;background: #224;color: #888;border: 1px solid #333;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;white-space:nowrap;"onclick="switchH2Tab('JP')">日本語</div>
+<div id="h2TabSP"style="padding: 6px 8px;background: #224;color: #888;border: 1px solid #333;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;white-space:nowrap;"onclick="switchH2Tab('SP')">SP</div>
 </div>
-<div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.7; color: #ccc;">
+<div style="padding: 16px 20px;overflow-y: auto;flex: 1;font-size: 13px;line-height: 1.7;color: #ccc;">
 <div id="h2ListTW"style="display: block;">
 <h3 class="h1sec">中斷技</h3>
 <h4 class=h1h4 style="margin-top:8px;">甚麼是中斷技？</h4>
 <p style="margin-bottom:8px;">　中斷技 指 玩家進入地圖之後，在被選定的樓層<strong style="color:#fa0;">中斷存檔</strong>，之後<strong style="color:#fa0;">中斷讀檔</strong>，進行<strong style="color:#f9c;">「打開→關閉戰歷」「上/下樓梯(又叫做 階段合わせ)」之類的操作後 開寶箱</strong>，或<strong style="color:#fa0;">甚麼也不做 直接開寶箱</strong>，得到「想要的物品」的秘技。其詳細原理如下：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>「地圖 Seed＋樓層數」與「樓層大小」的組合 決定 哪一層樓 有幾個寶箱 和 寶箱等級。</li>
 <li>每個寶箱 開出的 物品內容 則由「地圖 Seed＋樓層數＋經過秒數」決定，與 寶箱有幾個 甚麼等級 無關。「內部時間 0 秒」為其初始值。</li>
 <li>「中斷技」從「內部時間 0 秒」開始計時，每一秒 在後台改變一次 寶箱「能被開出」的物品——但後台的變化 不會自動更新到前台，必須靠「打開→關閉戰歷」「上/下樓梯」「戰鬥→戰鬥結束」等手段 把 後台的變化 刷新至前台(類似於在 秒錶 上按下 LAP 按鈕，記錄 LAP TIME)才能改變 寶箱「實際開出」的物品。</li>
@@ -2533,7 +2533,7 @@
 <ul style="padding-left:20px;">
 <li>以「Seed＋樓層數」為起點，先決定 樓層大小，再依照下列順序 生成樓層——「BSP、房間生成、壁面侵蝕、走廊連通、配置樓梯、配置寶箱」。</li>
 <li><code style=color:#22B14C>樓層大小＝「Seed＋樓層數」%Δ+MinSize</code>
-<br><table class=h1t style="margin-top:4px; margin-bottom:4px; font-size:11px;">
+<br><table class=h1t style="margin-top:4px;margin-bottom:4px;font-size:11px;">
 <tr class="hdr">
 <th>Δ</th>
 <th>MinSize</th>
@@ -2546,7 +2546,7 @@
 <tr><td>5</td><td>10</td><td>1~4</td><td>10×10~14×14</td></tr>
 </table>樓層數 則由 Rank 及 Seed 共同決定——參見 Ultimate Search 說明中的「樓層深度」。</li>
 <li>樓層大小 不消耗亂數，但 生成樓層 消耗大量 AT 函數：
-<br><table class=h1t style="margin-top:4px; margin-bottom:4px; font-size:11px;">
+<br><table class=h1t style="margin-top:4px;margin-bottom:4px;font-size:11px;">
 <tr><td>BSP</td><td>把一層樓切成好幾塊，樓層越大，切的次數越多，RNG 消耗越多</td></tr>
 <tr><td>房間生成</td><td>切出幾塊就嘗試建幾個房間，每個房間消耗數次 RNG 骰位置和大小</td></tr>
 <tr><td>壁面侵蝕</td><td>對每個格子進行處理，格子越多 RNG 消耗越多</td></tr>
@@ -2561,7 +2561,7 @@
 </ul>
 </details>
 <h4 class=h1h4 style="margin-top:8px;">中斷技 有哪些使用方法？</h4>
-<ul style="padding-left:20px; margin-bottom:8px;">
+<ul style="padding-left:20px;margin-bottom:8px;">
 <li><strong style="color:#0ca;">馬拉松</strong>：隊伍 4 人，打開「馬拉松工具」填寫指定的 Rank Seed(或載入 Preset)之後 按▶按鈕，等到計時器走到 0.00 秒的那一刻「讀取中斷檔」，然後邊看工具，邊跑地圖，利用「打開→關閉戰歷」使 該樓層寶箱 能開出玩家想要的物品，或「上/下樓梯(階段合わせ)」使 上/下一樓層寶箱 能開出玩家想要的物品。</li>
 <li><strong style="color:#0ca;">中斷即開</strong>：隊伍 4 人，「讀取中斷檔」之後，直接去開這一層樓的寶箱，得到「真實時間 7 秒」也就是「內部時間 2 秒」的物品。(約有 5%機率偏移成「一人旅」的時間)</li>
 <li><strong style="color:#0ca;">一人旅</strong>：<strong style="color:#eee;">隊伍 1 人(只有主角)</strong>，「讀取中斷檔」之後，直接去開這一層樓的寶箱，得到「真實時間 6 秒」也就是「內部時間 1 秒」的物品。(約有 20%機率偏移成「中斷即開」的時間)</li>
@@ -2571,7 +2571,7 @@
 </ul>
 <p style="margin-bottom:8px;">※以前還有一個叫「曲芸」的方法，指 特定位置中斷讀檔後，走特定的路線，到達目標箱後 開關戰歷 or 上下樓梯後 到達目標箱，開出 特定秒數(較長)的物品。由於難度太高，難以推廣。</p>
 <span><strong style="color:#f66;">注意：</strong></span>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>某些非正版環境下(模擬器、燒錄卡、CFW 等)，隊伍 4 人「中斷即開(真實時間 7 秒)」會高機率偏移成「一人旅(真實時間 6 秒)」甚至「內部時間 0 秒(真實時間 5 秒)」的時間，使大部分基於「即開」獲取多個稀有物品的地圖失去使用價值。</li>
 <li>某些非正版環境下，「馬拉松」及「體感」也會因 偏移 或 不能精確走時 而失效。</li>
 <li>並非所有非正版環境 都會有以上問題，但<strong style="color:#f7a">正版卡帶 一定不會有上述問題</strong>。因此若玩家想最大限度利用「馬拉松 即開 一人旅 體感」地圖的價值，<strong style="color:#f7a">最佳條件是 玩正版</strong>。</li>
@@ -2586,7 +2586,7 @@
 </details>
 <details class="h1det">
 <summary>📖常見中斷秒數的 體感 操作方法</summary>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>秒數</th><th>操作方法</th></tr>
 <tr><td>11</td><td>到達目標樓層→<strong style="color:#fa0;">立即回上一層</strong>→中斷存檔<br>讀檔後，最快速度 邊按 A 連打 邊按住 上方向鍵，下樓開寶箱</td></tr>
 <tr><td>12</td><td></td></tr>
@@ -2597,25 +2597,25 @@
 <tr><td>9+4N</td><td>【N 為小數】<br>到達目標樓層→<strong style="color:#fa0;">立即回上一層</strong>→中斷存檔<br>讀檔後，最快速度 邊按 A 連打 邊按住 上方向鍵 走 N 個來回<br>【N 為整數】<br>到達目標樓層→中斷存檔<br>讀檔後，最快速度 邊按 A 連打 邊按住 上方向鍵 走 N 個來回</td></tr>
 </table>
 </details>
-<h4 class=h1h4 style="margin-top:8px; margin-bottom:16px;">本工具的 按鈕 使用說明</h4>
+<h4 class=h1h4 style="margin-top:8px;margin-bottom:16px;">本工具的 按鈕 使用說明</h4>
 <strong style="color:#ffd700;">【即一人旅】</strong>
-<ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li>找出在同一層樓中，能透過<strong style="color:#0ca;">「中斷即開」</strong>或<strong style="color:#0ca;">「一人旅」</strong>直接開出 2~3 個指定物品的地圖。</li>
 <li><strong style="color:#cff;">B9F 物品</strong>找 B9F 的寶箱，其餘物品找 B3F 或 B4F 的寶箱。</li>
 <li><strong style="color:#f66;">⚠️注意：</strong>此按鈕不適用於搜「寶箱怪」——戰鬥結束後 會刷新內部時間，導致下一個原本出寶箱怪的寶箱 不再出寶箱怪。</li>
 </ul>
 <strong style="color:#ffd700;">【体感】</strong>
-<ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li>先透過「中斷即開」或「一人旅」拿走指定物品，再用<strong style="color:#0ca;">「體感」操作</strong>來刷新內部時間，使同層或隔壁層的「第 3 個寶箱(整列箱)」也能開出指定物品。</li>
 <li><strong style="color:#cff;">B9F 物品</strong>找 B9F 的寶箱，其餘物品找 B3F 或 B4F 的寶箱。</li>
 </ul>
 <strong style="color:#ffd700;">【整列箱】</strong>
-<ul style="padding-left:20px; margin-bottom:20px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:20px;color:#fff;">
 <li>專門尋找<strong style="color:#f7c;">連續兩層樓 都剛好有 3 個寶箱</strong>的地圖。利用下樓梯刷新內部時間，一次帶走兩層樓<strong style="color:#f7c;">第 3 個寶箱</strong>的稀有寶物。</li>
 <li><strong style="color:#cff;">B9F 物品</strong>找 B13F/B14F 的寶箱(因為 連續兩層樓 第 3 個寶箱 均為 S 箱 最淺就是這兩層)，其餘物品找 B3F/B4F 的寶箱。</li>
 </ul>
-<div style="background:#223; padding:12px; border-radius:6px; border-left:4px solid #4a4a8a;">
-<h3 style="color:#8cc8ff; font-size:14px; margin:0 0 8px;">其他名詞解釋</h3>
+<div style="background:#223;padding:12px;border-radius:6px;border-left:4px solid #4a4a8a;">
+<h3 style="color:#8cc8ff;font-size:14px;margin:0 0 8px;">其他名詞解釋</h3>
 <p style="margin-bottom:6px;"><strong style="color:#ffd700;">大富豪(Millionaire)</strong>：含有多個能開出「高價武器」(拿去商店賣錢)寶箱的地圖。本工具的「高價武器」指 所有的 B 箱武器 及 A 箱金屬史萊姆劍/槍。</p>
 </div>
 </div>
@@ -2623,7 +2623,7 @@
 <h3 class="h1sec">Chest Timer</h3>
 <h4 class=h1h4 style="margin-top:8px;">What is Chest Timer?</h4>
 <p style="margin-bottom:8px;">When you enter a grotto,do a<strong style="color:#fa0;">Quicksave</strong>on a designated floor,then<strong style="color:#fa0;">Quickload</strong>and<strong style="color:#f9c;">do things like"Open → Close the Battle Records (BR)"or"Go Down/Up-stairs (called 階段合わせ in Japanese)"before opening a chest</strong>,or<strong style="color:#fa0;">just open the chest without doing anything</strong>,you can get the item you want.This is called"Chest Timer".Here's how it works:</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>The combination of"Map Seed + Floor Number"and"Map Size"decide how many chests are on each floor,and what items each chest gives at"internal time 0 seconds."</li>
 <li>Chest Timer starts from"internal time 0 seconds".Every second,the item you'd get from each chest changes on the backend — but this doesn't auto-update on screen.You need to"Open/Close BR"or"Go Stairs"(think of it like pressing the LAP button on a stopwatch)to refresh what the chests actually give.</li>
 <li>You can't measure the exact moment of "internal time 0 seconds". But <strong style="color:#f9c">you can measure "real time 0 seconds" — the exact moment you press A to Quickload</strong>.
@@ -2635,7 +2635,7 @@
 <ul style="padding-left:20px;">
 <li>Starting from"Seed + Floor Number",the game first determines the Floor Size,then generates the floor in the following order—"BSP, Room Generation, Wall Erosion, Corridor Connection, Stair Placement, Chest Placement".</li>
 <li><code style=color:#22B14C>Floor Size＝「Seed＋Floor Number」%Δ+MinSize</code>
-<br><table class=h1t style="margin-top:4px; margin-bottom:4px; font-size:11px;">
+<br><table class=h1t style="margin-top:4px;margin-bottom:4px;font-size:11px;">
 <tr class="hdr">
 <th>Δ</th>
 <th>MinSize</th>
@@ -2648,7 +2648,7 @@
 <tr><td>5</td><td>10</td><td>1~4</td><td>10×10~14×14</td></tr>
 </table>Floor Depth is decided by both Rank and Seed—see"Floor Depth"in the Ultimate Search guide.</li>
 <li>Floor Size does not consume RNG,but floor generation consumes a large number of AT function calls:
-<br><table class=h1t style="margin-top:4px; margin-bottom:4px; font-size:11px;">
+<br><table class=h1t style="margin-top:4px;margin-bottom:4px;font-size:11px;">
 <tr><td>BSP</td><td>Divides the floor into sections;larger floors require more cuts and use more RNG</td></tr>
 <tr><td>Room Generation</td><td>Tries to build one room per section;each room consumes several RNG calls for position and size</td></tr>
 <tr><td>Wall Erosion</td><td>Processes each tile;more tiles means more RNG</td></tr>
@@ -2663,7 +2663,7 @@
 </ul>
 </details>
 <h4 class=h1h4 style="margin-top:8px;">Chest Timer Usages</h4>
-<ul style="padding-left:20px; margin-bottom:8px;">
+<ul style="padding-left:20px;margin-bottom:8px;">
 <li><strong style="color:#0ca;">Marathon</strong>:<br>① Open the Timer Tool(Chest Timer button),enter the specified Rank Seed(or load a Preset),then press the▶button.<br>② Quickload on DS when the timer reaches 0.00 seconds.<br>③ Then,while watching the tool,go through the map and Open/Close BR to make chests on the current floor give the item you want,or Go Down/Up-stairs to make chests on the next/previous floor give the item you want.</li>
 <li><strong style="color:#0ca;">Party</strong>:After Quickload,open chests on the current floor to get items at 7s(real-time)(Approximately 5%chance of shifting to the"Solo"timing.)</li>
 <li><strong style="color:#0ca;">Solo</strong>:<strong style="color:#eee;">Only 1 party member(MC only)</strong>.After Quickload,open chests on the current floor to get items at 6s(real-time)(Approximately 20%chance of shifting to the"Party"timing.)</li>
@@ -2673,7 +2673,7 @@
 </ul>
 <p style="margin-bottom:8px;">※There was also a method called"曲芸"which involved Quickloading at a specific position,walking a specific route to reach the target chest,then Open/Close BR or Go Stairs to get items at a specific timing.This method was extremely difficult and never caught on.</p>
 <span><strong style="color:#f66;">Note:</strong></span>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>On certain non-legit environments(emulators,flashcarts,CFW,etc.),the Party timer(7s real-time)has a high chance of shifting to Solo(6s)or even internal time 0 seconds(5s real-time),rendering most maps that rely on Party for multiple rare items unusable.</li>
 <li>On certain non-legit environments,Marathon and Taikan may also fail due to timing shifts or inability to keep precise time.</li>
 <li>Not all non-legit environments have these issues,but<strong style="color:#f7a">legit cartridges are guaranteed to be free from them</strong>.So if you want to make the most of Marathon,Party,Solo,and Taikan maps,<strong style="color:#f7a">playing on a legit cartridge is the way to go</strong>.</li>
@@ -2688,7 +2688,7 @@
 </details>
 <details class="h1det">
 <summary>📖How to Do Taikan for Common Timings</summary>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>Seconds</th><th>Operation Method</th></tr>
 <tr><td>11</td><td>Reach the target floor→<strong style="color:#fa0;">immediately return to the previous floor</strong>→Quicksave<br>After Quickload,mash A while holding Up on the D-pad,go downstairs and open the chest ASAP</td></tr>
 <tr><td>12</td><td></td></tr>
@@ -2699,25 +2699,25 @@
 <tr><td>9+4N</td><td>[When N is non-integer]<br>Reach the target floor→<strong style="color:#fa0;">immediately return to the previous floor</strong>→Quicksave<br>After Quickload,mash A while holding Up on the D-pad,walk N round trips ASAP<br>[When N is integer]<br>Reach the target floor→Quicksave<br>After Quickload,mash A while holding Up on the D-pad,walk N round trips ASAP</td></tr>
 </table>
 </details>
-<h4 class=h1h4 style="margin-top:8px; margin-bottom:16px;">Button Usage Guide for This Tool</h4>
+<h4 class=h1h4 style="margin-top:8px;margin-bottom:16px;">Button Usage Guide for This Tool</h4>
 <strong style="color:#ffd700;">【QL】</strong>
-<ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li>Find maps where you can get 2–3 specified items via<strong style="color:#0ca;">"Party"</strong>or<strong style="color:#0ca;">"Solo"</strong>from chests on the same floor.</li>
 <li><strong style="color:#cff;">B9F items</strong>search B9F chests;other items search B3F or B4F chests.</li>
 <li><strong style="color:#f66;">⚠️Note:</strong>This button is not for searching"Mimics (chest monsters)"—defeating a chest monster refreshes the internal timer,causing the next chest that was supposed to spawn a chest monster to no longer do so.</li>
 </ul>
 <strong style="color:#ffd700;">【Combo】</strong>
-<ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li>First get the specified item via"Party"or"Solo",then use a<strong style="color:#0ca;">Taikan operation</strong>to refresh the internal timer so the"3rd Chest"on the same or an adjacent floor also gives the specified item.</li>
 <li><strong style="color:#cff;">B9F items</strong>search B9F chests;other items search B3F or B4F chests.</li>
 </ul>
 <strong style="color:#ffd700;">【3rd】</strong>
-<ul style="padding-left:20px; margin-bottom:20px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:20px;color:#fff;">
 <li>Searches for maps where<strong style="color:#f7c;">two consecutive floors each have exactly 3 chests</strong>.Use the stairway to refresh the internal timer and collect the<strong style="color:#f7c;">3rd Chest</strong>from both floors in one run.</li>
 <li><strong style="color:#cff;">B9F items</strong>search B13F/B14F chests(because the shallowest pair of consecutive floors where both 3rd Chests are S-rank is B13F/B14F);other items search B3F/B4F chests.</li>
 </ul>
-<div style="background:#223; padding:12px; border-radius:6px; border-left:4px solid #4a4a8a;">
-<h3 style="color:#8cc8ff; font-size:14px; margin:0 0 8px;">Other Terminology</h3>
+<div style="background:#223;padding:12px;border-radius:6px;border-left:4px solid #4a4a8a;">
+<h3 style="color:#8cc8ff;font-size:14px;margin:0 0 8px;">Other Terminology</h3>
 <p style="margin-bottom:6px;"><strong style="color:#ffd700;">Millionaire(大富豪)</strong>:A map containing multiple chests that drop"high-value weapons"(to sell at shops for gold)."High-value weapons"in this tool refers to all B-rank chest weapons and A-rank chest Metal Slime Swords/Spears.</p>
 </div>
 </div>
@@ -2725,7 +2725,7 @@
 <h3 class="h1sec">中断技</h3>
 <h4 class=h1h4 style="margin-top:8px;">中断技とは？</h4>
 <p style="margin-bottom:8px;">　中断技とは、プレイヤーが地図に入った後、指定されたフロアで<strong style="color:#fa0;">中断セーブ</strong>を行い、その後<strong style="color:#fa0;">中断ロード</strong>をして<strong style="color:#f9c;">「戦歴を開く→閉じる」「タイミングに合わせて階段を降りる／上る（階段合わせ）」などの操作をしてから宝箱を開ける</strong>、または<strong style="color:#fa0;">何もせずに直接に宝箱を開ける</strong>ことで、欲しいアイテムを入手する裏技である。詳細は以下の通り：</p>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>「地図 Seed＋フロア番号」と「フロアサイズ」の組み合わせが、各フロアの宝箱の数と宝箱ランクを決める。</li>
 <li>それぞれの宝箱から出るアイテムは「地図 Seed＋フロア番号＋経った時間(秒数)」で決められる。</li>
 <li>その「経った時間(秒数)」のスタート時点は、<strong style="color:#f9c;">地図内で「中断セーブ」した後、A ボタンを押して「中断データからはじまる」を選んだ瞬間</strong>(つまり「中断ロード」をする瞬間)であり、「タイマー(英語なら Chest Timer)」と呼ぶ。</li>
@@ -2738,7 +2738,7 @@
 <ul style="padding-left:20px;">
 <li>「Seed＋フロア番号」で、まずフロアサイズを決定し、次に以下の順番でフロアを生成する——「BSP、部屋作り、侵食、通路の接続、階段の配置、宝箱の配置」。</li>
 <li><code style=color:#22B14C>フロアサイズ＝「Seed＋フロア番号」%Δ+MinSize</code>
-<br><table class=h1t style="margin-top:4px; margin-bottom:4px; font-size:11px;">
+<br><table class=h1t style="margin-top:4px;margin-bottom:4px;font-size:11px;">
 <tr class="hdr">
 <th>Δ</th>
 <th>MinSize</th>
@@ -2751,7 +2751,7 @@
 <tr><td>5</td><td>10</td><td>1~4</td><td>10×10~14×14</td></tr>
 </table>地図の階層数は Rank と Seed の両方で決まる——Ultimate Search の使い方の「深さ」を参照。</li>
 <li>フロアサイズを決める時には乱数を消費しないが、フロア生成には大量の AT 乱数を消費する：
-<br><table class=h1t style="margin-top:4px; margin-bottom:4px; font-size:11px;">
+<br><table class=h1t style="margin-top:4px;margin-bottom:4px;font-size:11px;">
 <tr><td>BSP</td><td>1 フロアを複数のエリアに分割する。フロアが大きいほど分割回数が多く、乱数消費も多い</td></tr>
 <tr><td>部屋作り</td><td>エリアごとに部屋を作る。エリアのどこに部屋を作ると、どれくらい大きい部屋を作るには、数回の乱数を消費する</td></tr>
 <tr><td>侵食</td><td>各マスに対して「侵食」処理を行う。マス目が多いほど乱数消費も多い</td></tr>
@@ -2769,7 +2769,7 @@
 </ul>
 </details>
 <h4 class=h1h4 style="margin-top:8px;">中断技の使い方</h4>
-<ul style="padding-left:20px; margin-bottom:8px;">
+<ul style="padding-left:20px;margin-bottom:8px;">
 <li><strong style="color:#0ca;">マラソン</strong>：パーティ 4 人で「マラソンツール」を開き、指定の Rank Seed を入力（またはプリセットを読み込み）して▶ボタンを押す。タイマーが 0.00 秒になった瞬間に「中断ロード」し、ツールを見ながら地図を進み、「戦歴開閉」でそのフロアの宝箱から欲しいアイテムを出す、あるいは「階段合わせ」で隣のフロアの宝箱から欲しいアイテムを出す。</li>
 <li><strong style="color:#0ca;">中断即開</strong>：パーティ 4 人で「中断ロード」をした後、そのフロアの宝箱を直接開けて「リアルタイム 7 秒」のアイテムを入手する。（約 5%の確率で「一人旅」のタイミングにずれる）</li>
 <li><strong style="color:#0ca;">一人旅</strong>：<strong style="color:#eee;">パーティ 1 人（主人公のみ）</strong>で「中断ロード」をした後、そのフロアの宝箱を直接開けて「リアルタイム 6 秒」のアイテムを入手する。（約 20%の確率で「中断即開」のタイミングにずれる）</li>
@@ -2779,7 +2779,7 @@
 </ul>
 <p style="margin-bottom:8px;">※以前は「曲芸」と呼ばれる方法もあった。特定の位置で中断セーブしてロードした後、特定のルートを歩いて①同じフロアなら目標の箱にタッチして戦歴開閉②隣のフロアなら階段合わせをした後に目標の箱を開けて「特定の秒数」のアイテムを出す方法である。難易度が非常に高く、人気が得られなかった。</p>
 <span><strong style="color:#f66;">注意：</strong></span>
-<ul style="padding-left:20px; margin-bottom:16px;">
+<ul style="padding-left:20px;margin-bottom:16px;">
 <li>一部の非正規環境（エミュレータ、マジコン、CFW など）では、パーティ 4 人の「中断即開（7 秒）」が高確率で「一人旅（6 秒）」または「初期値（5 秒）」にずれるため、「即開」属性の地図は殆ど利用できなくなる。</li>
 <li>「マラソン」や「体感」もずれや正確的に時間を計ることができないため、失敗することがある。</li>
 <li>すべての非正規環境で上記の問題が発生するわけではないが、<strong style="color:#f7a">正規ロムであれば上記の問題は絶対に発生しない</strong>ので、「マラソン・即開・一人旅・体感」地図の価値を最大まで活用したいなら、<strong style="color:#f7a">正規ロムでプレイするのが最善</strong>である。</li>
@@ -2794,7 +2794,7 @@
 </details>
 <details class="h1det">
 <summary>📖よくある体感秒数の操作方法</summary>
-<table class=h1t style="margin-top:4px; font-size:11px;">
+<table class=h1t style="margin-top:4px;font-size:11px;">
 <tr class=hdr2><th>秒数</th><th>操作方法</th></tr>
 <tr><td>11</td><td>目標フロアに到達→<strong style="color:#fa0;">すぐに前のフロアに戻る</strong>→中断セーブ<br>ロード後、A を連打＋上方向キー押しっぱなしで最速で階段を降りて宝箱を開ける</td></tr>
 <tr><td>12</td><td></td></tr>
@@ -2805,30 +2805,30 @@
 <tr><td>9+4N</td><td>【N が小数のとき】<br>目標フロアに到達→<strong style="color:#fa0;">すぐに前のフロアに戻る</strong>→中断セーブ<br>ロード後、A を連打＋上方向キー押しっぱなしで最速で N 往復する<br>【N が整数のとき】<br>目標フロアに到達→中断セーブ<br>ロード後、A を連打＋上方向キー押しっぱなしで最速で N 往復する</td></tr>
 </table>
 </details>
-<h4 class=h1h4 style="margin-top:8px; margin-bottom:16px;">本ツールのボタンの取扱説明</h4>
+<h4 class=h1h4 style="margin-top:8px;margin-bottom:16px;">本ツールのボタンの取扱説明</h4>
 <strong style="color:#ffd700;">【即一人旅】</strong>
-<ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li>同一フロア内で、<strong style="color:#0ca;">「中断即開」</strong>または<strong style="color:#0ca;">「一人旅」</strong>により 2〜3 個の指定されたアイテムを入手できる地図を探す。</li>
 <li><strong style="color:#cff;">B9F アイテム</strong>は B9F、それ以外のアイテムは B3F または B4F で検索する。</li>
 <li><strong style="color:#f66;">⚠️注意：</strong>このボタンは「トラップモンスター」の検索には使えない——戦闘終了後にも内部タイマーが更新されるため、次にトラップモンスターが出るはずだった宝箱から出なくなる。</li>
 </ul>
 <strong style="color:#ffd700;">【体感】</strong>
-<ul style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li>まず「中断即開」または「一人旅」で指定アイテムを取得した後、<strong style="color:#0ca;">「体感」操作</strong>で内部タイマーを更新し、同じフロアまたは隣のフロアの「3 つ目の宝箱（整列箱）」からも指定されたアイテムを入手する。</li>
 <li><strong style="color:#cff;">B9F アイテム</strong>は B9F、それ以外のアイテムは B3F または B4F で検索する。</li>
 </ul>
 <strong style="color:#ffd700;">【整列箱】</strong>
-<ul style="padding-left:20px; margin-bottom:20px; color:#fff;">
+<ul style="padding-left:20px;margin-bottom:20px;color:#fff;">
 <li><strong style="color:#f7c;">フロア 2 連続にそれぞれ丁度 3 つの宝箱がある</strong>地図を検索する。階段を降りるときのタイマー更新を利用して、2 フロア分の<strong style="color:#f7c;">3 つ目の宝箱(整列箱)</strong>からレアアイテムを回収する。</li>
 <li><strong style="color:#cff;">B9F アイテム</strong>は B13F/B14F で検索する（フロア 2 連続での 3 つ目の宝箱がいずれも S 箱になる最も浅い階層が B13F/B14F であるため）。それ以外のアイテムは B3F/B4F で検索する。</li>
 </ul>
-<div style="background:#223; padding:12px; border-radius:6px; border-left:4px solid #4a4a8a;">
-<h3 style="color:#8cc8ff; font-size:14px; margin:0 0 8px;">その他の用語解説</h3>
+<div style="background:#223;padding:12px;border-radius:6px;border-left:4px solid #4a4a8a;">
+<h3 style="color:#8cc8ff;font-size:14px;margin:0 0 8px;">その他の用語解説</h3>
 <p style="margin-bottom:6px;"><strong style="color:#ffd700;">大富豪(Millionaire)</strong>：「高価な武器」（店で売って金を稼ぐ用）の入った宝箱が複数ある地図。本ツールの「高価な武器」とは、すべての B 武器と メタスラの剣／やりを指す。</p>
 </div>
 </div>
 <div id="h2ListSP"style="display: none;">
-<h3 style="color:#8cc8ff; font-size:14px; margin:0 0 8px;">SP Thanks</h3>
+<h3 style="color:#8cc8ff;font-size:14px;margin:0 0 8px;">SP Thanks</h3>
 <table>
 <tr>
 <td><a href=https://w.atwiki.jp/yurippe target=_blank style="color:#0ca;">ゆりっぺさんwiki</a></td>
@@ -2877,18 +2877,18 @@
 </div>
 </div>
 <div id="h3Modal"class="modal-overlay"onclick="closeh3Modal(event)"style="z-index: 1002;">
-<div class="modal-content"onclick="event.stopPropagation()"style="max-width: 600px; border-color:#0ca;">
+<div class="modal-content"onclick="event.stopPropagation()"style="max-width: 600px;border-color:#0ca;">
 <div class="modal-header"style="border-bottom:1px solid #055;">
 <h3 style="color:#0ca;"data-i18n="K03"></h3>
 <button class="modal-close"onclick="closeh3Modal()">×</button>
 </div>
-<div class="modal-body"style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 75vh;">
+<div class="modal-body"style="padding: 0;display: flex;flex-direction: column;overflow-y: hidden;max-height: 75vh;">
 <div class="modal-tabs"style="border-bottom:2px solid #055;">
-<div id="h3TabTW"style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;"onclick="switchH3Tab('TW')">繁體中文</div>
-<div id="h3TabEN"style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;"onclick="switchH3Tab('EN')">English</div>
-<div id="h3TabJP"style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;"onclick="switchH3Tab('JP')">日本語</div>
+<div id="h3TabTW"style="padding: 6px 16px;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;"onclick="switchH3Tab('TW')">繁體中文</div>
+<div id="h3TabEN"style="padding: 6px 16px;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;"onclick="switchH3Tab('EN')">English</div>
+<div id="h3TabJP"style="padding: 6px 16px;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;"onclick="switchH3Tab('JP')">日本語</div>
 </div>
-<div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.7; color: #ccc;">
+<div style="padding: 16px 20px;overflow-y: auto;flex: 1;font-size: 13px;line-height: 1.7;color: #ccc;">
 <div id="h3ListTW"style="display: block;">
 <h3 class="h3sec"style="margin-top:0">🔍搜尋模式</h3>
 <table class="h3t">
@@ -2906,7 +2906,7 @@
 </tr>
 </table>
 <h3 class="h3sec">地圖法基本操作</h3>
-<ol style="padding-left:20px; color:#ccc; line-height:1.6; margin-bottom:16px; font-size:12px;">
+<ol style="padding-left:20px;color:#ccc;line-height:1.6;margin-bottom:16px;font-size:12px;">
 <li>按 DS 的 X 鍵打開 Menu，然後選擇 どうぐ→たからのちず 進入 藏寶圖一覽。</li>
 <li>找到符合 本工具篩選條件 的 地圖 A，用 改變排序/刪掉不要的地圖/多打幾張新地圖 等方式 把它排到 任意一頁的最下方(也就是 從上往下數 第 8 張，或最後一頁的最後一張)。</li>
 <li>進入另一張地圖 B——地圖 B 不符合本工具篩選條件，但它提供 您想要的怪物——該怪物在您指定的 地形×FloorMR 組合中出現，且符合該組合的樓層中有 AT 靜止區域</li>
@@ -2916,7 +2916,7 @@
 <li>重複以上步驟 4～6，掉寶數量快到 99 時 用掉(比如吃種子)，或 離開地圖 賣了物品之後 從 3 重來</li>
 </ol>
 <h3 class="h3sec">面板參數說明（由左到右按順序）</h3>
-<ul style="padding-left:20px; color:#ccc; line-height:1.6; margin-bottom:16px; font-size:12px;">
+<ul style="padding-left:20px;color:#ccc;line-height:1.6;margin-bottom:16px;font-size:12px;">
 <li><strong>①地形</strong>：指定 地形。</li>
 <li><strong>②FloorMR</strong>：指定 目標樓層的怪物等級。</li>
 <li><strong>③怪物名稱</strong>：該 地形×FloorMR 組合下必定出現的 4~5 種怪物（不含寶箱怪）。這些怪物可以被「くちぶえ」呼叫，詳情請看 ⑤魯拉。</li>
@@ -2929,7 +2929,7 @@
 <h3 class="h3sec">掉落判定機制與 ⑧掉寶 Pattern 對照表</h3>
 <div class="h3box">
 <p style="margin-bottom:8px;">針對第<strong>X</strong>步 AT 亂數的判定流程如下：</p>
-<ol style="padding-left:20px; margin-bottom:0; line-height:1.6;">
+<ol style="padding-left:20px;margin-bottom:0;line-height:1.6;">
 <li>優先判定「掉落」的 Rare(稀有)機率。</li>
 <li>若 Rare 判定成功，跳過該次 Normal 判定，由<strong>X+1</strong>步繼續判定「書1」的 Rare。</li>
 <li>若 Rare 判定失敗，由<strong>X+1</strong>步判定該次 Normal。接著不論結果，由<strong>X+2</strong>步判定「書1」的 Rare。依此類推。</li>
@@ -2986,11 +2986,11 @@
 <tr><td class="cc">xN</td><td class="cc">xN</td><td class="cx">xx</td><td class="cc">xN</td><td class="cx">xx</td></tr>
 <tr><td class="cc">xN</td><td class="cc">xN</td><td class="cx">xx</td><td class="cx">xx</td><td class="cc">xN</td></tr>
 </table>
-<p style="font-size:11px; color:#888; text-align:right;">※註：「書」為盜賊秘傳書，僅能透過多人/多卡帶連線配置增加。</p>
+<p style="font-size:11px;color:#888;text-align:right;">※註：「書」為盜賊秘傳書，僅能透過多人/多卡帶連線配置增加。</p>
 <h3 class="h3sec">搜尋結果解讀與 AT 消耗公式</h3>
-<div style="margin-bottom:16px; font-size:12px; color:#ccc; line-height:1.7;">
+<div style="margin-bottom:16px;font-size:12px;color:#ccc;line-height:1.7;">
 <p style="margin-bottom:8px;">在進行 AT 或 M 搜尋後，結果面板將提供以下四項核心數據：</p>
-<ol style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ol style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li><strong>符合掉寶 Pattern 的 AT 步數</strong>：搜稀有時，它是第一個「R」所在的 AT 步數。搜通常時，它是第一個「xN」的「x」所在的 AT 步數。<span style="color:#aaa;">(AT 搜尋必顯示，M 搜尋需指定 Pattern 後才顯示)</span></li>
 <li><strong>呼叫出的怪物</strong>：指定使用<code style="color:#fa0;">n</code>次魯拉後，再使用地圖法秘技時 能遭遇的怪物。</li>
 <li><strong>先制所需最小靈巧值</strong>：指定魯拉次數後，於戰鬥中觸發「先制攻擊」所需的最低靈巧值門檻。</li>
@@ -2998,14 +2998,14 @@
 </ol>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖靈巧值計算公式</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><code>靈巧值＝ceil(AT÷32768×100-2)×20</code></li>
 <li>最小為 0(顯示為 1)，若大於 999 則顯示為 1000</li>
 </ul>
 </details>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖戰鬥中消耗的 AT 步數「戰」的計算公式</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><code>「戰」＝符合掉寶 pattern 的 AT 步數-(<font color=c0a865>戰鬥開始時 AT</font>＋29×魯拉次數)</code></li>
 <li>「戰」可拆分為下列 魔法、特技 的組合(原則上最多 4 項，先制時若能精確掌握第 2 回合 AT 追加消耗規律，可增至 8 項)</li>
 </ul>
@@ -3018,7 +3018,7 @@
 <th>敵怪 4 隻</th>
 </tr>
 <tr>
-<td class="bg cw">先制<span style="font-size:10px; color:#888;">(角色靈巧≥地圖靈巧)</span></td>
+<td class="bg cw">先制<span style="font-size:10px;color:#888;">(角色靈巧≥地圖靈巧)</span></td>
 <td class="co b">38</td>
 <td class="co b">39</td>
 <td class="co b">39</td>
@@ -3401,14 +3401,14 @@
 </tr>
 </table>
 <div class="h3box h3box-r">
-<ul style="padding-left:16px; margin-bottom:8px;">
+<ul style="padding-left:16px;margin-bottom:8px;">
 <li>所有魔法 命中要害時<strong style="color:#f88;">AT+30</strong>。</li>
 <li>所有特技 命中要害時<strong style="color:#0ff;">不消耗 AT</strong>，ビッグバン等特例除外。</li>
 <li>所有秘傳書<strong style="color:#fc0;">必中</strong>。</li>
 <li><span style="color:#888;">イオ系魔法消耗 AT 步數不穩定，會隨機跳動，一般不用於開發地圖法。</span></li>
 </ul>
-<strong style="color:#fa0; display:block; margin-top:8px;">進入第 2 回合時，系統會重新排列怪物的顯示順序並消耗 AT：</strong>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<strong style="color:#fa0;display:block;margin-top:8px;">進入第 2 回合時，系統會重新排列怪物的顯示順序並消耗 AT：</strong>
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><strong>AT+int(怪物總數÷2)</strong>　　(怪物總數含已死怪物)</li>
 <li>如果第一回合結束時畫面已顯示全體怪物，則不重排➔<strong>AT+0</strong></li>
 </ul>
@@ -3416,18 +3416,18 @@
 </div>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖掉寶判定的計算公式</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><strong>普通掉寶判定：</strong><code>AT≤掉寶率×32768</code></li>
 <li><strong>盜賊秘傳書判定：</strong><code>AT≤int[32767÷int(掉寶率的倒數×100÷Lv)]+1</code></li>
 </ul>
 </details>
 <h3 class="h3sec">即時查詢與懶人包</h3>
-<p style="margin-bottom:12px; font-size:12px; color:#ccc;">在完成搜尋後，手動改變以下三個面板選項，可以即時更新對應的顯示結果（無需重新搜尋）：</p>
+<p style="margin-bottom:12px;font-size:12px;color:#ccc;">在完成搜尋後，手動改變以下三個面板選項，可以即時更新對應的顯示結果（無需重新搜尋）：</p>
 <table class="h3t sm ctr"style="max-width:500px">
 <tr class="hdr">
 <th style="width:25%">手動改變<br>以下選項</th>
-<th style="width:18%">呼叫的怪物<br><span style="font-size:10px; color:#888;">(同地形MR)</span></th>
-<th style="width:18%">呼叫的怪物<br><span style="font-size:10px; color:#888;">(跨地形MR)</span></th>
+<th style="width:18%">呼叫的怪物<br><span style="font-size:10px;color:#888;">(同地形MR)</span></th>
+<th style="width:18%">呼叫的怪物<br><span style="font-size:10px;color:#888;">(跨地形MR)</span></th>
 <th style="width:19%">先制所需<br>靈巧值</th>
 <th style="width:20%">戰鬥中<br>消耗 AT</th>
 </tr>
@@ -3453,7 +3453,7 @@
 <td class="ct b">〇</td>
 </tr>
 </table>
-<p style="font-size:11px; color:#f88; margin-bottom:16px;">※提示：第幾步 AT 符合掉寶 pattern 是每個 Seed 固有的屬性，<strong style="color:#f44;">完全無法透過任何手段改變</strong>。</p>
+<p style="font-size:11px;color:#f88;margin-bottom:16px;">※提示：第幾步 AT 符合掉寶 pattern 是每個 Seed 固有的屬性，<strong style="color:#f44;">完全無法透過任何手段改變</strong>。</p>
 </div>
 <div id="h3ListEN"style="display: none;">
 <h3 class="h3sec"style="margin-top:0">🔍Search Modes</h3>
@@ -3472,7 +3472,7 @@
 </tr>
 </table>
 <h3 class="h3sec">Map Method Basic Operation</h3>
-<ol style="padding-left:20px; color:#ccc; line-height:1.6; margin-bottom:16px; font-size:12px;">
+<ol style="padding-left:20px;color:#ccc;line-height:1.6;margin-bottom:16px;font-size:12px;">
 <li>Press X on the DS to open the Menu,then select Items→Treasure Maps to enter the Grotto list.</li>
 <li>Find Map A that matches the filter criteria of this tool,then use methods(change the sort order/delete unwanted maps/unlock new maps,etc.)to sort it to the bottom of any page(i.e.the 8th map counting from the top,or the last map on the last page).</li>
 <li>Enter Map B—Map B itself does not match the filter criteria of this tool,but it provides the monster you want—that monster appears in the floor(1)matches your specified Type×FloorMR combination(2)contains an AT-frozen zone.</li>
@@ -3482,7 +3482,7 @@
 <li>Repeat steps 4–6.When the drop count approaches 99,use them up;or leave the map,sell the items,and restart from step 3.</li>
 </ol>
 <h3 class="h3sec">Panel Parameters(left to right)</h3>
-<ul style="padding-left:20px; color:#ccc; line-height:1.6; margin-bottom:16px; font-size:12px;">
+<ul style="padding-left:20px;color:#ccc;line-height:1.6;margin-bottom:16px;font-size:12px;">
 <li><strong>①Type</strong>:Specify the terrain type.</li>
 <li><strong>②FloorMR</strong>:Specify the monster rank of the target floor.</li>
 <li><strong>③Monster Name</strong>:The 4–5 monsters(excluding chest monsters)that always appear for the given Type×FloorMR combination.These monsters can be summoned by the Whistle skill—see ⑤Zoom for details.</li>
@@ -3495,7 +3495,7 @@
 <h3 class="h3sec">Drop Judgment&⑧Drop Pattern Reference Table</h3>
 <div class="h3box">
 <p style="margin-bottom:8px;">For the AT random value at step<strong>X</strong>,the judgment flow is:</p>
-<ol style="padding-left:20px; margin-bottom:0; line-height:1.6;">
+<ol style="padding-left:20px;margin-bottom:0;line-height:1.6;">
 <li>First,judge the Rare probability of"Drop."("D"for short in the following)</li>
 <li>If the Rare judgment succeeds,skip the Normal judgment for this slot and proceed from step<strong>X+1</strong>to judge the Rare of"B1."("B1"means"Book 1"."Book"refers to Thief's Theory.)</li>
 <li>If the Rare judgment fails,use step<strong>X+1</strong>to judge the Normal for this slot.Then regardless of result,use step<strong>X+2</strong>to judge the Rare of"B1."And so on.</li>
@@ -3552,11 +3552,11 @@
 <tr><td class="cc">xN</td><td class="cc">xN</td><td class="cx">xx</td><td class="cc">xN</td><td class="cx">xx</td></tr>
 <tr><td class="cc">xN</td><td class="cc">xN</td><td class="cx">xx</td><td class="cx">xx</td><td class="cc">xN</td></tr>
 </table>
-<p style="font-size:11px; color:#888; text-align:right;">※Note:Additional copies can only be obtained via multiplayer/multi-cartridge connection.</p>
+<p style="font-size:11px;color:#888;text-align:right;">※Note:Additional copies can only be obtained via multiplayer/multi-cartridge connection.</p>
 <h3 class="h3sec">Search Results&AT Consumption Formula</h3>
-<div style="margin-bottom:16px; font-size:12px; color:#ccc; line-height:1.7;">
+<div style="margin-bottom:16px;font-size:12px;color:#ccc;line-height:1.7;">
 <p style="margin-bottom:8px;">After performing an AT or M search,the results panel provides the following four core data points:</p>
-<ol style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ol style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li><strong>Drop Pattern AT</strong>:When searching Rare,it's the AT step of the first "R". When searching Normal, it's the AT step of"x"from the first"xN".<span style="color:#aaa;">(Always shown in AT search;shown in M search only after specifying a Pattern)</span></li>
 <li><strong>Summoned monster</strong>:The specific monster encountered when the technique is used on this map after Zoom gets used<code style="color:#fa0;">n</code>times.</li>
 <li><strong>Minimum Deftness for preemptive</strong>:The minimum Deftness threshold required to trigger a"preemptive strike"in battle for the specified Zoom count.</li>
@@ -3564,14 +3564,14 @@
 </ol>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖Deftness Formula</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><code>Deftness=ceil(AT÷32768×100−2)×20</code></li>
 <li>Minimum is 0(displayed as 1);values greater than 999 are displayed as 1000.</li>
 </ul>
 </details>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖Formula for"Bat."(AT steps consumed in battle)</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><code>"Bat."=Drop Pattern AT−(<font color=c0a865>AT on Battle Start</font>+29n)</code>(n=Zoom count)</li>
 <li>"Bat."can be broken down into combinations of the spells/skills below(typically up to 4;up to 8 when the additional AT consumption entering Turn 2 can be precisely managed under preemptive).</li>
 </ul>
@@ -3584,7 +3584,7 @@
 <th>4M</th>
 </tr>
 <tr>
-<td class="bg cw">Preemptive<span style="font-size:10px; color:#888;">(character Deftness≥map Deftness)</span></td>
+<td class="bg cw">Preemptive<span style="font-size:10px;color:#888;">(character Deftness≥map Deftness)</span></td>
 <td class="co b">38</td>
 <td class="co b">39</td>
 <td class="co b">39</td>
@@ -3600,7 +3600,7 @@
 </table>
 </details>
 </div>
-<p style="font-size:11px; color:#888; text-align:right;">※DM:Damage range/AT:AT cost for 1 monster/CD:Common difference for 2+monsters</p>
+<p style="font-size:11px;color:#888;text-align:right;">※DM:Damage range/AT:AT cost for 1 monster/CD:Common difference for 2+monsters</p>
 <table class="h3t sm">
 <tr class="hdr">
 <th style="width:115px">Spell</th>
@@ -3968,14 +3968,14 @@
 </tr>
 </table>
 <div class="h3box h3box-r">
-<ul style="padding-left:16px; margin-bottom:8px;">
+<ul style="padding-left:16px;margin-bottom:8px;">
 <li>All spells on critical hit:<strong style="color:#f88;">AT+30</strong>.</li>
 <li>All skills on critical hit:<strong style="color:#0ff;">no AT consumption</strong>,except cases like Big Banga.</li>
 <li>All scroll skills are<strong style="color:#fc0;">guaranteed hits</strong>.</li>
 <li><span style="color:#888;">Bang-family spells have unstable AT consumption that fluctuates randomly;generally not used for developing Map Method strategies.</span></li>
 </ul>
-<strong style="color:#fa0; display:block; margin-top:8px;">When entering Turn 2,the system rearranges the monster display order,consuming AT:</strong>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<strong style="color:#fa0;display:block;margin-top:8px;">When entering Turn 2,the system rearranges the monster display order,consuming AT:</strong>
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><strong>AT+int(total monster count÷2)</strong>　(includes dead monsters)</li>
 <li>If all monsters were already shown on screen at the end of Turn 1,no rearrangement occurs➔<strong>AT+0</strong></li>
 </ul>
@@ -3983,18 +3983,18 @@
 </div>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖Drop Judgment Formula</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><strong>Normal Drop:</strong><code>AT≤Drop Rate×32768</code></li>
 <li><strong>Thief's Theory:</strong> <code>AT ≤ int[32767 ÷ int(Drop Rate<sup>-1</sup> × 100 ÷ Lv)] + 1</code></li>
 </ul>
 </details>
 <h3 class="h3sec">Quick Reference</h3>
-<p style="margin-bottom:12px; font-size:12px; color:#ccc;">After a search completes,manually changing any of the following three panel options instantly updates the corresponding display results(no re-search needed):</p>
+<p style="margin-bottom:12px;font-size:12px;color:#ccc;">After a search completes,manually changing any of the following three panel options instantly updates the corresponding display results(no re-search needed):</p>
 <table class="h3t sm ctr"style="max-width:500px">
 <tr class="hdr">
 <th style="width:25%">Change this<br>option</th>
-<th style="width:18%">Summoned monster<br><span style="font-size:10px; color:#888;">(same Type MR)</span></th>
-<th style="width:18%">Summoned monster<br><span style="font-size:10px; color:#888;">(cross Type MR)</span></th>
+<th style="width:18%">Summoned monster<br><span style="font-size:10px;color:#888;">(same Type MR)</span></th>
+<th style="width:18%">Summoned monster<br><span style="font-size:10px;color:#888;">(cross Type MR)</span></th>
 <th style="width:19%">Deftness for<br>preemptive</th>
 <th style="width:20%">AT consumed<br>in battle</th>
 </tr>
@@ -4020,7 +4020,7 @@
 <td class="ct b">〇</td>
 </tr>
 </table>
-<p style="font-size:11px; color:#f88; margin-bottom:16px;">※Tip:The AT step at which a Drop Pattern is matched is a fixed property of each Seed—it<strong style="color:#f44;">cannot be changed by any means whatsoever</strong>.</p>
+<p style="font-size:11px;color:#f88;margin-bottom:16px;">※Tip:The AT step at which a Drop Pattern is matched is a fixed property of each Seed—it<strong style="color:#f44;">cannot be changed by any means whatsoever</strong>.</p>
 </div>
 <div id="h3ListJP"style="display: none;">
 <h3 class="h3sec"style="margin-top:0">🔍検索モード</h3>
@@ -4039,7 +4039,7 @@
 </tr>
 </table>
 <h3 class="h3sec">地図法の基本操作</h3>
-<ol style="padding-left:20px; color:#ccc; line-height:1.6; margin-bottom:16px; font-size:12px;">
+<ol style="padding-left:20px;color:#ccc;line-height:1.6;margin-bottom:16px;font-size:12px;">
 <li>DS の X ボタンでメニューを開き、どうぐ→たからのちず を選択して 地図一覧 に入る。</li>
 <li>本ツールの絞り込み条件に合致する 地図 A を見つけ、並べ替え／不要な地図の削除／新しい地図を入手 などの方法で 任意のページの最下段（即ち 上から 8 枚目、または最終ページの最後の 1 枚）に並べる。</li>
 <li>別の 地図 B に入る——地図 B 自体は本ツールの絞り込み条件には合致しないが、プレイヤーの欲しいモンスターを提供する——そのモンスターは指定した 地形×FloorMR の組み合わせで出現し、地図 B 内のその組み合わせに該当するフロアには AT 静止区間が存在する。</li>
@@ -4049,7 +4049,7 @@
 <li>上記 4〜6 を繰り返す。ドロップ数が 99 に近づいたら使い切るか(例えば種)、地図を出てアイテムを売却した後、3 からやり直す。</li>
 </ol>
 <h3 class="h3sec">パネルパラメータ説明（左から順に）</h3>
-<ul style="padding-left:20px; color:#ccc; line-height:1.6; margin-bottom:16px; font-size:12px;">
+<ul style="padding-left:20px;color:#ccc;line-height:1.6;margin-bottom:16px;font-size:12px;">
 <li><strong>①地形</strong>：地形を指定する。</li>
 <li><strong>②FloorMR</strong>：対象フロアの敵ランクを指定する。</li>
 <li><strong>③モンスター名</strong>：その地形×FloorMR の組み合わせで「くちぶえ」で召喚できる 4〜5 種のモンスター（宝箱モンスターは召喚できないので対象外）。</li>
@@ -4062,7 +4062,7 @@
 <h3 class="h3sec">ドロップ判定メカニズムと ⑧ドロップパターン対照表</h3>
 <div class="h3box">
 <p style="margin-bottom:8px;">第<strong>X</strong>ステップの AT 乱数に対する判定フローは以下の通り：</p>
-<ol style="padding-left:20px; margin-bottom:0; line-height:1.6;">
+<ol style="padding-left:20px;margin-bottom:0;line-height:1.6;">
 <li>まず「落」(ドロップ)の レア 判定を行う。</li>
 <li>レア 判定成功の場合、その 通常 判定をスキップし、第<strong>X+1</strong>ステップで「盗1」の レア 判定に進む。</li>
 <li>レア 判定失敗の場合、第<strong>X+1</strong>ステップでその 通常 判定を行う。結果にかかわらず、第<strong>X+2</strong>ステップで「盗1」の レア 判定に進む。以降同様。</li>
@@ -4119,11 +4119,11 @@
 <tr><td class="cc">xN</td><td class="cc">xN</td><td class="cx">xx</td><td class="cc">xN</td><td class="cx">xx</td></tr>
 <tr><td class="cc">xN</td><td class="cc">xN</td><td class="cx">xx</td><td class="cx">xx</td><td class="cc">xN</td></tr>
 </table>
-<p style="font-size:11px; color:#888; text-align:right;">※注：「盗」は盗賊の秘伝書によるオート盗むを指す。本数を増やすのはマルチプレイ／1人マルチのみ可能。</p>
+<p style="font-size:11px;color:#888;text-align:right;">※注：「盗」は盗賊の秘伝書によるオート盗むを指す。本数を増やすのはマルチプレイ／1人マルチのみ可能。</p>
 <h3 class="h3sec">検索結果の読み方と AT 消費計算式</h3>
-<div style="margin-bottom:16px; font-size:12px; color:#ccc; line-height:1.7;">
+<div style="margin-bottom:16px;font-size:12px;color:#ccc;line-height:1.7;">
 <p style="margin-bottom:8px;">AT または M 検索後、結果パネルには以下の 4 つの主要データが表示される：</p>
-<ol style="padding-left:20px; margin-bottom:16px; color:#fff;">
+<ol style="padding-left:20px;margin-bottom:16px;color:#fff;">
 <li><strong>ドロップパターンに合致する AT ステップ数</strong>：レアの場合、最初の「R」に該当する AT ステップ数。通常の場合、最初の「xN」の「x」に該当する AT ステップ数。<span style="color:#aaa;">(AT 検索では常に表示、M 検索では Pattern 指定後に表示)</span></li>
 <li><strong>召喚されるモンスター</strong>：ルーラを<code style="color:#fa0;">n</code>回使用した場合、地図法の手順に従って呼び出せるモンスター。</li>
 <li><strong>先制に必要な最小きようさ</strong>：ルーラ回数を指定した上で、戦闘中に「先制攻撃」を発動させるための「きようさ」最小値。</li>
@@ -4131,14 +4131,14 @@
 </ol>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖きようさの計算式</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><code>きようさ＝ceil(AT÷32768×100-2)×20</code></li>
 <li>最小は 0（1 と表示）；999 を超える場合は 1000 と表示</li>
 </ul>
 </details>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖戦闘中に消費すべき AT ステップ数「戦」の計算式</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><code>「戦」＝ドロップパターンに合致する AT ステップ数−(<font color=c0a865>戦闘開始時 AT</font>+29×ルーラ回数)</code></li>
 <li>「戦」は以下の呪文・特技の組み合わせに分解できる（最大 4 つ；先制する時に 2 ターン目の AT 追加消費を正しく把握できれば最大 8 つまで増加可能）</li>
 </ul>
@@ -4151,7 +4151,7 @@
 <th>敵 4 体</th>
 </tr>
 <tr>
-<td class="bg cw">先制<span style="font-size:10px; color:#888;">(キャラきようさ≥地図きようさ)</span></td>
+<td class="bg cw">先制<span style="font-size:10px;color:#888;">(キャラきようさ≥地図きようさ)</span></td>
 <td class="co b">38</td>
 <td class="co b">39</td>
 <td class="co b">39</td>
@@ -4534,14 +4534,14 @@
 </tr>
 </table>
 <div class="h3box h3box-r">
-<ul style="padding-left:16px; margin-bottom:8px;">
+<ul style="padding-left:16px;margin-bottom:8px;">
 <li>すべての呪文は会心時<strong style="color:#f88;">AT+30</strong>。</li>
 <li>すべての特技は会心時<strong style="color:#0ff;">AT 消費なし</strong>、ビッグバン等の例外を除く。</li>
 <li>すべての秘伝書技は<strong style="color:#fc0;">必中</strong>。</li>
 <li><span style="color:#888;">イオ系呪文の AT 消費は不安定でランダムに変動するため、通常は地図法の開発には使用しない。</span></li>
 </ul>
-<strong style="color:#fa0; display:block; margin-top:8px;">2 ターン目に入る際、モンスターの表示順が並び替えられるため、AT が消費される：</strong>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<strong style="color:#fa0;display:block;margin-top:8px;">2 ターン目に入る際、モンスターの表示順が並び替えられるため、AT が消費される：</strong>
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><strong>AT+int(モンスター総数÷2)</strong>　（倒されたモンスターも含む）</li>
 <li>1 ターン目終了時に画面上で全モンスターが表示されていた場合、並び替えは行われず➔<strong>AT+0</strong></li>
 </ul>
@@ -4549,18 +4549,18 @@
 </div>
 <details class="h1det"style="margin-bottom:16px;">
 <summary>📖ドロップ判定の計算式</summary>
-<ul style="padding-left:16px; margin-bottom:4px;">
+<ul style="padding-left:16px;margin-bottom:4px;">
 <li><strong>通常ドロップ判定(落)：</strong><code>AT≤ドロップ率×32768</code></li>
 <li><strong>秘伝書のオート盗む判定(盗)：</strong><code>AT≤int[32767÷int(ドロップ率の逆数×100÷Lv)]+1</code></li>
 </ul>
 </details>
 <h3 class="h3sec">リアルタイム更新とクイックリファレンス</h3>
-<p style="margin-bottom:12px; font-size:12px; color:#ccc;">検索完了後、以下の 3 つのパネルオプションを手動で変更すると、対応する表示結果が即座に更新される（再検索は不要）：</p>
+<p style="margin-bottom:12px;font-size:12px;color:#ccc;">検索完了後、以下の 3 つのパネルオプションを手動で変更すると、対応する表示結果が即座に更新される（再検索は不要）：</p>
 <table class="h3t sm ctr"style="max-width:500px">
 <tr class="hdr">
 <th style="width:25%">手動で変更<br>する項目</th>
-<th style="width:18%">召喚モンスター<br><span style="font-size:10px; color:#888;">(同地形 MR)</span></th>
-<th style="width:18%">召喚モンスター<br><span style="font-size:10px; color:#888;">(他地形 MR)</span></th>
+<th style="width:18%">召喚モンスター<br><span style="font-size:10px;color:#888;">(同地形 MR)</span></th>
+<th style="width:18%">召喚モンスター<br><span style="font-size:10px;color:#888;">(他地形 MR)</span></th>
 <th style="width:19%">先制に必要な<br>きようさ</th>
 <th style="width:20%">戦闘中の<br>AT 消費</th>
 </tr>
@@ -4586,27 +4586,27 @@
 <td class="ct b">〇</td>
 </tr>
 </table>
-<p style="font-size:11px; color:#f88; margin-bottom:16px;">※ヒント：何ステップ目の AT がドロップパターンに合致するかは各 Seed 固有の属性であり、<strong style="color:#f44;">いかなる手段でも変更することはできない</strong>。</p>
+<p style="font-size:11px;color:#f88;margin-bottom:16px;">※ヒント：何ステップ目の AT がドロップパターンに合致するかは各 Seed 固有の属性であり、<strong style="color:#f44;">いかなる手段でも変更することはできない</strong>。</p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div id="unified_search_panel"style="background:#111128; padding:20px; border-bottom:2px solid #4a4a8a;">
-<div class="search-panel-header"style="border-bottom: 1px dashed #4a4a8a; padding-bottom: 12px; margin-bottom: 16px;">
-<h3 style="color:#ffd700; margin: 0; font-size:16px;"data-i18n="G01"></h3>
-<div class="checkbox-field"style="background: #1a1a3a; padding: 6px 12px; border-radius: 4px; border: 1px solid #335;">
+<div id="unified_search_panel"style="background:#111128;padding:20px;border-bottom:2px solid #4a4a8a;">
+<div class="search-panel-header"style="border-bottom: 1px dashed #4a4a8a;padding-bottom: 12px;margin-bottom: 16px;">
+<h3 style="color:#ffd700;margin: 0;font-size:16px;"data-i18n="G01"></h3>
+<div class="checkbox-field"style="background: #1a1a3a;padding: 6px 12px;border-radius: 4px;border: 1px solid #335;">
 <input type="checkbox"id="searchAllRanks"checked>
 <label for="searchAllRanks"data-i18n="F01"></label>
 <input type="checkbox"id="searchOnlyWithD"style="margin-left: 10px;">
 <label for="searchOnlyWithD"data-i18n="F03"></label>
-<button id="btnExport"class="go"style="background:linear-gradient(135deg, #282, #050); padding: 4px 16px; color:#fff; margin-left: 15px; font-size:12px;"onclick="exportSearchResults()"data-i18n="H06"></button>
+<button id="btnExport"class="go"style="background:linear-gradient(135deg, #282, #050);padding: 4px 16px;color:#fff;margin-left: 15px;font-size:12px;"onclick="exportSearchResults()"data-i18n="H06"></button>
 </div>
 </div>
-<div style="display:flex; flex-wrap:wrap; gap:8px; width:100%; align-items:stretch;">
-<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #4a4a8a; flex:1 1 calc(60% - 16px); min-width:340px; margin:0; display:flex; flex-direction:column;">
-<h4 style="color:#0ff; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">1️⃣<span style="margin-left:8px">Ultimate Search</span>
-<button onclick="openh1Modal()"style="margin-left:6px; background:#224; color:#0ff; border:1px solid #4a4a8a; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;"onmouseover="this.style.background='#0ff'; this.style.color='#000';"onmouseout="this.style.background='#224'; this.style.color='#0ff';"title="Help">?</button></h4>
+<div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;align-items:stretch;">
+<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;flex:1 1 calc(60% - 16px);min-width:340px;margin:0;display:flex;flex-direction:column;">
+<h4 style="color:#0ff;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">1️⃣<span style="margin-left:8px">Ultimate Search</span>
+<button onclick="openh1Modal()"style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;"onmouseover="this.style.background='#0ff';this.style.color='#000';"onmouseout="this.style.background='#224';this.style.color='#0ff';"title="Help">?</button></h4>
 <div class="us-grid">
 <div><label data-i18n="G03"></label><select id="cond_prefix"><option value=""data-i18n="G02"></option></select></div>
 <div><label data-i18n="G04"></label><select id="cond_suffix"><option value=""data-i18n="G02"></option></select></div>
@@ -4646,46 +4646,46 @@
 <select id="cond_only_mon"style="color:#fcf;border-color:#c4a;">
 <option value=""data-i18n="G02"></option>
 </select></div>
-<div style="grid-column:span 2; display:flex; flex-direction:column; justify-content:flex-end; background:#1a0a1a; border:1px solid #525; border-radius:4px; padding:2px 8px 4px;">
-<label style="color:#f8f; font-size:11px; margin-bottom:2px;"data-i18n="G15"></label>
-<div style="display:flex; align-items:center; gap: 6px;">
-<button class="go"onclick="MultibugSearch()"id="searchBtnBug"style="background:linear-gradient(135deg,#c0c,#606); color:#fff; padding:0 6px; font-size:10px; height:20px; border:none; border-radius:3px; font-weight:bold; cursor:pointer;"data-i18n="H05"></button>
-<label style="color:#aaa; font-size:11px; display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
+<div style="grid-column:span 2;display:flex;flex-direction:column;justify-content:flex-end;background:#1a0a1a;border:1px solid #525;border-radius:4px;padding:2px 8px 4px;">
+<label style="color:#f8f;font-size:11px;margin-bottom:2px;"data-i18n="G15"></label>
+<div style="display:flex;align-items:center;gap: 6px;">
+<button class="go"onclick="MultibugSearch()"id="searchBtnBug"style="background:linear-gradient(135deg,#c0c,#606);color:#fff;padding:0 6px;font-size:10px;height:20px;border:none;border-radius:3px;font-weight:bold;cursor:pointer;"data-i18n="H05"></button>
+<label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
 <input type="checkbox"id="requireFloorIncrease"style="margin-right:2px;"><span data-i18n="F04"></span></label>
-<label style="color:#aaa; font-size:11px; display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
+<label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
 <input type="checkbox"id="requireBugFloorHit"style="margin-right:2px;">🍊</label>
 </div>
 </div>
 </div>
-<div style="background:#111; padding:6px; border-radius:4px; border:1px solid #4c4; margin-bottom:8px;">
-<div class="chest-count-row"style="display:flex; flex-wrap:wrap; font-size:12px; color:#fff;">
-<label>S<input type="number"id="cond_box_S"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>A<input type="number"id="cond_box_A"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>B<input type="number"id="cond_box_B"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>C<input type="number"id="cond_box_C"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>D<input type="number"id="cond_box_D"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>E<input type="number"id="cond_box_E"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>F<input type="number"id="cond_box_F"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>G<input type="number"id="cond_box_G"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>H<input type="number"id="cond_box_H"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
-<label>I<input type="number"id="cond_box_I"min="0"max="40"style="width:36px; height:22px; padding:0 2px; background:#000; color:#fff; border:1px solid #666; font-size:11px;"></label>
+<div style="background:#111;padding:6px;border-radius:4px;border:1px solid #4c4;margin-bottom:8px;">
+<div class="chest-count-row"style="display:flex;flex-wrap:wrap;font-size:12px;color:#fff;">
+<label>S<input type="number"id="cond_box_S"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>A<input type="number"id="cond_box_A"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>B<input type="number"id="cond_box_B"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>C<input type="number"id="cond_box_C"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>D<input type="number"id="cond_box_D"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>E<input type="number"id="cond_box_E"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>F<input type="number"id="cond_box_F"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>G<input type="number"id="cond_box_G"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>H<input type="number"id="cond_box_H"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>I<input type="number"id="cond_box_I"min="0"max="40"style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
 </div>
 </div>
-<div style="display:flex; width:100%;">
-<button id="searchBtnSpecific"class="go"style="flex:1; background:linear-gradient(135deg,#0ff,#08a); color:#000; font-size:15px; padding:8px; font-weight:bold; letter-spacing: 2px; margin-right:8px;"onclick="startUltimateSearch()">🎯Search</button>
-<button class="go"style="background:linear-gradient(135deg,#556,#334); color:#fff; font-size:15px; padding:8px 12px; font-weight:bold; border-radius:4px; border:1px solid #666;"onclick="clearUltimateSearch()"title="Clear">Clear</button>
+<div style="display:flex;width:100%;">
+<button id="searchBtnSpecific"class="go"style="flex:1;background:linear-gradient(135deg,#0ff,#08a);color:#000;font-size:15px;padding:8px;font-weight:bold;letter-spacing: 2px;margin-right:8px;"onclick="startUltimateSearch()">🎯Search</button>
+<button class="go"style="background:linear-gradient(135deg,#556,#334);color:#fff;font-size:15px;padding:8px 12px;font-weight:bold;border-radius:4px;border:1px solid #666;"onclick="clearUltimateSearch()"title="Clear">Clear</button>
 </div>
 </div>
-<div style="display:flex; flex-direction:column; gap:8px; flex:1 1 calc(40% - 16px); min-width:320px; margin:0;">
-<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #4a4a8a; margin:0; flex:1; display:flex; flex-direction:column;">
-<h4 style="color:#88b; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">2️⃣<span style="margin-left:8px"data-i18n="H00"></span>
-<button onclick="openh2Modal()"style="margin-left:6px; background:#224; color:#0ff; border:1px solid #4a4a8a; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;"onmouseover="this.style.background='#0ff'; this.style.color='#000';"onmouseout="this.style.background='#224'; this.style.color='#0ff';"title="Help">?</button>
-<button onclick="mrtOpen()"style="margin-left:6px; background:linear-gradient(135deg, #c60, #840); color:#fff; border:none; border-radius:4px; padding:2px 10px; font-size:11px; cursor:pointer; font-family:inherit;"data-i18n="H07"></button></h4>
-<div style="display: flex; flex-direction: column; gap:8px; flex:1;">
-<div class="search-group"style="background:#111; border-color:#333; margin:0;">
+<div style="display:flex;flex-direction:column;gap:8px;flex:1 1 calc(40% - 16px);min-width:320px;margin:0;">
+<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;margin:0;flex:1;display:flex;flex-direction:column;">
+<h4 style="color:#88b;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">2️⃣<span style="margin-left:8px"data-i18n="H00"></span>
+<button onclick="openh2Modal()"style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;"onmouseover="this.style.background='#0ff';this.style.color='#000';"onmouseout="this.style.background='#224';this.style.color='#0ff';"title="Help">?</button>
+<button onclick="mrtOpen()"style="margin-left:6px;background:linear-gradient(135deg, #c60, #840);color:#fff;border:none;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;font-family:inherit;"data-i18n="H07"></button></h4>
+<div style="display: flex;flex-direction: column;gap:8px;flex:1;">
+<div class="search-group"style="background:#111;border-color:#333;margin:0;">
 <label data-i18n="G16"></label>
-<div class="search-input-row"style="display:flex; flex-wrap:nowrap; gap:4px; align-items:center;">
-<select id="searchItem"style="flex:1 1 auto; width:0; min-width:80px; height:26px; font-size:11px; padding:0 2px;">
+<div class="search-input-row"style="display:flex;flex-wrap:nowrap;gap:4px;align-items:center;">
+<select id="searchItem"style="flex:1 1 auto;width:0;min-width:80px;height:26px;font-size:11px;padding:0 2px;">
 <optgroup label=""id="og1">
 <option value="Ethereal stone"data-i18n="I_Ethereal stone"></option>
 <option value="Lucida shard"data-i18n="I_Lucida shard"></option>
@@ -4733,57 +4733,57 @@
 <option value="Pandora's box"data-i18n="I_Pandora's box"></option>
 </optgroup>
 </select>
-<button class="go"onclick="startSearch()"id="searchBtn"style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;"data-i18n="H01"></button>
-<button class="go"onclick="TKSearch()"id="BtnTK"style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;"data-i18n="H02"></button>
-<button class="go"onclick="Box3Search()"id="searchBtnBox3"style="padding:0 4px; font-size:11px; height:26px; flex:0 0 auto; white-space:nowrap; flex-shrink:0;"data-i18n="H03"></button>
+<button class="go"onclick="startSearch()"id="searchBtn"style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;"data-i18n="H01"></button>
+<button class="go"onclick="TKSearch()"id="BtnTK"style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;"data-i18n="H02"></button>
+<button class="go"onclick="Box3Search()"id="searchBtnBox3"style="padding:0 4px;font-size:11px;height:26px;flex:0 0 auto;white-space:nowrap;flex-shrink:0;"data-i18n="H03"></button>
 </div>
 </div>
-<div class="search-group"style="background:#05111a; border-color:#134; margin: 0; flex:1;">
+<div class="search-group"style="background:#05111a;border-color:#134;margin: 0;flex:1;">
 <label style="color:#0ff;"data-i18n="G17"></label>
-<div style="display: flex; gap: 6px; margin-top: 4px; align-items: stretch;">
-<div id="fs_container"style="display:flex; flex-direction:column; gap:4px; flex: 1 1 auto; min-width: 0;"></div>
-<button class="go"onclick="FreeSearch()"id="btnFreeSearch"style="background:linear-gradient(135deg, #0088cc, #004488); color:#fff; padding:0 12px; font-size:12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; flex: 0 0 auto; min-width: 45px;">Free</button>
+<div style="display: flex;gap: 6px;margin-top: 4px;align-items: stretch;">
+<div id="fs_container"style="display:flex;flex-direction:column;gap:4px;flex: 1 1 auto;min-width: 0;"></div>
+<button class="go"onclick="FreeSearch()"id="btnFreeSearch"style="background:linear-gradient(135deg, #0088cc, #004488);color:#fff;padding:0 12px;font-size:12px;border:none;border-radius:4px;font-weight:bold;cursor:pointer;flex: 0 0 auto;min-width: 45px;">Free</button>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div style="background:#16162a; padding:10px; border-radius:8px; border:1px solid #055; margin-top:10px; box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
-<h4 style="color:#0ca; margin-top:0; margin-bottom:10px; font-size:13px; display:flex; align-items:center;">3️⃣<span style="margin-left:8px"data-i18n="H04"></span>
-<button onclick="openh3Modal()"style="margin-left:6px; background:#001a1a; color:#0ca; border:1px solid #055; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center; transition:all 0.2s;"onmouseover="this.style.background='#0ca'; this.style.color='#000';"onmouseout="this.style.background='#001a1a'; this.style.color='#0ca';"title="Help">?</button>
-<button class="go"onclick="openSeedInspector()"style="margin-left:6px; background:linear-gradient(135deg,#0aa,#044); color:#fff; padding:4px 8px; font-size:11px; height:28px;">Detail</button>
+<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #055;margin-top:10px;box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
+<h4 style="color:#0ca;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">3️⃣<span style="margin-left:8px"data-i18n="H04"></span>
+<button onclick="openh3Modal()"style="margin-left:6px;background:#001a1a;color:#0ca;border:1px solid #055;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;"onmouseover="this.style.background='#0ca';this.style.color='#000';"onmouseout="this.style.background='#001a1a';this.style.color='#0ca';"title="Help">?</button>
+<button class="go"onclick="openSeedInspector()"style="margin-left:6px;background:linear-gradient(135deg,#0aa,#044);color:#fff;padding:4px 8px;font-size:11px;height:28px;">Detail</button>
 </h4>
 <div class="compact-search-row">
-<div class="search-group"style="background:#001a1a; border-color:#055; padding:8px;">
-<div class="search-input-row"style="align-items:center; flex-wrap:wrap; gap:2px;">
-<select id="at_env"onchange="atUpd()"style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:55px;">
+<div class="search-group"style="background:#001a1a;border-color:#055;padding:8px;">
+<div class="search-input-row"style="align-items:center;flex-wrap:wrap;gap:2px;">
+<select id="at_env"onchange="atUpd()"style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:55px;">
 <option value="1">洞窟</option><option value="2">遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5"selected>火山</option></select>
-<select id="at_mr"onchange="atUpd()"style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:45px;">
+<select id="at_mr"onchange="atUpd()"style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:45px;">
 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9"selected>9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
-<select id="at_mon"style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:240px;"></select>
-<span style="color:#555; font-size:11px;"data-i18n="G18"></span>
-<input type="number"id="at_deft"oninput="updateBattleAT()"min="0"max="999"placeholder=""style="background:#000; color:#39C5BB; border:1px solid #555; padding:4px; font-size:12px; width:50px; text-align:center;">
-<span style="color:#555; font-size:11px;"data-i18n="G19"></span>
+<select id="at_mon"style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:240px;"></select>
+<span style="color:#555;font-size:11px;"data-i18n="G18"></span>
+<input type="number"id="at_deft"oninput="updateBattleAT()"min="0"max="999"placeholder=""style="background:#000;color:#39C5BB;border:1px solid #555;padding:4px;font-size:12px;width:50px;text-align:center;">
+<span style="color:#555;font-size:11px;"data-i18n="G19"></span>
 <input type="checkbox"id="at_sortPOP"style="margin-right:2px;">
-<input type="number"id="at_n_input"oninput="updateBattleAT()"min="0"value="0"style="background:#000; color:#39C5BB; border:1px solid #555; padding:4px; font-size:12px; width:45px; text-align:center;">
-<span style="color:#555; font-size:11px;"id="at_lblSteps"></span>
-<input type="number"id="at_maxSteps"value="400"style="width:55px; background:#000; color:#0f0; border:1px solid #555; padding:4px; font-size:12px; text-align:center;">
-<select id="at_threshold"style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px; max-width:60px;">
+<input type="number"id="at_n_input"oninput="updateBattleAT()"min="0"value="0"style="background:#000;color:#39C5BB;border:1px solid #555;padding:4px;font-size:12px;width:45px;text-align:center;">
+<span style="color:#555;font-size:11px;"id="at_lblSteps"></span>
+<input type="number"id="at_maxSteps"value="400"style="width:55px;background:#000;color:#0f0;border:1px solid #555;padding:4px;font-size:12px;text-align:center;">
+<select id="at_threshold"style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;max-width:60px;">
 <option value="128">1/256</option>
 <option value="256">1/128</option>
 <option value="512">1/64</option>
 <option value="1024">1/32</option>
 </select>
-<select id="at_pattern"style="background:#000; color:#0f0; border:1px solid #555; padding:2px; font-size:12px;"><option value="">--</option></select>
-<button class="go"onclick="atPtnSearch()"id="atPtnSchBtn"style="background:linear-gradient(135deg,#f80,#a30); color:#fff; padding:4px 8px; font-size:11px; height:28px;">AT</button>
-<button class="go"onclick="atSearch()"id="atSearchBtn"style="background:linear-gradient(135deg,#0ca,#065); color:#fff; padding:4px 8px; font-size:11px; height:28px;">M</button>
+<select id="at_pattern"style="background:#000;color:#0f0;border:1px solid #555;padding:2px;font-size:12px;"><option value="">--</option></select>
+<button class="go"onclick="atPtnSearch()"id="atPtnSchBtn"style="background:linear-gradient(135deg,#f80,#a30);color:#fff;padding:4px 8px;font-size:11px;height:28px;">AT</button>
+<button class="go"onclick="atSearch()"id="atSearchBtn"style="background:linear-gradient(135deg,#0ca,#065);color:#fff;padding:4px 8px;font-size:11px;height:28px;">M</button>
 </div>
 </div>
 </div>
 </div>
-<div id="searchResults"style="margin-top:10px; padding:12px; background:#0a0a15; border:1px solid #4a4a8a; border-radius:6px; min-height:100px;">
-<div style="color:#666; font-size:13px; text-align:center; margin-top:12px;"></div>
+<div id="searchResults"style="margin-top:10px;padding:12px;background:#0a0a15;border:1px solid #4a4a8a;border-radius:6px;min-height:100px;">
+<div style="color:#666;font-size:13px;text-align:center;margin-top:12px;"></div>
 </div></div>
 <div id="result"></div>
 <hr>
@@ -4794,7 +4794,7 @@ ElistOfs is introduced by 43(DQ9TMAP101.exe's author) and fixed by TKG<br>
 Powered by Gemini and Claude<br>
 Produced by WWWild<br>
 Dragon Quest IX Copyright 2009,2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX;Copyright Koichi Sugiyama<br>
-<span style="cursor:pointer; background:#224; color:#aaa; border:1px solid #4a4a8a; padding:4px 10px; border-radius:4px; margin-left:12px; display:inline-block; font-size:12px; transition:all 0.2s;"onclick="openDisclaimerModal()"onmouseover="this.style.borderColor='#ffd700'; this.style.color='#ffd700';"onmouseout="this.style.borderColor='#4a4a8a'; this.style.color='#aaa';">📜Disclaimer</span>
+<span style="cursor:pointer;background:#224;color:#aaa;border:1px solid #4a4a8a;padding:4px 10px;border-radius:4px;margin-left:12px;display:inline-block;font-size:12px;transition:all 0.2s;"onclick="openDisclaimerModal()"onmouseover="this.style.borderColor='#ffd700';this.style.color='#ffd700';"onmouseout="this.style.borderColor='#4a4a8a';this.style.color='#aaa';">📜Disclaimer</span>
 </span>
 </div>
 </body>
