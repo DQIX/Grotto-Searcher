@@ -125,8 +125,20 @@ target.appendChild(controls);
 }
 },0);
 html+='<div class="floor-tabs">';
-for(let i=0;i<mapData.floorCount;i++){
-html+=`<div class="floor-tab${i===activeFloor?' active':''}" onclick="switchFloor(${i})">B${i+1}F</div>`;
+for (let i=0;i<mapData.floorCount;i++) {
+let tabStyle='';
+const einfo=getFloorElistInfo(mapData,i);
+if(einfo.state){
+const st=''+einfo.state;
+const el0=''+EL_0,elP=''+EL_P,el2=''+EL_2,el3=''+EL_3,el4=''+EL_4;
+let c=null;
+if(st.includes(el0) && !st.includes(elP))c='#c0c0c0';
+else if(st.includes('only')||st.includes('オンリー'))c='#FFC90E';
+else if(st.includes(el2)||st.includes(el3)||st.includes(el4))c='#B5E61D';
+else if(st.includes(elP))c='#00A2E8';
+if(c)tabStyle=` style="background:${c};color:#000;border-color:${c}"`;
+}
+html+=`<div class="floor-tab${i===activeFloor?' active':''}"${tabStyle} onclick="switchFloor(${i})">B${i+1}F</div>`;
 }
 html+='</div>';
 html+='<div class="floor-content" id="floor-content"></div>';
