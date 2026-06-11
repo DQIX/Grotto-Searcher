@@ -12,7 +12,7 @@ return{deft,color,label};
 }
 function siFormatAT(val){
 if(val<-2)return'⊖';
-if(val>458)return'⊕';
+if(val>970)return'⊕';
 return val;
 }
 function getATPair(seed,N){
