@@ -117,12 +117,12 @@ const DQ9_CHUNK_SIZES={scan:1024,atMonster:2048,atPattern:2048};
 function getWorkerCount(){
 try{
 const q=new URLSearchParams(window.location.search).get('workers');
-if(q){const n=parseInt(q);if(n>=1)return Math.min(n,64);}
+if(q){const n=parseInt(q);if(n>=1)return Math.min(n,256);}
 }catch(e){}
 if(typeof window.DQ9_WORKER_COUNT==='number'&&window.DQ9_WORKER_COUNT>=1){
-return Math.min(Math.floor(window.DQ9_WORKER_COUNT),64);
+return Math.min(Math.floor(window.DQ9_WORKER_COUNT),256);
 }
-return Math.max(1,Math.min(navigator.hardwareConcurrency||4,32));
+return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
 }
 function getSearchWorkerPool(){
 if(_dq9Pool)return _dq9Pool;
@@ -340,6 +340,7 @@ if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.sty
 return;
 }
 let hitCount=0;
+let renderedCount=0;
 const restoreBtn=()=>{if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.style.color=config.btnColor||'#000';}};
 const job={
 kind:'scan',
@@ -356,15 +357,21 @@ hitCount=p.hits;
 progressSpan.textContent=Math.floor((p.processed/p.total)*100)+'% ('+B02+' '+p.rStr+', Seed '+p.seedHex+') ['+B04+''+p.hits+' '+B03+']';
 },
 onBatch:(items)=>{
+if(config.renderCap!==undefined&&renderedCount>=config.renderCap)return;
 const fragment=document.createDocumentFragment();
-for(const it of items)fragment.appendChild(materializeResultItem(it));
-grid.appendChild(fragment);
+for(const it of items){
+if(config.renderCap!==undefined&&renderedCount>=config.renderCap)break;
+fragment.appendChild(materializeResultItem(it));
+renderedCount++;
+}
+if(fragment.childNodes.length>0)grid.appendChild(fragment);
 },
 onDone:(d)=>{
 hitCount=d.hits;
 isSearching=false;
 restoreBtn();
 progressSpan.textContent=searchDoneMsg(hitCount);
+if(config.onDoneExtra)config.onDoneExtra(d);
 },
 onError:(msg)=>{
 console.error("搜尋過程發生錯誤：",msg);
@@ -393,7 +400,7 @@ stopText:'🛑 STOP',
 emptyRankMsg:B07,
 validateConds:(conds,searchFilterLoc)=>{
 const hasBasicCond=Object.keys(conds).some(k=>k!=='reqBox'&&k!=='hasBoxCond'&&conds[k]!=="");
-if(!hasBasicCond&&!conds.hasBoxCond&&!searchFilterLoc){alert(A01);return false;}
+if(!hasBasicCond&&!conds.hasBoxCond){alert(A01);return false;}
 return true;
 },
 filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
@@ -427,6 +434,42 @@ return sharedRankFilter(ranksToSearch,conds,true);
 },
 processor:'multibug',
 params:{searchOnlyWithD,requireFloorIncrease,requireBugFloorHit,effectiveElistCond,isCombinedSearch},
+});
+}
+function initCPUBenchmark(){
+const h4=document.querySelector('#unified_search_panel h4');
+if(!h4)return;
+const cpuBtn=document.createElement('button');
+cpuBtn.id='cpuBenchBtn';
+cpuBtn.textContent='💻';
+cpuBtn.title='CPU Benchmark';
+cpuBtn.style.cssText='margin-left:6px;background:#224;color:#0ff;border:1px solid #088;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;';
+cpuBtn.onmouseover=function(){this.style.background='#0ff';this.style.color='#000';};
+cpuBtn.onmouseout=function(){this.style.background='#224';this.style.color='#0ff';};
+cpuBtn.onclick=startCPUBenchmark;
+h4.appendChild(cpuBtn);
+}
+function startCPUBenchmark(){
+if(isSearching){requestSearchCancel();return;}
+const t0=performance.now();
+executeSharedSearch({
+btnId:'cpuBenchBtn',
+btnText:'💻',
+btnBg:'#224',
+btnColor:'#0ff',
+stopText:'🛑',
+emptyRankMsg:B07,
+searchFilterLoc:true,
+validateConds:()=>true,
+renderCap:0,
+filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
+processor:'ultimate',
+params:{searchOnlyWithD:false},
+onDoneExtra:(d)=>{
+const elapsed=((performance.now()-t0)/1000).toFixed(2);
+const sp=document.getElementById('searchProgress');
+if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
+},
 });
 }
 function clearUltimateSearch(){

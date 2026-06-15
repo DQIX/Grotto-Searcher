@@ -583,6 +583,7 @@ updateFSItems(i);
 }
 initFreeSearchUI();
 if(typeof initSeedInspectorUI==='function'){initSeedInspectorUI();}
+if(typeof initCPUBenchmark==='function'){initCPUBenchmark();}
 const urlParams=new URLSearchParams(window.location.search);
 const urlId=urlParams.get('id');
 if(urlId&&/^[0-9A-Fa-f]{6}$/.test(urlId)){
