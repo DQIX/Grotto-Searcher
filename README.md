@@ -55,6 +55,6 @@ All other languages are AI translated from Traditional Chinese version and manua
 
 iOS 10.3+ / Android 6.0+ / Windows 7+ / Any other OS which can run:
 
-Chrome 57+ / Firefox 52+ / Edge 15+ / Safari 10.1+
+Chrome 57+ / Firefox 52+ / Edge 17+ / Safari 10.1+
 
-CPU with high single thread efficiency (The tool author doesn't use Web Worker)
+Classic Web Worker is available on server side. Source code / Standalone versions only support single thread.
