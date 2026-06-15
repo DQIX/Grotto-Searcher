@@ -1,731 +1,663 @@
-function calcDeftness(at){
-const raw=Math.ceil(at/32768*100-2)*20;
-if(raw<=0)return 0;
-if(raw>999)return 1000;
-return raw;
+const TILE_SIZE=22;
+const COLORS={
+0:'#f5f0e0',
+1:'#000',
+2:'#e8e0c8',
+3:'#000',
+4:'#4c4',
+5:'#f44',
+6:'#ffd700',
+8:'#ccd8c0',
+};
+const WALL_COLOR='#000';
+let mapData=null;
+let activeFloor=0;
+function calculate(){
+const safeZone=document.getElementById('controls_container');
+const controlsDiv=document.getElementById('single_map_controls');
+if(safeZone&&controlsDiv){safeZone.appendChild(controlsDiv);}
+const seedStr=document.getElementById('seed').value.trim();
+const seed=parseInt(seedStr,16);
+const rank=parseInt(document.getElementById('rank').value);
+if(isNaN(seed)||seed<0||seed>0x7FFF||!/^[0-9a-fA-F]{1,4}$/.test(seedStr)){
+document.getElementById('result').innerHTML='<div class="error">'+C17+'</div>';
+return;
 }
-function formatDeftness(at){
-const deft=calcDeftness(at);
-const color=deft>=1000?'#f44':deft<=1?'#888':'#39C5BB';
-const label=deft>=1000?'1000':(deft<=0?'1':deft.toString());
-return{deft,color,label};
+mapData=new GrottoDetail();
+mapData.MapSeed=seed;
+mapData.MapRank=rank;
+mapData.calculateDetail();
+activeFloor=0;
+renderResult();
 }
-function siFormatAT(val){
-if(val<-2)return'⊖';
-if(val>970)return'⊕';
-return val;
+function calcR2N2(seed){
+const threshR=Math.floor(32768/256);
+const threshN=Math.floor(32768/128);
+const MAX=400;
+let rng=seed>>>0;
+const v=[];
+for(let i=0;i<MAX+4;i++){rng=lcg(rng);v.push((rng>>>16)&0x7FFF);}
+let r2=-1,r2_3=-1,n2=-1;
+for(let i=0;i<MAX;i++){
+if(r2===-1&&v[i]<threshR&&v[i+1]<threshR)r2=i+1;
+if(r2_3===-1&&v[i]<threshR&&i+3<v.length&&v[i+3]<threshR)r2_3=i+1;
+if(n2===-1&&i+3<v.length&&v[i]>=threshR&&v[i+1]<threshN&&v[i+2]>=threshR&&v[i+3]<threshN)n2=i+1;
 }
-function getATPair(seed,N){
-let s=seed>>>0;
-for(let i=0;i<N;i++)s=lcg(s);
-const atN=(s>>>16)&0x7FFF;
-s=lcg(s);
-const atN1=(s>>>16)&0x7FFF;
-return{atN,atN1};
+return{r2,r2_3,n2};
 }
-function atUpd(){
-const envType=parseInt(document.getElementById('at_env').value);
-const floorMR=parseInt(document.getElementById('at_mr').value);
-const sel=document.getElementById('at_mon');
-sel.innerHTML='';
-const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
-if(!spawnList)return;
-for(const entry of spawnList){
-if(entry.length<3)continue;
-const md=MONSTER_DATA[entry[0]];
-if(!md)continue;
-const opt=document.createElement('option');
-opt.value=entry[0];
-opt.textContent=`${md.jp} (${md.en})`;
-sel.appendChild(opt);
+function classifyElistState(st){
+st=''+st;
+if(st.includes(''+EL_0)&&!st.includes(''+EL_P))return{kind:'none'};
+if(st.includes('only')||st.includes('オンリー'))return{kind:'only'};
+if(st.includes(''+EL_4))return{kind:'reduced',count:4};
+if(st.includes(''+EL_3))return{kind:'reduced',count:3};
+if(st.includes(''+EL_2))return{kind:'reduced',count:2};
+if(st.includes(''+EL_P))return{kind:'partial'};
+return{kind:'normal'};
 }
-if(typeof updateATOnlyMonsters==='function')updateATOnlyMonsters();
+function renderResult(){
+const el=document.getElementById('result');
+if(!mapData||mapData.floorCount===0){
+el.innerHTML='<div class="error">'+C18+'</div>';
+return;
 }
-if(document.readyState==='loading'){
-document.addEventListener('DOMContentLoaded',atinit);
+const seedHex=hex4(mapData.MapSeed);
+const rStr=hex2(mapData.MapRank);
+const locData=calcLocations(mapData.MapSeed,rStr);
+let locHtmlString='';
+if(locData.outputOrder.length>0){
+const locStrings=locData.outputOrder.map(item=>{
+const bqs=Array.from(locData.seenLocations[item.location]);
+return`${hex2(item.location)} (${formatRanges(bqs)})`;
+});
+locHtmlString=locStrings.join('<br>');
 }else{
-setTimeout(atinit,0);
+locHtmlString=C19;
 }
-function atinit(){
-atUpd();
-const patSel=document.getElementById('at_pattern');
-if(patSel&&typeof AT_O!=='undefined'){
+let currentSeed=mapData.MapSeed;
+const atValues=[];
+for(let i=1;i<=37;i++){
+currentSeed=lcg(currentSeed);
+if(i>=35&&i<=37){
+atValues.push((currentSeed>>>16)&0x7FFF);
+}
+}
+const atHtmlString=`[35] ${atValues[0]}<br>[36] ${atValues[1]}<br>[37] ${atValues[2]}`;
+const rn=calcR2N2(mapData.MapSeed);
+const fmtRN=v=>v===-1?`<span style="color:#555;">—</span>`:`<span style="color:#0f0;">${v}</span>`;
+const rnHtml=`<span style="color:#f88;">[R2] ${fmtRN(rn.r2)}</span><br><span style="color:#f88;">[+3] ${fmtRN(rn.r2_3)}</span><br><span style="color:#8cf;">[N2] ${fmtRN(rn.n2)}</span>`;
+const boxData=mapData.getMapBoxCounts();
+const boxCounts=boxData.counts;
+const totalBoxes=boxData.total;
+let boxCountHtmlArr=[];
+for(let r=10;r>=1;r--){
+if(boxCounts[r]>0){
+let color="#aaa";
+if(r===10)color="#ffd700";
+else if(r>=8)color="#f44";
+else if(r>=4)color="#4c4";
+else if(r===3)color="#62a1ff";
+boxCountHtmlArr.push(`<span style="margin-right:6px; display:inline-block; background:#000; padding:2px 6px; border-radius:4px; border:1px solid #333;"><strong style="color:${color}; font-size:14px; text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff; font-weight:bold;">${boxCounts[r]}</span></span>`);
+}
+}
+let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
+let html=`<div class="info-bar">
+<span>Rank:<strong>${rStr}</strong></span>
+<span>Seed:<strong>${seedHex}</strong></span>
+<span style="display:inline-flex;align-items:flex-start;"><span>${C01}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapName}</span><span style="display:block;color:#ffd700">${mapData.mapNameJP}</span></strong></span>
+<span style="display:inline-flex;align-items:flex-start;"><span>${C02}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapTypeName}</span><span style="display:block;color:#ffd700">${mapData.mapTypeNameJP}</span></strong></span>
+<span>${C03}:<strong>${mapData.monsterRank}</strong></span>
+<span>${C04}:<strong>${mapData.floorCount}</strong></span>
+<span style="display:inline-flex;align-items:flex-start;"><span>Boss:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.bossName}</span><span style="display:block;color:#ffd700">${mapData.bossNameJP}</span></strong></span>
+<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C05}:
+<strong style="display:block; color:#0ff; font-family:monospace; font-size:12px; margin-top:2px;">${locHtmlString}</strong>
+</span>
+<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C06}:
+<strong style="display:block; color:#4c4; font-family:monospace; font-size:12px; margin-top:2px; text-align:left;">${atHtmlString}</strong>
+</span>
+<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C07}:
+<strong style="display:block; font-family:monospace; font-size:12px; margin-top:2px; text-align:left;">${rnHtml}</strong>
+</span>
+</div>
+<div class="info-bar"style="align-items:center; background:#16162a; border-bottom:1px solid #4a4a8a; padding:8px 14px; gap:6px;">
+<span style="color:#88b; font-weight:bold; white-space:nowrap;">${C08}</span>
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px; flex:1; min-width:0;">
+${boxString}
+</div>
+<span style="white-space:nowrap; padding-left:8px; border-left:2px solid #4a4a8a; color:#8cc8ff; font-weight:bold;">📦${totalBoxes}</span>
+<div id="controls_target_area"style="display:flex; align-items:center;"></div>
+</div>`;
+setTimeout(()=>{
+const target=document.getElementById('controls_target_area');
+const controls=document.getElementById('single_map_controls');
+if(target&&controls){
+target.appendChild(controls);
+}
+},0);
+html+='<div class="floor-tabs">';
+const ELIST_TAB_COLORS={none:'#c0c0c0',only:'#FFC90E',reduced:'#B5E61D',partial:'#00A2E8'};
+for(let i=0;i<mapData.floorCount;i++){
+let tabStyle='';
+const einfo=getFloorElistInfo(mapData,i);
+if(einfo.state){
+const c=ELIST_TAB_COLORS[classifyElistState(einfo.state).kind]||null;
+if(c)tabStyle=` style="background:${c};color:#000;border-color:${c}"`;
+}
+html+=`<div class="floor-tab${i===activeFloor?' active':''}"${tabStyle} onclick="switchFloor(${i})">B${i+1}F</div>`;
+}
+html+='</div>';
+html+='<div class="floor-content" id="floor-content"></div>';
+el.innerHTML=html;
+renderFloor(activeFloor);
+}
+function switchFloor(f){
+activeFloor=f;
+document.querySelectorAll('.floor-tab').forEach((t,i)=>t.classList.toggle('active',i===f));
+renderFloor(f);
+}
+function renderFloor(f){
+const container=document.getElementById('floor-content');
+const w=mapData.getFloorWidth(f);
+const h=mapData.getFloorHeight(f);
+const map=mapData.getFloorMap(f);
+const up=mapData.getUpStair(f);
+const down=mapData.getDownStair(f);
+const boxCount=mapData.getBoxCount(f);
+const canvasW=w*TILE_SIZE;
+const canvasH=h*TILE_SIZE;
+let infoHtml='<div class="floor-info">';
+infoHtml+=`<h3>B${f+1}F</h3>`;
+infoHtml+='<table>';
+infoHtml+=`<tr><td>${C10}</td><td>${w} × ${h}</td></tr>`;
+if(f<mapData.floorCount-1)
+infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　▼ (${down.x}, ${down.y})</td></tr>`;
+else
+infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　Boss (${down.x}, ${down.y})</td></tr>`;
+const elistInfo=getFloorElistInfo(mapData,f);
+let stateHtml=elistInfo.state?` <span style="background:#f4c; color:#fff; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:6px; white-space:nowrap;">${elistInfo.state}</span>`:'';
+let dHtml=elistInfo.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:4px; white-space:nowrap;">${elistInfo.dValue}</span>`:'';
+infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
+const envType=mapData._details[3];
+let floorMR=floorMRAt(mapData._details[2],f);
+const spawnList=(SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR])||[];
+const normals=spawnList.filter(e=>e.length===3);
+const isJP=(DISPLAY_LANG!=='EN');
+const stCls=classifyElistState(elistInfo.state||'');
+let grayFrom=normals.length;
+if(stCls.kind==='reduced')grayFrom=stCls.count;
+else if(stCls.kind==='none')grayFrom=0;
+else if(stCls.kind==='only')grayFrom=0;
+const onlyMonId=(ONLY_MONSTERS[envType]&&ONLY_MONSTERS[envType][floorMR])||'';
+const isOnlyMode=(stCls.kind==='only');
+let monsterSpans=normals.map((entry,i)=>{
+const md=MONSTER_DATA[entry[0]];
+if(!md)return'';
+const name=isJP?md.jp:md.en;
+let isGray;
+if(isOnlyMode){
+isGray=(entry[0]!==onlyMonId);
+}else{
+isGray=(i>=grayFrom);
+}
+const bg=isGray?'#1a1a2e':'#2a2a4a';
+const fg=isGray?'#555':'#ddd';
+return`<span class="mon-pill" style="color:${fg};background:${bg};">${name}</span>`;
+}).filter(Boolean);
+if(monsterSpans.length>0){
+infoHtml+=`<tr><td>${C12}</td><td class="mon-td">${monsterSpans.join('')}</td></tr>`;
+}
+if(boxCount>0){
+infoHtml+=`<tr><td>${C13}</td><td>${boxCount} <font color=#666>${C14}</font></td></tr>`;
+for(let i=0;i<boxCount;i++){
+const box=mapData.getBoxInfo(f,i);
+const rn=CHEST_RANK[box.rank]||box.rank;
+const[soloEN,soloJP]=mapData.getBoxItem(f,i,1).map(v=>v||'?');
+const[partyEN,partyJP]=mapData.getBoxItem(f,i,2).map(v=>v||'?');
+const dispSolo=DISPLAY_LANG!=='EN'?soloJP:soloEN;
+const dispParty=DISPLAY_LANG!=='EN'?partyJP:partyEN;
+infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
+<div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span>(${box.x},${box.y})</div>
+<div class="chest-item"><span class="chest-item-solo">Item(${STR_SOLO}):${dispSolo}</span></div>
+<div class="chest-item"><span class="chest-item-party">Item(${STR_PARTY}):${dispParty}</span></div>
+</td></tr>`;
+}
+}else{
+infoHtml+=`<tr><td>${C15}</td><td>${C16}</td></tr>`;
+}
+infoHtml+='</table>';
+infoHtml+='<div class="legend" style="margin-top:20px">';
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#f5f0e0"></div>${D01}</div>`;
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#000"></div>${D02}</div>`;
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#e8e0c8"></div>${D03}</div>`;
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#ccd8c0"></div>${D04}</div>`;
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#4c4"></div>${D05}</div>`;
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#f44"></div>${D06}</div>`;
+infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#ffd700"></div>${D07}</div>`;
+infoHtml+='</div></div>';
+container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${canvasW}" height="${canvasH}" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div>${infoHtml}`;
+document.querySelector('.map-container').style.position='relative';
+const mapCanvas=document.getElementById('mapCanvas');
+mapCanvas.addEventListener('mousemove',(e)=>{
+const rect=mapCanvas.getBoundingClientRect();
+const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
+const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
+const coordEl=document.getElementById('coordDisplay');
+if(mx>=0&&mx<w&&my>=0&&my<h){
+const tNames={0:D01,1:D02,2:D03,3:D02,4:C11,5:C11,6:D07,8:D04};
+const tile=map[my][mx];
+let label=tNames[tile]||`tile:${tile}`;
+if(mx===up.x&&my===up.y)label=D05+'▲';
+if(mx===down.x&&my===down.y)label=(f<mapData.floorCount-1)?D06+'▼':'Boss▼';
+coordEl.textContent=`(${mx},${my}) ${label}`;
+mapCanvas.style.cursor=boxPositions.has(mx+','+my)?'pointer':'default';
+}else{
+coordEl.textContent='';
+mapCanvas.style.cursor='default';
+}
+});
+const boxPositions=new Map();
+for(let i=0;i<boxCount;i++){
+const b=mapData.getBoxInfo(f,i);
+boxPositions.set(b.x+','+b.y,i+1);
+}
+mapCanvas.addEventListener('click',(e)=>{
+const rect=mapCanvas.getBoundingClientRect();
+const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
+const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
+if(boxPositions&&boxPositions.has(mx+','+my)){
+const boxNum=boxPositions.get(mx+','+my);
+showChestTimer(f,boxNum-1,mx,my);
+}
+});
+const canvas=document.getElementById('mapCanvas');
+const ctx=canvas.getContext('2d');
+ctx.fillStyle='#000';
+ctx.fillRect(0,0,canvasW,canvasH);
+for(let y=0;y<h;y++){
+for(let x=0;x<w;x++){
+let tile=map[y][x];
+const px=x*TILE_SIZE;
+const py=y*TILE_SIZE;
+const isUpStair=(x===up.x&&y===up.y);
+const isDownStair=(x===down.x&&y===down.y);
+const boxNum=boxPositions.get(x+','+y)||0;
+const isBox=boxNum>0;
+let displayTile=tile;
+if(isUpStair)displayTile=4;
+else if(isDownStair)displayTile=5;
+else if(isBox)displayTile=6;
+else if(tile===4||tile===5||tile===6)displayTile=0;
+if(displayTile===1||displayTile===3){
+ctx.fillStyle=WALL_COLOR;
+ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
+}else{
+ctx.fillStyle=COLORS[displayTile]||COLORS[0];
+ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
+ctx.strokeStyle='rgba(0,0,0,0.08)';
+ctx.strokeRect(px+0.5,py+0.5,TILE_SIZE-1,TILE_SIZE-1);
+}
+ctx.textAlign='center';
+ctx.textBaseline='middle';
+if(isUpStair){
+ctx.fillStyle='#000';
+ctx.font='bold 12px sans-serif';
+ctx.fillText('▲',px+TILE_SIZE/2,py+TILE_SIZE/2);
+}else if(isDownStair){
+ctx.fillStyle='#000';
+ctx.font='bold 12px sans-serif';
+ctx.fillText('▼',px+TILE_SIZE/2,py+TILE_SIZE/2);
+}else if(isBox){
+ctx.fillStyle='#000';
+ctx.font='bold 11px sans-serif';
+ctx.fillText(boxNum,px+TILE_SIZE/2,py+TILE_SIZE/2);
+}
+}
+}
+ctx.fillStyle='rgba(0,0,0,0.3)';
+ctx.font='9px monospace';
+ctx.textAlign='center';
+ctx.textBaseline='top';
+for(let x=0;x<w;x++)ctx.fillText(x,x*TILE_SIZE+TILE_SIZE/2,2);
+ctx.textBaseline='middle';
+ctx.textAlign='left';
+for(let y=0;y<h;y++)ctx.fillText(y,2,y*TILE_SIZE+TILE_SIZE/2);
+}
+function showChestTimer(floorIndex,boxIndex,x,y){
+const modal=document.getElementById('chestModal');
+const title=document.getElementById('chestModalTitle');
+const body=document.getElementById('chestModalBody');
+const boxInfo=mapData.getBoxInfo(floorIndex,boxIndex);
+const rn=CHEST_RANK[boxInfo.rank]||boxInfo.rank;
+title.textContent=`B${floorIndex+1}F ${C15} ${boxIndex+1} (Rank ${rn}) @ (${x}, ${y})`;
+let results=[];
+let currentStart=0;
+let[currentItemEN,currentItemJP]=mapData.getBoxItem(floorIndex,boxIndex,0);
+for(let s=1;s<=255;s++){
+let[itemEN,itemJP]=mapData.getBoxItem(floorIndex,boxIndex,s);
+if(itemEN!==currentItemEN){
+results.push({start:currentStart,end:s-1,itemEN:currentItemEN,itemJP:currentItemJP});
+currentStart=s;
+currentItemEN=itemEN;
+currentItemJP=itemJP;
+}
+}
+results.push({start:currentStart,end:255,itemEN:currentItemEN,itemJP:currentItemJP});
+let htmlEN='';
+let htmlJP='';
+results.forEach(res=>{
+const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3,'0'):`${(res.start + 5).toString().padStart(3, '0')} ~ ${(res.end + 5).toString().padStart(3, '0')}`;
+const isHighlight=(res.start<=2&&res.end>=1);
+const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15); border-left: 3px solid #ffd700; padding-left: 8px;':'';
+const textStyle=isHighlight?'color: #ffd700; font-weight: bold;':'';
+htmlEN+=`<div class="timer-row" style="${rowStyle}">
+<span class="timer-range"style="${textStyle}">${rangeStr}</span>
+<span class="timer-item"style="${textStyle}">${res.itemEN}</span>
+</div>`;
+htmlJP+=`<div class="timer-row" style="${rowStyle}">
+<span class="timer-range"style="${textStyle}">${rangeStr}</span>
+<span class="timer-item"style="${textStyle}">${res.itemJP}</span>
+</div>`;
+});
+body.style.padding='0';
+body.style.overflowY='hidden';
+body.style.display='flex';
+body.style.flexDirection='column';
+body.innerHTML=`<div class="modal-tabs">
+<div id="ctTabEN"style="padding: 6px 16px; background: #1a1a3a; color: #ffd700; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchCtTab('EN')">English</div>
+<div id="ctTabJP"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchCtTab('JP')">日本語</div>
+</div>
+<div style="padding: 12px 16px; overflow-y: auto; flex: 1;">
+<div id="ctListEN"style="display: block;">${htmlEN}</div>
+<div id="ctListJP"style="display: none;">${htmlJP}</div>
+</div>
+`;
+modal.style.display='flex';
+switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
+}
+function switchTab(prefix,lang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
+const keys=['TW','EN','JP','SP'];
+keys.forEach(key=>{
+let tab=document.getElementById(prefix+'Tab'+key);
+let list=document.getElementById(prefix+'List'+key);
+if(!tab||!list)return;
+if(key===lang){
+tab.style.background='#1a1a3a';tab.style.color=activeColor;tab.style.borderColor=activeBorder;list.style.display='block';
+}else{
+tab.style.background=inactiveBg;tab.style.color=inactiveColor;tab.style.borderColor=inactiveBorder;list.style.display='none';
+}
+});
+}
+function openModal(modalId,tabPrefix,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
+const modal=document.getElementById(modalId);
+if(modal){
+modal.style.display='flex';
+const targetLang=['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW';
+switchTab(tabPrefix,targetLang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder);
+}
+}
+function closeChestModal(){document.getElementById('chestModal').style.display='none';}
+function switchCtTab(lang){switchTab('ct',lang,'#ffd700','#4a4a8a','#224','#888','#333');}
+function openDisclaimerModal(){openModal('disclaimerModal','disc','#ffd700','#4a4a8a','#224','#888','#333');}
+function closeDisclaimerModal(){document.getElementById('disclaimerModal').style.display='none';}
+function switchDisclaimerTab(lang){switchTab('disc',lang,'#ffd700','#4a4a8a','#224','#888','#333');}
+function openh1Modal(){openModal('h1Modal','h1','#0ff','#4a4a8a','#224','#888','#333');}
+function closeh1Modal(){document.getElementById('h1Modal').style.display='none';}
+function switchH1Tab(lang){switchTab('h1',lang,'#0ff','#4a4a8a','#224','#888','#333');}
+function openh2Modal(){openModal('h2Modal','h2','#0ff','#4a4a8a','#224','#888','#333');}
+function closeh2Modal(){document.getElementById('h2Modal').style.display='none';}
+function switchH2Tab(lang){switchTab('h2',lang,'#0ff','#4a4a8a','#224','#888','#333');}
+function openh3Modal(){openModal('h3Modal','h3','#0ca','#055','#001a1a','#598','#033');}
+function closeh3Modal(){document.getElementById('h3Modal').style.display='none';}
+function switchH3Tab(lang){switchTab('h3',lang,'#0ca','#055','#001a1a','#598','#033');}
+window.addEventListener('DOMContentLoaded',()=>{
+function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
+let selectElement=document.getElementById(selectId);
+if(!selectElement)return;
+Object.keys(dataObj).forEach(key=>{
+let item=dataObj[key];
+let option=document.createElement("option");
+option.value=key;
+option.text=`${item[nameIdx1]} ${item[nameIdx2]}`;
+selectElement.appendChild(option);
+});
+}
+if(typeof PREFIX_NAMES!=='undefined')populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
+if(typeof SUFFIX_NAMES!=='undefined')populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
+if(typeof LOCALE_NAMES!=='undefined')populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
+if(typeof ENV_NAMES!=='undefined')populateDropdownObj('cond_env',ENV_NAMES,0,1);
+if(typeof BOSS_NAMES!=='undefined')populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
+const atCountSel=document.getElementById('atConsecutiveCount');
+if(atCountSel&&typeof AT_O!=='undefined'){
 AT_O.forEach(pair=>{
-const opt=document.createElement('option');
+let opt=document.createElement('option');
 opt.value=pair[0];
 opt.textContent=pair[1];
-patSel.appendChild(opt);
+atCountSel.appendChild(opt);
 });
 }
-const lbl=document.getElementById('at_lblSteps');
-if(lbl)lbl.textContent=T('Steps','步數','ｽﾃｯﾌﾟ');
-}
-function getMonsterNameByAT(atVal,envType,floorMR){
-const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
-if(!spawnList)return"?";
-for(const entry of spawnList){
-if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2]){
-const md=MONSTER_DATA[entry[0]];
-return md?(DISPLAY_LANG!=='EN'?md.jp:md.en):"?";
-}
-}
-return"?";
-}
-function updateATOnlyMonsters(){
-const envType=parseInt(document.getElementById('at_env').value);
-const floorMR=parseInt(document.getElementById('at_mr').value);
-document.querySelectorAll('.at-dynamic-mon').forEach(el=>{
-const atVal=parseInt(el.getAttribute('data-at'));
-if(!isNaN(atVal)){
-el.textContent=getMonsterNameByAT(atVal,envType,floorMR);
-}
-});
-}
-function updateBattleAT(){
-let deftInput=document.getElementById('at_deft');
-let userDeft=(deftInput&&deftInput.value!=='')?parseInt(deftInput.value):999;
-let nInput=document.getElementById('at_n_input');
-let n=(nInput&&nInput.value!=='')?parseInt(nInput.value):0;
-document.querySelectorAll('.at-m-card').forEach(card=>{
-let seed=parseInt(card.getAttribute('data-seed'));
-let cN=35+(29*n);
-const{atN,atN1}=getATPair(seed,cN);
-const{deft,color:deftColor,label:deftLabel}=formatDeftness(atN1);
-let atnLabel=card.querySelector('.at-m-atn-label');
-if(atnLabel){
-if(atnLabel.textContent.includes('AT['))atnLabel.textContent=`AT[${cN}]: `;
-else atnLabel.textContent=`AT +${cN}: `;
-}
-let atnVal=card.querySelector('.at-m-atval');
-if(atnVal)atnVal.textContent=atN;
-let monStrong=card.querySelector('.at-dynamic-mon');
-if(monStrong){
-monStrong.setAttribute('data-at',atN);
-let envType=parseInt(document.getElementById('at_env').value);
-let floorMR=parseInt(document.getElementById('at_mr').value);
-if(typeof getMonsterNameByAT==='function'){
-monStrong.textContent=getMonsterNameByAT(atN,envType,floorMR);
-}
-}
-let deftSpan=card.querySelector('.at-m-deft');
-if(deftSpan){
-deftSpan.style.color=deftColor;
-deftSpan.textContent=`${G18} ${deftLabel}`;
-}
-card.querySelectorAll('.at-dynamic-battle').forEach(el=>{
-el.setAttribute('data-req',deft);
-el.setAttribute('data-current-n',cN);
-});
-});
-document.querySelectorAll('.at-dynamic-battle').forEach(el=>{
-let target=parseInt(el.getAttribute('data-target'));
-let req=parseInt(el.getAttribute('data-req'));
-let pop=el.hasAttribute('data-current-n')?parseInt(el.getAttribute('data-current-n')):parseInt(el.getAttribute('data-n'));
-let d1,d2,d4;
-if(userDeft<req){
-d1=target-(pop+4);
-d2=target-(pop+5);
-d4=target-(pop+6);
-}else{
-d1=target-(pop+3);
-d2=target-(pop+4);
-d4=target-(pop+5);
-}
-el.textContent=`${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}`;
-});
-}
-function evaluateATPtn(pType,validCount,hb){
-let matched=false,extractLen=0;
-switch(pType){
-case 1:if(validCount>=2&&(hb&3)===3){matched=true;extractLen=2;}break;
-case 2:if(validCount>=3&&(hb&15)===5){matched=true;extractLen=4;}break;
-case 3:if(validCount>=4&&(hb&9)===9){matched=true;extractLen=4;}break;
-case 4:if(validCount>=3&&(hb&7)===7){matched=true;extractLen=3;}break;
-case 5:if(validCount>=4&&(hb&15)===15){matched=true;extractLen=4;}break;
-case 6:if(validCount>=5&&(hb&31)===31){matched=true;extractLen=5;}break;
-case 7:if(validCount>=6){let v=hb&63;if(v===57||v===51||v===39){matched=true;extractLen=6;}}break;
-case 8:if(validCount>=7){let v=hb&127;if(v===97||v===100||v===76||v===73||v===67){matched=true;extractLen=7;}}break;
-case 9:if(validCount>=6&&(hb&63)===21){matched=true;extractLen=6;}break;
-case 10:if(validCount>=8&&(hb&255)===85){matched=true;extractLen=8;}break;
-case 11:if(validCount>=10&&(hb&1023)===341){matched=true;extractLen=10;}break;
-case 12:if(validCount>=10){let v=hb&1023;if(v===337||v===325||v===277){matched=true;extractLen=10;}}break;
-case 13:if(validCount>=10){let v=hb&1023;if(v===321||v===324||v===276||v===273||v===261){matched=true;extractLen=10;}}break;
-}
-return{matched,extractLen};
-}
-function formatATPtnHTML(extractLen,step,valsBuffer,hb){
-let formattedVals=[];
-for(let i=extractLen-1;i>=0;i--){
-let sv=step-i;
-let v=valsBuffer[sv%10];
-let m=(hb&(1<<i))!==0;
-if(m)formattedVals.push(`<strong style="color:#f44;">${v}</strong>`);
-else formattedVals.push(`<span style="color:#666;">${v}</span>`);
-}
-return formattedVals.join(', ');
-}
-async function atSearch(){
-if(isSearching){searchCancel=true;return;}
-isSearching=true;searchCancel=false;
-const btn=document.getElementById('atSearchBtn');
-btn.textContent='STOP';btn.style.background='#f44';btn.style.color='#fff';
-const monEnvType=parseInt(document.getElementById('at_env').value);
-const monFloorMR=parseInt(document.getElementById('at_mr').value);
-const monId=document.getElementById('at_mon').value;
-const nVal=parseInt(document.getElementById('at_n_input').value);
-if(isNaN(nVal)||nVal<0){isSearching=false;btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';return;}
-const N=35+29*nVal;
-const spawnList=SPAWN_DB[monEnvType]&&SPAWN_DB[monEnvType][monFloorMR];
-let atmin=-1,atmax=-1;
-for(const entry of spawnList){
-if(entry[0]===monId&&entry.length>=3){
-atmin=entry[1];atmax=entry[2];break;
-}
-}
-if(atmin<0){isSearching=false;btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';return;}
-const md=MONSTER_DATA[monId];
-const conds=getUltimateConds();
-const hasBoxCond=conds.hasBoxCond;
-const searchFilterLoc=true;
-const searchOnlyWithD=document.getElementById('searchOnlyWithD').checked;
-const baseRankStr=document.getElementById('rank').value;
-const maxSeed=0x7FFF;
-const rangeData=getValidatedSeedRange();
-if(rangeData.error){alert(rangeData.error);isSearching=false;btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';return;}
-const{startSeed,endSeed}=rangeData;
-const rank=parseInt(baseRankStr);
-const rStr=hex2(rank);
-const targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:null);
-const deftInput=document.getElementById('at_deft').value.trim();
-const deftMax=deftInput!==''?parseInt(deftInput):-1;
-const atThreshold=parseInt(document.getElementById('at_threshold').value);
-let pType=AT_PAT[document.getElementById('at_pattern').value]||0;
-let atMaxSteps=parseInt(document.getElementById('at_maxSteps').value);
-if(isNaN(atMaxSteps)||atMaxSteps<38)atMaxSteps=400;
-if(atMaxSteps<N)atMaxSteps=N;
-let headerExtra='';
-if(deftMax>=0)headerExtra+=` ｜ ${G18} ${deftMax}`;
-if(pType>0){
-const patSel=document.getElementById('at_pattern');
-const probSel=document.getElementById('at_threshold');
-headerExtra+=` ｜ ${patSel.options[patSel.selectedIndex].text} (${probSel.options[probSel.selectedIndex].text})`;
-}
-const resultDiv=document.getElementById('searchResults');
-resultDiv.innerHTML=`<div style="color:#aaa; font-size:13px; margin-bottom:8px;">
-<div style="color:#0ca; font-size:12px; margin-bottom:6px;">${ENV_NAMES[monEnvType][1]}Rank ${monFloorMR}｜${md.jp}(${md.en})｜POP=${N}(Zoom=${nVal})｜AT:${atmin}～${atmax}${headerExtra}</div>
-${B01}<span id="searchProgress"style="color:#fff; font-weight:bold">0%</span></div><div id="searchGrid"class="search-grid"></div>`;
-const grid=document.getElementById('searchGrid');
-const progressSpan=document.getElementById('searchProgress');
-const atMchSeeds=new Map();
-for(let seed=startSeed;seed<=Math.min(endSeed,maxSeed);seed++){
-const{atN,atN1}=getATPair(seed,N);
-if(atN<atmin||atN>atmax)continue;
-if(deftMax>=0){
-if(calcDeftness(atN1)>deftMax)continue;
-}
-atMchSeeds.set(seed,{atN,atN1});
-}
-const atPtnDetails=new Map();
-if(pType>0){
-const valsBuffer=new Int32Array(10);
-for(const[seed]of[...atMchSeeds]){
-let rng=seed;
-let historyBits=0,validCount=0;
-let foundOffsets=[];
-for(let step=1;step<=atMaxSteps;step++){
-rng=lcg(rng);
-let val=(rng>>>16)&0x7FFF;
-if(step<38)continue;
-let isMatch=(val<=atThreshold)?1:0;
-historyBits=((historyBits<<1)|isMatch)&1023;
-valsBuffer[step%10]=val;
-validCount++;
-let{matched,extractLen}=evaluateATPtn(pType,validCount,historyBits);
-if(matched){
-let startStep=step-extractLen+1;
-if(startStep>=N+3){
-let valsHtml=formatATPtnHTML(extractLen,step,valsBuffer,historyBits);
-foundOffsets.push({start:startStep,valsHtml:valsHtml});
-}
-historyBits=0;validCount=0;
-}
-}
-if(foundOffsets.length>0){
-atPtnDetails.set(seed,{foundOffsets});
-}else{
-atMchSeeds.delete(seed);
-}
-}
-}
-const needMapGeneration=hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="";
-let _onlyMonExpectedStr=buildOnlyMonExpectedStr(conds);
-let searchEngine=new GrottoDetail();
-searchEngine.trackOverflow=(conds.anomaly==='all_invalid'||conds.anomaly==='ghost');
-let totalCombos=atMchSeeds.size;
-let processed=0;
-let hitCount=0;
-let fragment=document.createDocumentFragment();
-let allResults=[];
-const patSel2=document.getElementById('at_pattern');
-const probSel2=document.getElementById('at_threshold');
-const patternName2=patSel2?patSel2.options[patSel2.selectedIndex].text:'';
-const probText2=probSel2?probSel2.options[probSel2.selectedIndex].text:'';
-try{
-for(const[seed,atinfo]of atMchSeeds){
-if(searchCancel)break;
-if(processed%50===0){
-progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% ['+B04+''+hitCount+' '+B03+']';
-await new Promise(r=>setTimeout(r,0));
-}
-searchEngine.MapSeed=seed;
-searchEngine.MapRank=rank;
-_cachedLocData=null;
-searchEngine.calculateDetail(true);
-if(!checkBasicConds(searchEngine,conds)){processed++;continue;}
-if(!checkOnlyMonPossible(searchEngine,conds)){processed++;continue;}
-if(needMapGeneration)searchEngine.createDungeonDetail();
-let boxHtml="";
-if(hasBoxCond){
-let chestResult=ChestHtml(searchEngine,conds);
-if(!chestResult.isMatch){processed++;continue;}
-boxHtml=chestResult.html;
-}
-let elistResult=checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr);
-if(!elistResult.match){processed++;continue;}
-let locResult=checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey);
-if(!locResult.match){processed++;continue;}
-let anomResult=checkAnomalies(searchEngine,conds);
-if(!anomResult.match){processed++;continue;}
-let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
-hitCount++;
-let itemNode=document.createElement('div');
-itemNode.className='search-result-item';
-if(elistResult.hasMatchedD)itemNode.dataset.hasD="true";
-let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
-let specialHtml=elistResult.specialHitDetails.length>0?`<div style="margin-top:4px;">${elistResult.specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
-let anomalyHtml=anomResult.anomalyDetails.length>0?`<div style="margin-top:6px; display:flex; flex-direction:column; align-items:flex-start;">${anomResult.anomalyDetails.map(h=>h.replace('<span style="','<span style="display:inline-block; line-height:1.4; margin-top:4px; ')).join('')}</div>`:'';
-let mapNameDisp=dispName(searchEngine);
-const{deft,color:deftColor,label:deftLabel}=formatDeftness(atinfo.atN1);
-let diffsHtml='';
-let patHtml='';
-const patData=atPtnDetails.get(seed);
-if(pType>0&&patData){
-let offsetsHtml=patData.foundOffsets.map(o=>
-`<span style="color:#0ff; font-size:12px;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`
-).join('<br>');
-patHtml=`<div style="margin-top:4px; padding:4px 8px; background:#111; border:1px solid #333; border-radius:4px;">
-<span style="color:#fa0; font-size:11px; font-weight:bold;">${patternName2}(${probText2})</span><br>
-${offsetsHtml}</div>`;
-diffsHtml=patData.foundOffsets.map(o=>{
-const d1=o.start-(N+3);
-const d2=o.start-(N+4);
-const d4=o.start-(N+5);
-return`<span class="at-dynamic-battle" data-target="${o.start}" data-n="${N}" data-req="${deft}" style="font-size:11px; text-shadow:0 0 2px rgba(255,170,0,0.5);">${d1} / ${d2} / ${d4}</span>`;
-}).join(`<br><span style="color:transparent; font-size:11px;">${BATTLE_LABEL} </span>`);
-diffsHtml=`<span style="color:#fa0; margin-left:12px; font-size:11px;">${BATTLE_LABEL} ${diffsHtml}</span>`;
-}
-let atHtml=`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px; padding:5px 8px; background:#0a1a1a; border:1px solid #055; border-radius:3px;">
-<span style="color:#4c4; font-size:11px;"><span class="at-m-atn-label">AT[${N}]:</span><span class="at-m-atval">${atinfo.atN}</span></span>
-<strong class="at-dynamic-mon"data-at="${atinfo.atN}"style="color:#f8f; margin-left:8px; font-size:11px; text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
-<br>
-<span class="at-m-deft"style="color:${deftColor}; display:inline-block; margin-top:4px; font-size:11px;">${G18}${deftLabel}</span>
-${diffsHtml}
-</div>`;
-const capturedJumpToFloor=jumpToFloor;
-itemNode.innerHTML=`
-<span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
-<span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff; font-size:11px">${mapNameDisp}</span>${locHtml}
-<div style="margin-top:4px;">${boxHtml}</div>
-${specialHtml}
-${anomalyHtml}
-${atHtml}
-${patHtml}
-`;
-itemNode.onclick=makeResultClickHandler(seed,rStr,capturedJumpToFloor);
-allResults.push({node:itemNode,pop:atinfo.atN});
-processed++;
-}
-const atSortPOP=document.getElementById('at_sortPOP').checked;
-if(atSortPOP){
-allResults.sort((a,b)=>a.pop-b.pop);
-}
-for(let res of allResults)fragment.appendChild(res.node);
-if(fragment.children.length>0)grid.appendChild(fragment);
-if(typeof updateATOnlyMonsters==='function')updateATOnlyMonsters();
-if(typeof updateBattleAT==='function')updateBattleAT();
-}catch(error){
-console.error("AT Monster Search error:",error);
-alert(A03);
-searchCancel=true;
-}finally{
-isSearching=false;
-btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';
-progressSpan.textContent=searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${B06?B06+' ':''}${hitCount} ${B03})`;
-}
-}
-async function atPtnSearch(){
-if(isSearching){searchCancel=true;return;}
-isSearching=true;searchCancel=false;
-const btn=document.getElementById('atPtnSchBtn');
-btn.textContent='STOP';btn.style.background='#f44';
-const threshold=parseInt(document.getElementById('at_threshold').value);
-let pType=AT_PAT[document.getElementById('at_pattern').value]||0;
-if(pType===0){alert(A01);isSearching=false;btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';return;}
-let maxSteps=parseInt(document.getElementById('at_maxSteps').value);
-if(isNaN(maxSteps)||maxSteps<38)maxSteps=400;
-const nVal=parseInt(document.getElementById('at_n_input').value);
-const POPIndex=(isNaN(nVal)||nVal<0)?35:35+29*nVal;
-if(maxSteps<POPIndex)maxSteps=POPIndex+1;
-const searchFilterLoc=true;
-const baseRankStr=document.getElementById('rank').value;
-const rStr=hex2(parseInt(baseRankStr));
-const targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:null);
-const rangeData=getValidatedSeedRange();
-if(rangeData.error){alert(rangeData.error);isSearching=false;btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';return;}
-const startSeed=rangeData.startSeed;
-const endSeed=searchFilterLoc?Math.min(rangeData.endSeed,0x7FFF):rangeData.endSeed;
-const patSel=document.getElementById('at_pattern');
-const patternName=patSel.options[patSel.selectedIndex].text;
-const probSel=document.getElementById('at_threshold');
-const probText=probSel.options[probSel.selectedIndex].text;
-const resultDiv=document.getElementById('searchResults');
-resultDiv.innerHTML=`<div style="color:#aaa; font-size:13px; margin-bottom:8px;">
-<div style="color:#f80; font-size:12px; margin-bottom:6px;">${patternName}｜${probText}｜N=${POPIndex}(n=${nVal||0})｜Rank ${rStr}</div>
-${B01}<span id="searchProgress"style="color:#fff; font-weight:bold">0%</span></div><div id="searchGrid"class="search-grid"></div>`;
-const grid=document.getElementById('searchGrid');
-const progressSpan=document.getElementById('searchProgress');
-let hitCount=0;
-let processed=0;
-let totalSeeds=endSeed-startSeed+1;
-let fragment=document.createDocumentFragment();
-let allATResults=[];
-const valsBuffer=new Int32Array(10);
-try{
-for(let seed=startSeed;seed<=endSeed;seed++){
-if(searchCancel)break;
-if(searchFilterLoc){
-let locData=calcLocations(seed,targetRankKey);
-if(locData.outputOrder.length===0){processed++;continue;}
-}
-if(processed%1000===0){
-progressSpan.textContent=Math.floor((processed/totalSeeds)*100)+'% (Seed '+hex4(seed)+') ['+B04+''+hitCount+' '+B03+']';
-await new Promise(r=>setTimeout(r,0));
-}
-processed++;
-let rng=seed;
-let historyBits=0;
-let validCount=0;
-let foundOffsets=[];
-let POPValue=null;
-let DefValue=null;
-for(let step=1;step<=maxSteps;step++){
-rng=lcg(rng);
-let val=(rng>>>16)&0x7FFF;
-if(step===POPIndex)POPValue=val;
-if(step===POPIndex+1)DefValue=val;
-if(step<38)continue;
-let isMatch=(val<=threshold)?1:0;
-historyBits=((historyBits<<1)|isMatch)&1023;
-valsBuffer[step%10]=val;
-validCount++;
-let{matched,extractLen}=evaluateATPtn(pType,validCount,historyBits);
-if(matched){
-let startStep=step-extractLen+1;
-if(startStep>=POPIndex+3){
-let valsHtml=formatATPtnHTML(extractLen,step,valsBuffer,historyBits);
-foundOffsets.push({start:startStep,valsHtml:valsHtml});
-}
-historyBits=0;validCount=0;
-}
-}
-if(foundOffsets.length>0){
-hitCount++;
-let seedHex=hex4(seed);
-let offsetsHtml=foundOffsets.map(o=>
-`<span style="color:#0ff;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`
-).join('<br>');
-let specificAtHtml='';
-if(POPValue!==null&&DefValue!==null){
-const{deft,color:deftColor,label:deftLabel}=formatDeftness(DefValue);
-const diffsHtml=foundOffsets.map(o=>{
-const d1=o.start-(POPIndex+3);
-const d2=o.start-(POPIndex+4);
-const d4=o.start-(POPIndex+5);
-return`<span class="at-dynamic-battle" data-target="${o.start}" data-n="${POPIndex}" data-req="${deft}" style="font-size:13px; text-shadow:0 0 2px rgba(255,170,0,0.5);">${d1} / ${d2} / ${d4}</span>`;
-}).join(`<br><span style="color:transparent; font-size:11px;">${BATTLE_LABEL} </span>`);
-specificAtHtml=`<div class="at-m-card" data-seed="${seed}" style="margin-top:6px; padding-top:4px; border-top:1px dashed #432;">
-<span class="at-m-atn-label"style="color:#aaa;">AT+${POPIndex}:</span>
-<strong class="at-m-atval"style="color:#39C5BB; text-shadow:0 0 2px rgba(57,197,187,0.5);">${POPValue}</strong>
-<strong class="at-dynamic-mon"data-at="${POPValue}"style="color:#f8f; margin-left:8px; text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
-<br><span class="at-m-deft"style="color:${deftColor}; display:inline-block; margin-top:4px;">${G18}${deftLabel}</span>
-<span style="color:#fa0; margin-left:12px; font-size:11px;">${BATTLE_LABEL}${diffsHtml}</span></div>`;
-}
-let itemNode=document.createElement('div');
-itemNode.className='search-result-item';
-itemNode.innerHTML=`
-<span style="color:#ffd700; font-weight:bold; font-size:13px;">${seedHex}</span><br>
-<div style="background:#111; padding:4px 8px; border-radius:4px; margin:4px 0; border:1px solid #333;">
-<span style="color:#fa0; font-weight:bold;">${patternName}(${probText})</span></div>
-<div style="padding-top:2px;">${offsetsHtml}</div>
-${specificAtHtml}
-`;
-itemNode.onclick=makeResultClickHandler(seed,null);
-allATResults.push({node:itemNode,pop:POPValue!==null?POPValue:99999});
-}
-}
-const atSortPOP=document.getElementById('at_sortPOP').checked;
-if(atSortPOP){
-allATResults.sort((a,b)=>a.pop-b.pop);
-}
-for(let res of allATResults)fragment.appendChild(res.node);
-if(fragment.children.length>0)grid.appendChild(fragment);
-updateATOnlyMonsters();
-updateBattleAT();
-}catch(error){
-console.error("AT Pattern Search error:",error);
-alert(A03);
-searchCancel=true;
-}finally{
-isSearching=false;
-btn.textContent='AT';btn.style.background='linear-gradient(135deg,#f80,#a30)';
-progressSpan.textContent=searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${B06?B06+' ':''}${hitCount} ${B03})`;
-}
-}
-const SI_PATTERN_INDICES={
-'R2':[[1,2]],
-'R2_3':[[1,4]],
-'R3':[[1,2,3]],
-'R4':[[1,2,3,4]],
-'R5':[[1,2,3,4,5]],
-'4_in_6':[[1,2,3,6],[1,2,5,6],[1,4,5,6]],
-'3_in_7':[[1,2,5],[1,2,7],[1,4,5],[1,4,7],[1,6,7]],
-'N2':[[2,4]],
-'N3':[[2,4,6]],
-'N4':[[2,4,6,8]],
-'N5':[[2,4,6,8,10]],
-'4_in_10':[[2,4,6,10],[2,4,8,10],[2,6,8,10]],
-'3_in_10':[[2,4,8],[2,4,10],[2,6,8],[2,6,10],[2,8,10]]
+let topIds=["0B5","01B","0B9"];
+let seenIds=new Set(topIds);
+let envOrder=[1,2,3,4,5];
+let sel=document.getElementById('cond_only_mon');
+if(sel){
+const createOpt=(id)=>{
+let opt=document.createElement('option');
+let data=MONSTER_DATA[id];
+opt.value=data.en;
+opt.textContent=`${data.en} ${data.jp}`;
+return opt;
 };
-function siRunBattleSim(startRng,gSize,rRarity,nRarity,tLevels,recordSeq){
-let rng=startRng>>>0;
-let seq=[];
-let rareHits=[];
-let normHits=[];
-let rngCount=0;
-let successRare=0;
-let successNorm=0;
-let threshR=rRarity>0?Math.floor(32768/rRarity):-1;
-let threshN=nRarity>0?Math.floor(32768/nRarity):-1;
-for(let m=0;m<gSize;m++){
-rng=lcg(rng);
-rngCount++;
-let vR=(rng>>>16)&0x7FFF;
-let okR=vR<=threshR;
-if(recordSeq)seq.push({val:vR,red:okR,type:`Group${m+1} Drop (R)`});
-if(okR){
-successRare++;
-rareHits.push(rngCount);
-}else{
-rng=lcg(rng);
-rngCount++;
-let vN=(rng>>>16)&0x7FFF;
-let okN=vN<=threshN;
-if(recordSeq)seq.push({val:vN,red:okN,type:`Group${m+1} Drop (N)`});
-if(okN){
-successNorm++;
-normHits.push(rngCount);
+const addSep=()=>{
+let s=document.createElement('option');
+s.disabled=true;
+s.textContent="──────────";
+sel.appendChild(s);
+};
+topIds.forEach(id=>sel.appendChild(createOpt(id)));
+addSep();
+envOrder.forEach((env,idx)=>{
+if(ONLY_MONSTERS[env]){
+let added=false;
+ONLY_MONSTERS[env].forEach(id=>{
+if(id&&!seenIds.has(id)){
+seenIds.add(id);
+sel.appendChild(createOpt(id));
+added=true;
 }
-}
-}
-for(let b=0;b<4;b++){
-if(tLevels[b]<=0)continue;
-for(let m=0;m<gSize;m++){
-rng=lcg(rng);
-rngCount++;
-let vTR=(rng>>>16)&0x7FFF;
-let eRateR=Math.floor((rRarity*100)/tLevels[b]);
-let thTR=Math.floor(32767/eRateR)+1;
-let okTR=vTR<=thTR;
-if(recordSeq)seq.push({val:vTR,red:okTR,steal:true,type:`Book${b+1} Group${m+1} (R)`});
-if(okTR){
-successRare++;
-rareHits.push(rngCount);
-}else{
-rng=lcg(rng);
-rngCount++;
-let vTN=(rng>>>16)&0x7FFF;
-let eRateN=Math.floor((nRarity*100)/tLevels[b]);
-let thTN=Math.floor(32767/eRateN)+1;
-let okTN=vTN<=thTN;
-if(recordSeq)seq.push({val:vTN,red:okTN,steal:true,type:`Book${b+1} Group${m+1} (N)`});
-if(okTN){
-successNorm++;
-normHits.push(rngCount);
-}
-}
-}
-}
-return{successRare,successNorm,seq,rareHits,normHits};
-}
-function siMatchesPattern(hits,patterns){
-if(!patterns||patterns.length===0)return false;
-for(let p of patterns){
-if(hits.length<p.length)continue;
-let match=true;
-for(let i=0;i<p.length;i++){
-if(hits[i]!==p[i]){match=false;break;}
-}
-if(match)return true;
-}
-return false;
-}
-function siBuildSeqHtml(seqArray){
-let items=seqArray.map(item=>{
-let color=item.red?'#f44':'#fff';
-let fw=item.red?'bold':'normal';
-let bg=item.steal?'background:rgba(255,150,0,0.4); padding:0 2px; border-radius:3px;':'';
-return`<span style="color:${color}; font-weight:${fw}; ${bg}" title="${item.type}">${item.val}</span>`;
 });
-return`<div style="margin-top:6px; font-size:11px; color:#aaa; line-height:1.6;">`+C24+`: [ ${items.join(', ')} ]</div>`;
+if(added&&idx<envOrder.length-1)addSep();
 }
-function initSeedInspectorUI(){
-const mrSel=document.getElementById('si_mr');
-if(mrSel){
-mrSel.options.length=0;
-for(let i=1;i<=12;i++){
-mrSel.options.add(new Option(i,i));
-}
-mrSel.value=2;
-}
-for(let b=1;b<=4;b++){
-const tSel=document.getElementById(`si_t${b}`);
-if(tSel){
-tSel.options.length=0;
-tSel.options.add(new Option('--',0));
-for(let i=1;i<=99;i++){
-tSel.options.add(new Option(i,i));
-}
-tSel.value=(b===1)?99:99;
-}
-}
-const patSel=document.getElementById('si_pattern');
-if(patSel){
-patSel.options.length=0;
-patSel.options.add(new Option('----','none'));
-if(typeof AT_O!=='undefined'&&Array.isArray(AT_O)){
-AT_O.forEach(pair=>{
-patSel.options.add(new Option(pair[1],pair[0]));
 });
 }
+initItemI18n();
+refreshI18n();
+document.querySelectorAll('.lang-sw').forEach(b=>{
+if(b.dataset.lang===DISPLAY_LANG){b.style.background='#00A2E8';b.style.color='#fff';b.style.borderColor='#00A2E8';}
+});
+const srDiv=document.getElementById('searchResults');
+if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666; font-size:13px; text-align:center; margin-top:20px;">'+J02+'</div>';
+const prefixEl=document.getElementById('cond_prefix');
+const suffixEl=document.getElementById('cond_suffix');
+const elistEl=document.getElementById('cond_elist');
+const onlyMonEl=document.getElementById('cond_only_mon');
+const seedInput=document.getElementById('seed');
+const rankSelect=document.getElementById('rank');
+if(seedInput){
+seedInput.addEventListener('keydown',(e)=>{
+if(e.key==='Enter')calculate();
+});
 }
+if(rankSelect){
+rankSelect.addEventListener('change',()=>{
+if(mapData)calculate();
+});
 }
-function updateSeedInspector(){
-const seedHex=document.getElementById('si_seed').value.trim()||'0000';
-const seed=parseInt(seedHex,16);
-const envType=parseInt(document.getElementById('si_env').value);
-const floorMR=parseInt(document.getElementById('si_mr').value);
-const userDeft=parseInt(document.getElementById('si_deft').value)||0;
-const n=parseInt(document.getElementById('si_n').value)||0;
-const enemyCount=parseInt(document.getElementById('si_enemy_count').value);
-const groupSize=parseInt(document.getElementById('si_group_size').value)||1;
-const is2ndTurn=document.getElementById('si_2nd_turn').checked;
-const rareRarity=parseInt(document.getElementById('si_rare_rate').value);
-const normRarity=parseInt(document.getElementById('si_norm_rate').value);
-const tLvs=[
-parseInt(document.getElementById('si_t1').value)||0,
-parseInt(document.getElementById('si_t2').value)||0,
-parseInt(document.getElementById('si_t3').value)||0,
-parseInt(document.getElementById('si_t4').value)||0
-];
-const scanMax=parseInt(document.getElementById('si_scan_max').value)||0;
-const targetTotalStep=parseInt(document.getElementById('si_target_step').value)||35;
-const pSelect=document.getElementById('si_pattern');
-const pTypeStr=pSelect.value;
-const pType=(typeof AT_PAT!=='undefined')?(AT_PAT[pTypeStr]||0):0;
-const pText=pSelect.options[pSelect.selectedIndex].text;
-if(isNaN(seed))return;
-const N=35+(29*n);
-const{atN:atN_val,atN1:atN1_val}=getATPair(seed,N);
-const monName=(typeof getMonsterNameByAT==='function')?getMonsterNameByAT(atN_val,envType,floorMR):'?';
-const mapDeft=(typeof calcDeftness==='function')?calcDeftness(atN1_val):0;
-let actualCost=(userDeft>=mapDeft)?3:4;
-let extraTurnCost=is2ndTurn?Math.floor(enemyCount/2):0;
-let totalStartCost=actualCost+extraTurnCost;
-let patternMsg="";
-let foundOffset=-1;
-let foundSequence=null;
-const isNormPat=pTypeStr.startsWith('N')||pTypeStr==='4_in_10'||pTypeStr==='3_in_10';
-const targetPatterns=SI_PATTERN_INDICES[pTypeStr];
-if(pType>0&&scanMax>0&&targetPatterns){
-let baseRng=seed>>>0;
-for(let i=0;i<37;i++)baseRng=lcg(baseRng);
-for(let step=38;step<=N+scanMax;step++){
-const rngSnapshot=baseRng;
-let sim=siRunBattleSim(baseRng,groupSize,rareRarity,normRarity,tLvs,false);
-baseRng=lcg(baseRng);
-let currentHits=isNormPat?sim.normHits:sim.rareHits;
-if(siMatchesPattern(currentHits,targetPatterns)){
-if(step>=N+totalStartCost){
-foundOffset=step-(N+totalStartCost);
-foundSequence=siRunBattleSim(rngSnapshot,groupSize,rareRarity,normRarity,tLvs,true).seq;
-break;
+function initFreeSearchUI(){
+const container=document.getElementById('fs_container');
+if(!container)return;
+let floorOpts=`<option value="0">---</option>`;
+for(let i=3;i<=16;i++)floorOpts+=`<option value="${i}">B${i}F</option>`;
+let boxOpts=`
+<option value="-1">---</option>
+<option value="0">1</option>
+<option value="1">2</option>
+<option value="2">3${T('rd','(整列)','(整列)')}</option>
+<option value="3">${T('Non-3','非整列','非整列')}</option>
+`;
+let rankOpts=`<option value="0">---</option>`;
+['S','A','B','C','D','E','F','G','H','I'].forEach((r,idx)=>{rankOpts+=`<option value="${10-idx}">${r}</option>`;});
+window.updateFSItems=function(groupId){
+let rankSelect=document.getElementById(`fs_r_${groupId}`);
+let itemSelect=document.getElementById(`fs_i_${groupId}`);
+if(!rankSelect||!itemSelect)return;
+let currentVal=itemSelect.value;
+let r=parseInt(rankSelect.value);
+let itemOpts=`<option value="ANY">---</option>`;
+let seen=new Set();
+let hasSpecial=false;
+if(r===0||r===10){
+itemOpts+=`<option value="Sainted soma">${getDispItem("Sainted soma")}</option>`;
+seen.add("Sainted soma");
+hasSpecial=true;
 }
+if(r===0||r===9){
+itemOpts+=`<option value="Ethereal stone">${getDispItem("Ethereal stone")}</option>`;
+seen.add("Ethereal stone");
+hasSpecial=true;
 }
+if(r===0||r===9||r===8){
+itemOpts+=`<option value="Rich">${T('Millionaire','大富豪','大富豪')}</option>`;
+hasSpecial=true;
 }
-patternMsg=foundOffset!==-1?
-C20+` <span class="si-highlight" style="color:#0f0;">AT +${N+totalStartCost+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
+if(r===0||r===8){
+itemOpts+=`<option value="Attribeauty">${getDispItem("Attribeauty")}</option>`;
+seen.add("Attribeauty");
+hasSpecial=true;
 }
-let battleStr="";
-let seqHtml="";
-if(pType>0&&foundOffset!==-1){
-let target=N+totalStartCost+foundOffset;
-let d1=target-(N+totalStartCost);
-let d2=target-(N+totalStartCost+1);
-let d4=target-(N+totalStartCost+2);
-seqHtml=siBuildSeqHtml(foundSequence);
-battleStr=`${BATTLE_LABEL}: <span style="color:#fa0; font-weight:bold; font-size:14px;">${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}</span> <span style="color:#888; font-size:11px;">`+C22+`</span> ${seqHtml}`;
+if(r===0||r===9){
+itemOpts+=`<option value="Metasla">${T('Metal Slime Equips','金屬史萊姆裝備','メタスラ装備')}</option>`;
+hasSpecial=true;
+}
+if(r===0||r===10){
+itemOpts+=`<option value="S_wpn">${T('S Weapon','S武器','S武器')}</option>`;
+hasSpecial=true;
+}
+if(hasSpecial){
+itemOpts+=`<option disabled>──────</option>`;
+}
+let validItems=[];
+if(typeof TableR!=='undefined'&&typeof TableO!=='undefined'&&typeof TableQ!=='undefined'){
+if(r===0){
+TableR.forEach(p=>{if(!seen.has(p[0])){seen.add(p[0]);validItems.push(p[0]);}});
 }else{
-let abs_1=N+totalStartCost;
-let abs_2=abs_1+1;
-let abs_4=abs_1+2;
-let currentRng=seed>>>0;
-for(let i=0;i<abs_1-1;i++)currentRng=lcg(currentRng);
-let defaultSim=siRunBattleSim(currentRng,groupSize,rareRarity,normRarity,tLvs,true);
-seqHtml=siBuildSeqHtml(defaultSim.seq);
-battleStr=`${BATTLE_LABEL}: <span style="color:#fa0; font-weight:bold; font-size:14px;">${abs_1} / ${abs_2} / ${abs_4}</span> <span style="color:#888; font-size:11px;">`+C23+`</span> ${seqHtml}`;
+let startIdx=TableO[r-1];
+let endIdx=(TableO[r]!==undefined)?TableO[r]:TableQ.length;
+for(let i=startIdx;i<endIdx;i++){
+let itemName=TableR[TableQ[i]][0];
+if(!seen.has(itemName)){seen.add(itemName);validItems.push(itemName);}
 }
-let s_target=seed>>>0;
-for(let i=0;i<targetTotalStep;i++)s_target=lcg(s_target);
-const atTarget_val=(s_target>>>16)&0x7FFF;
-let DropThreshold=Math.floor(32768/rareRarity);
-let firstThiefLv=tLvs[0]>0?tLvs[0]:99;
-const effectiveRate=Math.floor((rareRarity*100)/firstThiefLv);
-const ThiefThreshold=Math.floor(32767/effectiveRate)+1;
-const resBox=document.getElementById('si_at_results');
-resBox.innerHTML=`
-<div style="display:flex; justify-content:space-between;">
-<span>POP:<span class="si-highlight">${N}</span>|AT ${N}:<span class="si-highlight">${atN_val}</span>(${monName})</span>
-<span style="font-size:11px;">${patternMsg}</span>
-</div>
-<div>AT ${N+1}:<span style="color:#39C5BB;">${atN1_val}</span>➔`+G18+`:<span class="si-highlight">${mapDeft}</span></div>
-<div style="margin-top:5px; padding-top:5px; border-top:1px dashed #335;">
-${battleStr}
-</div>`;
-const targetBox=document.getElementById('si_target_results');
-targetBox.innerHTML=`
-<div>AT<span style="color:#fff;">${targetTotalStep}</span>:<span class="si-highlight"style="color:#f44; font-size:15px;">${atTarget_val}</span></div>
-<div style="font-size:11px; margin-top:5px; color:#ccc;">
-`+C25+`(≤${DropThreshold}):${atTarget_val<=DropThreshold?'✅ YES':'❌ NO'}<br>
-`+C26+`(Lv${firstThiefLv}≤${ThiefThreshold}):${atTarget_val<=ThiefThreshold?'✅ YES':'❌ NO'}
+}
+validItems.forEach(en=>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
+}
+itemSelect.innerHTML=itemOpts;
+if(itemSelect.querySelector(`option[value="${currentVal}"]`)){
+itemSelect.value=currentVal;
+}else{
+itemSelect.value="ANY";
+}
+};
+for(let i=1;i<=3;i++){
+container.innerHTML+=`
+<div style="display:flex; gap:2px; align-items:center;">
+<span style="color:#0ff; font-size:10px; width:10px; text-align:center;">${i}</span>
+<select id="fs_f_${i}"style="width:45px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${floorOpts}</select>
+<select id="fs_b_${i}"style="width:50px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${boxOpts}</select>
+<select id="fs_r_${i}"onchange="updateFSItems(${i})"style="width:40px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${rankOpts}</select>
+<select id="fs_i_${i}"style="flex:1; width:50px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555; text-overflow:ellipsis;"></select>
+<input type="number"id="fs_t_${i}"value="7"min="5"placeholder="sec"style="width:35px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555; text-align:center;">
 </div>`;
 }
-function openSeedInspector(){
-document.getElementById('seedInspectorModal').style.display='flex';
-updateSeedInspector();
+for(let i=1;i<=3;i++){
+updateFSItems(i);
 }
-function closeSeedInspector(e){
-if(!e||e.target.className==='modal-close'){
-document.getElementById('seedInspectorModal').style.display='none';
+}
+initFreeSearchUI();
+if(typeof initSeedInspectorUI==='function'){initSeedInspectorUI();}
+const urlParams=new URLSearchParams(window.location.search);
+const urlId=urlParams.get('id');
+if(urlId&&/^[0-9A-Fa-f]{6}$/.test(urlId)){
+const urlRank=urlId.substring(0,2).toUpperCase();
+const urlSeed=urlId.substring(2,6).toUpperCase();
+const rankEl=document.getElementById('rank');
+const seedEl=document.getElementById('seed');
+const rankVal='0x'+urlRank;
+if([...rankEl.options].some(o=>o.value===rankVal)){
+rankEl.value=rankVal;
+seedEl.value=urlSeed;
+}
+}
+calculate();
+});
+let isModalDragging=false;
+const allModalIds=['chestModal','disclaimerModal','h1Modal','h2Modal','h3Modal'];
+window.addEventListener('mousedown',(e)=>{
+if(allModalIds.includes(e.target.id)){isModalDragging=false;}
+else{isModalDragging=true;}
+});
+window.addEventListener('mouseup',(e)=>{
+if(!isModalDragging&&allModalIds.includes(e.target.id)){e.target.style.display='none';}
+isModalDragging=false;
+});
+function exportSearchResults(){
+try{
+const items=document.querySelectorAll('#searchGrid .search-result-item, #atSearchGrid .search-result-item');
+if(items.length===0){
+alert(A06);
+return;
+}
+let txtContent="RANK,SEED,"+T('Result','搜尋結果','検索結果')+"\n";
+items.forEach(item=>{
+let lines=item.innerText.split('\n').map(s=>s.trim()).filter(s=>s!=="");
+if(lines.length===0)return;
+let firstLine=lines[0];
+let seed="";
+let rank="--";
+let seedMatch=firstLine.match(/^([0-9A-F]{4})/i);
+if(seedMatch)seed=seedMatch[1].toUpperCase();
+let rankMatch=firstLine.match(/\(Rank\s*([0-9A-F]{2})\)/i);
+if(rankMatch)rank=rankMatch[1].toUpperCase();
+let resultLines=lines.slice(1).filter(line=>{
+if(/Lv\.?\s*\d+/i.test(line))return false;
+if(/^(Caves|Ruins|Ice|Water|Fire|洞窟|遺跡|氷|水|火山)$/i.test(line))return false;
+return true;
+});
+let resultText=resultLines.join(" / ");
+if(/^(B3F|B4F)\s+(Solo|Party|一人旅|即開)/i.test(resultText)){
+const itemName=document.getElementById('searchItem').value;
+resultText=`${getDispItem(itemName)} ${resultText}`;
+}
+else if(/^B9F\s+(Solo|Party|一人旅|即開)/i.test(resultText)){
+const itemName=document.getElementById('searchItem').value;
+resultText=`${getDispItem(itemName)} ${resultText}`;
+}
+let hasD=item.dataset.hasD==="true";
+if(hasD){
+txtContent+=`${rank},${seed},${resultText},D\n`;
+}else{
+txtContent+=`${rank},${seed},${resultText}\n`;
+}
+});
+const blob=new Blob([txtContent],{type:'text/plain;charset=utf-8'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DQ9_Search_Results_${new Date().getTime()}.txt`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}catch(error){
+alert(A07+error.message);
+console.error("匯出錯誤詳細資訊：",error);
 }
 }

@@ -2,13 +2,16 @@ let DISPLAY_LANG='EN';
 let _L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
 function T(en,tw,jp){const a=[en,tw,jp];a.toString=a.valueOf=function(){return this[_L];};return a;}
 const A01=T('Please choose at least one condition.','請至少輸入一個搜尋條件！','少なくとも1つの条件を入力してください。');
-const A03=T('Unexpected error during search. See Console for details.','搜尋過程中發生意外錯誤，已安全中斷。詳情請見 Console。','検索中にエラーが発生しました。詳細は Console を確認してください。');
-const A04=T('Sorry! Quickload search is not available for chest monsters.','非常抱歉！寶箱怪只能搜体感。','宝箱モンスターは体感検索のみ対応しています。');
+const A02=T('Unexpected error during search. See Console for details.','搜尋過程中發生意外錯誤，已安全中斷。詳情請見 Console。','検索中にエラーが発生しました。詳細は Console を確認してください。');
+const A03=T('Sorry! Quickload search is not available for chest monsters.','非常抱歉！寶箱怪只能搜體感。','宝箱モンスターは体感検索のみ対応しています。');
 const A05=T('Sorry! Searching for this item is currently unavailable.','非常抱歉！這個物品的搜尋功能暫未開通。','このアイテムの検索機能は現在未実装です。');
 const A06=T('No output! Please perform a search first.','目前沒有搜尋結果可以匯出！請先執行一次搜索。','出力する結果がありません！先に検索を実行してください。');
 const A07=T('❌ Output error!\\n\\nReason:','❌ 匯出失敗！\\n\\n錯誤原因：','❌ 出力に失敗しました！\\n\\n原因：');
-const A10=T('Invalid Location. Valid range: 01–96 (hex), digits 0–9 and A–F only.','無效的位置值。有效範圍：01–96（十六進制），僅限 0–9 及 A–F。','無効な場所コードです。有効な入力範囲：01–96（16進数）、0–9 および A–F のみ。');
-const A11=T('Invalid Seed. Valid range: 0000–7FFF (hex), digits 0–9 and A–F only.','無效的 Seed 值。有效範圍：0000–7FFF（十六進制），僅限 0–9 及 A–F。','無効な Seed です。有効な入力範囲：0000–7FFF（16進数）、0–9 および A–F のみ。');
+const A08=T('No valid maps in this Seed range when filtering by location.','在勾選「排除無位置地圖」的情況下，您輸入的 Seed 範圍內沒有合法地圖！','場所候補フィルター有効時、この Seed 範囲に該当する地図はありません！');
+const A09=T('Invalid Location. Valid range: 01–96 (hex), digits 0–9 and A–F only.','無效的位置值。有效範圍：01–96（十六進制），僅限 0–9 及 A–F。','無効な場所コードです。有効な入力範囲：01–96（16進数）、0–9 および A–F のみ。');
+const A10=T('Invalid Seed. Valid range: 0000–FFFF (hex), digits 0–9 and A–F only.','無效的 Seed 值。有效範圍：0000–FFFF（十六進制），僅限 0–9 及 A–F。','無効な Seed です。有効な入力範囲：0000–FFFF（16進数）、0–9 および A–F のみ。');
+const A11=T('"Only Monster" cannot be paired with ONLY (1-enemy) / No-enemy / 15x15 / Multi-special together.','「指定 ONLY 怪物」不可與 ONLY(任何怪)／敵無／15x15／複數特殊層 一起選擇。','「オンリーモンスター」は オンリー／敵無／15x15／複数の特殊フロア と併用できません。')
+const A12=T('Multibug search does not support Bug Terrain conditions.','Multibug 搜尋不支援 Bug地形。','マルチバグ検索はネタ地形に対応しておりません。')
 const B01=T('Progress:','搜尋進度:','Progress:');
 const B02=T('Rank','掃描 Rank','Rank');
 const B03=T('Found','個','個');
@@ -23,8 +26,8 @@ const C03=T('SMR','怪物等級','敵ランク');
 const C04=T('Depth','樓層數','深さ');
 const C05=T('Location & BQ','位置與 BQ','場所 & Base値');
 const C06=T('AT value','AT 判定值','AT 判定値');
-const C06b=T('AT Ptn','地圖法','地図法');
-const C07=T('Chests:','寶箱:','宝箱:');
+const C07=T('AT Ptn','地圖法','地図法');
+const C08=T('Chests:','寶箱:','宝箱:');
 const C09=T('No Chest','無寶箱','箱無し');
 const C10=T('Size','地圖大小','サイズ');
 const C11=T('Stairs','樓梯','階段');
@@ -79,6 +82,7 @@ const G23=T('E.Group','敵組','敵ｸﾞﾙｰﾌﾟ');
 const G24=T('Rare','稀有','レア');
 const G25=T('Normal','普通','通常');
 const G26=T('Thief\'s Theory User Lv','盜賊秘傳書 持有者 Lv','とうぞくの秘伝書 所持者 Lv');
+const G27=T('Map Deftness','地圖靈巧值','地図きようさ');
 const GBQ=T('Base Quality','BQ','Base値');
 const H00=T('Chest Timer Search','中斷技 搜尋','中断技 検索');
 const H01=T('QL','即一人旅','即一人旅');
@@ -86,7 +90,7 @@ const H02=T('Combo','體感','体感');
 const H03=T('3rd','整列箱','整列箱');
 const H04=T('Map Method (AT) Search','地圖法 (AT) 搜尋','地図法 (AT) 検索');
 const H05=T('Multibug','Multibug','マルチバグ');
-const H06=T('📥 TXT Output','📥 匯出 TXT','📥 TXT 出力');
+const H06=T('📥 TXT Output','📥 匯出TXT','📥 TXT出力');
 const H07=T('Chest Timer','馬拉松工具','マラソンツール');
 const J01=T('Click to preview','點擊直接預覽此地圖','クリックでプレビュー');
 const J02=T('Waiting for searching...','等待執行搜尋...','検索待ち中...');
@@ -117,61 +121,21 @@ const EL_NP=T(" (No Pandora's Box)"," (Pandora's Box 消失)"," (パンドラボ
 const EL_NM=T(" (No Mimic)"," (Mimic 消失)"," (ミミック消失)");
 const EL_NC=T(" (No Cannibox)"," (Cannibox 消失)"," (ひとくいばこ消失)");
 const EL_NORMAL=T('Normal','一般','通常');
-const EL_15=T('15×15','15×15','15×15');
 const AT_O=[['R2',T('2 Rare','連續 2 個稀有','レア×2')],['R2_3',T('2 Rare (N/N+3)','連續 2 個稀有 (N/N+3)','レア×2 (チカラめし)')],['R3',T('3 Rare','連續 3 個稀有','レア×3')],['R4',T('4 Rare','連續 4 個稀有','レア×4')],['R5',T('5 Rare','連續 5 個稀有','レア×5')],['4_in_6',T('4 in 6 Rare','6 個中 4 個稀有','レア×4 (6連続)')],['3_in_7',T('3 in 7 Rare','7 個中 3 個稀有','レア×3 (7連続)')],['N2',T('2 Normal','連續 2 個通常','通常×2')],['N3',T('3 Normal','連續 3 個通常','通常×3')],['N4',T('4 Normal','連續 4 個通常','通常×4')],['N5',T('5 Normal','連續 5 個通常','通常×5')],['4_in_10',T('4 in 10 Normal','10 個中 4 個通常','通常×4 (10連続)')],['3_in_10',T('3 in 10 Normal','10 個中 3 個通常','通常×3 (10連続)')]];
 const AT_PAT={'R2':1,'N2':2,'R2_3':3,'R3':4,'R4':5,'R5':6,'4_in_6':7,'3_in_7':8,'N3':9,'N4':10,'N5':11,'4_in_10':12,'3_in_10':13};
 const BATTLE_LABEL=T('Bat.','戰','戦');
 const i18nDict={
 'F01':F01,'F03':F03,'F04':F04,
 'G01':G01,'G02':G02,'G03':G03,'G04':G04,'G05':G05,'G06':G06,'G07':G07,'G08':G08,'G09':G09,'G10':G10,'G11':G11,'G12':G12,'G13':G13,'G14':G14,'G15':G15,
-'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'GBQ':GBQ,
+'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'G27':G27,'GBQ':GBQ,
 'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,'H07':H07,
 'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
 'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,
-'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,'EL_15':EL_15,
+'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
 };
 const _OG={og1:T('Materials','素材/消耗品','素材/消耗品'),ogS:T('B9F Items','B9F物品','B9Fアイテム'),og2:T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'),og3:T('Cursed Equipment','詛咒裝備','呪い装備'),og4:T('Other Equipment','其他裝備','その他の装備'),og5:T('Chest Monsters','寶箱怪','宝箱モンスター')};
 const _STEPS_LBL=T('Steps','步數','歩');
-const _B3F_SUFFIX=T(' (3)',' (3)',' (3)');
-function refreshI18n(){
-document.querySelectorAll('[data-i18n]').forEach(el=>{
-const key=el.getAttribute('data-i18n');
-let text=i18nDict[key];
-if(text){
-if(el.tagName==='OPTION'&&typeof b3fThreeItems!=='undefined'&&b3fThreeItems.includes(el.value)){text=String(text)+String(_B3F_SUFFIX);}
-el.textContent=text;
-}
-});
-for(const[id,label]of Object.entries(_OG)){const el=document.getElementById(id);if(el)el.label=label;}
-const sl=document.getElementById('lblSteps');if(sl)sl.textContent=_STEPS_LBL;
-if(typeof updateFSItems==='function'){for(let i=1;i<=3;i++)updateFSItems(i);}
-['atConsecutiveCount','at_pattern'].forEach(sid=>{
-const sel=document.getElementById(sid);
-if(sel&&typeof AT_O!=='undefined'){
-const cv=sel.value;
-sel.querySelectorAll('option').forEach((o,idx)=>{if(idx>0&&AT_O[idx-1])o.textContent=AT_O[idx-1][1];});
-sel.value=cv;
-}
-});
-}
-function switchUILang(lang){
-if(!['TW','EN','JP'].includes(lang))return;
-DISPLAY_LANG=lang;
-_L=lang==='EN'?0:lang==='JP'?2:1;
-refreshI18n();
-document.querySelectorAll('.lang-sw').forEach(b=>{
-if(b.dataset.lang===lang){b.style.background='#00A2E8';b.style.color='#fff';b.style.borderColor='#00A2E8';}
-else{b.style.background='#224';b.style.color='#888';b.style.borderColor='#444';}
-});
-const mm=document.getElementById('marathonModal');
-if(mm){mrtLang=lang==='EN'?'en':'jp';const bl=document.getElementById('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();if(mm.classList.contains('open')){mrtBuildTable();mrtRenderRows();}}
-if(typeof mapData!=='undefined'&&mapData&&mapData.floorCount>0){
-const cc=document.getElementById('controls_container');
-const sc=document.getElementById('single_map_controls');
-if(cc&&sc)cc.appendChild(sc);
-renderResult();
-}
-}
+const b3fThreeItems=["Mini medal","Sage's elixir","Iron nails","Hephaestus' flame"];
 const MAP_RANK=[0x02,0x38,0x3D,0x4C,0x51,0x65,0x79,0x8D,0xA1,0xB5,0xC9,0xDD];
 const CHEST_RANK={10:'S',9:'A',8:'B',7:'C',6:'D',5:'E',4:'F',3:'G',2:'H',1:'I'};
 const ENV_NAMES={1:['Caves','洞窟'],2:['Ruins','遺跡'],3:['Ice','氷'],4:['Water','水'],5:['Fire','火山']};
@@ -250,7 +214,10 @@ const TableR=[
 ["Bad axe","グレートアックス"],["Groundbreaker","大地くだき"],["Meteorang","メテオエッジ"],["Angel's bow","天使の弓"],
 ["Mimic","ミミック"],["Cannibox","ひとくいばこ"]
 ];
-const b3fThreeItems=["Mini medal","Sage's elixir","Iron nails","Hephaestus' flame"];
+function debounce(fn,ms){
+let timer;
+return function(...args){clearTimeout(timer);timer=setTimeout(()=>fn.apply(this,args),ms);};
+}
 function lcg(seed){return(Math.imul(seed,1103515245)+12345)>>>0;}
 class GrottoDetail{
 constructor(){
@@ -519,7 +486,14 @@ const above=d[i3+((d[index1+1]-1)<<4)+792];
 if(above===1||above===8)continue;
 const random1=this.gRNGRange(0,num2);
 const num9=i3-1;
-for(let i4=0;i4<random1&&d[i3+((d[index1+1]+i4)<<4)+792]!==8&&d[i3+((d[index1+1]+i4+1)<<4)+792]!==1&&(d[((d[index1+1]+i4)<<4)+i3+1+792]===1||d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1)&&(d[((d[index1+1]+i4)<<4)+num9+792]===1||d[num9+((d[index1+1]+i4+1)<<4)+792]!==1);i4++)
+for(let i4=0;i4<random1&&
+d[i3+((d[index1+1]+i4)<<4)+792]!==8&&
+d[i3+((d[index1+1]+i4+1)<<4)+792]!==1&&
+(d[((d[index1+1]+i4)<<4)+i3+1+792]===1||
+d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1)&&
+(d[((d[index1+1]+i4)<<4)+num9+792]===1||
+d[num9+((d[index1+1]+i4+1)<<4)+792]!==1);
+i4++)
 d[i3+((d[index1+1]+i4)<<4)+792]=1;
 }
 }else{
@@ -544,7 +518,14 @@ const below=d[i7+((d[index1+3]+1)<<4)+792];
 if(below===1||below===8)continue;
 const random3=this.gRNGRange(0,num2);
 const num11=i7-1;
-for(let i9=0;i9<random3&&d[i7+((d[index1+3]-i9)<<4)+792]!==8&&d[i7+((d[index1+3]-i9-1)<<4)+792]!==1&&(d[((d[index1+3]-i9)<<4)+i7+1+792]===1||d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1)&&(d[num11+((d[index1+3]-i9)<<4)+792]===1||d[num11+((d[index1+3]-i9-1)<<4)+792]!==1);i9++)
+for(let i9=0;i9<random3&&
+d[i7+((d[index1+3]-i9)<<4)+792]!==8&&
+d[i7+((d[index1+3]-i9-1)<<4)+792]!==1&&
+(d[((d[index1+3]-i9)<<4)+i7+1+792]===1||
+d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1)&&
+(d[num11+((d[index1+3]-i9)<<4)+792]===1||
+d[num11+((d[index1+3]-i9-1)<<4)+792]!==1);
+i9++)
 d[i7+((d[index1+3]-i9)<<4)+792]=1;
 }
 }
@@ -563,7 +544,14 @@ const left=d[(i10<<4)+792+d[index1]-1];
 if(left===1||left===8)continue;
 const random4=this.gRNGRange(0,num1);
 const num13=i10-1;
-for(let i12=0;i12<random4&&d[i12+(i10<<4)+d[index1]+792]!==8&&d[i12+(i10<<4)+d[index1]+792+1]!==1&&(d[i12+((i10+1)<<4)+d[index1]+792]===1||d[i12+((i10+1)<<4)+d[index1]+792+1]!==1)&&(d[i12+(num13<<4)+d[index1]+792]===1||d[i12+(num13<<4)+d[index1]+792+1]!==1);i12++)
+for(let i12=0;i12<random4&&
+d[i12+(i10<<4)+d[index1]+792]!==8&&
+d[i12+(i10<<4)+d[index1]+792+1]!==1&&
+(d[i12+((i10+1)<<4)+d[index1]+792]===1||
+d[i12+((i10+1)<<4)+d[index1]+792+1]!==1)&&
+(d[i12+(num13<<4)+d[index1]+792]===1||
+d[i12+(num13<<4)+d[index1]+792+1]!==1);
+i12++)
 d[i12+(i10<<4)+d[index1]+792]=1;
 }
 }
@@ -582,7 +570,14 @@ const right=d[d[index1+1]+(i13<<4)+792+1];
 if(right===1||right===8)continue;
 const random5=this.gRNGRange(0,num1);
 const num15=i13-1;
-for(let i15=0;i15<random5&&d[(i13<<4)+792+d[index1+2]-i15]!==8&&d[(i13<<4)+792+d[index1+2]-i15-1]!==1&&(d[((i13+1)<<4)+792+d[index1+2]-i15]===1||d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1)&&(d[(num15<<4)+792+d[index1+2]-i15]===1||d[(num15<<4)+792+d[index1+2]-i15-1]!==1);i15++)
+for(let i15=0;i15<random5&&
+d[(i13<<4)+792+d[index1+2]-i15]!==8&&
+d[(i13<<4)+792+d[index1+2]-i15-1]!==1&&
+(d[((i13+1)<<4)+792+d[index1+2]-i15]===1||
+d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1)&&
+(d[(num15<<4)+792+d[index1+2]-i15]===1||
+d[(num15<<4)+792+d[index1+2]-i15-1]!==1);
+i15++)
 d[(i13<<4)+792+d[index1+2]-i15]=1;
 }
 }
@@ -1219,14 +1214,14 @@ const SPAWN_DB={
 };
 const _elistWtL=new Uint8Array(256);
 const _elistWtU=new Uint8Array(256);
+function floorMRAt(baseMR,f){return Math.min(12,baseMR+(f>>2));}
 function getFloorElistInfo(engine,f){
 const d=engine.di[f];
 const width=d[2];
 const height=d[3];
 const envType=engine._details[3];
 const baseMR=engine._details[2];
-let floorMR=baseMR+(f>>2);
-if(floorMR>12)floorMR=12;
+let floorMR=floorMRAt(baseMR,f);
 const gArr=G_VALUES[envType];
 const G=gArr?gArr[floorMR]:0;
 const omArr=ONLY_MONSTERS[envType];
@@ -1252,9 +1247,9 @@ wtCount++;
 }
 }
 }
-const boundary=4128-(W*16+X*8);
+const C=4128-(W*16+X*8);
 let A,B,D;
-if(boundary>=0){
+if(C>=0){
 A=4896+(W*16)+(X*8);
 B=X;
 D=0;
@@ -1276,7 +1271,7 @@ const isIce10_12=(envType===3&&floorMR>=10&&floorMR<=12);
 const isRuins3=(envType===2&&floorMR===3);
 const isIce1=(envType===3&&floorMR===1);
 const F=(isIce10_12||isRuins3||isIce1)?7:8;
-const ElistOfs=A+4+(B*8)+(D*4)+(F*28)+G;
+const ElistOfs=A+4+(B*8)+(D*4)+(F*20)+(F*8)+G;
 const val=ElistOfs;
 let state=null;
 if(val<=0x2B30){

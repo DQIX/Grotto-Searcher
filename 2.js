@@ -42,11 +42,8 @@ ranges.push(start===end?`${start}`:`${start}-${end}`);
 return ranges.join(',');
 }
 let SEED_TO_TIMERS_CACHE=null;
-function calcLocations(seed,rStr){
-const{fqMin,fqMax}=RANKS[rStr]||{fqMin:2,fqMax:248};
-const seenLocations={};
-const outputOrder=[];
-if(!SEED_TO_TIMERS_CACHE){
+function ensureSeedTimerCache(){
+if(SEED_TO_TIMERS_CACHE)return;
 SEED_TO_TIMERS_CACHE={};
 for(let t=0;t<65536;t++){
 const x1=lcg(t);
@@ -56,13 +53,20 @@ if(!SEED_TO_TIMERS_CACHE[s])SEED_TO_TIMERS_CACHE[s]=[];
 SEED_TO_TIMERS_CACHE[s].push(t);
 }
 }
-const timers=SEED_TO_TIMERS_CACHE[seed]||[];
-for(const timer of timers){
+function timerToR1R3(timer){
 const x1=lcg(timer);
 const x2=lcg(x1);
 const x3=lcg(x2);
-const r1=(x1>>>16)&0x7FFF;
-const r3=(x3>>>16)&0x7FFF;
+return{r1:(x1>>>16)&0x7FFF,r3:(x3>>>16)&0x7FFF};
+}
+function calcLocations(seed,rStr){
+const{fqMin,fqMax}=RANKS[rStr]||{fqMin:2,fqMax:248};
+const seenLocations={};
+const outputOrder=[];
+ensureSeedTimerCache();
+const timers=SEED_TO_TIMERS_CACHE[seed]||[];
+for(const timer of timers){
+const{r1,r3}=timerToR1R3(timer);
 const locToBq={};
 for(let baseQ=2;baseQ<=248;baseQ++){
 const finalQ=calcFinalQuality(baseQ,r1);
@@ -103,89 +107,11 @@ return a.minBq-b.minBq;
 });
 return{outputOrder,seenLocations};
 }
-function getValidatedSeedRange(){
-let minStr=document.getElementById('cond_seed_min')?document.getElementById('cond_seed_min').value.trim():"";
-let maxStr=document.getElementById('cond_seed_max')?document.getElementById('cond_seed_max').value.trim():"";
-let customMin=minStr?parseInt(minStr,16):0;
-let customMax=maxStr?parseInt(maxStr,16):0x7FFF;
-if(isNaN(customMin)||customMin<0)customMin=0;
-if(isNaN(customMax)||customMax>0x7FFF)customMax=0x7FFF;
-if(customMin>customMax){const t=customMin;customMin=customMax;customMax=t;document.getElementById('cond_seed_min').value=hex4(customMin);document.getElementById('cond_seed_max').value=hex4(customMax);}
-const searchFilterLoc=true;
-const startSeed=customMin;
-const endSeed=searchFilterLoc?Math.min(customMax,0x7FFF):customMax;
-return{startSeed,endSeed,searchFilterLoc};
-}
-function validateHex(id,minVal,maxVal,padLen,errMsg){
-const el=document.getElementById(id);
-if(!el||!el.value)return;
-const v=el.value.trim().toUpperCase();
-if(!v.length||/[^0-9A-F]/.test(v)){alert(errMsg);el.value='';return;}
-const n=parseInt(v,16);
-if(isNaN(n)||n<minVal||n>maxVal){alert(errMsg);el.value='';return;}
-if(padLen)el.value=v.padStart(padLen,'0');
-}
-function getUltimateConds(){
-const getV=(id)=>{const el=document.getElementById(id);return el?el.value.trim():"";};
-const reqBox={};
-['I','H','G','F','E','D','C','B','A','S'].forEach((ch,i)=>{
-reqBox[i+1]=parseInt(getV('cond_box_'+ch))||0;
-});
-return{
-prefix:getV('cond_prefix'),suffix:getV('cond_suffix'),locale:getV('cond_locale'),
-lv:getV('cond_lv'),location:getV('cond_location'),bq:getV('cond_bq'),bqCount:getV('cond_bq_count'),
-env:getV('cond_env'),monster:getV('cond_monster'),depth:getV('cond_depth'),boss:getV('cond_boss'),
-seedMin:getV('cond_seed_min'),seedMax:getV('cond_seed_max'),elist:getV('cond_elist'),
-onlyMon:getV('cond_only_mon'),anomaly:getV('cond_anomaly'),
-reqBox:reqBox,hasBoxCond:Object.values(reqBox).some(v=>v>0)
-};
-}
 let _cachedLocData=null;
 function checkUltimateCondsMatch(engine,seed,targetRankKey,conds,searchFilterLoc){
 _cachedLocData=null;
-if(conds.prefix&&engine._details[5]!=conds.prefix)return false;
-if(conds.suffix&&engine._details[6]!=conds.suffix)return false;
-if(conds.locale&&(engine.MapLocale)!=conds.locale)return false;
-if(conds.lv&&engine._details[4]!=conds.lv)return false;
-if(conds.env&&engine._details[3]!=conds.env)return false;
-if(conds.monster&&engine._details[2]!=conds.monster)return false;
-if(conds.depth&&engine._details[1]!=conds.depth)return false;
-if(conds.boss&&engine._details[0]!=conds.boss)return false;
-let targetLocNum=conds.location?parseInt(conds.location,16):null;
-let targetBqNum=conds.bq?parseInt(conds.bq):null;
-let bqCountFilter=conds.bqCount||"";
-if(targetLocNum!==null||targetBqNum!==null||searchFilterLoc||bqCountFilter){
-if(targetRankKey!==null&&typeof calcLocations==='function'){
-let locData=calcLocations(seed,targetRankKey);
-_cachedLocData=locData;
-if(locData.outputOrder.length===0)return false;
-if(targetLocNum!==null){
-if(!locData.seenLocations[targetLocNum])return false;
-if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))return false;
-}else if(targetBqNum!==null){
-let bqFound=false;
-for(let loc in locData.seenLocations){
-if(locData.seenLocations[loc].has(targetBqNum)){bqFound=true;break;}
-}
-if(!bqFound)return false;
-}
-if(bqCountFilter==="1"){
-let allBqs=new Set();
-for(let loc in locData.seenLocations){
-for(let bq of locData.seenLocations[loc])allBqs.add(bq);
-}
-if(allBqs.size!==1)return false;
-}else if(bqCountFilter==="1p"){
-let found=false;
-for(let loc in locData.seenLocations){
-if(locData.seenLocations[loc].size===1){found=true;break;}
-}
-if(!found)return false;
-}
-}else if(bqCountFilter){
-return false;
-}
-}
+if(!checkBasicConds(engine,conds))return false;
+if(!checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey,true).match)return false;
 return true;
 }
 function ChestHtml(engine,conds){
@@ -274,6 +200,23 @@ result.badge=`<br><span style="display:inline-block; color:#aaa; font-size:11px;
 }
 return result;
 }
+function evalElistFloorHit(searchEngine,f,info,elistCond){
+let targetCount=0;
+let isElistHit=false;
+if(info.state.includes(EL_4)){targetCount=4;if(elistCond==='4')isElistHit=true;}
+else if(info.state.includes(EL_3)){targetCount=3;if(elistCond==='3')isElistHit=true;}
+else if(info.state.includes(EL_2)){targetCount=2;if(elistCond==='2')isElistHit=true;}
+if(!isElistHit&&elistCond){
+if(elistCond==='PARTIAL_NONE'&&info.state.includes(EL_P))isElistHit=true;
+else if(elistCond==='ONLY'&&(info.state.includes('only')||info.state.includes('オンリー')))isElistHit=true;
+else if(elistCond==='NONE'&&info.state.includes(EL_0)&&!info.state.includes(EL_P))isElistHit=true;
+else if(elistCond==='SIZE_15'&&searchEngine.di[f][2]===15)isElistHit=true;
+}
+return{targetCount,isElistHit};
+}
+function makeDBadge(dValue){
+return dValue>0?` <span style="background:#fa0; color:#000; padding:1px 4px; border-radius:3px; font-size:10px;">${dValue}</span>`:'';
+}
 function checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr){
 let result={match:true,specialHitDetails:[],jumpToFloor:-1,hasMatchedD:false};
 if(!(conds.elist||conds.onlyMon||searchOnlyWithD))return result;
@@ -293,50 +236,48 @@ for(let f=0;f<searchEngine.floorCount;f++){
 let info=getFloorElistInfo(searchEngine,f);
 if(!info.state)continue;
 if(info.dValue>0)hasAnyD=true;
-let targetCount=0;
-let isElistHit=false;
-if(info.state.includes(EL_4)){targetCount=4;if(conds.elist==='4')isElistHit=true;}
-else if(info.state.includes(EL_3)){targetCount=3;if(conds.elist==='3')isElistHit=true;}
-else if(info.state.includes(EL_2)){targetCount=2;if(conds.elist==='2')isElistHit=true;}
-if(!isElistHit&&conds.elist){
-if(conds.elist==='PARTIAL_NONE'&&info.state.includes(EL_P))isElistHit=true;
-else if(conds.elist==='ONLY'&&(info.state.includes('only')||info.state.includes('オンリー')))isElistHit=true;
-else if(conds.elist==='NONE'&&info.state.includes(EL_0)&&!info.state.includes(EL_P))isElistHit=true;
-else if(conds.elist==='SIZE_15'&&searchEngine.di[f][2]===15)isElistHit=true;
-}
+const floorHit=evalElistFloorHit(searchEngine,f,info,conds.elist);
+let targetCount=floorHit.targetCount;
+let isElistHit=floorHit.isElistHit;
 let monBadge='';
 let isCombinedMatchedThisFloor=false;
 let needSpawnDb=(targetCount>0&&(conds.elist===targetCount.toString()||(conds.elist==='SIZE_15'&&isElistHit)))||(isCombinedSearch&&isElistHit);
 if(needSpawnDb){
-let floorMR=Math.min(12,baseMR+(f>>2));
+let floorMR=floorMRAt(baseMR,f);
 let badgeData=getElistMonsterBadge(envType,floorMR,targetCount,isCombinedSearch?conds.onlyMon:null);
 monBadge=badgeData.badge;
 isCombinedMatchedThisFloor=badgeData.isCombinedHit;
 }
 specialFloorCount++;
-let dBadge=info.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 4px; border-radius:3px; font-size:10px;">${info.dValue}</span>`:'';
+let dBadge=makeDBadge(info.dValue);
 let displayText=`B${f+1}F: ${info.state}${dBadge}${monBadge}`;
 currentMapSpecials.push({f,state:info.state,dValue:info.dValue,monBadge});
 if(isCombinedSearch){
-if(isCombinedMatchedThisFloor&&!elistMatched){
+if(isCombinedMatchedThisFloor){
+if(info.dValue>0)result.hasMatchedD=true;
+if(!elistMatched){
 elistMatched=true;
 onlyMatched=true;
 result.specialHitDetails.push(displayText);
 if(result.jumpToFloor===-1)result.jumpToFloor=f;
-if(info.dValue>0)result.hasMatchedD=true;
+}
 }
 }else{
-if(conds.elist&&conds.elist!=='MULTI_SPECIAL'&&!elistMatched&&isElistHit){
+if(conds.elist&&conds.elist!=='MULTI_SPECIAL'&&isElistHit){
+if(info.dValue>0)result.hasMatchedD=true;
+if(!elistMatched){
 elistMatched=true;
 result.specialHitDetails.push(displayText);
 if(result.jumpToFloor===-1)result.jumpToFloor=f;
-if(info.dValue>0)result.hasMatchedD=true;
 }
-if(conds.onlyMon&&!onlyMatched&&info.state.includes(_onlyMonExpectedStr)){
+}
+if(conds.onlyMon&&info.state.includes(_onlyMonExpectedStr)){
+if(info.dValue>0)result.hasMatchedD=true;
+if(!onlyMatched){
 onlyMatched=true;
 if(!result.specialHitDetails.includes(displayText))result.specialHitDetails.push(displayText);
 if(result.jumpToFloor===-1)result.jumpToFloor=f;
-if(info.dValue>0)result.hasMatchedD=true;
+}
 }
 }
 }
@@ -344,7 +285,7 @@ if(conds.elist==='MULTI_SPECIAL'){
 if(specialFloorCount>=2){
 elistMatched=true;
 currentMapSpecials.forEach(s=>{
-let dBadge=s.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 4px; border-radius:3px; font-size:10px;">${s.dValue}</span>`:'';
+let dBadge=makeDBadge(s.dValue);
 let text=`B${s.f+1}F: ${s.state}${dBadge}${s.monBadge}`;
 if(!result.specialHitDetails.includes(text))result.specialHitDetails.push(text);
 if(s.dValue>0)result.hasMatchedD=true;
@@ -361,10 +302,11 @@ if(!result.hasMatchedD)result.match=false;
 }
 return result;
 }
-function checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey){
+function checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey,applyBqCount){
 let targetLocNum=conds.location?parseInt(conds.location,16):null;
 let targetBqNum=conds.bq?parseInt(conds.bq):null;
-if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc)return{match:true};
+const bqCountFilter=applyBqCount?(conds.bqCount||""):"";
+if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc&&!bqCountFilter)return{match:true};
 if(seed>0x7FFF||targetRankKey===null)return{match:false};
 _cachedLocData=calcLocations(seed,targetRankKey);
 let locData=_cachedLocData;
@@ -376,6 +318,19 @@ if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))ret
 let bqFound=false;
 for(let loc in locData.seenLocations){if(locData.seenLocations[loc].has(targetBqNum)){bqFound=true;break;}}
 if(!bqFound)return{match:false};
+}
+if(bqCountFilter==="1"){
+let allBqs=new Set();
+for(let loc in locData.seenLocations){
+for(let bq of locData.seenLocations[loc])allBqs.add(bq);
+}
+if(allBqs.size!==1)return{match:false};
+}else if(bqCountFilter==="1p"){
+let found=false;
+for(let loc in locData.seenLocations){
+if(locData.seenLocations[loc].size===1){found=true;break;}
+}
+if(!found)return{match:false};
 }
 return{match:true};
 }
@@ -429,97 +384,16 @@ if(MONSTER_DATA[id].en===conds.onlyMon){targetJpName=MONSTER_DATA[id].jp;break;}
 }
 return(DISPLAY_LANG!=='EN'?targetJpName:conds.onlyMon)+(DISPLAY_LANG!=='EN'?"オンリー":" only");
 }
-let isSearching=false;
-let searchCancel=false;
-function makeResultClickHandler(seed,rStr,jumpFloor){
-return()=>{
-const seedHex=hex4(seed);
-document.getElementById('seed').value=seedHex;
-if(rStr)document.getElementById('rank').value="0x"+rStr;
-calculate();
-const siSeed=document.getElementById('si_seed');
-if(siSeed)siSeed.value=seedHex;
-const mR=document.getElementById('mrt_inRank');
-const mS=document.getElementById('mrt_inSeed');
-if(mR&&rStr)mR.value=rStr;
-if(mS)mS.value=seedHex;
-document.getElementById('result').scrollIntoView({behavior:'smooth'});
-if(jumpFloor!==undefined&&jumpFloor!==null&&jumpFloor!==-1){
-setTimeout(()=>{
-const tab=document.querySelectorAll('.floor-tab')[jumpFloor];
-if(tab)tab.click();
-},50);
+function resolveRankKey(rStr,rankNum){
+return RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:((rankNum!==undefined&&RANKS[rankNum])?rankNum:null));
 }
-};
+function rankCanDropInMRRange(r,numMin,numMax){
+for(let num=numMin;num<=numMax;num++){
+const cMin=TableF[(num-1)*4+1];
+const cMax=TableF[(num-1)*4+2];
+if(r>=cMin&&r<=cMax)return true;
 }
-async function executeSharedSearch(config){
-if(isSearching){searchCancel=true;return;}
-const conds=getUltimateConds();
-const searchFilterLoc=true;
-if(config.validateConds&&!config.validateConds(conds,searchFilterLoc)){return;}
-const rangeData=getValidatedSeedRange();
-if(rangeData.error){alert(rangeData.error);return;}
-const{startSeed,endSeed}=rangeData;
-isSearching=true;searchCancel=false;
-const btn=document.getElementById(config.btnId);
-if(btn){
-btn.textContent=config.stopText||'🛑 STOP';
-btn.style.background='#f44';
-btn.style.color='#fff';
-}
-const searchAllRanks=document.getElementById('searchAllRanks').checked;
-const baseRankStr=document.getElementById('rank').value;
-let ranksToSearch=searchAllRanks?MAP_RANK:[parseInt(baseRankStr)];
-if(config.filterRanks){ranksToSearch=config.filterRanks(ranksToSearch,conds);}
-const resultDiv=document.getElementById('searchResults');
-resultDiv.innerHTML='<div style="color:#aaa; font-size:13px; margin-bottom:8px">'+B01+' <span id="searchProgress" style="color:#fff; font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>';
-const grid=document.getElementById('searchGrid');
-const progressSpan=document.getElementById('searchProgress');
-if(ranksToSearch.length===0){
-progressSpan.textContent="100% ("+(config.emptyRankMsg||B08)+")";
-isSearching=false;
-if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.style.color=config.btnColor||'#fff';}
-return;
-}
-let totalCombos=ranksToSearch.length*(endSeed-startSeed+1);
-let processed=0;
-let hitCount=0;
-let searchEngine=new GrottoDetail();
-if(config.setupEngine)config.setupEngine(searchEngine,conds);
-let fragment=document.createDocumentFragment();
-try{
-for(let rank of ranksToSearch){
-if(searchCancel)break;
-let rStr=hex2(rank);
-let targetRankKey=RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:(RANKS[rank]?rank:null));
-for(let seed=startSeed;seed<=endSeed;seed++){
-if(searchCancel)break;
-if(seed%250===0){
-progressSpan.textContent=Math.floor((processed/totalCombos)*100)+'% ('+B02+' '+rStr+', Seed '+hex4(seed)+') ['+B04+''+hitCount+' '+B03+']';
-if(fragment.children.length>0)grid.appendChild(fragment);
-await new Promise(r=>setTimeout(r,0));
-}
-searchEngine.MapSeed=seed;
-searchEngine.MapRank=rank;
-_cachedLocData=null;
-let itemNode=config.processSeed(searchEngine,seed,rStr,targetRankKey,conds,searchFilterLoc);
-if(itemNode){
-hitCount++;
-fragment.appendChild(itemNode);
-}
-processed++;
-}
-}
-if(fragment.children.length>0)grid.appendChild(fragment);
-}catch(error){
-console.error("搜尋過程發生錯誤：",error);
-alert(A03);
-searchCancel=true;
-}finally{
-isSearching=false;
-if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.style.color=config.btnColor||'#000';}
-progressSpan.textContent=searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${B06?B06+' ':''}${hitCount} ${B03})`;
-}
+return false;
 }
 function getRankSMRInfo(rank,conds){
 let rStr=hex2(rank);
@@ -597,18 +471,7 @@ let maxOffset=isBugSearch?3:Math.floor((maxFloorCount-1)/4);
 if(conds.hasBoxCond){
 let maxPossibleNum=Math.min(12,maxSMR+maxOffset);
 for(let r=10;r>=1;r--){
-if(conds.reqBox[r]>0){
-let canDrop=false;
-for(let num=minSMR;num<=maxPossibleNum;num++){
-let cMin=TableF[(num-1)*4+1];
-let cMax=TableF[(num-1)*4+2];
-if(r>=cMin&&r<=cMax){
-canDrop=true;
-break;
-}
-}
-if(!canDrop)return false;
-}
+if(conds.reqBox[r]>0&&!rankCanDropInMRRange(r,minSMR,maxPossibleNum))return false;
 }
 }
 if(conds.onlyMon){
@@ -637,45 +500,412 @@ if(!isPossible)return false;
 return true;
 });
 }
-function startUltimateSearch(){
-const conds=getUltimateConds();
-const _onlyMonExpectedStr=buildOnlyMonExpectedStr(conds);
-executeSharedSearch({
-btnId:'searchBtnSpecific',
-btnText:'🎯 Search',
-btnBg:'linear-gradient(135deg,#0ff,#08a)',
-btnColor:'#000',
-stopText:'🛑 STOP',
-emptyRankMsg:B07,
-validateConds:(conds,searchFilterLoc)=>{
-const hasBasicCond=Object.keys(conds).some(k=>k!=='reqBox'&&k!=='hasBoxCond'&&conds[k]!=="");
-if(!hasBasicCond&&!conds.hasBoxCond&&!searchFilterLoc){alert(A01);return false;}
-return true;
+function getDispItem(enName){let trans=i18nDict['I_'+enName];return trans?String(trans).split('(')[0]:enName;}
+const ITEMS_MILLIONAIRE=["Hero spear","Pruning knife","Wyrmwand","Wizardly whip","Beast claws","Attribeauty","Heavy hatchet","Megaton hammer","Pentarang","Metal slime sword","Metal slime spear"];
+const ITEMS_MILLIONAIRE_BOX3=ITEMS_MILLIONAIRE.slice(0,7);
+const ITEMS_S_WEAPONS=["Stardust sword","Poker","Deft dagger","Bright staff","Gringham whip","Knockout rod","Dragonlord claws","Critical fan","Bad axe","Groundbreaker","Meteorang","Angel's bow"];
+function getChestRanksForItems(itemNames){
+const ranks=[];
+for(let r=1;r<=10;r++){
+let startIdx=TableO[r-1],endIdx=TableO[r];
+for(let i=startIdx;i<endIdx;i++){
+if(itemNames.includes(TableR[TableQ[i]][0])&&!ranks.includes(r))ranks.push(r);
+}
+}
+return ranks;
+}
+function filterMapRanksBySMRAndChest(ranksToSearch,conds,chestRankGroups,targetFloorOffset){
+return ranksToSearch.filter(rank=>{
+const info=getRankSMRInfo(rank,conds);
+if(!info)return false;
+const{minSMR,maxSMR,maxFloorCount}=info;
+if(!chestRankGroups||chestRankGroups.length===0)return true;
+let minOffset=0;
+let maxOffset=Math.floor((maxFloorCount-1)/4);
+if(targetFloorOffset!==undefined&&targetFloorOffset!==null){
+let requiredFloors=(targetFloorOffset*4)+1;
+if(maxFloorCount<requiredFloors)return false;
+minOffset=targetFloorOffset;
+maxOffset=targetFloorOffset;
+}
+let minPossibleNum=minSMR+minOffset;
+let maxPossibleNum=Math.min(12,maxSMR+maxOffset);
+return chestRankGroups.every(group=>
+group.some(r=>rankCanDropInMRRange(r,minPossibleNum,maxPossibleNum))
+);
+});
+}
+function calcDeftness(at){
+const raw=Math.ceil(at/32768*100-2)*20;
+if(raw<=0)return 0;
+if(raw>999)return 1000;
+return raw;
+}
+function formatDeftness(at){
+const deft=calcDeftness(at);
+const color=deft>=1000?'#f44':deft<=1?'#888':'#39C5BB';
+const label=deft>=1000?'1000':(deft<=0?'1':deft.toString());
+return{deft,color,label};
+}
+function siFormatAT(val){
+if(val<-2)return'⊖';
+if(val>970)return'⊕';
+return val;
+}
+function getATPair(seed,N){
+let s=seed>>>0;
+for(let i=0;i<N;i++)s=lcg(s);
+const atN=(s>>>16)&0x7FFF;
+s=lcg(s);
+const atN1=(s>>>16)&0x7FFF;
+return{atN,atN1};
+}
+function evaluateATPtn(pType,validCount,hb){
+let matched=false,extractLen=0;
+switch(pType){
+case 1:if(validCount>=2&&(hb&3)===3){matched=true;extractLen=2;}break;
+case 2:if(validCount>=3&&(hb&15)===5){matched=true;extractLen=4;}break;
+case 3:if(validCount>=4&&(hb&9)===9){matched=true;extractLen=4;}break;
+case 4:if(validCount>=3&&(hb&7)===7){matched=true;extractLen=3;}break;
+case 5:if(validCount>=4&&(hb&15)===15){matched=true;extractLen=4;}break;
+case 6:if(validCount>=5&&(hb&31)===31){matched=true;extractLen=5;}break;
+case 7:if(validCount>=6){let v=hb&63;if(v===57||v===51||v===39){matched=true;extractLen=6;}}break;
+case 8:if(validCount>=7){let v=hb&127;if(v===97||v===100||v===76||v===73||v===67){matched=true;extractLen=7;}}break;
+case 9:if(validCount>=6&&(hb&63)===21){matched=true;extractLen=6;}break;
+case 10:if(validCount>=8&&(hb&255)===85){matched=true;extractLen=8;}break;
+case 11:if(validCount>=10&&(hb&1023)===341){matched=true;extractLen=10;}break;
+case 12:if(validCount>=10){let v=hb&1023;if(v===337||v===325||v===277){matched=true;extractLen=10;}}break;
+case 13:if(validCount>=10){let v=hb&1023;if(v===321||v===324||v===276||v===273||v===261){matched=true;extractLen=10;}}break;
+}
+return{matched,extractLen};
+}
+function formatATPtnHTML(extractLen,step,valsBuffer,hb){
+let formattedVals=[];
+for(let i=extractLen-1;i>=0;i--){
+let sv=step-i;
+let v=valsBuffer[sv%10];
+let m=(hb&(1<<i))!==0;
+if(m)formattedVals.push(`<strong style="color:#f44;">${v}</strong>`);
+else formattedVals.push(`<span style="color:#666;">${v}</span>`);
+}
+return formattedVals.join(', ');
+}
+function _scanPattern(seed,maxSteps,threshold,pType,minStart,popIndex){
+const valsBuffer=new Int32Array(10);
+let rng=seed,historyBits=0,validCount=0;
+let foundOffsets=[];
+let popValue=null,defValue=null;
+for(let step=1;step<=maxSteps;step++){
+rng=lcg(rng);
+const val=(rng>>>16)&0x7FFF;
+if(popIndex>0){
+if(step===popIndex)popValue=val;
+if(step===popIndex+1)defValue=val;
+}
+if(step<38)continue;
+historyBits=((historyBits<<1)|((val<=threshold)?1:0))&1023;
+valsBuffer[step%10]=val;
+validCount++;
+const{matched,extractLen}=evaluateATPtn(pType,validCount,historyBits);
+if(matched){
+const startStep=step-extractLen+1;
+if(startStep>=minStart){
+foundOffsets.push({start:startStep,valsHtml:formatATPtnHTML(extractLen,step,valsBuffer,historyBits)});
+}
+historyBits=0;validCount=0;
+}
+}
+return{foundOffsets,popValue,defValue};
+}
+function _buildOffsetsHtml(foundOffsets){
+return foundOffsets.map(o=>
+`<span style="color:#0ff; font-size:12px;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`
+).join('<br>');
+}
+function _buildDiffsHtml(foundOffsets,N,deft){
+const lines=foundOffsets.map(o=>{
+const d1=o.start-(N+3),d2=o.start-(N+4),d4=o.start-(N+5);
+return`<span class="at-dynamic-battle" data-target="${o.start}" data-n="${N}" data-req="${deft}" style="font-size:11px; text-shadow:0 0 2px rgba(255,170,0,0.5);">${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}</span>`;
+}).join(`<br><span style="color:transparent; font-size:11px;">${BATTLE_LABEL} </span>`);
+return`<span style="color:#fa0; margin-left:12px; font-size:11px;">${BATTLE_LABEL} ${lines}</span>`;
+}
+function _buildATCard(seed,N,atN,atN1,diffsHtml){
+const{deft,color:deftColor,label:deftLabel}=formatDeftness(atN1);
+return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px; padding:5px 8px; background:#0a1a1a; border:1px solid #055; border-radius:3px;">
+<span style="color:#4c4; font-size:11px;"><span class="at-m-atn-label">AT[${N}]:</span><span class="at-m-atval">${atN}</span></span>
+<strong class="at-dynamic-mon"data-at="${atN}"style="color:#f8f; margin-left:8px; font-size:11px; text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
+<br><span class="at-m-deft"style="color:${deftColor}; display:inline-block; margin-top:4px; font-size:11px;">${G18}${deftLabel}</span>
+${diffsHtml}</div>`;
+}
+function _buildPatternBox(patternName,probText,offsetsHtml){
+return`<div style="margin-top:4px; padding:4px 8px; background:#111; border:1px solid #333; border-radius:4px;">
+<span style="color:#fa0; font-size:11px; font-weight:bold;">${patternName}(${probText})</span><br>${offsetsHtml}</div>`;
+}
+function initItemI18n(){
+if(typeof TableR!=='undefined'){TableR.forEach(pair=>{i18nDict['I_'+pair[0]]=T(pair[0],pair[1],pair[1]);});}
+Object.assign(i18nDict,{
+"I_Millionaire":T("Millionaire","大富豪","大富豪"),
+"I_S weapon":T("S weapon","S武器","S武器")
+});
+}
+const SEED_SETUP={
+ultimate:(engine,job)=>{
+engine.trackOverflow=(job.conds.anomaly==='all_invalid'||job.conds.anomaly==='ghost');
+job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
 },
-filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
-setupEngine:(eng,conds)=>{
-eng.trackOverflow=(conds.anomaly==='all_invalid'||conds.anomaly==='ghost');
+multibug:(engine,job)=>{
+job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
 },
-processSeed:(searchEngine,seed,rStr,targetRankKey,conds,searchFilterLoc)=>{
-const searchOnlyWithD=document.getElementById('searchOnlyWithD').checked;
+};
+const ITEM_BASIC_REQS={
+free:(eng,p,conds)=>eng.floorCount>=p.reqFloorCount,
+quickload:(eng,p,conds)=>eng.floorCount>=(p.isB9F?9:3)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isB9F?2:0).length>0,
+third:(eng,p,conds)=>eng.floorCount>=(p.isS3?14:4)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isS3?3:0).length>0,
+jfire:(eng,p,conds)=>eng.monsterRank===9&&eng.floorCount>=9,
+tk:(eng,p,conds)=>eng.floorCount>=3,
+};
+const DUNGEON_CHECKERS={
+free:(eng,p)=>{
+let groupHits=[];
+let usedHits=new Set();
+for(let g of p.groups){
+let hitFoundForGroup=false;
+let gHtmlStr="";
+let f=g.floor-1;
+if(f>=eng.floorCount)return{isHit:false};
+let bCount=eng.getBoxCount(f);
+boxLoop:
+for(let b=0;b<bCount;b++){
+if(g.boxIdx===0&&b!==0)continue;
+if(g.boxIdx===1&&b!==1)continue;
+if(g.boxIdx===2&&b!==2)continue;
+if(g.boxIdx===3&&(b===2||b>=3))continue;
+let boxInfo=eng.getBoxInfo(f,b);
+if(g.rank>0&&boxInfo.rank!==g.rank)continue;
+if(!g.items&&g.timerVal===-1){
+let boxKey=`${f}_${b}_ANY`;
+let isBoxUsed=false;
+for(let k of usedHits){
+if(k.startsWith(`${f}_${b}_`)){isBoxUsed=true;break;}
+}
+if(isBoxUsed)continue;
+hitFoundForGroup=true;
+usedHits.add(boxKey);
+gHtmlStr=`<span style="color:#ffd700;font-size:11px;">B${f+1}F ${CHEST_RANK[boxInfo.rank]}${b+1} (Any)</span>`;
+break boxLoop;
+}
+let checkSecStart=g.timerVal===-1?0:g.timerVal-5;
+let checkSecEnd=g.timerVal===-1?255:g.timerVal-5;
+if(checkSecStart<0)checkSecStart=0;
+if(checkSecEnd<0)checkSecEnd=0;
+for(let s=checkSecStart;s<=checkSecEnd;s++){
+let hitKey=`${f}_${b}_${s}`;
+let boxKey=`${f}_${b}_ANY`;
+if(usedHits.has(hitKey)||usedHits.has(boxKey))continue;
+let itemEN=eng.getBoxItem(f,b,s)[0];
+if(g.items===null||g.items.includes(itemEN)){
+hitFoundForGroup=true;
+usedHits.add(hitKey);
+let tDisp=s+5;
+let itemDisp=getDispItem(itemEN);
+gHtmlStr=`<span style="color:#ffd700;font-size:11px;">B${f+1}F ${CHEST_RANK[boxInfo.rank]}${b+1} (${tDisp}s): ${itemDisp}</span>`;
+break boxLoop;
+}
+}
+}
+if(!hitFoundForGroup)return{isHit:false};
+groupHits.push(gHtmlStr);
+}
+return{isHit:true,jumpFloor:p.groups[0].floor-1,displayHtml:groupHits.join('<br>'),specialStyle:"1px solid #08c"};
+},
+quickload:(eng,p)=>{
+const checkSet=new Set(p.checkItems);
+let hitTypes=[];
+let firstHitFloor=-1;
+for(let f of p.targetFloors){
+if(f>=eng.floorCount)continue;
+const soloNames=eng.getFloorItemNames(f,1);
+const partyNames=eng.getFloorItemNames(f,2);
+let soloC=0,partyC=0;
+for(let b=0;b<soloNames.length;b++){
+if(checkSet.has(soloNames[b]))soloC++;
+if(checkSet.has(partyNames[b]))partyC++;
+}
+if(soloC>=p.reqCount||partyC>=p.reqCount){if(firstHitFloor===-1)firstHitFloor=f;}
+let prefixStr=p.isB9F?'B9F ':`B${f+1}F `;
+if(soloC>=p.reqCount){
+hitTypes.push(`<span style="color:#ff99bb; font-size:11px">${prefixStr}${STR_SOLO} x${soloC}</span>`);
+}
+if(partyC>=p.reqCount){
+hitTypes.push(`<span style="color:#ffd700; font-size:11px">${prefixStr}${STR_PARTY} x${partyC}</span>`);
+}
+}
+if(hitTypes.length>0){
+return{isHit:true,jumpFloor:firstHitFloor,displayHtml:hitTypes.join('<br>')};
+}
+return{isHit:false};
+},
+third:(eng,p)=>{
+let f1=p.targetFloors[0],f2=p.targetFloors[1];
+if(eng.getBoxCount(f1)>=3&&eng.getBoxCount(f2)>=3){
+if(p.isS3&&(eng.getBoxInfo(f1,2).rank!==10||eng.getBoxInfo(f2,2).rank!==10)){
+return{isHit:false};
+}
+let p1=eng.getBoxItem(f1,2,2)[0];
+let p2=eng.getBoxItem(f2,2,2)[0];
+let r1=CHEST_RANK[eng.getBoxInfo(f1,2).rank]||'?';
+let r2=CHEST_RANK[eng.getBoxInfo(f2,2).rank]||'?';
+if(p.checkItems.includes(p1)&&p.checkItems.includes(p2)){
+return{
+isHit:true,jumpFloor:f1,
+displayHtml:`<span style="color:${p.colorStyle};font-size:11px">B${f1+1}F ${r1}3: ${getDispItem(p1)}<br>B${f2+1}F ${r2}3: ${getDispItem(p2)}</span>`
+};
+}
+}
+return{isHit:false};
+},
+jfire:(eng,p)=>{
+let b9Boxes=eng.getBoxCount(8);
+let c1Met=false;
+let c1Hits=[];
+const soloNames=eng.getFloorItemNames(8,1);
+const partyNames=eng.getFloorItemNames(8,2);
+const limit=Math.min(2,soloNames.length);
+for(let b=0;b<limit;b++){
+const s=soloNames[b],pp=partyNames[b];
+if(s==="Sainted soma"||pp==="Sainted soma"){
+c1Met=true;
+let t=(s===pp)?STR_BOTH:(pp==="Sainted soma"?STR_PARTY:STR_SOLO);
+let color="#ff99d7";
+if(t===STR_PARTY)color="#ffd700";
+c1Hits.push(`<span style="color:${color}; font-size:11px">B9F S${b+1}: ${getDispItem("Sainted soma")} (${t})</span>`);
+}
+}
+if(!c1Met||(b9Boxes>=3&&partyNames[2]==="Sainted soma"))return{isHit:false};
+let c2Met=false,c2Det="";
+const chk3=(fIdx,n)=>{
+if(eng.getBoxCount(fIdx)>=3&&eng.getBoxInfo(fIdx,2).rank===10){
+let pItem=eng.getBoxItem(fIdx,2,2)[0];
+if(pItem==="Sainted soma"||pItem==="Sage's elixir"){
+let dispItem=pItem==="Sainted soma"?getDispItem("Sainted soma"):getDispItem("Sage's elixir");
+return{met:true,det:`${n} S3: ${dispItem}`};
+}
+}
+return{met:false};
+};
+let b9Res=chk3(8,"B9F");
+if(b9Res.met){c2Met=true;c2Det=b9Res.det;}
+else if(eng.floorCount>=10){
+let b10Res=chk3(9,"B10F");
+if(b10Res.met){c2Met=true;c2Det=b10Res.det;}
+}
+if(c1Met&&c2Met){
+let html=`${c1Hits.join('<br>')}<br><span style="color:#11F514; font-size:11px">${c2Det}</span>`;
+return{isHit:true,jumpFloor:8,displayHtml:html};
+}
+return{isHit:false};
+},
+tk:(eng,p)=>{
+let wpSet=new Set(p.wpTargets);
+let wpMet=false,wpFloor=2;
+let wpHits=[];
+let checkWp=(fIdx)=>{
+if(fIdx>=eng.floorCount)return false;
+const soloNames=eng.getFloorItemNames(fIdx,1);
+const partyNames=eng.getFloorItemNames(fIdx,2);
+let foundAny=false;
+const limit=Math.min(2,soloNames.length);
+for(let b=0;b<limit;b++){
+const s=soloNames[b],pp=partyNames[b];
+if(wpSet.has(s)||wpSet.has(pp)){
+let t=(wpSet.has(s)&&wpSet.has(pp))?STR_BOTH:(wpSet.has(pp)?STR_PARTY:STR_SOLO);
+let hitItem=wpSet.has(pp)?pp:s;
+let hitItemStr=getDispItem(hitItem);
+let rName=CHEST_RANK[eng.getBoxInfo(fIdx,b).rank]||'?';
+let color="#ff99bb";
+if(t===STR_PARTY)color="#ffd700";
+wpHits.push(`<span style="color:${color}; font-size:11px">B${fIdx+1}F ${rName}${b+1}: ${hitItemStr} (${t})</span>`);
+wpMet=true;
+wpFloor=fIdx;
+foundAny=true;
+}
+}
+return foundAny;
+};
+if(p.isMonsterBox){
+if(!checkWp(2))return{isHit:false};
+let c1Met=false,matDet="",b3Rank="";
+if(eng.floorCount>2&&eng.getBoxCount(2)>=3){
+b3Rank=CHEST_RANK[eng.getBoxInfo(2,2).rank]||'?';
+let foundSec=-1;
+for(let s=p.minSec;s<=p.maxSec;s++){
+if(eng.getBoxItem(2,2,s)[0]===p.targetItem){foundSec=s;break;}
+}
+if(foundSec!==-1){
+c1Met=true;
+matDet=`B3F ${b3Rank}3 (${foundSec + 5}s): ${getDispItem(p.targetItem)}`;
+}
+}
+if(c1Met){
+let html=`${wpHits.join('<br>')}<br><span style="color:#f66; font-size:11px; font-weight:bold;">${matDet}</span>`;
+return{isHit:true,jumpFloor:2,displayHtml:html,specialStyle:"1px solid #f66"};
+}
+return{isHit:false};
+}
+if(!checkWp(2))checkWp(3);
+if(!wpMet)return{isHit:false};
+let c1Met=false,c2Met=false,matDet="";
+let b3V=false,pB3="",b3Rank="";
+let b4V=false,pB4="",b4Rank="";
+let currentB3Targets=p.isMillionaire?(wpFloor===2?p.strictMatTargets:p.broadMatTargets):p.strictMatTargets;
+let currentB4Targets=p.isMillionaire?(wpFloor===3?p.strictMatTargets:p.broadMatTargets):p.strictMatTargets;
+let checkSec=p.isMillionaire?2:8;
+let labelText=p.isMillionaire?"":"(13s)";
+if(eng.floorCount>2&&eng.getBoxCount(2)>=3){
+pB3=eng.getBoxItem(2,2,checkSec)[0];
+b3Rank=CHEST_RANK[eng.getBoxInfo(2,2).rank]||'?';
+if(currentB3Targets.includes(pB3)){
+let pB3_25s=eng.getBoxItem(2,2,20)[0];
+if(!p.isMillionaire){
+if(!currentB3Targets.includes(pB3_25s))b3V=true;
+}else{
+if(!p.strictMatTargets.includes(pB3_25s))b3V=true;
+}
+}
+}
+if(eng.floorCount>3&&eng.getBoxCount(3)>=3){
+pB4=eng.getBoxItem(3,2,checkSec)[0];
+b4Rank=CHEST_RANK[eng.getBoxInfo(3,2).rank]||'?';
+if(currentB4Targets.includes(pB4)){
+let pB4_25s=eng.getBoxItem(3,2,20)[0];
+if(!p.isMillionaire){
+if(!currentB4Targets.includes(pB4_25s))b4V=true;
+}else{
+if(!p.strictMatTargets.includes(pB4_25s))b4V=true;
+}
+}
+}
+if(b3V&&b4V){c2Met=true;matDet=`B3F ${b3Rank}3 ${labelText}: ${getDispItem(pB3)}<br>B4F ${b4Rank}3 ${labelText}: ${getDispItem(pB4)}`;}
+else if(b3V){c1Met=true;matDet=`B3F ${b3Rank}3 ${labelText}: ${getDispItem(pB3)}`;}
+else if(b4V){c1Met=true;matDet=`B4F ${b4Rank}3 ${labelText}: ${getDispItem(pB4)}`;}
+if(c1Met||c2Met){
+let html=`${wpHits.join('<br>')}<br><span style="color:#11F514; font-size:11px">${matDet}</span>`;
+return{isHit:true,jumpFloor:wpFloor,displayHtml:html,specialStyle:c2Met?"1px solid #fa0":""};
+}
+return{isHit:false};
+},
+};
+const SEED_PROCESSORS={
+ultimate:(searchEngine,seed,rStr,targetRankKey,job)=>{
+const conds=job.conds;
+const searchOnlyWithD=job.params.searchOnlyWithD;
+const _onlyMonExpectedStr=job._onlyMonExpectedStr;
 const needMapGeneration=conds.hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="";
 searchEngine.calculateDetail(true);
-if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,searchFilterLoc))return null;
+if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
 if(conds.onlyMon){
 let isCombinedSearch=['2','3','4','PARTIAL_NONE'].includes(conds.elist);
-if(!isCombinedSearch){
-let possible=false;
-let baseMR=searchEngine.monsterRank;
-let maxFloorMR=Math.min(12,baseMR+Math.floor((searchEngine.floorCount-1)/4));
-let envMonsters=ONLY_MONSTERS[searchEngine._details[3]];
-if(envMonsters){
-for(let fMR=baseMR;fMR<=maxFloorMR;fMR++){
-let mId=envMonsters[fMR];
-if(mId&&MONSTER_DATA[mId]&&MONSTER_DATA[mId].en===conds.onlyMon){possible=true;break;}
-}
-}
-if(!possible)return null;
-}
+if(!isCombinedSearch&&!checkOnlyMonPossible(searchEngine,conds))return null;
 }
 if(needMapGeneration)searchEngine.createDungeonDetail();
 let boxHtml="";
@@ -692,14 +922,11 @@ let specialHitDetails=elistResult.specialHitDetails;
 let anomalyDetails=anomResult.anomalyDetails;
 let hasMatchedD=elistResult.hasMatchedD;
 let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
-let itemNode=document.createElement('div');
-itemNode.className='search-result-item';
-if(hasMatchedD)itemNode.dataset.hasD="true";
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 let specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s => `<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
 let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px; display:flex; flex-direction:column; align-items:flex-start;">${anomalyDetails.map(html => html.replace('<span style="', '<span style="display:inline-block; line-height:1.4; margin-top:4px; ')).join('')}</div>`:'';
 let mapNameDisp=dispName(searchEngine);
-itemNode.innerHTML=`
+const html=`
 <span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
 <span style="color:#0ff; font-size:11px">${mapNameDisp}</span>${locHtml}
@@ -707,41 +934,18 @@ itemNode.innerHTML=`
 ${specialHtml}
 ${anomalyHtml}
 `;
-itemNode.onclick=makeResultClickHandler(seed,rStr,jumpToFloor);
-return itemNode;
-}
-});
-}
-async function MultibugSearch(){
-const conds=getUltimateConds();
+return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor};
+},
+multibug:(searchEngine,seed,rStr,targetRankKey,job)=>{
+const conds=job.conds;
 const cond_elist=conds.elist;
 const cond_only_mon=conds.onlyMon;
-const _onlyMonExpectedStr=buildOnlyMonExpectedStr(conds);
-const isCombinedSearch=(['2','3','4','PARTIAL_NONE'].includes(cond_elist))&&!!cond_only_mon;
-let effectiveElistCond=cond_elist;
-const searchOnlyWithDNode=document.getElementById('searchOnlyWithD');
-const searchOnlyWithD=searchOnlyWithDNode?searchOnlyWithDNode.checked:false;
-if(!cond_elist&&!cond_only_mon&&!searchOnlyWithD&&!conds.hasBoxCond){
-effectiveElistCond='ONLY';
-}
-executeSharedSearch({
-btnId:'searchBtnBug',
-btnText:H05,
-btnBg:'linear-gradient(135deg,#c0c,#606)',
-btnColor:'#fff',
-stopText:'STOP',
-emptyRankMsg:B07,
-filterRanks:(ranksToSearch,conds)=>{
-return sharedRankFilter(ranksToSearch,conds,true);
-},
-processSeed:(searchEngine,seed,rStr,targetRankKey,conds,searchFilterLoc)=>{
-const requireFloorIncrease=document.getElementById('requireFloorIncrease').checked;
-const requireBugFloorHitNode=document.getElementById('requireBugFloorHit');
-const requireBugFloorHit=requireBugFloorHitNode?requireBugFloorHitNode.checked:false;
+const _onlyMonExpectedStr=job._onlyMonExpectedStr;
+const{requireFloorIncrease,requireBugFloorHit,searchOnlyWithD,effectiveElistCond,isCombinedSearch}=job.params;
 searchEngine._at_offset=0;
 searchEngine._force_16_floors=false;
 searchEngine.calculateDetail(true);
-if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,searchFilterLoc))return null;
+if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
 let origFloors=searchEngine.floorCount;
 let origBoss=dispBoss(searchEngine);
 let origName=dispName(searchEngine);
@@ -777,45 +981,28 @@ if(!boxMatch){
 searchEngine._force_16_floors=false;
 return null;
 }
-boxHtml=`<div style="margin-top:4px;"><span style="color:#ffcc00;font-size:11px;background:#420;padding:2px 4px;border-radius:3px;">${boxStr.join(' ')}</span></div>`;
+boxHtml=`<div style="margin-top:4px;"><span style="color:#fc0;font-size:10px;background:#420;padding:2px 4px;border-radius:3px;">${boxStr.join(' ')}</span></div>`;
 }
 let foundSpecialFloors=[];
 let specialHitCount=0;
 let hasAnyD=false;
-for(let f=2;f<16;f++){
+for(let f=4;f<16;f++){
 let elistInfo=getFloorElistInfo(searchEngine,f);
-let val=parseInt(elistInfo.hex,16);
 if(elistInfo.dValue>0)hasAnyD=true;
 let isElistHit=false;
 let isOnlyHit=false;
-if(val>=0x2B00&&elistInfo.state){
-if(!effectiveElistCond){isElistHit=true;}
-else if(effectiveElistCond==='PARTIAL_NONE'&&elistInfo.state.includes(EL_P))isElistHit=true;
-else if(effectiveElistCond==='4'&&elistInfo.state.includes(EL_4))isElistHit=true;
-else if(effectiveElistCond==='3'&&elistInfo.state.includes(EL_3))isElistHit=true;
-else if(effectiveElistCond==='2'&&elistInfo.state.includes(EL_2))isElistHit=true;
-else if(effectiveElistCond==='ONLY'&&(elistInfo.state.includes('only')||elistInfo.state.includes('オンリー')))isElistHit=true;
-else if(effectiveElistCond==='NONE'&&elistInfo.state.includes(EL_0)&&!elistInfo.state.includes(EL_P))isElistHit=true;
-else if(effectiveElistCond==='MULTI_SPECIAL')isElistHit=true;
-else if(effectiveElistCond==='SIZE_15'){
-let _dim=searchEngine.di[f][2];
-if(_dim===15)isElistHit=true;
+let floorHit=null;
+if(elistInfo.state){
+if(!effectiveElistCond||effectiveElistCond==='MULTI_SPECIAL'){
+isElistHit=true;
+}else{
+floorHit=evalElistFloorHit(searchEngine,f,elistInfo,effectiveElistCond);
+isElistHit=floorHit.isElistHit;
 }
 if(isCombinedSearch){
-if(isElistHit){
-let tgtCount=0;
-if(elistInfo.state.includes(EL_4))tgtCount=4;
-else if(elistInfo.state.includes(EL_3))tgtCount=3;
-else if(elistInfo.state.includes(EL_2))tgtCount=2;
-let fMR=searchEngine._details[2]+(f>>2);
-if(fMR>12)fMR=12;
-let spList=(SPAWN_DB[searchEngine._details[3]]&&SPAWN_DB[searchEngine._details[3]][fMR])||[];
-let norms=spList.filter(e=>e.length===3);
-let limit=tgtCount>0?tgtCount:norms.length;
-let survivingNamesEn=norms.slice(0,limit).map(e=>MONSTER_DATA[e[0]]?MONSTER_DATA[e[0]].en:'');
-if(survivingNamesEn.includes(cond_only_mon)){
-isOnlyHit=true;
-}
+if(isElistHit&&floorHit){
+const bd=getElistMonsterBadge(searchEngine._details[3],floorMRAt(searchEngine._details[2],f),floorHit.targetCount,cond_only_mon);
+if(bd.isCombinedHit)isOnlyHit=true;
 }
 }else{
 if(!cond_only_mon){
@@ -825,14 +1012,15 @@ isOnlyHit=true;
 }
 }
 }
-let isSpecialMatch=(isElistHit&&isOnlyHit&&val>=0x2B00&&val<=0x2BBC&&elistInfo.state);
+let isSpecialMatch=(isElistHit&&isOnlyHit&&elistInfo.state);
 if(isSpecialMatch){specialHitCount++;}
-if((val>=0x2B00&&elistInfo.state)||(searchOnlyWithD&&elistInfo.dValue>0)){
+if(elistInfo.state||(searchOnlyWithD&&elistInfo.dValue>0)){
 if(!foundSpecialFloors.some(x=>x.floor===f+1)){
 let fMR=searchEngine._details[2]+(f>>2);
 if(fMR>12)fMR=12;
 foundSpecialFloors.push({
 floor:f+1,
+isElistHit:isElistHit,
 hex:elistInfo.hex,
 state:elistInfo.state||EL_NORMAL,
 dValue:elistInfo.dValue,
@@ -875,12 +1063,14 @@ const isJP_mb=(DISPLAY_LANG!=='EN');
 let elistHtmlStr=foundSpecialFloors.map(info=>{
 let stateColor="#888";
 if(info.state!==EL_NORMAL){
-if(info.floor<=origFloors){
+if(info.floor<=Math.min(origFloors,bugFloors)){
 stateColor="#4f4";
+}else if(info.floor<=origFloors){
+stateColor="#00a2e8";
 }else if(info.floor<=bugFloors){
 stateColor="#fa0";
 }else{
-stateColor="#f8f";
+stateColor="#f7f";
 }
 }
 let dHtml=info.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:4px; white-space:nowrap;">${info.dValue}</span>`:'';
@@ -890,54 +1080,223 @@ let surviveCount=0;
 if(st.includes(EL_4))surviveCount=4;
 else if(st.includes(EL_3))surviveCount=3;
 else if(st.includes(EL_2))surviveCount=2;
-let shouldShowMonBadge=surviveCount>0&&(cond_elist===surviveCount.toString()||isCombinedSearch||cond_elist==='SIZE_15');
+let shouldShowMonBadge=surviveCount>0&&(cond_elist===surviveCount.toString()||isCombinedSearch||(cond_elist==='SIZE_15'&&info.isElistHit));
 if(shouldShowMonBadge){
-const spList=(SPAWN_DB[info.envType]&&SPAWN_DB[info.envType][info.floorMR])||[];
-const norms=spList.filter(e=>e.length===3);
-const names=norms.slice(0,surviveCount).map(e=>{
-const md=MONSTER_DATA[e[0]];
-return md?(isJP_mb?md.jp:md.en):'?';
-});
-line+=`<br><span style="color:#aaa; font-size:10px;">${names.join(' + ')}</span>`;
+line+=getElistMonsterBadge(info.envType,info.floorMR,surviveCount,null).badge;
 }
 return line;
 }).join('<br>');
-let itemNode=document.createElement('div');
-itemNode.className='search-result-item';
-if(hasAnyD)itemNode.dataset.hasD="true";
+const locHtml=_cachedLocData?LocaHtmlFromData(_cachedLocData,conds):"";
 let bugIcon=isFloorIncreased?'📈':'';
-itemNode.innerHTML=`
+const html=`
 <span style="color:#ffd700; font-weight:bold; font-size:15px;">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
 <div style="background:#111; padding:4px 8px; border-radius:4px; margin:4px 0; border:1px solid #333;">
 <span style="color:#aaa; font-size:11px">[Source]${origName}|B${origFloors}F|${origBoss}</span><br>
-<span style="color:#f8f; font-size:12px">[Bug]${bugName}|B${bugFloors}F|${bugBoss}${bugIcon}</span>
-</div>${boxHtml}
+<span style="color:#f8f; font-size:11px">[Bug]${bugName}|B${bugFloors}F|${bugBoss}${bugIcon}</span>
+</div>${locHtml}${boxHtml}
 <div style="padding-top:2px;">${elistHtmlStr}</div>
 `;
-itemNode.onclick=makeResultClickHandler(seed,rStr);
 searchEngine._force_16_floors=false;
-return itemNode;
+return{seed,rStr,html,hasD:hasAnyD};
+},
+item:(searchEngine,seed,rStr,targetRankKey,job)=>{
+const conds=job.conds;
+const p=job.params;
+searchEngine.calculateDetail(true);
+const basicReq=ITEM_BASIC_REQS[p.checker];
+if(basicReq&&!basicReq(searchEngine,p,conds))return null;
+if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
+searchEngine.createDungeonDetail();
+let chestResult=ChestHtml(searchEngine,conds);
+if(!chestResult.isMatch)return null;
+let boxHtml=chestResult.html;
+let hitResult=DUNGEON_CHECKERS[p.checker](searchEngine,p);
+if(hitResult&&hitResult.isHit){
+let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
+let mapNameDisp=dispName(searchEngine);
+const html=`
+<span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
+<span style="color:#888">(Rank ${rStr})</span><br>
+<span style="color:#0ff; font-size:11px; margin-bottom:2px; display:inline-block;">${mapNameDisp}</span>${locHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+<div style="margin-top:4px;">${hitResult.displayHtml}</div>
+`;
+return{seed,rStr,html,jumpFloor:hitResult.jumpFloor||0,specialStyle:hitResult.specialStyle||'',title:''+J01};
 }
-});
+return null;
+},
+};
+async function coreRunScanJob(job,io){
+const conds=job.conds;
+const totalCombos=job.ranks.length*(job.endSeed-job.startSeed+1);
+let processed=0;
+let hitCount=0;
+let batch=[];
+let searchEngine=new GrottoDetail();
+const setup=SEED_SETUP[job.processor];
+if(setup)setup(searchEngine,job);
+const proc=SEED_PROCESSORS[job.processor];
+for(let rank of job.ranks){
+if(io.cancelled())break;
+let rStr=hex2(rank);
+let targetRankKey=resolveRankKey(rStr,rank);
+for(let seed=job.startSeed;seed<=job.endSeed;seed++){
+if(io.cancelled())break;
+if(seed%250===0){
+io.progress({processed,total:totalCombos,hits:hitCount,rStr,seedHex:hex4(seed)});
+if(batch.length>0){io.batch(batch);batch=[];}
+await io.yield();
 }
-function clearUltimateSearch(){
-const inputIds=[
-'cond_prefix','cond_suffix','cond_locale','cond_lv','cond_location',
-'cond_bq','cond_bq_count','cond_env','cond_monster','cond_depth','cond_boss',
-'cond_seed_min','cond_seed_max','cond_elist','cond_only_mon','cond_anomaly',
-'cond_box_S','cond_box_A','cond_box_B','cond_box_C','cond_box_D',
-'cond_box_E','cond_box_F','cond_box_G','cond_box_H','cond_box_I'
-];
-inputIds.forEach(id=>{
-let el=document.getElementById(id);
-if(el){el.value='';}
-});
-let bqEl=document.getElementById('cond_bq');
-if(bqEl){bqEl.disabled=false;bqEl.style.opacity='1';}
-const checkboxIds=['searchAllRanks','searchOnlyWithD','requireFloorIncrease','requireBugFloorHit'];
-checkboxIds.forEach(id=>{
-let el=document.getElementById(id);
-if(el){el.checked=false;}
-});
+searchEngine.MapSeed=seed;
+searchEngine.MapRank=rank;
+_cachedLocData=null;
+let item=proc(searchEngine,seed,rStr,targetRankKey,job);
+if(item){
+hitCount++;
+batch.push(item);
+}
+processed++;
+}
+}
+if(batch.length>0)io.batch(batch);
+return hitCount;
+}
+async function coreRunATMonsterJob(job,io){
+const conds=job.conds;
+const{N,atmin,atmax,deftMax,pType,atThreshold,atMaxSteps,rank,rStr,targetRankKey,searchOnlyWithD,searchFilterLoc}=job;
+const hasBoxCond=conds.hasBoxCond;
+const atMchSeeds=new Map();
+for(let seed=job.startSeed;seed<=job.endSeed;seed++){
+if((seed&8191)===0){if(io.cancelled())return 0;await io.yield();}
+let s=seed>>>0;
+for(let i=0;i<N;i++)s=lcg(s);
+const atN=(s>>>16)&0x7FFF;
+if(atN<atmin||atN>atmax)continue;
+if(deftMax>=0){
+s=lcg(s);
+const atN1=(s>>>16)&0x7FFF;
+if(calcDeftness(atN1)>deftMax)continue;
+atMchSeeds.set(seed,{atN,atN1});
+}else{
+s=lcg(s);
+atMchSeeds.set(seed,{atN,atN1:(s>>>16)&0x7FFF});
+}
+}
+const atPtnDetails=new Map();
+if(pType>0){
+const toDelete=[];
+let scanned=0;
+for(const[seed]of atMchSeeds){
+if((++scanned&255)===0){if(io.cancelled())return 0;await io.yield();}
+const{foundOffsets}=_scanPattern(seed,atMaxSteps,atThreshold,pType,N+3,0);
+if(foundOffsets.length>0){
+atPtnDetails.set(seed,{foundOffsets});
+}else{
+toDelete.push(seed);
+}
+}
+for(const seed of toDelete)atMchSeeds.delete(seed);
+}
+const needMapGeneration=hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="";
+let _onlyMonExpectedStr=buildOnlyMonExpectedStr(conds);
+let searchEngine=new GrottoDetail();
+searchEngine.trackOverflow=(conds.anomaly==='all_invalid'||conds.anomaly==='ghost');
+let totalCombos=atMchSeeds.size;
+let processed=0;
+let hitCount=0;
+let batch=[];
+for(const[seed,atinfo]of atMchSeeds){
+if(io.cancelled())break;
+if(processed%200===0){
+io.progress({processed,total:totalCombos,hits:hitCount});
+if(batch.length>0){io.batch(batch);batch=[];}
+await io.yield();
+}
+searchEngine.MapSeed=seed;
+searchEngine.MapRank=rank;
+_cachedLocData=null;
+searchEngine.calculateDetail(true);
+if(!checkBasicConds(searchEngine,conds)){processed++;continue;}
+if(!checkOnlyMonPossible(searchEngine,conds)){processed++;continue;}
+if(needMapGeneration)searchEngine.createDungeonDetail();
+let boxHtml="";
+if(hasBoxCond){
+let chestResult=ChestHtml(searchEngine,conds);
+if(!chestResult.isMatch){processed++;continue;}
+boxHtml=chestResult.html;
+}
+let elistResult=checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr);
+if(!elistResult.match){processed++;continue;}
+let locResult=checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey);
+if(!locResult.match){processed++;continue;}
+let anomResult=checkAnomalies(searchEngine,conds);
+if(!anomResult.match){processed++;continue;}
+let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
+hitCount++;
+let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
+let specialHtml=elistResult.specialHitDetails.length>0?`<div style="margin-top:4px;">${elistResult.specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
+let anomalyHtml=anomResult.anomalyDetails.length>0?`<div style="margin-top:6px; display:flex; flex-direction:column; align-items:flex-start;">${anomResult.anomalyDetails.map(h=>h.replace('<span style="','<span style="display:inline-block; line-height:1.4; margin-top:4px; ')).join('')}</div>`:'';
+let mapNameDisp=dispName(searchEngine);
+const{deft}=formatDeftness(atinfo.atN1);
+let diffsHtml='';
+let patHtml='';
+const patData=atPtnDetails.get(seed);
+if(pType>0&&patData){
+patHtml=_buildPatternBox(job.patternName,job.probText,_buildOffsetsHtml(patData.foundOffsets));
+diffsHtml=_buildDiffsHtml(patData.foundOffsets,N,deft);
+}
+let atHtml=_buildATCard(seed,N,atinfo.atN,atinfo.atN1,diffsHtml);
+const html=`
+<span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
+<span style="color:#888">(Rank ${rStr})</span><br>
+<span style="color:#0ff; font-size:11px">${mapNameDisp}</span>${locHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+${specialHtml}
+${anomalyHtml}
+${atHtml}
+${patHtml}
+`;
+batch.push({seed,rStr,html,hasD:elistResult.hasMatchedD,jumpFloor:jumpToFloor,pop:atinfo.atN});
+processed++;
+}
+if(batch.length>0)io.batch(batch);
+return hitCount;
+}
+async function coreRunATPatternJob(job,io){
+let hitCount=0;
+let processed=0;
+let totalSeeds=job.endSeed-job.startSeed+1;
+let batch=[];
+for(let seed=job.startSeed;seed<=job.endSeed;seed++){
+if(io.cancelled())break;
+if(job.searchFilterLoc){
+let locData=calcLocations(seed,job.targetRankKey);
+if(locData.outputOrder.length===0){processed++;continue;}
+}
+if(processed%1000===0){
+io.progress({processed,total:totalSeeds,hits:hitCount,seedHex:hex4(seed)});
+if(batch.length>0){io.batch(batch);batch=[];}
+await io.yield();
+}
+processed++;
+const{foundOffsets,popValue,defValue}=_scanPattern(seed,job.maxSteps,job.threshold,job.pType,job.POPIndex+3,job.POPIndex);
+if(foundOffsets.length>0){
+hitCount++;
+let specificAtHtml='';
+if(popValue!==null&&defValue!==null){
+const{deft}=formatDeftness(defValue);
+const diffsHtml=_buildDiffsHtml(foundOffsets,job.POPIndex,deft);
+specificAtHtml=_buildATCard(seed,job.POPIndex,popValue,defValue,diffsHtml);
+}
+const html=`
+<span style="color:#ffd700; font-weight:bold; font-size:13px;">${hex4(seed)}</span><br>
+${_buildPatternBox(job.patternName,job.probText,_buildOffsetsHtml(foundOffsets))}
+${specificAtHtml}
+`;
+batch.push({seed,rStr:null,html,pop:popValue!==null?popValue:99999});
+}
+}
+if(batch.length>0)io.batch(batch);
+return hitCount;
 }
