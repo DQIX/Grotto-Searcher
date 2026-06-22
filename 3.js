@@ -1387,10 +1387,10 @@ const ThiefThreshold=Math.floor(32767/effectiveRate)+1;
 const resBox=document.getElementById('si_at_results');
 resBox.innerHTML=`
 <div style="display:flex; justify-content:space-between;">
-<span>POP:<span class="si-highlight">${N}</span>|AT ${N}:<span class="si-highlight">${atN_val}</span>(${monName})</span>
+<span>AT ${N}: <span class="si-highlight">${atN_val}</span> → <span style="color:#FFAEC9;">${monName}</span></span>
 <span style="font-size:11px;">${patternMsg}</span>
 </div>
-<div>AT ${N+1}:<span style="color:#39C5BB;">${atN1_val}</span>➔`+G27+`:<span class="si-highlight">${mapDeft}</span></div>
+<div>AT ${N+1}: <span style="color:#39C5BB;">${atN1_val}</span> → `+G27+`: <span class="si-highlight">${mapDeft}</span></div>
 <div style="margin-top:5px; padding-top:5px; border-top:1px dashed #335;">
 ${battleStr}
 </div>`;
