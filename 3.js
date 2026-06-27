@@ -436,6 +436,40 @@ processor:'multibug',
 params:{searchOnlyWithD,requireFloorIncrease,requireBugFloorHit,effectiveElistCond,isCombinedSearch},
 });
 }
+function startFastestSearch(){
+const conds=getUltimateConds();
+if(!validateElistOnlyMonCombo(conds))return;
+if(conds.elist==='MULTI_SPECIAL'||conds.anomaly){alert(A13);return;}
+if(!(conds.depth||conds.lv||conds.elist||conds.onlyMon||conds.location||conds.boss)){alert(A14);return;}
+const searchOnlyWithD=document.getElementById('searchOnlyWithD').checked;
+executeSharedSearch({btnId:'fastestBtn',btnText:'短',btnBg:'#224',btnColor:'#0f0',stopText:'⏹',emptyRankMsg:B07,
+sortTopN:(conds.elist||conds.onlyMon)?Infinity:50,
+validateConds:(conds,searchFilterLoc)=>{
+const hasBasicCond=Object.keys(conds).some(k=>k!=='reqBox'&&k!=='hasBoxCond'&&conds[k]!=="");
+if(!hasBasicCond&&!conds.hasBoxCond){alert(A01);return false;}
+return true;
+},
+filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
+processor:'fastest',
+params:{searchOnlyWithD},
+});
+}
+function initFastest(){
+const h4=document.querySelector('#unified_search_panel h4');
+if(!h4)return;
+if(document.getElementById('fastestBtn'))return;
+const btn=document.createElement('button');
+btn.id='fastestBtn';
+btn.textContent='短';
+btn.title='最短地図検索';
+btn.style.cssText='margin-left:6px;background:#224;color:#0f0;border:1px solid #080;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;';
+btn.onmouseover=function(){if(isSearching)return;this.style.background='#0f0';this.style.color='#000';};
+btn.onmouseout=function(){if(isSearching)return;this.style.background='#224';this.style.color='#0f0';};
+btn.onclick=startFastestSearch;
+h4.appendChild(btn);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initFastest);
+else initFastest();
 function initCPUBenchmark(){
 const h4=document.querySelector('#unified_search_panel h4');
 if(!h4)return;
@@ -452,19 +486,11 @@ h4.appendChild(cpuBtn);
 function startCPUBenchmark(){
 if(isSearching){requestSearchCancel();return;}
 const t0=performance.now();
-executeSharedSearch({
-btnId:'cpuBenchBtn',
-btnText:'💻',
-btnBg:'#224',
-btnColor:'#0ff',
-stopText:'🛑',
-emptyRankMsg:B07,
-searchFilterLoc:true,
-validateConds:()=>true,
+executeSharedSearch({btnId:'cpuBenchBtn',btnText:'💻',btnBg:'#224',btnColor:'#0ff',stopText:'🛑',emptyRankMsg:B07,validateConds:()=>true,
 renderCap:0,
 filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
-processor:'ultimate',
-params:{searchOnlyWithD:false},
+processor:'fastest',
+params:{searchOnlyWithD:false,benchmarkMode:true},
 onDoneExtra:(d)=>{
 const elapsed=((performance.now()-t0)/1000).toFixed(2);
 const sp=document.getElementById('searchProgress');

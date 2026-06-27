@@ -419,18 +419,47 @@ if(conds&&conds.monster){
 let targetSMR=parseInt(conds.monster);
 if(targetSMR<minSMR||targetSMR>maxSMR)return null;
 }
-let maxFloorCount=16;
+let floorLo=2,floorHi=16;
 for(let i=0;i<9;i++){
 if(rank>=TableB[i*4]&&rank<=TableB[i*4+1]){
-maxFloorCount=TableB[i*4+3];
+floorLo=TableB[i*4+2];
+floorHi=TableB[i*4+3];
 break;
 }
 }
-if(conds&&conds.depth)maxFloorCount=parseInt(conds.depth);
+let maxFloorCount=floorHi;
+if(conds&&conds.depth){let d=parseInt(conds.depth);if(d<floorLo||d>floorHi)return null;maxFloorCount=d;}
+let minBoss=1,maxBoss=12;
+for(let i=0;i<9;i++){
+if(rank>=TableD[i*4]&&rank<=TableD[i*4+1]){
+minBoss=TableD[i*4+2];
+maxBoss=TableD[i*4+3];
+break;
+}
+}
+if(conds&&conds.boss){
+let b=parseInt(conds.boss);
+if(b<minBoss||b>maxBoss)return null;
+}
+
+if(conds&&conds.lv){
+const clampLv=v=>v<1?1:v>99?99:v;
+let dLo=conds.depth?parseInt(conds.depth):floorLo;
+let dHi=conds.depth?parseInt(conds.depth):floorHi;
+let sLo=conds.monster?parseInt(conds.monster):minSMR;
+let sHi=conds.monster?parseInt(conds.monster):maxSMR;
+let bLo=conds.boss?parseInt(conds.boss):minBoss;
+let bHi=conds.boss?parseInt(conds.boss):maxBoss;
+let lvLo=clampLv((bLo+dLo+sLo-4)*3-5);
+let lvHi=clampLv((bHi+dHi+sHi-4)*3+5);
+let L=parseInt(conds.lv);
+if(L<lvLo||L>lvHi)return null;
+}
 return{minSMR,maxSMR,maxFloorCount};
 }
+
 function sharedRankFilter(ranksToSearch,conds,isBugSearch=false){
-if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix){
+if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix&&!conds.lv&&!conds.depth&&!conds.boss){
 return ranksToSearch;
 }
 return ranksToSearch.filter(rank=>{
@@ -1126,6 +1155,132 @@ return{seed,rStr,html,jumpFloor:hitResult.jumpFloor||0,specialStyle:hitResult.sp
 }
 return null;
 },
+};
+const _uspDIST=new Float64Array(256);
+const _uspHC=new Float64Array(4096);
+const _uspHN=new Int32Array(4096);
+let _uspHS=0,_uspPC=0;
+function _uspPush(c,n){
+let i=_uspHS++;_uspHC[i]=c;_uspHN[i]=n;
+while(i>0){
+const p=(i-1)>>1;if(_uspHC[p]<=_uspHC[i])break;
+let t=_uspHC[p];_uspHC[p]=_uspHC[i];_uspHC[i]=t;
+t=_uspHN[p];_uspHN[p]=_uspHN[i];_uspHN[i]=t;i=p;
+}
+}
+function _uspPop(){
+const nd=_uspHN[0];_uspPC=_uspHC[0];const last=--_uspHS;
+if(last>0){
+_uspHC[0]=_uspHC[last];_uspHN[0]=_uspHN[last];let i=0;
+for(;;){
+const l=2*i+1,r=2*i+2;let m=i;
+if(l<_uspHS&&_uspHC[l]<_uspHC[m])m=l;
+if(r<_uspHS&&_uspHC[r]<_uspHC[m])m=r;
+if(m===i)break;
+let t=_uspHC[m];_uspHC[m]=_uspHC[i];_uspHC[i]=t;
+t=_uspHN[m];_uspHN[m]=_uspHN[i];_uspHN[i]=t;i=m;
+}
+}
+return nd;
+}
+function _uspFloorCost(eng,f){
+const di=eng.di[f];
+const W=di[2],H=di[3];
+if(W<=0||H<=0)return null;
+const sx=di[4],sy=di[5],gx=di[6],gy=di[7];
+if(sx===gx&&sy===gy)return 0;
+if(sx<0||sx>=W||sy<0||sy>=H||gx<0||gx>=W||gy<0||gy>=H)return null;
+const tl=(x,y)=>di[(y<<4)+x+792];
+const wk=(x,y)=>(x>=0&&x<W&&y>=0&&y<H&&tl(x,y)!==1&&tl(x,y)!==3);
+_uspDIST.fill(Infinity,0,(H<<4));
+const s=(sy<<4)+sx;_uspDIST[s]=0;_uspHS=0;_uspPush(0,s);
+while(_uspHS>0){
+const nd=_uspPop();const co=_uspPC;
+if(co>_uspDIST[nd])continue;
+const cx=nd&0xF,cy=nd>>4;
+if(cx===gx&&cy===gy)return co;
+if(wk(cx,cy-1)){const ni=((cy-1)<<4)+cx,nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx,cy+1)){const ni=((cy+1)<<4)+cx,nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx-1,cy)){const ni=(cy<<4)+(cx-1),nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx+1,cy)){const ni=(cy<<4)+(cx+1),nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx+1,cy+1)&&wk(cx+1,cy)&&wk(cx,cy+1)){const ni=((cy+1)<<4)+(cx+1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx+1,cy-1)&&wk(cx+1,cy)&&wk(cx,cy-1)){const ni=((cy-1)<<4)+(cx+1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx-1,cy+1)&&wk(cx-1,cy)&&wk(cx,cy+1)){const ni=((cy+1)<<4)+(cx-1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+if(wk(cx-1,cy-1)&&wk(cx-1,cy)&&wk(cx,cy-1)){const ni=((cy-1)<<4)+(cx-1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
+}
+return null;
+}
+function _uspFastestHtml(eng,opts){
+opts=opts||{};
+const hideFloors=!!opts.hideFloors;
+const fcAll=eng.floorCount;if(fcAll<=0)return null;
+const hasLimit=(typeof opts.upToFloor==='number'&&opts.upToFloor>=0);
+const limit=hasLimit?Math.min(opts.upToFloor,fcAll):fcAll;
+const pf=new Array(limit);let sum=0;
+for(let f=0;f<limit;f++){const c=_uspFloorCost(eng,f);if(c===null)return null;pf[f]=c;sum+=c;}
+const fm=v=>(Number.isInteger(v)?v:v.toFixed(1));
+let html=`<div style="margin-top:4px;"><span style="color:#ffc90e;font-weight:bold;font-size:14px">${fm(sum)}</span></div>`;
+if(!hideFloors){
+const floors=pf.map((c,f)=>{const isGoal=(!hasLimit&&f===limit-1);return `<span style="color:${isGoal?'#fc6':'#9ab'}">B${f+1}F${isGoal?'✦':''}<b style="color:#cde">${fm(c)}</b></span>`;}).join('<span style="color:#445"> · </span>');
+html+=`<div style="margin-top:3px;font-size:11px;font-family:monospace;line-height:1.7">${floors}</div>`;
+}
+return{html,cost:sum};
+}
+SEED_SETUP.fastest=(engine,job)=>{
+engine.trackOverflow=(job.conds.anomaly==='all_invalid'||job.conds.anomaly==='ghost');
+job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
+};
+SEED_PROCESSORS.fastest=(searchEngine,seed,rStr,targetRankKey,job)=>{
+const conds=job.conds;
+const searchOnlyWithD=job.params.searchOnlyWithD;
+const benchmarkMode=!!job.params.benchmarkMode;
+const _onlyMonExpectedStr=job._onlyMonExpectedStr;
+searchEngine.calculateDetail(true);
+if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
+if(!benchmarkMode&&searchEngine._details[0]===12){
+const allowGrey=(parseInt(conds.boss)===12||conds.elist||conds.onlyMon);
+if(!allowGrey)return null;
+}
+if(conds.onlyMon){
+let isCombinedSearch=['2','3','4','PARTIAL_NONE'].includes(conds.elist);
+if(!isCombinedSearch&&!checkOnlyMonPossible(searchEngine,conds))return null;
+}
+searchEngine.createDungeonDetail();
+let boxHtml="";
+if(conds.hasBoxCond){
+let chestResult=ChestHtml(searchEngine,conds);
+if(!chestResult.isMatch)return null;
+boxHtml=chestResult.html;
+}
+let elistResult=checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr);
+if(!elistResult.match)return null;
+let anomResult=checkAnomalies(searchEngine,conds);
+if(!anomResult.match)return null;
+let specialHitDetails=elistResult.specialHitDetails;
+let anomalyDetails=anomResult.anomalyDetails;
+let hasMatchedD=elistResult.hasMatchedD;
+let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
+let upToFloor=-1;
+if(!benchmarkMode&&(conds.elist||conds.onlyMon)&&elistResult.jumpToFloor!==-1){
+upToFloor=elistResult.jumpToFloor;
+}
+let fastestRes=_uspFastestHtml(searchEngine,benchmarkMode?{hideFloors:false,upToFloor:-1}:{hideFloors:true,upToFloor:upToFloor});
+if(fastestRes===null)return null;
+let fastestHtml=fastestRes.html;
+let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
+let specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
+let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html=>html.replace('<span style="','<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
+let mapNameDisp=dispName(searchEngine);
+const html=`
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
+<span style="color:#888">(Rank ${rStr})</span><br>
+<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+${fastestHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+${specialHtml}
+${anomalyHtml}
+`;
+return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor,sortCost:fastestRes.cost};
 };
 async function coreRunScanJob(job,io){
 const conds=job.conds;
