@@ -25,6 +25,8 @@ Ultimate search
 - Single monster floor (Only)
 - Nipple Map (inaccessible chest), Chamber Map (inaccessible area), Softlock, etc.
 - 4-player Multiplay Bug (Multibug)
+- Fastest Map Search (短)
+- CPU Benchmark (💻)
 
 Chest Timer related search
 - Quickload B3/B4/B9 same item x2 (QL)
