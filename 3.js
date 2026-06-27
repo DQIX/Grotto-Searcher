@@ -341,6 +341,8 @@ return;
 }
 let hitCount=0;
 let renderedCount=0;
+const sortTopN=config.sortTopN;
+const sortBucket=(sortTopN!==undefined)?[]:null;
 const restoreBtn=()=>{if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.style.color=config.btnColor||'#000';}};
 const job={
 kind:'scan',
@@ -352,11 +354,11 @@ startSeed,endSeed,
 lang:DISPLAY_LANG,
 };
 runSearchJob(job,{
-onProgress:(p)=>{
-hitCount=p.hits;
+onProgress:(p)=>{hitCount=p.hits;
 progressSpan.textContent=Math.floor((p.processed/p.total)*100)+'% ('+B02+' '+p.rStr+', Seed '+p.seedHex+') ['+B04+''+p.hits+' '+B03+']';
 },
 onBatch:(items)=>{
+if(sortBucket){for(const it of items)sortBucket.push(it);return;}
 if(config.renderCap!==undefined&&renderedCount>=config.renderCap)return;
 const fragment=document.createDocumentFragment();
 for(const it of items){
@@ -366,11 +368,19 @@ renderedCount++;
 }
 if(fragment.childNodes.length>0)grid.appendChild(fragment);
 },
-onDone:(d)=>{
-hitCount=d.hits;
-isSearching=false;
-restoreBtn();
+onDone:(d)=>{hitCount=d.hits;isSearching=false;restoreBtn();
+if(sortBucket){
+sortBucket.sort((a, b)=>(a.sortCost-b.sortCost));
+const shown=sortBucket.slice(0,sortTopN);
+const fragment=document.createDocumentFragment();
+for(const it of shown)fragment.appendChild(materializeResultItem(it));
+if(fragment.childNodes.length>0)grid.appendChild(fragment);
+let doneTxt=searchDoneMsg(hitCount);
+if(sortBucket.length>sortTopN)doneTxt+=' · '+B09.replace('{n}',sortTopN);
+progressSpan.textContent=doneTxt;
+}else{
 progressSpan.textContent=searchDoneMsg(hitCount);
+}
 if(config.onDoneExtra)config.onDoneExtra(d);
 },
 onError:(msg)=>{
