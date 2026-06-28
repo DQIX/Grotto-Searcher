@@ -375,9 +375,7 @@ const shown=sortBucket.slice(0,sortTopN);
 const fragment=document.createDocumentFragment();
 for(const it of shown)fragment.appendChild(materializeResultItem(it));
 if(fragment.childNodes.length>0)grid.appendChild(fragment);
-let doneTxt=searchDoneMsg(hitCount);
-if(sortBucket.length>sortTopN)doneTxt+=' · '+B09.replace('{n}',sortTopN);
-progressSpan.textContent=doneTxt;
+progressSpan.textContent=searchDoneMsg(hitCount);
 }else{
 progressSpan.textContent=searchDoneMsg(hitCount);
 }
