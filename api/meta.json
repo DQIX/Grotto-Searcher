@@ -1,0 +1,635 @@
+{
+  "ranks": [
+    {
+      "hex": "02",
+      "decimal": 2,
+      "fq": {
+        "fqMin": 2,
+        "fqMax": 55
+      }
+    },
+    {
+      "hex": "38",
+      "decimal": 56,
+      "fq": {
+        "fqMin": 56,
+        "fqMax": 60
+      }
+    },
+    {
+      "hex": "3D",
+      "decimal": 61,
+      "fq": {
+        "fqMin": 61,
+        "fqMax": 75
+      }
+    },
+    {
+      "hex": "4C",
+      "decimal": 76,
+      "fq": {
+        "fqMin": 76,
+        "fqMax": 80
+      }
+    },
+    {
+      "hex": "51",
+      "decimal": 81,
+      "fq": {
+        "fqMin": 81,
+        "fqMax": 100
+      }
+    },
+    {
+      "hex": "65",
+      "decimal": 101,
+      "fq": {
+        "fqMin": 101,
+        "fqMax": 120
+      }
+    },
+    {
+      "hex": "79",
+      "decimal": 121,
+      "fq": {
+        "fqMin": 121,
+        "fqMax": 140
+      }
+    },
+    {
+      "hex": "8D",
+      "decimal": 141,
+      "fq": {
+        "fqMin": 141,
+        "fqMax": 160
+      }
+    },
+    {
+      "hex": "A1",
+      "decimal": 161,
+      "fq": {
+        "fqMin": 161,
+        "fqMax": 180
+      }
+    },
+    {
+      "hex": "B5",
+      "decimal": 181,
+      "fq": {
+        "fqMin": 181,
+        "fqMax": 200
+      }
+    },
+    {
+      "hex": "C9",
+      "decimal": 201,
+      "fq": {
+        "fqMin": 201,
+        "fqMax": 220
+      }
+    },
+    {
+      "hex": "DD",
+      "decimal": 221,
+      "fq": {
+        "fqMin": 221,
+        "fqMax": 248
+      }
+    }
+  ],
+  "prefix": {
+    "1": {
+      "en": "Clay",
+      "jp": "はかなき"
+    },
+    "2": {
+      "en": "Rock",
+      "jp": "ちいさな"
+    },
+    "3": {
+      "en": "Granite",
+      "jp": "うす暗き"
+    },
+    "4": {
+      "en": "Basalt",
+      "jp": "ゆらめく"
+    },
+    "5": {
+      "en": "Graphite",
+      "jp": "ざわめく"
+    },
+    "6": {
+      "en": "Iron",
+      "jp": "ねむれる"
+    },
+    "7": {
+      "en": "Copper",
+      "jp": "怒れる"
+    },
+    "8": {
+      "en": "Bronze",
+      "jp": "呪われし"
+    },
+    "9": {
+      "en": "Steel",
+      "jp": "放たれし"
+    },
+    "10": {
+      "en": "Silver",
+      "jp": "けだかき"
+    },
+    "11": {
+      "en": "Gold",
+      "jp": "わななく"
+    },
+    "12": {
+      "en": "Platinum",
+      "jp": "残された"
+    },
+    "13": {
+      "en": "Ruby",
+      "jp": "見えざる"
+    },
+    "14": {
+      "en": "Emerald",
+      "jp": "あらぶる"
+    },
+    "15": {
+      "en": "Sapphire",
+      "jp": "とどろく"
+    },
+    "16": {
+      "en": "Diamond",
+      "jp": "大いなる"
+    }
+  },
+  "suffix": {
+    "1": {
+      "en": "Joy",
+      "jp": "花"
+    },
+    "2": {
+      "en": "Bliss",
+      "jp": "岩"
+    },
+    "3": {
+      "en": "Glee",
+      "jp": "風"
+    },
+    "4": {
+      "en": "Doubt",
+      "jp": "空"
+    },
+    "5": {
+      "en": "Woe",
+      "jp": "獣"
+    },
+    "6": {
+      "en": "Dolour",
+      "jp": "夢"
+    },
+    "7": {
+      "en": "Regret",
+      "jp": "影"
+    },
+    "8": {
+      "en": "Bane",
+      "jp": "大地"
+    },
+    "9": {
+      "en": "Fear",
+      "jp": "運命"
+    },
+    "10": {
+      "en": "Dread",
+      "jp": "魂"
+    },
+    "11": {
+      "en": "Hurt",
+      "jp": "闇"
+    },
+    "12": {
+      "en": "Gloom",
+      "jp": "光"
+    },
+    "13": {
+      "en": "Doom",
+      "jp": "魔神"
+    },
+    "14": {
+      "en": "Evil",
+      "jp": "星々"
+    },
+    "15": {
+      "en": "Ruin",
+      "jp": "悪霊"
+    },
+    "16": {
+      "en": "Death",
+      "jp": "神々"
+    }
+  },
+  "locale": {
+    "1": {
+      "en": "Cave",
+      "jp": "洞くつ"
+    },
+    "2": {
+      "en": "Tunnel",
+      "jp": "地下道"
+    },
+    "3": {
+      "en": "Mine",
+      "jp": "坑道"
+    },
+    "4": {
+      "en": "Crevasse",
+      "jp": "雪道"
+    },
+    "5": {
+      "en": "Marsh",
+      "jp": "沼地"
+    },
+    "6": {
+      "en": "Lair",
+      "jp": "アジト"
+    },
+    "7": {
+      "en": "Icepit",
+      "jp": "氷穴"
+    },
+    "8": {
+      "en": "Lake",
+      "jp": "地底湖"
+    },
+    "9": {
+      "en": "Crater",
+      "jp": "火口"
+    },
+    "10": {
+      "en": "Path",
+      "jp": "道"
+    },
+    "11": {
+      "en": "Snowhall",
+      "jp": "雪原"
+    },
+    "12": {
+      "en": "Moor",
+      "jp": "湿原"
+    },
+    "13": {
+      "en": "Dungeon",
+      "jp": "牢ごく"
+    },
+    "14": {
+      "en": "Crypt",
+      "jp": "墓場"
+    },
+    "15": {
+      "en": "Nest",
+      "jp": "巣"
+    },
+    "16": {
+      "en": "Ruins",
+      "jp": "遺跡"
+    },
+    "17": {
+      "en": "Tundra",
+      "jp": "凍土"
+    },
+    "18": {
+      "en": "Waterway",
+      "jp": "水脈"
+    },
+    "19": {
+      "en": "World",
+      "jp": "世界"
+    },
+    "20": {
+      "en": "Abyss",
+      "jp": "奈落"
+    },
+    "21": {
+      "en": "Maze",
+      "jp": "迷宮"
+    },
+    "22": {
+      "en": "Glacier",
+      "jp": "氷河"
+    },
+    "23": {
+      "en": "Chasm",
+      "jp": "眠る地"
+    },
+    "24": {
+      "en": "Void",
+      "jp": "じごく"
+    }
+  },
+  "environment": {
+    "1": {
+      "en": "Caves",
+      "jp": "洞窟"
+    },
+    "2": {
+      "en": "Ruins",
+      "jp": "遺跡"
+    },
+    "3": {
+      "en": "Ice",
+      "jp": "氷"
+    },
+    "4": {
+      "en": "Water",
+      "jp": "水"
+    },
+    "5": {
+      "en": "Fire",
+      "jp": "火山"
+    }
+  },
+  "boss": {
+    "1": {
+      "en": "Equinox",
+      "abbr": "馬",
+      "jp": "黒竜丸"
+    },
+    "2": {
+      "en": "Nemean",
+      "abbr": "爪",
+      "jp": "ハヌマーン"
+    },
+    "3": {
+      "en": "Shogum",
+      "abbr": "髭",
+      "jp": "スライムジェネラル"
+    },
+    "4": {
+      "en": "Trauminator",
+      "abbr": "機",
+      "jp": "Sキラーマシン"
+    },
+    "5": {
+      "en": "Elusid",
+      "abbr": "教",
+      "jp": "イデアラゴン"
+    },
+    "6": {
+      "en": "Sir Sanguinus",
+      "abbr": "血",
+      "jp": "ブラッドナイト"
+    },
+    "7": {
+      "en": "Atlas",
+      "abbr": "巨",
+      "jp": "アトラス"
+    },
+    "8": {
+      "en": "Hammibal",
+      "abbr": "猪",
+      "jp": "怪力軍曹イボイノス"
+    },
+    "9": {
+      "en": "Fowleye",
+      "abbr": "鳥",
+      "jp": "邪眼皇帝アウルート"
+    },
+    "10": {
+      "en": "Excalipurr",
+      "abbr": "猫",
+      "jp": "魔剣神レパルド"
+    },
+    "11": {
+      "en": "Tyrannosaurus Wrecks",
+      "abbr": "滅",
+      "jp": "破壊神フォロボス"
+    },
+    "12": {
+      "en": "Greygnarl",
+      "abbr": "竜",
+      "jp": "グレイナル"
+    }
+  },
+  "monsters": {
+    "00B": {
+      "en": "Mushroom Mage",
+      "jp": "マージマタンゴ"
+    },
+    "036": {
+      "en": "Pink Sanguini",
+      "jp": "ピンクモーモン"
+    },
+    "034": {
+      "en": "Sluggernaut",
+      "jp": "スーパーテンツク"
+    },
+    "076": {
+      "en": "Bomboulder",
+      "jp": "メガザルロック"
+    },
+    "052": {
+      "en": "Gloomy Gastropog",
+      "jp": "ダークデンデン"
+    },
+    "02F": {
+      "en": "Freezing Fog",
+      "jp": "フロストギズモ"
+    },
+    "04D": {
+      "en": "Gem Jamboree",
+      "jp": "ゴールデントーテム"
+    },
+    "037": {
+      "en": "Genie Sanguini",
+      "jp": "マポレーナ"
+    },
+    "035": {
+      "en": "Sluggerslaught",
+      "jp": "ラストテンツク"
+    },
+    "0B5": {
+      "en": "Metal King Slime",
+      "jp": "メタルキング"
+    },
+    "0D7": {
+      "en": "Godsteed",
+      "jp": "レジェンドホース"
+    },
+    "053": {
+      "en": "Earthenwarrior",
+      "jp": "はにわナイト"
+    },
+    "02A": {
+      "en": "Raving Lunatick",
+      "jp": "メーダロード"
+    },
+    "040": {
+      "en": "Bagma",
+      "jp": "ようがんピロー"
+    },
+    "062": {
+      "en": "Teaky Mask",
+      "jp": "トーテムキラー"
+    },
+    "097": {
+      "en": "Blastoad",
+      "jp": "キャノンキング"
+    },
+    "01B": {
+      "en": "Liquid Metal Slime",
+      "jp": "はぐれメタル"
+    },
+    "0B9": {
+      "en": "Gem Slime",
+      "jp": "ゴールデンスライム"
+    },
+    "0E4": {
+      "en": "AU-1000",
+      "jp": "ゴールドマジンガ"
+    },
+    "008": {
+      "en": "Lost Soul",
+      "jp": "さまようたましい"
+    },
+    "012": {
+      "en": "Sootheslime",
+      "jp": "ベホイムスライム"
+    },
+    "068": {
+      "en": "Ghoul",
+      "jp": "グール"
+    },
+    "056": {
+      "en": "Skeleton Soldier",
+      "jp": "死霊の騎士"
+    },
+    "031": {
+      "en": "Grim Grinner",
+      "jp": "ダークホビット"
+    },
+    "0B2": {
+      "en": "Killing Machine",
+      "jp": "キラーマシン"
+    },
+    "05D": {
+      "en": "Belisha Beakon",
+      "jp": "アカイライ"
+    },
+    "0B8": {
+      "en": "Darkonium Slime",
+      "jp": "スライムマデュラ"
+    },
+    "0EC": {
+      "en": "Geothaum",
+      "jp": "あんこくまじん"
+    },
+    "03D": {
+      "en": "Salamarauder",
+      "jp": "かいぞくウーパー"
+    },
+    "051": {
+      "en": "Giddy Gastropog",
+      "jp": "メダパニつむり"
+    },
+    "059": {
+      "en": "Diethon",
+      "jp": "ヘルバイパー"
+    },
+    "013": {
+      "en": "Cureslime",
+      "jp": "ベホマスライム"
+    },
+    "057": {
+      "en": "Dark Skeleton",
+      "jp": "影の騎士"
+    },
+    "0F0": {
+      "en": "Mandrake Monarch",
+      "jp": "まかいファイター"
+    },
+    "0B0": {
+      "en": "Drakulord",
+      "jp": "ドラゴン・ウー"
+    },
+    "03E": {
+      "en": "Axolhotl",
+      "jp": "ウパパロン"
+    },
+    "086": {
+      "en": "Sorcerer",
+      "jp": "ようじゅつし"
+    },
+    "015": {
+      "en": "Robo-robin",
+      "jp": "アイアンクック"
+    },
+    "080": {
+      "en": "Live Lava",
+      "jp": "マグマロン"
+    },
+    "02E": {
+      "en": "Hell Niño",
+      "jp": "ヒートギズモ"
+    },
+    "0AA": {
+      "en": "Red Dragon",
+      "jp": "レッドドラゴン"
+    },
+    "0C3": {
+      "en": "Fright Knight",
+      "jp": "ナイトリッチ"
+    },
+    "0C7": {
+      "en": "Bird of Terrordise",
+      "jp": "れんごくまちょう"
+    },
+    "0AB": {
+      "en": "Rashaverak",
+      "jp": "アンドレアル"
+    }
+  },
+  "fields": [
+    "seed",
+    "prefix",
+    "environment",
+    "suffix",
+    "level",
+    "locale",
+    "smr",
+    "depth",
+    "boss",
+    "locations",
+    "elist"
+  ],
+  "fieldDescriptions": {
+    "seed": "Map Seed (0-32767)",
+    "prefix": "Prefix index (1-16)",
+    "environment": "Terrain type (1=Caves, 2=Ruins, 3=Ice, 4=Water, 5=Fire)",
+    "suffix": "Suffix index (1-16)",
+    "level": "Map Level (1-99)",
+    "locale": "Locale index (1-24)",
+    "smr": "B1F Monster Rank",
+    "depth": "Floor count",
+    "boss": "Boss index (1-12)",
+    "locations": "Valid location codes (empty=ungeneratable)",
+    "elist": "Special floor data: [[floorIndex, stateCode, dValue], ...] — empty=all normal"
+  },
+  "elistCodes": {
+    "P": "Partially No-enemy",
+    "E4": "4-enemy",
+    "E3": "3-enemy",
+    "E2": "2-enemy",
+    "E1": "ONLY (1-enemy)",
+    "N": "No-enemy",
+    "E1_format": "E1:monsterID — e.g. E1:0B5 = Metal King Slime only",
+    "suffix_p": "(No Pandora's Box)",
+    "suffix_m": "(No Mimic)",
+    "suffix_c": "(No Cannibox)",
+    "examples": [
+      "E1:0B5 = Metal King Slime only",
+      "E3p = 3-enemy + No Pandora's Box",
+      "Nm = No-enemy + No Mimic"
+    ]
+  }
+}
