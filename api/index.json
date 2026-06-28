@@ -1,0 +1,58 @@
+{
+"description": "DQ9 Grotto Searcher Static JSON API",
+"version": "4.0.0",
+"source": "https://github.com/DQIX/Grotto-Searcher",
+"endpoints": {
+"meta": "api/meta.json",
+"ranks": [
+{
+"rank": "02",
+"url": "api/rank_02.json"
+},
+{
+"rank": "38",
+"url": "api/rank_38.json"
+},
+{
+"rank": "3D",
+"url": "api/rank_3D.json"
+},
+{
+"rank": "4C",
+"url": "api/rank_4C.json"
+},
+{
+"rank": "51",
+"url": "api/rank_51.json"
+},
+{
+"rank": "65",
+"url": "api/rank_65.json"
+},
+{
+"rank": "79",
+"url": "api/rank_79.json"
+},
+{
+"rank": "8D",
+"url": "api/rank_8D.json"
+},
+{
+"rank": "A1",
+"url": "api/rank_A1.json"
+},
+{
+"rank": "B5",
+"url": "api/rank_B5.json"
+},
+{
+"rank": "C9",
+"url": "api/rank_C9.json"
+},
+{
+"rank": "DD",
+"url": "api/rank_DD.json"
+}
+]
+}
+}
