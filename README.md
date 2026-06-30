@@ -59,6 +59,14 @@ iOS 10.3+ / Android 6.0+ / Windows 7+ / Any other OS which can run:
 
 Chrome 57+ / Firefox 52+ / Edge 17+ / Safari 10.1+
 
-Classic Web Worker is available on server side. 9950X3D can finish most searches within 2 seconds (10x of iPhone 16).
+Classic Web Worker is available online.
 
 Locally running source code / standalone versions only support single thread.
+
+
+CPU Benchmark (2026.06.30 renewal)
+iPhone 12 Pro Max: 20.48s
+iPhone 16 Pro: 11.22s
+i5-5200U: 37.15s
+i9-12900KF: 3.34s (P-core 82℃)
+R9-9950X3D: 1.98s
