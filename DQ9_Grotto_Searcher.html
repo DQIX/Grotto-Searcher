@@ -71,7 +71,7 @@
 <option value="C9,7FE0">【ゆりっぺ】あらぶる夢の水脈Lv64（C9 7FE0）</option>
 <option value="C9,2AC6">【ゆりっぺ大富豪】見えざる獣の墓場Lv73（C9 2AC6）</option>
 <option value="DD,32BB">【ジャギ大富豪】大いなる岩の世界Lv63（DD 32BB）</option>
-<option value="DD,235E">【ルイズﾀｿ大富豪】とどろく影の世界Lv78（DD 235E）</option>
+<option value="DD,235E">【ルイスﾀｿ大富豪】とどろく影の世界Lv78（DD 235E）</option>
 <option value="C9,158D">【ウミサンゴ大富豪】けだかき花の世界Lv61（C9 158D）</option>
 <option value="DD,5C43">【TK89】見えざる光の眠る地Lv89（DD 5C43）</option>
 <option value="DD,47D0">【御柱げんま】とどろく花のじごくLv67（DD 47D0）</option>
@@ -99,29 +99,74 @@
 <div class="modal-body"style="padding:12px;overflow-y:auto;max-height:85vh;">
 <div class="si-section">
 <div class="si-grid">
-<div class="si-field"><label>Seed</label><input type="text"id="si_seed"value="7340"maxlength="4"style="width:65px;text-transform:uppercase;"oninput="updateSeedInspector()"></div>
-<div class="si-field"><label data-i18n="G07"></label><select id="si_env"style="width:65px;"onchange="updateSeedInspector()"><option value="1">洞窟</option><option value="2"selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
-<div class="si-field"><label data-i18n="G09"></label><select id="si_mr"onchange="updateSeedInspector()"></select></div>
-<div class="si-field"><label data-i18n="G18"></label><input type="number"id="si_deft"value=910 min=1 max=999 style="width:60px;"oninput="updateSeedInspector()"></div>
-<div class="si-field"><label data-i18n="G19"></label><input type="number"id="si_n"value=0 min=0 oninput="updateSeedInspector()"></div>
-<div class="si-field"><label data-i18n="G20"></label><select id="si_pattern"style="width:85px;"onchange="updateSeedInspector()"></select></div>
-<div class="si-field"><label data-i18n="G21"></label><input type="number"id="si_scan_max"value=2000 min=0 style="width:60px;"oninput="updateSeedInspector()"></div>
+<div class="si-field"><label>Seed</label><input type="text"id="si_seed"value="7340"maxlength="4"style="width:65px;text-transform:uppercase;"oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label data-i18n="G07"></label><select id="si_env"style="width:65px;"onchange="debouncedUpdateSeedInspector()"><option value="1">洞窟</option><option value="2"selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
+<div class="si-field"><label data-i18n="G09"></label><select id="si_mr"onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label data-i18n="G18"></label><input type="number"id="si_deft"value=910 min=1 max=999 style="width:60px;"oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label data-i18n="G19"></label><input type="number"id="si_n"value=0 min=0 oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label data-i18n="G20"></label><select id="si_pattern"style="width:85px;"onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label data-i18n="G21"></label><input type="number"id="si_scan_max"value=2000 min=0 style="width:60px;"oninput="debouncedUpdateSeedInspector()"></div>
 </div>
 </div>
 <div class="si-section"><div class="si-result-box"id="si_at_results"></div></div>
+<div class="si-section"style="border:1px solid #335;border-radius:4px;padding:8px;background:#1a1a3a;">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<label style="color:#0ff;font-size:11px;font-weight:bold;">⚔Solver</label>
+<div style="display:flex;gap:6px;align-items:center;">
+<label style="font-size:9px;color:#888;cursor:pointer;"><input type="checkbox"id="si_useStats"onchange="debouncedUpdateSeedInspector()"style="width:13px;height:13px;vertical-align:middle;cursor:pointer;">Stats</label>
+<label style="font-size:9px;color:#f80;cursor:pointer;"><input type="checkbox"id="si_multiPlayer"onchange="debouncedUpdateSeedInspector()"style="width:13px;height:13px;vertical-align:middle;cursor:pointer;">Multi</label>
+<button onclick="var p=document.getElementById('solverPanel');p.style.display=p.style.display==='none'?'':'none'"style="background:none;border:1px solid #555;color:#888;font-size:10px;padding:1px 6px;border-radius:3px;cursor:pointer;">▼</button>
+</div>
+</div>
+<div id="solverPanel"style="display:none;margin-top:6px;">
+<div style="font-size:9px;color:#666;margin-bottom:4px;">ATK=max999|Lv→秘傳書Lv</div>
+<div style="display:flex;gap:2px;color:#888;font-size:8px;margin-bottom:1px;padding-left:16px;"><span style="width:52px;">Job</span><span style="width:42px;">ATK</span><span style="width:42px;">M.Mgt</span><span style="width:42px;">STR</span><span style="width:42px;">AGI</span><span style="width:42px;">Mend</span><span style="width:42px;">Deft</span>
+</div>
+<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job1"onchange="applyJobStats(1)"style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2"selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number"id="si_atk1"value="282"min="1"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_might1"value="700"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_str1"value="196"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_agi1"value="601"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_mend1"value="300"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_deft1"value="514"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+</div>
+<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job2"onchange="applyJobStats(2)"style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2"selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number"id="si_atk2"value="282"min="1"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_might2"value="700"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_str2"value="196"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_agi2"value="601"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_mend2"value="300"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_deft2"value="514"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+</div>
+<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job3"onchange="applyJobStats(3)"style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10"selected>賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number"id="si_atk3"value="309"min="1"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_might3"value="537"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_str3"value="302"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_agi3"value="318"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_mend3"value="508"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_deft3"value="267"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+</div>
+<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job4"onchange="applyJobStats(4)"style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6"selected>ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number"id="si_atk4"value="840"min="1"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_might4"value="300"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_str4"value="600"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_agi4"value="224"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_mend4"value="300"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+<input type="number"id="si_deft4"value="466"min="0"max="999"style="width:42px;font-size:10px;"oninput="debouncedUpdateSeedInspector()">
+</div>
+</div>
+</div>
 <div class="si-section">
 <div class="si-grid"style="gap:6px;">
-<div class="si-field"><label data-i18n="G22"></label><select id="si_enemy_count"onchange="updateSeedInspector()"style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
-<div class="si-field"><label data-i18n="G23"></label><select id="si_group_size"onchange="updateSeedInspector()"style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label style="display:block;margin-bottom:5px;font-size:11px;color:#fa0;">2T</label><div style="display:flex;align-items:center;height:16px;"><input type="checkbox"id="si_2nd_turn"onchange="updateSeedInspector()"style="width:20px;height:20px;cursor:pointer;"></div></div>
-<div class="si-field"><label data-i18n="G24"></label><select id="si_rare_rate"style="width:60px;"onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256"selected>1/256</option></select></div>
-<div class="si-field"><label data-i18n="G25"></label><select id="si_norm_rate"style="width:60px;"onchange="updateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128"selected>1/128</option></select></div>
+<div class="si-field"><label data-i18n="G23"></label><select id="si_group_size"onchange="debouncedUpdateSeedInspector()"style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+<div class="si-field"><label data-i18n="G24"></label><select id="si_rare_rate"style="width:60px;"onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256"selected>1/256</option></select></div>
+<div class="si-field"><label data-i18n="G25"></label><select id="si_norm_rate"style="width:60px;"onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128"selected>1/128</option></select></div>
 <div class="si-field"><label data-i18n="G26"></label>
 <div style="display:flex;gap:4px;">
-<select id="si_t1"onchange="updateSeedInspector()"style="width:45px;"></select>
-<select id="si_t2"onchange="updateSeedInspector()"style="width:45px;"></select>
-<select id="si_t3"onchange="updateSeedInspector()"style="width:45px;"></select>
-<select id="si_t4"onchange="updateSeedInspector()"style="width:45px;"></select>
+<select id="si_t1"onchange="debouncedUpdateSeedInspector()"style="width:45px;"></select>
+<select id="si_t2"onchange="debouncedUpdateSeedInspector()"style="width:45px;"></select>
+<select id="si_t3"onchange="debouncedUpdateSeedInspector()"style="width:45px;"></select>
+<select id="si_t4"onchange="debouncedUpdateSeedInspector()"style="width:45px;"></select>
 </div>
 </div>
 </div>
@@ -129,14 +174,13 @@
 <div class="si-section">
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
 <label style="color:#aaa;font-size:12px;">AT Debug</label>
-<input type="number"id="si_target_step"value="35"min="1"style="width:65px;"oninput="updateSeedInspector()">
+<input type="number"id="si_target_step"value="35"min="1"style="width:65px;"oninput="debouncedUpdateSeedInspector()">
 </div>
 <div class="si-result-box"id="si_target_results"style="border-color:#f44;"></div>
 </div>
 </div>
 </div>
 </div>
-
 <div id="disclaimerModal" class="modal-overlay" onclick="closeDisclaimerModal(event)" style="z-index: 1001;">
 <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
 <div class="modal-header">
@@ -241,7 +285,11 @@
 <li>説明書：本プロジェクトの作者が中国語 (繁体字) を作成し、Claude が英語・日本語に翻訳</li>
 </ul>
 <p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本プロジェクトは、上記のいかなる情報源に対してもオリジナリティを主張しません。本プロジェクトは <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong> ライセンスのもとで公開されており、商業目的での使用は禁じられています。</small></p>
-</div></div></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div id="h1Modal" class="modal-overlay" onclick="closeh1Modal(event)" style="z-index: 1002;">
 <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
 <div class="modal-header">
@@ -834,23 +882,28 @@
 <div class="h1box3">
 <strong style="color:#f88;">指定 ONLY 怪物</strong><br>按照 洞窟、遺跡、冰、水、火山 的順序，按 FloorMR 從小到大，把每個組合的 ONLY 怪物列出來供大家搜尋。每個 <code style="color:#f8f;">地形 × FloorMR</code> 組合的 ONLY 怪物只可能是排在怪物列表最前面的那個怪物。
 </div>
+
 <details class="h1det">
 <summary>📖 實際機制 與 dq9tmap101.exe 誤判的歷史</summary>
 <div>
+
 <h4 class=h1h4>記憶體溢出 導致超大面積樓層的出現怪物減少</h4>
 <p style="margin-bottom:12px; text-align:justify;">　DQ9 如果一層樓面積特別大、白方格特別多，會使樓層面積的數據變得龐大，過度佔據記憶體，而把每層樓末端的數據從記憶體中「擠出去」。由於末端數據剛好用來存放該樓層的「怪物生成列表 (Enemy List)」，一旦被擠掉，能出現的怪物種類就會變少。少了一種或幾種叫做 <strong style="color:#f8f;">敵減</strong>，少到僅剩一種叫做 <strong style="color:#f8f;">ONLY</strong>，全部被擠掉叫做 <strong style="color:#f8f;">敵無</strong>。</p>
+
 <h4 class=h1h4>衍生 BUG</h4>
 <ul style="padding-left:20px; margin-bottom:16px;">
 <li style="margin-bottom:6px;"><strong>寶箱怪消失 BUG：</strong>寶箱怪佔了數據位置但不在地圖上出現。若有怪物 ID 排在寶箱怪之前 (例如<code>はぐれメタル</code>)，則會導致在這些 ONLY 地圖中出現寶箱怪「一生成就立即消失」的奇異現象。</li>
 <li style="margin-bottom:6px;"><strong>吹口哨失敗 BUG：</strong>使用戰士技能「くちぶえ」時，如果系統抽到的怪物剛好是「被擠掉的那幾種」，就會發生呼叫不出怪物的判定失敗。</li>
 <li style="margin-bottom:6px;"><strong>Flag0 方格 與 掉寶操縱：</strong>某些大面積樓層因白方格過多，導致白方格專用的記憶體空間也發生溢出。這會使該樓層右下角出現「上下左右鄰接四邊不為零，卻被強制當作零處理」的白方格 (即 Flag0)。在此方格內不會出現怪物，怪物也不會走進來（除非追蹤玩家）。但若在此處使用「くちぶえ」，不僅能正常呼叫怪物，<strong style="color:#fa0;">且 AT 亂數在進入戰鬥後會保持停止狀態。</strong> 這個特質被極致運用於「地圖法秘技」來精準操縱怪物掉寶。</li>
 </ul>
+
 <h4 class=h1h4>「ONLY」誤判為「敵無」「無無無」的歷史</h4>
 <p style="margin-bottom:16px; text-align:justify;">　此機制最初由 <code>dq9tmap101.exe</code> 的作者 (43) 發現，並命名為 <strong style="color:#fff;">ElistOfs (Enemy List Offsets)</strong>。但當時作者並未發現 <strong>Flag0</strong> 的存在，導致所有帶 Flag0 的地圖算出來的 ElistOfs 比真實值大很多，產生了大量的誤判（例如「敵減」被誤判為「ONLY」，「ONLY」被誤判為「敵無」）。
 <br>　除此之外，作者還犯了一個人為錯誤——當所有白方格鄰接四邊之和的總數÷2 ≧ 256 時，程式莫名其妙地把它減去 256，造成了「ElistOfs=1Exx~1Fxx 但卻是特殊樓層」的嚴重誤判 (也就是「敵無/敵減/ONLY 誤判為 無無無」)。
 <br>　由於作者後來遭到 5ch 網友排擠，<code>dq9tmap101.exe</code> 停止更新，這個誤判就這樣存在了 16 年。在此期間，<strong>Terence</strong> 於 2010 年 10 月發表的 <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#0ca;">Grotto Mechanics Guide</a>
  初步提到了白方格過多導致的怪物不生成現象，但沒有進一步研究。而日本玩家群則靠著一張張地圖打出來比對，建立了不少資料庫 (例如 <a href="https://w.atwiki.jp/dq9-only" target="_blank" style="color:#0ca;">オンリー敵減(2種) wiki</a>，<strong>ぶぶづけ</strong> 為 <code>dq9tmap101.exe</code> 做的 mapdata patch (他的<a href=http://bubudzuke.pa.land.to target="_blank" style="color:#0ca;">網站</a>已於 2026.03.31 關閉) 等)，但沒人從機制上探索。
 <br>　2025年12月，本工具的開發者委託 <strong>TKG</strong> 徹底分析了 <code>dq9tmap101.exe</code>，終於把 ElistOfs 的真相找出來了：</p>
+
 <h4 class=h1h4>ElistOfs 計算公式</h4>
 <ol style="padding-left:20px; margin-bottom:16px;"><li>令 Boundary = 4128 - 16W - 8X<br>W：該樓層白方格總數<br>X：從左到右、從上到下 逐一檢查該樓層每個白方格 得到的 L+U 的總和 (即 X = L + U)<br>L：若該白方格的左邊一格也是白方格，L = 1，否則 L = 0<br>U：若該白方格的上邊一格也是白方格，U = 1，否則 U = 0</li>
 <li>Boundary≥0 時，A = 4896 + 16W + 8X<br>Boundary＜0 時，A = 4896 + 16W + 8B<br>B = (9016 - 4896 - 16W) ÷ 8 = (4120 - 16W) ÷ 8 = 515 − 2W</li>
@@ -927,7 +980,9 @@
 <p style="font-size:11px; color:#888;">樓層狀態：(A) F = 7 (B) ONLY 怪物 ID 比 寶箱怪 靠前 (例: はぐれメタル)</p>
 </div>
 </details>
+
 <h3 class="h1sec" id="sec-multibug">4 人連線異變 (Multibug)</h3>
+
 <h4 class=h1h4 style="margin-top:8px;">Multibug 簡介</h4>
 <p style="margin-bottom:8px;"><strong>觸發條件</strong>：4 台機器連線時，3 名 Guest 同時加入 Host 的世界。第 2 位正在加入的時候，Host 狂按 A 鍵 (相當於高橋名人連打的速度) 進入地圖洞窟，成功進入的那一瞬間機率性觸發 (並非 100% 成功，若失敗，需要 3 名 Guest 全部返回自己的世界，重新連線再來一遍)。</p>
 <p style="margin-bottom:8px;"><strong>現象</strong>：Multibug 被觸發後，<strong style="color:#c8f;">一部分地圖參數受到 亂數+1 的影響</strong>，使 Host 的世界中</p>
@@ -971,6 +1026,7 @@
 <li>亂數+1 重新計算出的值恰好等於原值時，樓層深度 不變。在變動範圍值為 N 的區間，不變的機率約為 1/N。</li>
 <li>樓層深度 減少代表可到達的樓層數比原來更少——對玩家而言通常沒有利用價值。</li>
 </ul>
+
 <details class="h1det">
 <summary>📖 Rank 02 / 38 / 3D 的結構性限制</summary>
 <p style="margin-bottom:4px;"><strong style="color:#cff;">Rank 02</strong> (樓層深度 2–4，SMR 1–3)：<strong style="color:#ac0;">Bug 樓層深度 = SMR+1</strong></p>
@@ -996,16 +1052,17 @@
 <h3 class="h1sec" id="sec-fastest">最短地圖搜尋</h3>
 <p style="margin-bottom:8px;color:#ccc;font-size:12px">DQ9 的 每張地圖 每層樓，從 上樓梯 到 下樓梯 之間的距離 有長有短。
 <br>玩家為了從 入口 走到 BOSS 樓層 儘量快，會特別保留 距離較短 的地圖，以便發掘新地圖時 節約時間。
-<br>本搜尋功能採用<strong>「Dijkstra 演算法」</strong>算出每層樓從 上樓梯 到 下樓梯 之間的距離，並按照 <a href=https://w.atwiki.jp/masha-masha/181.html target=_blank style="color:#0ca;text-decoration:none;border-bottom:1px solid #0ca">勇気ある旅人さんwiki</a> 等著名玩家的要求，追加了「禁止切對角線」的規則，確保算法符合著名玩家們的定義。</p>
+<br>本搜尋功能採用<strong>「Dijkstra 演算法」</strong>算出每層樓從 上樓梯 到 下樓梯 之間的距離，並按照 <a href=https://w.atwiki.jp/masha-masha/181.html target=_blank style="color:#0ca;text-decoration:none;border-bottom:1px solid #0ca">勇気ある旅人さんwiki</a> 等著名玩家的要求，追加了「No corner cutting rule」，確保算法符合著名玩家們的定義。</p>
 <ul style="padding-left:16px;margin-top:4px">
 <li>每層樓 從 上樓梯 到 下樓梯，每一個 橫 / 竪 著走的白方格，算 1</li>
 <li>每個廣域空間，每次斜著走，算 1.5</li>
-<li>以下地形 根據「禁止切對角線」的規則 禁止斜走：
+<li>以下地形 根據 No corner cutting rule 禁止斜走：
 <br>□□
 <br>□■</li>
 </ul>
 <p style="margin-bottom:12px;color:#ccc;font-size:12px">(實際上除了 入口 到 BOSS 之間的距離要短之外，還要考慮 某層樓最快的走法要不要避敵，如果有較多樓層要避敵，那麼這地圖再快也沒用。但由於機能所限，本搜尋功能 無法預測 要不要避敵，煩請各位玩家諒解)</p>
 </div>
+
 <div id="h1ListEN" style="display: none;">
 <h3 class="h1sec" id="sec-mapname" style="margin-top:0;">Grotto Name</h3>
 <table class=h1t>
@@ -1050,6 +1107,7 @@
 </ul>
 <p style="margin-top:8px; color:#ccc;">SMR, Depth, Terrain Type and Boss are described in detail in later sections.</p>
 </div>
+
 <details class="h1det" id="det-prefix">
 <summary>📖 Details</summary>
 <div>
@@ -1156,28 +1214,34 @@
 <tr><td class="loc"><u>03</u></td><td>◯</td><td></td></tr>
 <tr><td class="loc">04</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>86</b></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="4" class="rh">西セントシュタイン<br><span class="sm">Western Stornway</span></td><td class="loc">05</td><td>◯</td><td>5.86s (7th)</td></tr>
 <tr><td class="loc">06</td><td>◯</td><td>8.31s (13th)</td></tr>
 <tr><td class="loc">07</td><td>◯</td><td></td></tr>
 <tr><td class="loc">08</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">東セントシュタイン<br><span class="sm">Eastern Stornway</span></td><td class="loc">09</td><td>◯</td><td></td></tr>
 <tr><td class="loc">0A</td><td>×</td><td></td></tr>
 <tr><td class="loc">0B</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>87</b></td><td>◎</td><td></td></tr>
 <tr><td class="loc"><b>88</b></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">エラフィタ地方<br><span class="sm">Zere</span></td><td class="loc"><u>0C</u></td><td>◯</td><td></td></tr>
 <tr><td class="loc">0D</td><td>×</td><td></td></tr>
 <tr><td class="loc">0E</td><td>×</td><td></td></tr>
 <tr><td class="loc">0F</td><td>×</td><td>8.72s (14th)</td></tr>
 <tr><td class="loc">10</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ほろびのもり<br><span class="sm">Doomingale Forest</span></td><td class="loc">11</td><td>×</td><td></td></tr>
 <tr><td class="loc">12</td><td>×</td><td></td></tr>
 <tr><td class="loc">13</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">東ベクセリア地方<br><span class="sm">Eastern Coffinwell</span></td><td class="loc">14</td><td>×</td><td></td></tr>
 <tr><td class="loc">15</td><td>×</td><td></td></tr>
 <tr><td class="loc"><u>16</u></td><td>◯</td><td></td></tr>
 <tr><td class="loc">17</td><td>◯</td><td>5.50s (6th)</td></tr>
 <tr><td class="loc">18</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="7" class="rh">西ベクセリア地方<br><span class="sm">Western Coffinwell</span></td><td class="loc"><u>19</u></td><td>×</td><td></td></tr>
 <tr><td class="loc">1A</td><td>◯</td><td></td></tr>
 <tr><td class="loc">1B</td><td>×</td><td></td></tr>
@@ -1185,6 +1249,7 @@
 <tr><td class="loc"><i>68</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>89</b></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8A</b></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="7" class="rh">アユルダーマとう<br><span class="sm">Newid Isle</span></td><td class="loc">1D</td><td>×</td><td>5.36s (5th)</td></tr>
 <tr><td class="loc">1E</td><td>◯</td><td></td></tr>
 <tr><td class="loc">1F</td><td>◯</td><td></td></tr>
@@ -1192,27 +1257,34 @@
 <tr><td class="loc">21</td><td>×</td><td></td></tr>
 <tr><td class="loc"><b>8B</b></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8C</b></td><td>△</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ベレンのきしべ<br><span class="sm">Slurry Coast</span></td><td class="loc">22</td><td>×</td><td>1.45s (1st)</td></tr>
 <tr><td class="loc">23</td><td>◯</td><td></td></tr>
 <tr><td class="loc">24</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">カラコタ地方<br><span class="sm">Dourbridge</span></td><td class="loc">25</td><td>×</td><td></td></tr>
 <tr><td class="loc">26</td><td>◯</td><td></td></tr>
 <tr><td class="loc">27</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ビタリへいげん<br><span class="sm">Lonely Plains</span></td><td class="loc">28</td><td>◯</td><td></td></tr>
 <tr><td class="loc">29</td><td>×</td><td></td></tr>
 <tr><td class="loc">2A</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">サンマロウ地方<br><span class="sm">Bloomingdale</span></td><td class="loc">2B</td><td>◯</td><td></td></tr>
 <tr><td class="loc">2C</td><td>×</td><td>7.98s (11th)</td></tr>
 <tr><td class="loc">2D</td><td>◯</td><td>8.85s (15th)</td></tr>
 <tr><td class="loc">2E</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>2F</i></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="6" class="rh">ビタリかいがん<br><span class="sm">Lonely Coast</span></td><td class="loc"><i>30</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>31</i></td><td>×</td><td></td></tr>
 <tr><td class="loc"><i>32</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8D</b></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8E</b></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8F</b></td><td>×</td><td></td></tr>
+
 <tr><td class="rh">あめのしま<br><span class="sm">Pluvi Isle</span></td><td class="loc"><i>33</i></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="8" class="rh">グビアナさばく<br><span class="sm">Djust Desert</span></td><td class="loc"><i>34</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>35</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc">36</td><td>×</td><td>Very easy to get lost</td></tr>
@@ -1221,25 +1293,30 @@
 <tr><td class="loc">39</td><td>◯</td><td></td></tr>
 <tr><td class="loc">3A</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>90</b></td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">アシュバル地方<br><span class="sm">Hermany</span></td><td class="loc">3B</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>3C</i></td><td>◎</td><td></td></tr>
 <tr><td class="loc">3D</td><td>◯</td><td></td></tr>
 <tr><td class="loc">3E</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>91</b></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">エルマニオンかいがん<br><span class="sm">Snowberian Coast</span></td><td class="loc">3F</td><td>×</td><td></td></tr>
 <tr><td class="loc">40</td><td>×</td><td>Will hit after 10 mins</td></tr>
 <tr><td class="loc">41</td><td>×</td><td></td></tr>
 <tr><td class="loc">42</td><td>◯</td><td>Narrow landing hitbox</td></tr>
 <tr><td class="loc">43</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">エルマニオンせつげん<br><span class="sm">Snowberia</span></td><td class="loc">44</td><td>△</td><td>3.21s (2nd)</td></tr>
 <tr><td class="loc">45</td><td>×</td><td></td></tr>
 <tr><td class="loc">46</td><td>◯</td><td></td></tr>
 <tr><td class="loc">47</td><td>◯</td><td></td></tr>
 <tr><td class="loc">48</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="4" class="rh">アイスバリーかいがん<br><span class="sm">Cringle Coast</span></td><td class="loc">49</td><td>×</td><td></td></tr>
 <tr><td class="loc">4A</td><td>△</td><td></td></tr>
 <tr><td class="loc">4B</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>92</b></td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="7" class="rh">ヤハーンしっち<br><span class="sm">Urdus Marshland</span></td><td class="loc">4C</td><td>×</td><td></td></tr>
 <tr><td class="loc">4D</td><td>×</td><td></td></tr>
 <tr><td class="loc">4E</td><td>×</td><td></td></tr>
@@ -1247,11 +1324,13 @@
 <tr><td class="loc">50</td><td>◯</td><td></td></tr>
 <tr><td class="loc">51</td><td>◯</td><td></td></tr>
 <tr><td class="loc">52</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">カルバド大そうげん<br><span class="sm">Iluugazar Plains</span></td><td class="loc">53</td><td>◯</td><td>6.36s (8th)</td></tr>
 <tr><td class="loc">54</td><td>◯</td><td>12.20s</td></tr>
 <tr><td class="loc">55</td><td>◯</td><td></td></tr>
 <tr><td class="loc">56</td><td>◯</td><td></td></tr>
 <tr><td class="loc">57</td><td>×</td><td>8.16s (12th)</td></tr>
+
 <tr><td rowspan="7" class="rh">カズチィチィ山<br><span class="sm">Mt Ulzuun</span></td><td class="loc">58</td><td>◯</td><td></td></tr>
 <tr><td class="loc">59</td><td>×</td><td></td></tr>
 <tr><td class="loc">5A</td><td>×</td><td></td></tr>
@@ -1259,29 +1338,36 @@
 <tr><td class="loc">5F</td><td>×</td><td></td></tr>
 <tr><td class="loc">60</td><td>×</td><td></td></tr>
 <tr><td class="loc">61</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ダダマルダ山<br><span class="sm">Mt Ulbaruun</span></td><td class="loc">5C</td><td>×</td><td></td></tr>
 <tr><td class="loc">5D</td><td>×</td><td></td></tr>
 <tr><td class="loc">5E</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ジャーホジ地方<br><span class="sm">Khaalag Coast</span></td><td class="loc"><i>62</i></td><td>×</td><td></td></tr>
 <tr><td class="loc"><i>63</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>64</i></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="4" class="rh">オンゴリのがけ<br><span class="sm">Ondor Cliffs</span></td><td class="loc"><i>65</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>66</i></td><td>×</td><td></td></tr>
 <tr><td class="loc"><i>67</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>93</b></td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">東ナザム地方<br><span class="sm">Eastern Wormwood</span></td><td class="loc">69</td><td>◯</td><td>5.00s (4th)</td></tr>
 <tr><td class="loc">6A</td><td>◯</td><td>Must land nearby</td></tr>
 <tr><td class="loc">6B</td><td>◯</td><td></td></tr>
 <tr><td class="loc">6C</td><td>×</td><td></td></tr>
 <tr><td class="loc"><b>94</b></td><td>◎</td><td></td></tr>
+
 <tr><td rowspan="6" class="rh">西ナザム地方<br><span class="sm">Western Wormwood</span></td><td class="loc">6D</td><td>◯</td><td></td></tr>
 <tr><td class="loc">6E</td><td>×</td><td></td></tr>
 <tr><td class="loc">6F</td><td>◯</td><td></td></tr>
 <tr><td class="loc">70</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>71</i></td><td>×</td><td></td></tr>
 <tr><td class="loc"><b>95</b></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="2" class="rh">竜のもん<br><span class="sm">Wormwood Canyon</span></td><td class="loc">72</td><td>◯</td><td></td></tr>
 <tr><td class="loc">73</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="7" class="rh">竜のしっぽ地方<br><span class="sm">Wyrmtail</span></td><td class="loc">74</td><td>×</td><td></td></tr>
 <tr><td class="loc">75</td><td>◯</td><td></td></tr>
 <tr><td class="loc">76</td><td>◎</td><td></td></tr>
@@ -1289,16 +1375,20 @@
 <tr><td class="loc">7B</td><td>◯</td><td></td></tr>
 <tr><td class="loc">7C</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>96</b></td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">竜のつばさ地方<br><span class="sm">Wyrmwing</span></td><td class="loc">78</td><td>◯</td><td></td></tr>
 <tr><td class="loc">79</td><td>◯</td><td></td></tr>
 <tr><td class="loc">7A</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="4" class="rh">竜のあぎと地方<br><span class="sm">Wyrmsmaw</span></td><td class="loc">7D</td><td>◯</td><td></td></tr>
 <tr><td class="loc">7E</td><td>◯</td><td></td></tr>
 <tr><td class="loc">7F</td><td>◯</td><td></td></tr>
 <tr><td class="loc">80</td><td>×</td><td>6.45s (9th)</td></tr>
+
 <tr><td rowspan="3" class="rh">竜のくび地方<br><span class="sm">Wyrmneck</span></td><td class="loc">81</td><td>×</td><td></td></tr>
 <tr><td class="loc"><u>82</u></td><td>◯</td><td></td></tr>
 <tr><td class="loc">83</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="2" class="rh">ガナンていこくりょう<br><span class="sm">The Gittish Empire</span></td><td class="loc">84</td><td>×</td><td></td></tr>
 <tr><td class="loc">85</td><td>◯</td><td></td></tr>
 </tbody>
@@ -1322,9 +1412,11 @@
 <li>All maps that cannot be legitimately generated will be identified and displayed by this tool as <strong>"No Location."</strong></li>
 </ul>
 </div>
+
 <div class="h1box2">
 <h4 style="color:#0ca; margin:0 0 6px; font-size:13px;">Rank</h4>
 <p style="color:#ccc; margin-bottom:8px;">The <a href="#sec-bq-fq" style="text-decoration:none;"><strong style="color:#0ff; border-bottom:1px solid #055;">Final Quality (FQ)</strong></a> mentioned below is divided into 12 intervals, which define the Rank.</p>
+
 <table class=h1t style="font-size:11px;">
 <tr class=hdr2>
 <th>Rank</th>
@@ -1346,7 +1438,9 @@
 </table>
 <p>This tool supports typing ?id=RRSSSS after the URL to jump to the grotto with specified Rank &amp; Seed. (e.g. ?id=797854 makes it jump to Silver Marsh of Bane Lv.58)</p>
 </div>
+
 <h3 class="h1sec" id="sec-bq-fq">Base Quality (BQ) &amp; Final Quality (FQ)</h3>
+
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base Quality (BQ)</strong><br>
 <code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">BQ = HeroLv + HeroRev×5 + MapLv</code>
@@ -1363,6 +1457,7 @@
 <br><strong>1</strong>: The map can only be generated by exactly one BQ.
 <br><strong>1'</strong>: One of the map's valid locations can only be generated by exactly one BQ.
 </div>
+
 <details class="h1det">
 <summary>📖 Grotto Generation in detail</summary>
 <div>
@@ -1958,6 +2053,7 @@
 <tr><td class="loc"><i>68</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>89</b></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8A</b></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="7" class="rh">アユルダーマとう<br><span class="sm">Newid Isle</span></td><td class="loc">1D</td><td>×</td><td>5.36s (5位)</td></tr>
 <tr><td class="loc">1E</td><td>◯</td><td></td></tr>
 <tr><td class="loc">1F</td><td>◯</td><td></td></tr>
@@ -1965,20 +2061,25 @@
 <tr><td class="loc">21</td><td>×</td><td></td></tr>
 <tr><td class="loc"><b>8B</b></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><b>8C</b></td><td>△</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ベレンのきしべ<br><span class="sm">Slurry Coast</span></td><td class="loc">22</td><td>×</td><td>1.45s (1位)</td></tr>
 <tr><td class="loc">23</td><td>◯</td><td></td></tr>
 <tr><td class="loc">24</td><td>×</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">カラコタ地方<br><span class="sm">Dourbridge</span></td><td class="loc">25</td><td>×</td><td></td></tr>
 <tr><td class="loc">26</td><td>◯</td><td></td></tr>
 <tr><td class="loc">27</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="3" class="rh">ビタリへいげん<br><span class="sm">Lonely Plains</span></td><td class="loc">28</td><td>◯</td><td></td></tr>
 <tr><td class="loc">29</td><td>×</td><td></td></tr>
 <tr><td class="loc">2A</td><td>◯</td><td></td></tr>
+
 <tr><td rowspan="5" class="rh">サンマロウ地方<br><span class="sm">Bloomingdale</span></td><td class="loc">2B</td><td>◯</td><td></td></tr>
 <tr><td class="loc">2C</td><td>×</td><td>7.98s (11位)</td></tr>
 <tr><td class="loc">2D</td><td>◯</td><td>8.85s (15位)</td></tr>
 <tr><td class="loc">2E</td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>2F</i></td><td>×</td><td></td></tr>
+
 <tr><td rowspan="6" class="rh">ビタリかいがん<br><span class="sm">Lonely Coast</span></td><td class="loc"><i>30</i></td><td>◯</td><td></td></tr>
 <tr><td class="loc"><i>31</i></td><td>×</td><td></td></tr>
 <tr><td class="loc"><i>32</i></td><td>◯</td><td></td></tr>
@@ -2140,11 +2241,14 @@
 </table>
 <p>本ツールは URL の後に ?id=RRSSSS を入力すれば、指定された Rank と Seed の地図に飛ばされる。(例：?id=B50E5C で 見えざる魔神の道Lv87 (まさゆきの地図) に飛ばされる)</p>
 </div>
+
 <h3 class="h1sec" id="sec-bq-fq">Base 値、Final 値</h3>
+
 <div style="margin-bottom:12px;">
 <strong style="color:#0ff;">Base 値</strong><br>
 <code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Base値＝主人公の全職の最高Lv＋主人公の全職の最高転生回数×5＋今潜っている地図Lv</code>
 </div>
+
 <div style="margin-bottom:16px;">
 <strong style="color:#0ff;">Final 値</strong><br>
 <code style="background:#000; padding:2px 6px; color:#fcf; border:1px solid #333; border-radius:3px;">Final値＝Base値±10%</code>
@@ -2152,6 +2256,7 @@
 <br><br><span style="color:#aaa;">検索時、右側のボックスに Base 値 の具体値を入力する。</span>
 <br><span style="color:#aaa;">左側のドロップダウンで「1」を選ぶと、全ての場所において Base 値 が 1 つしかない地図を検索する。「1'」を選ぶと、うち1つの場所において Base 値 が 1 つしかない地図を検索する。</span>
 </div>
+
 <details class="h1det">
 <summary>📖 地図生成のステップ</summary>
 <div>
@@ -2165,8 +2270,10 @@
 </div>
 </details>
 <h3 class="h1sec" id="sec-terrain">地形</h3>
+
 <div class="h1box">
 <p style="margin-bottom:8px; color:#ccc;">地形は <strong style="color:#fa0;">洞窟・遺跡・氷・水・火山</strong> の 5 種類。確率は 洞窟 30%、遺跡 40%、その他各 10%。一部のクエストでは「指定された地形」と「指定された敵ランク」の地図を入手する必要がある。</p>
+
 <ul style="padding-left:20px; color:#aaa; line-height:1.7;">
 <li><strong style="color:#39C5BB;">遺跡：</strong>十字路・通路入口でモンスターに <span style="color:#f88;">塞がれやすい</span>。</li>
 <li><strong style="color:#39C5BB;">洞窟 & 水：</strong>広い空間の壁に突起構造があり、プレイヤーの移動距離をやや増やせる。</li>
@@ -3451,8 +3558,8 @@
 <td class="bl">おうぎのまい<br>バーニングバード<br>石つぶて</td>
 <td class="cc"></td>
 <td class="ct c b">8</td>
-<td class="cr c">+5</td>
-<td class="cc">風林火山×おうぎのまい 對金屬有效</td>
+<td class="cr c">+8</td>
+<td class="cc">風林火山×おうぎのまい：對金屬有效<br>バーニングバード：Bug導致武器的火屬性加成被重複納入計算</td>
 </tr>
 <tr>
 <td class="bl">なぎはらい</td>
@@ -4048,8 +4155,8 @@
 <td class="bl">Fan Dango<br>Firebird Throw<br>Stone's Throw</td>
 <td class="cc"></td>
 <td class="ct c b">8</td>
-<td class="cr c">+5</td>
-<td class="cc">Attribeauty × Fan Dango works on Metals</td>
+<td class="cr c">+8</td>
+<td class="cc">Attribeauty × Fan Dango works on Metals<br>Firebird Throw also multiplies Fire-weapon's bonus by bug</td>
 </tr>
 <tr>
 <td class="bl">Party Pooper</td>
@@ -4633,8 +4740,8 @@
 <td class="bl">おうぎのまい<br>バーニングバード<br>石つぶて</td>
 <td class="cc"></td>
 <td class="ct c b">8</td>
-<td class="cr c">+5</td>
-<td class="cc"></td>
+<td class="cr c">+8</td>
+<td class="cc">風林火山×おうぎのまい：メタルモンスターに当てる<br>バーニングバード：バグによって武器の炎属性ボーナスも重複して加算する</td>
 </tr>
 <tr>
 <td class="bl">なぎはらい</td>
@@ -4766,6 +4873,13 @@
 <option value="stair"data-i18n="TKB3_0"></option>
 <option value="ghost"data-i18n="TKB3_1"></option>
 <option value="all_invalid"data-i18n="TKB3_2"></option>
+<option disabled>─────</option>
+<option value="usp_map"data-i18n="TKB4_1"></option>
+<option value="usp_map_d"data-i18n="TKB4_2"></option>
+<option value="usp_floor"data-i18n="TKB4_3"></option>
+<option value="usp_floor_d"data-i18n="TKB4_4"></option>
+<option value="usp_slow"data-i18n="TKB4_5"></option>
+<option value="usp_slow_d"data-i18n="TKB4_6"></option>
 </select></div>
 <div><label style="color:#f88;"data-i18n="G12"></label>
 <select id="cond_elist"style="color:#fcf;border-color:#c44;">

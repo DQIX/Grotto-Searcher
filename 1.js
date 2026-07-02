@@ -14,6 +14,8 @@ const A11=T('"Only Monster" cannot be paired with ONLY (1-enemy) / No-enemy / 15
 const A12=T('Multibug search does not support Bug Terrain conditions.','Multibug 搜尋不支援 Bug地形。','マルチバグ検索はネタ地形に対応しておりません。')
 const A13=T('Fastest Map Search does not support this option.','最短地圖搜尋不支援此選項。','最短地図検索はこの選択肢に対応しておりません。')
 const A14=T('Fastest Map Search requires at least one of: Depth, Lv, Sp.Floor (ElistOfs), ONLY Monster, Location, or Boss.','最短地圖搜尋需至少填寫以下其中一項：樓層深度、Lv、特殊樓層 (ElistOfs)、指定 ONLY 怪物、位置、Boss。','最短地図検索では、深さ・Lv・特殊フロア (ElistOfs)・オンリーモンスター・場所・ボス のうち、少なくとも 1 つの入力が必要です。')
+const A15=T('This is a Fastest / Slowest search mode. Please press the main "🎯 Search" button to run it.','這是「最短／最長」搜尋模式，請按主搜尋鈕「🎯 Search」執行。','これは「最短／最長」検索モードです。メインの「🎯 Search」ボタンで実行してください。')
+const A16=T('Fastest Floor requires Sp.Floor (ElistOfs), ONLY Monster, or Depth as the cutoff floor.','最短樓層需以 特殊樓層 (ElistOfs)／指定 ONLY 怪物／樓層深度 其中之一作為截止樓層。','最短フロアでは、特殊フロア (ElistOfs)／オンリーモンスター／深さ のいずれかを到達フロアとして指定してください。')
 const B01=T('Progress:','搜尋進度:','Progress:');
 const B02=T('Rank','掃描 Rank','Rank');
 const B03=T('Found','個','個');
@@ -68,7 +70,7 @@ const G07=T('Type','地形','地形');
 const G08=T('SMR','怪物等級','敵ランク');
 const G09=T('FloorMR','FloorMR','ﾌﾛｱ敵ﾗﾝｸ');
 const G10=T('Depth','樓層深度','深さ');
-const G11=T('Bug Terrain','Bug地形','ネタ地形');
+const G11=T('Bug Terrain/Fastest','Bug地形／最短','ネタ／最短');
 const G12=T('Sp.Floor (ElistOfs)','特殊樓層 (ElistOfs)','特殊フロア (ElistOfs)');
 const G13=T('ONLY Monster','指定 ONLY 怪物','オンリーモンスター');
 const G14=T('Seed Range (Hex)','Seed 範圍 (Hex)','Seed 範囲 (Hex)');
@@ -112,6 +114,12 @@ const TKB1_3=T('Chestless','無寶箱樓層','箱無しフロア');
 const TKB3_0=T('Wall-Embedded Stair','被牆壁封死的樓梯','壁に埋まった階段');
 const TKB3_1=T('Ghost Stair','幽靈樓梯','ゴースト階段');
 const TKB3_2=T('Softlock','危険？ハマるフロア','危険？ハマるフロア');
+const TKB4_1=T('Fastest Map','最短地圖','最短地図');
+const TKB4_2=T('Fastest Map (Detail)','最短地圖 (詳細版)','最短地図 (詳細版)');
+const TKB4_3=T('Fastest Floor','最短樓層','最短フロア');
+const TKB4_4=T('Fastest Floor (Detail)','最短樓層 (詳細版)','最短フロア (詳細版)');
+const TKB4_5=T('Slowest Map','最長地圖','最長地図');
+const TKB4_6=T('Slowest Map (Detail)','最長地圖 (詳細版)','最長地図 (詳細版)');
 const EL_M=T('Multi-Special-Floor','複數特殊層','複数の特殊フロア');
 const EL_P=T('Partially No-enemy','部分敵無','部分敵無');
 const EL_4=T('4-enemy','敵減 4 種','敵減 4 種');
@@ -132,7 +140,7 @@ const i18nDict={
 'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'G27':G27,'GBQ':GBQ,
 'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,'H07':H07,
 'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
-'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,
+'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,'TKB4_1':TKB4_1,'TKB4_2':TKB4_2,'TKB4_3':TKB4_3,'TKB4_4':TKB4_4,'TKB4_5':TKB4_5,'TKB4_6':TKB4_6,
 'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
 };
 const _OG={og1:T('Materials','素材/消耗品','素材/消耗品'),ogS:T('B9F Items','B9F物品','B9Fアイテム'),og2:T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'),og3:T('Cursed Equipment','詛咒裝備','呪い装備'),og4:T('Other Equipment','其他裝備','その他の装備'),og5:T('Chest Monsters','寶箱怪','宝箱モンスター')};
@@ -141,6 +149,7 @@ const b3fThreeItems=["Mini medal","Sage's elixir","Iron nails","Hephaestus' flam
 const MAP_RANK=[0x02,0x38,0x3D,0x4C,0x51,0x65,0x79,0x8D,0xA1,0xB5,0xC9,0xDD];
 const CHEST_RANK={10:'S',9:'A',8:'B',7:'C',6:'D',5:'E',4:'F',3:'G',2:'H',1:'I'};
 const ENV_NAMES={1:['Caves','洞窟'],2:['Ruins','遺跡'],3:['Ice','氷'],4:['Water','水'],5:['Fire','火山']};
+const ENV_OPTS=[T('Caves','洞窟','洞窟'),T('Ruins','遺跡','遺跡'),T('Ice','冰','氷'),T('Water','水','水'),T('Fire','火山','火山')];
 const BOSS_NAMES={
 1:['Equinox','馬','黒竜丸'],2:['Nemean','爪','ハヌマーン'],3:['Shogum','髭','スライムジェネラル'],4:['Trauminator','機','Sキラーマシン'],
 5:['Elusid','教','イデアラゴン'],6:['Sir Sanguinus','血','ブラッドナイト'],7:['Atlas','巨','アトラス'],8:['Hammibal','猪','怪力軍曹イボイノス'],
@@ -1332,7 +1341,7 @@ _anom_queue[qTail++]=nIdx;
 }
 return regionSize;
 }
-function getFloorAnomalies(engine,f,checkGhostStair=false){
+function getFloorAnomalies(engine,f,checkGhostStair=false,skipIsoScan=false){
 const di=engine.di[f];
 const width=di[2];
 const height=di[3];
@@ -1350,6 +1359,7 @@ break;
 }
 const hasInaccessibleStair=!_anom_visited[(downY<<4)|downX];
 const isolatedRegions=[];
+if(!skipIsoScan){
 for(let y=0;y<height;y++){
 const yShift=y<<4;
 for(let x=0;x<width;x++){
@@ -1359,6 +1369,7 @@ const tile=di[idx+792];
 if(tile===0||tile===2||tile===8){
 const regionSize=runBFS(x,y,width,height,di,isIsoWalkable);
 isolatedRegions.push(regionSize);
+}
 }
 }
 }

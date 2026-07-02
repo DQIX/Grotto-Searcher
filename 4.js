@@ -97,7 +97,7 @@ if(r===10)color="#ffd700";
 else if(r>=8)color="#f44";
 else if(r>=4)color="#4c4";
 else if(r===3)color="#62a1ff";
-boxCountHtmlArr.push(`<span style="margin-right:6px; display:inline-block; background:#000; padding:2px 6px; border-radius:4px; border:1px solid #333;"><strong style="color:${color}; font-size:14px; text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff; font-weight:bold;">${boxCounts[r]}</span></span>`);
+boxCountHtmlArr.push(`<span style="margin-right:6px;display:inline-block;background:#000;padding:2px 6px;border-radius:4px;border:1px solid #333;"><strong style="color:${color};font-size:14px;text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff;font-weight:bold;">${boxCounts[r]}</span></span>`);
 }
 }
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
@@ -109,23 +109,23 @@ let html=`<div class="info-bar">
 <span>${C03}:<strong>${mapData.monsterRank}</strong></span>
 <span>${C04}:<strong>${mapData.floorCount}</strong></span>
 <span style="display:inline-flex;align-items:flex-start;"><span>Boss:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.bossName}</span><span style="display:block;color:#ffd700">${mapData.bossNameJP}</span></strong></span>
-<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C05}:
-<strong style="display:block; color:#0ff; font-family:monospace; font-size:12px; margin-top:2px;">${locHtmlString}</strong>
+<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C05}:
+<strong style="display:block;color:#0ff;font-family:monospace;font-size:12px;margin-top:2px;">${locHtmlString}</strong>
 </span>
-<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C06}:
-<strong style="display:block; color:#4c4; font-family:monospace; font-size:12px; margin-top:2px; text-align:left;">${atHtmlString}</strong>
+<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C06}:
+<strong style="display:block;color:#4c4;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${atHtmlString}</strong>
 </span>
-<span style="display:inline-block; vertical-align:top; border-left:1px dashed #4a4a8a; padding-left:15px; margin-left:5px;">${C07}:
-<strong style="display:block; font-family:monospace; font-size:12px; margin-top:2px; text-align:left;">${rnHtml}</strong>
+<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C07}:
+<strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
 </span>
 </div>
-<div class="info-bar"style="align-items:center; background:#16162a; border-bottom:1px solid #4a4a8a; padding:8px 14px; gap:6px;">
-<span style="color:#88b; font-weight:bold; white-space:nowrap;">${C08}</span>
-<div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px; flex:1; min-width:0;">
+<div class="info-bar"style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
+<span style="color:#88b;font-weight:bold;white-space:nowrap;">${C08}</span>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;min-width:0;">
 ${boxString}
 </div>
-<span style="white-space:nowrap; padding-left:8px; border-left:2px solid #4a4a8a; color:#8cc8ff; font-weight:bold;">📦${totalBoxes}</span>
-<div id="controls_target_area"style="display:flex; align-items:center;"></div>
+<span style="white-space:nowrap;padding-left:8px;border-left:2px solid #4a4a8a;color:#8cc8ff;font-weight:bold;">📦${totalBoxes}</span>
+<div id="controls_target_area"style="display:flex;align-items:center;"></div>
 </div>`;
 setTimeout(()=>{
 const target=document.getElementById('controls_target_area');
@@ -174,8 +174,8 @@ infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　▼ (${down.x}, ${dow
 else
 infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　Boss (${down.x}, ${down.y})</td></tr>`;
 const elistInfo=getFloorElistInfo(mapData,f);
-let stateHtml=elistInfo.state?` <span style="background:#f4c; color:#fff; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:6px; white-space:nowrap;">${elistInfo.state}</span>`:'';
-let dHtml=elistInfo.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:4px; white-space:nowrap;">${elistInfo.dValue}</span>`:'';
+let stateHtml=elistInfo.state?` <span style="background:#f4c;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:6px;white-space:nowrap;">${elistInfo.state}</span>`:'';
+let dHtml=elistInfo.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px;white-space:nowrap;">${elistInfo.dValue}</span>`:'';
 infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
 const envType=mapData._details[3];
 let floorMR=floorMRAt(mapData._details[2],f);
@@ -347,8 +347,8 @@ let htmlJP='';
 results.forEach(res=>{
 const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3,'0'):`${(res.start + 5).toString().padStart(3, '0')} ~ ${(res.end + 5).toString().padStart(3, '0')}`;
 const isHighlight=(res.start<=2&&res.end>=1);
-const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15); border-left: 3px solid #ffd700; padding-left: 8px;':'';
-const textStyle=isHighlight?'color: #ffd700; font-weight: bold;':'';
+const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15);border-left: 3px solid #ffd700;padding-left: 8px;':'';
+const textStyle=isHighlight?'color: #ffd700;font-weight: bold;':'';
 htmlEN+=`<div class="timer-row" style="${rowStyle}">
 <span class="timer-range"style="${textStyle}">${rangeStr}</span>
 <span class="timer-item"style="${textStyle}">${res.itemEN}</span>
@@ -363,10 +363,10 @@ body.style.overflowY='hidden';
 body.style.display='flex';
 body.style.flexDirection='column';
 body.innerHTML=`<div class="modal-tabs">
-<div id="ctTabEN"style="padding: 6px 16px; background: #1a1a3a; color: #ffd700; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchCtTab('EN')">English</div>
-<div id="ctTabJP"style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;"onclick="switchCtTab('JP')">日本語</div>
+<div id="ctTabEN"style="padding: 6px 16px;background: #1a1a3a;color: #ffd700;border: 1px solid #4a4a8a;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;"onclick="switchCtTab('EN')">English</div>
+<div id="ctTabJP"style="padding: 6px 16px;background: #224;color: #888;border: 1px solid #333;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;"onclick="switchCtTab('JP')">日本語</div>
 </div>
-<div style="padding: 12px 16px; overflow-y: auto; flex: 1;">
+<div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
 <div id="ctListEN"style="display: block;">${htmlEN}</div>
 <div id="ctListJP"style="display: none;">${htmlJP}</div>
 </div>
@@ -475,7 +475,7 @@ document.querySelectorAll('.lang-sw').forEach(b=>{
 if(b.dataset.lang===DISPLAY_LANG){b.style.background='#00A2E8';b.style.color='#fff';b.style.borderColor='#00A2E8';}
 });
 const srDiv=document.getElementById('searchResults');
-if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666; font-size:13px; text-align:center; margin-top:20px;">'+J02+'</div>';
+if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
 const prefixEl=document.getElementById('cond_prefix');
 const suffixEl=document.getElementById('cond_suffix');
 const elistEl=document.getElementById('cond_elist');
@@ -568,13 +568,13 @@ itemSelect.value="ANY";
 };
 for(let i=1;i<=3;i++){
 container.innerHTML+=`
-<div style="display:flex; gap:2px; align-items:center;">
-<span style="color:#0ff; font-size:10px; width:10px; text-align:center;">${i}</span>
-<select id="fs_f_${i}"style="width:45px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${floorOpts}</select>
-<select id="fs_b_${i}"style="width:50px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${boxOpts}</select>
-<select id="fs_r_${i}"onchange="updateFSItems(${i})"style="width:40px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555;">${rankOpts}</select>
-<select id="fs_i_${i}"style="flex:1; width:50px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555; text-overflow:ellipsis;"></select>
-<input type="number"id="fs_t_${i}"value="7"min="5"placeholder="sec"style="width:35px; padding:0; font-size:11px; height:24px; background:#000; color:#0f0; border:1px solid #555; text-align:center;">
+<div style="display:flex;gap:2px;align-items:center;">
+<span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
+<select id="fs_f_${i}"style="width:45px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${floorOpts}</select>
+<select id="fs_b_${i}"style="width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${boxOpts}</select>
+<select id="fs_r_${i}"onchange="updateFSItems(${i})"style="width:40px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${rankOpts}</select>
+<select id="fs_i_${i}"style="flex:1;width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-overflow:ellipsis;"></select>
+<input type="number"id="fs_t_${i}"value="7"min="5"placeholder="sec"style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
 </div>`;
 }
 for(let i=1;i<=3;i++){

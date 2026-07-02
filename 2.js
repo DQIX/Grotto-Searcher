@@ -196,7 +196,7 @@ if(onlyMonNameStr&&survivingNamesEn.includes(onlyMonNameStr)){
 result.isCombinedHit=true;
 }
 if(targetCount>0&&survivingNames.length>0){
-result.badge=`<br><span style="display:inline-block; color:#aaa; font-size:11px;">${survivingNames.join(' + ')}</span>`;
+result.badge=`<br><span style="display:inline-block;color:#aaa;font-size:11px;">${survivingNames.join(' + ')}</span>`;
 }
 return result;
 }
@@ -215,7 +215,7 @@ else if(elistCond==='SIZE_15'&&searchEngine.di[f][2]===15)isElistHit=true;
 return{targetCount,isElistHit};
 }
 function makeDBadge(dValue){
-return dValue>0?` <span style="background:#fa0; color:#000; padding:1px 4px; border-radius:3px; font-size:10px;">${dValue}</span>`:'';
+return dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;">${dValue}</span>`:'';
 }
 function checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr){
 let result={match:true,specialHitDetails:[],jumpToFloor:-1,hasMatchedD:false};
@@ -343,12 +343,25 @@ let hasAnyGhostAnomaly=false,hasAnyAllInvalidAnomaly=false,corridorFloorCount=0;
 let firstChestFloor=-1,firstCorridorFloor=-1,firstStairFloor=-1;
 let firstNoChestFloor=-1,firstMultiRegionFloor=-1,firstGhostFloor=-1,firstAllInvalidFloor=-1;
 for(let f=0;f<searchEngine.floorCount;f++){
-let anom=getFloorAnomalies(searchEngine,f,conds.anomaly==='ghost');
-if(anom.isAllInvalidStair){hasAnyAllInvalidAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff; font-size:11px; font-weight:bold; background:#cc0000; padding:1px 4px; border-radius:3px; border:1px solid #f44; box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_2}</span>`);if(firstAllInvalidFloor===-1)firstAllInvalidFloor=f;}
-if(anom.hasInaccessibleStair){hasAnyStairAnomaly=true;result.anomalyDetails.push(`<span style="color:#ff0000; font-size:11px; font-weight:bold; background:#550000; padding:1px 4px; border-radius:3px;">B${f+1}F ${TKB3_0}</span>`);if(firstStairFloor===-1)firstStairFloor=f;}
-if(anom.hasInaccessibleChest){hasAnyChestAnomaly=true;if(anom.totalChests===1){hasAnyNoChestAnomaly=true;result.anomalyDetails.push(`<span style="color:#0ff; font-size:11px; font-weight:bold; background:#004466; padding:1px 4px; border-radius:3px; border:1px solid #08a;">B${f+1}F ${TKB1_3}</span>`);if(firstNoChestFloor===-1)firstNoChestFloor=f;}else{result.anomalyDetails.push(`<span style="color:#ff69b4; font-size:11px; font-weight:bold;">B${f+1}F ${TKB1_1}</span>`);}if(firstChestFloor===-1)firstChestFloor=f;}
-if(anom.hasIsolatedCorridor){hasAnyCorridorAnomaly=true;corridorFloorCount++;if(anom.isolatedRegions.length>=2){hasAnyMultiRegionAnomaly=true;if(firstMultiRegionFloor===-1)firstMultiRegionFloor=f;}let countBadges=anom.isolatedRegions.map(size=>`<span style="background:#ff6ec7; color:#fff; padding:1px 4px; border-radius:3px; font-size:10px; margin-left:4px; box-shadow:1px 1px 2px rgba(0,0,0,0.5);">${size}</span>`).join('');result.anomalyDetails.push(`<span style="color:#fa0; font-size:11px;">B${f+1}F ${TKB2_1} ${countBadges}</span>`);if(firstCorridorFloor===-1)firstCorridorFloor=f;}
-if(anom.hasGhostStair){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff; font-size:11px; font-weight:bold; background:#555577; padding:1px 4px; border-radius:3px; border:1px solid #8888aa; box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${anom.GhostStairs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
+if(conds.anomaly==='all_invalid'){
+if(searchEngine.isStairOverflow[f]){hasAnyAllInvalidAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#c00;padding:1px 4px;border-radius:3px;border:1px solid #f44;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_2}</span>`);if(firstAllInvalidFloor===-1)firstAllInvalidFloor=f;}
+continue;
+}
+if(conds.anomaly==='ghost'){
+const di=searchEngine.di[f];const W=di[2],H=di[3];
+const upX=di[4],upY=di[5],downX=di[6],downY=di[7];
+const gs=[];
+for(let y=0;y<H;y++){const yOfs=(y<<4)+792;for(let x=0;x<W;x++){const t=di[yOfs+x];if(t===4||t===5){if(!((x===upX&&y===upY)||(x===downX&&y===downY)))gs.push(`(${x},${y})`);}}}
+if(gs.length>0){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#557;padding:1px 4px;border-radius:3px;border:1px solid #88a;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${gs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
+continue;
+}
+const needsIso=conds.anomaly==='corridor'||conds.anomaly==='multi_corridor'||conds.anomaly==='multi_region'||conds.anomaly==='chest_corridor';
+let anom=getFloorAnomalies(searchEngine,f,false,!needsIso);
+if(anom.isAllInvalidStair){hasAnyAllInvalidAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#cc0000;padding:1px 4px;border-radius:3px;border:1px solid #f44;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_2}</span>`);if(firstAllInvalidFloor===-1)firstAllInvalidFloor=f;}
+if(anom.hasInaccessibleStair){hasAnyStairAnomaly=true;result.anomalyDetails.push(`<span style="color:#ff0000;font-size:11px;font-weight:bold;background:#550000;padding:1px 4px;border-radius:3px;">B${f+1}F ${TKB3_0}</span>`);if(firstStairFloor===-1)firstStairFloor=f;}
+if(anom.hasInaccessibleChest){hasAnyChestAnomaly=true;if(anom.totalChests===1){hasAnyNoChestAnomaly=true;result.anomalyDetails.push(`<span style="color:#0ff;font-size:11px;font-weight:bold;background:#004466;padding:1px 4px;border-radius:3px;border:1px solid #08a;">B${f+1}F ${TKB1_3}</span>`);if(firstNoChestFloor===-1)firstNoChestFloor=f;}else{result.anomalyDetails.push(`<span style="color:#ff69b4;font-size:11px;font-weight:bold;">B${f+1}F ${TKB1_1}</span>`);}if(firstChestFloor===-1)firstChestFloor=f;}
+if(anom.hasIsolatedCorridor){hasAnyCorridorAnomaly=true;corridorFloorCount++;if(anom.isolatedRegions.length>=2){hasAnyMultiRegionAnomaly=true;if(firstMultiRegionFloor===-1)firstMultiRegionFloor=f;}let countBadges=anom.isolatedRegions.map(size=>`<span style="background:#ff6ec7;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;margin-left:4px;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">${size}</span>`).join('');result.anomalyDetails.push(`<span style="color:#fa0;font-size:11px;">B${f+1}F ${TKB2_1} ${countBadges}</span>`);if(firstCorridorFloor===-1)firstCorridorFloor=f;}
+if(anom.hasGhostStair){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#555577;padding:1px 4px;border-radius:3px;border:1px solid #8888aa;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${anom.GhostStairs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
 if(anom.hasInaccessibleChest&&anom.hasIsolatedCorridor)hasAnyChestCorridorCombo=true;
 }
 if(conds.anomaly==='chest'&&!hasAnyChestAnomaly)result.match=false;
@@ -428,7 +441,15 @@ break;
 }
 }
 let maxFloorCount=floorHi;
-if(conds&&conds.depth){let d=parseInt(conds.depth);if(d<floorLo||d>floorHi)return null;maxFloorCount=d;}
+if(conds&&conds.depth){
+let d=parseInt(conds.depth);
+if(d<floorLo||d>floorHi)return null;
+maxFloorCount=d;
+}
+if(conds&&conds.depth2){
+let d2=parseInt(conds.depth2);
+if(d2>floorHi)return null;
+}
 let minBoss=1,maxBoss=12;
 for(let i=0;i<9;i++){
 if(rank>=TableD[i*4]&&rank<=TableD[i*4+1]){
@@ -441,7 +462,6 @@ if(conds&&conds.boss){
 let b=parseInt(conds.boss);
 if(b<minBoss||b>maxBoss)return null;
 }
-
 if(conds&&conds.lv){
 const clampLv=v=>v<1?1:v>99?99:v;
 let dLo=conds.depth?parseInt(conds.depth):floorLo;
@@ -457,9 +477,8 @@ if(L<lvLo||L>lvHi)return null;
 }
 return{minSMR,maxSMR,maxFloorCount};
 }
-
 function sharedRankFilter(ranksToSearch,conds,isBugSearch=false){
-if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix&&!conds.lv&&!conds.depth&&!conds.boss){
+if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix&&!conds.lv&&!conds.depth&&!conds.depth2&&!conds.boss){
 return ranksToSearch;
 }
 return ranksToSearch.filter(rank=>{
@@ -624,6 +643,8 @@ const valsBuffer=new Int32Array(10);
 let rng=seed,historyBits=0,validCount=0;
 let foundOffsets=[];
 let popValue=null,defValue=null;
+const noLowerBound=(maxSteps<=50);
+const effMinStart=noLowerBound?1:minStart;
 for(let step=1;step<=maxSteps;step++){
 rng=lcg(rng);
 const val=(rng>>>16)&0x7FFF;
@@ -631,14 +652,14 @@ if(popIndex>0){
 if(step===popIndex)popValue=val;
 if(step===popIndex+1)defValue=val;
 }
-if(step<38)continue;
+if(!noLowerBound&&step<38)continue;
 historyBits=((historyBits<<1)|((val<=threshold)?1:0))&1023;
 valsBuffer[step%10]=val;
 validCount++;
 const{matched,extractLen}=evaluateATPtn(pType,validCount,historyBits);
 if(matched){
 const startStep=step-extractLen+1;
-if(startStep>=minStart){
+if(startStep>=effMinStart){
 foundOffsets.push({start:startStep,valsHtml:formatATPtnHTML(extractLen,step,valsBuffer,historyBits)});
 }
 historyBits=0;validCount=0;
@@ -648,27 +669,27 @@ return{foundOffsets,popValue,defValue};
 }
 function _buildOffsetsHtml(foundOffsets){
 return foundOffsets.map(o=>
-`<span style="color:#0ff; font-size:12px;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`
+`<span style="color:#0ff;font-size:12px;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`
 ).join('<br>');
 }
 function _buildDiffsHtml(foundOffsets,N,deft){
 const lines=foundOffsets.map(o=>{
 const d1=o.start-(N+3),d2=o.start-(N+4),d4=o.start-(N+5);
-return`<span class="at-dynamic-battle" data-target="${o.start}" data-n="${N}" data-req="${deft}" style="font-size:11px; text-shadow:0 0 2px rgba(255,170,0,0.5);">${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}</span>`;
-}).join(`<br><span style="color:transparent; font-size:11px;">${BATTLE_LABEL} </span>`);
-return`<span style="color:#fa0; margin-left:12px; font-size:11px;">${BATTLE_LABEL} ${lines}</span>`;
+return`<span class="at-dynamic-battle" data-target="${o.start}" data-n="${N}" data-req="${deft}" style="font-size:11px;text-shadow:0 0 2px rgba(255,170,0,0.5);">${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}</span>`;
+}).join(`<br><span style="color:transparent;font-size:11px;">${BATTLE_LABEL} </span>`);
+return`<span style="color:#fa0;margin-left:12px;font-size:11px;">${BATTLE_LABEL} ${lines}</span>`;
 }
 function _buildATCard(seed,N,atN,atN1,diffsHtml){
 const{deft,color:deftColor,label:deftLabel}=formatDeftness(atN1);
-return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px; padding:5px 8px; background:#0a1a1a; border:1px solid #055; border-radius:3px;">
-<span style="color:#4c4; font-size:11px;"><span class="at-m-atn-label">AT[${N}]:</span><span class="at-m-atval">${atN}</span></span>
-<strong class="at-dynamic-mon"data-at="${atN}"style="color:#f8f; margin-left:8px; font-size:11px; text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
-<br><span class="at-m-deft"style="color:${deftColor}; display:inline-block; margin-top:4px; font-size:11px;">${G18}${deftLabel}</span>
+return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px;padding:5px 8px;background:#0a1a1a;border:1px solid #055;border-radius:3px;">
+<span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]:</span><span class="at-m-atval">${atN}</span></span>
+<strong class="at-dynamic-mon"data-at="${atN}"style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
+<br><span class="at-m-deft"style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18}${deftLabel}</span>
 ${diffsHtml}</div>`;
 }
 function _buildPatternBox(patternName,probText,offsetsHtml){
-return`<div style="margin-top:4px; padding:4px 8px; background:#111; border:1px solid #333; border-radius:4px;">
-<span style="color:#fa0; font-size:11px; font-weight:bold;">${patternName}(${probText})</span><br>${offsetsHtml}</div>`;
+return`<div style="margin-top:4px;padding:4px 8px;background:#111;border:1px solid #333;border-radius:4px;">
+<span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName}(${probText})</span><br>${offsetsHtml}</div>`;
 }
 function initItemI18n(){
 if(typeof TableR!=='undefined'){TableR.forEach(pair=>{i18nDict['I_'+pair[0]]=T(pair[0],pair[1],pair[1]);});}
@@ -763,10 +784,10 @@ if(checkSet.has(partyNames[b]))partyC++;
 if(soloC>=p.reqCount||partyC>=p.reqCount){if(firstHitFloor===-1)firstHitFloor=f;}
 let prefixStr=p.isB9F?'B9F ':`B${f+1}F `;
 if(soloC>=p.reqCount){
-hitTypes.push(`<span style="color:#ff99bb; font-size:11px">${prefixStr}${STR_SOLO} x${soloC}</span>`);
+hitTypes.push(`<span style="color:#ff99bb;font-size:11px">${prefixStr}${STR_SOLO} x${soloC}</span>`);
 }
 if(partyC>=p.reqCount){
-hitTypes.push(`<span style="color:#ffd700; font-size:11px">${prefixStr}${STR_PARTY} x${partyC}</span>`);
+hitTypes.push(`<span style="color:#ffd700;font-size:11px">${prefixStr}${STR_PARTY} x${partyC}</span>`);
 }
 }
 if(hitTypes.length>0){
@@ -807,7 +828,7 @@ c1Met=true;
 let t=(s===pp)?STR_BOTH:(pp==="Sainted soma"?STR_PARTY:STR_SOLO);
 let color="#ff99d7";
 if(t===STR_PARTY)color="#ffd700";
-c1Hits.push(`<span style="color:${color}; font-size:11px">B9F S${b+1}: ${getDispItem("Sainted soma")} (${t})</span>`);
+c1Hits.push(`<span style="color:${color};font-size:11px">B9F S${b+1}: ${getDispItem("Sainted soma")} (${t})</span>`);
 }
 }
 if(!c1Met||(b9Boxes>=3&&partyNames[2]==="Sainted soma"))return{isHit:false};
@@ -829,7 +850,7 @@ let b10Res=chk3(9,"B10F");
 if(b10Res.met){c2Met=true;c2Det=b10Res.det;}
 }
 if(c1Met&&c2Met){
-let html=`${c1Hits.join('<br>')}<br><span style="color:#11F514; font-size:11px">${c2Det}</span>`;
+let html=`${c1Hits.join('<br>')}<br><span style="color:#11F514;font-size:11px">${c2Det}</span>`;
 return{isHit:true,jumpFloor:8,displayHtml:html};
 }
 return{isHit:false};
@@ -853,7 +874,7 @@ let hitItemStr=getDispItem(hitItem);
 let rName=CHEST_RANK[eng.getBoxInfo(fIdx,b).rank]||'?';
 let color="#ff99bb";
 if(t===STR_PARTY)color="#ffd700";
-wpHits.push(`<span style="color:${color}; font-size:11px">B${fIdx+1}F ${rName}${b+1}: ${hitItemStr} (${t})</span>`);
+wpHits.push(`<span style="color:${color};font-size:11px">B${fIdx+1}F ${rName}${b+1}: ${hitItemStr} (${t})</span>`);
 wpMet=true;
 wpFloor=fIdx;
 foundAny=true;
@@ -876,7 +897,7 @@ matDet=`B3F ${b3Rank}3 (${foundSec + 5}s): ${getDispItem(p.targetItem)}`;
 }
 }
 if(c1Met){
-let html=`${wpHits.join('<br>')}<br><span style="color:#f66; font-size:11px; font-weight:bold;">${matDet}</span>`;
+let html=`${wpHits.join('<br>')}<br><span style="color:#f66;font-size:11px;font-weight:bold;">${matDet}</span>`;
 return{isHit:true,jumpFloor:2,displayHtml:html,specialStyle:"1px solid #f66"};
 }
 return{isHit:false};
@@ -918,7 +939,7 @@ if(b3V&&b4V){c2Met=true;matDet=`B3F ${b3Rank}3 ${labelText}: ${getDispItem(pB3)}
 else if(b3V){c1Met=true;matDet=`B3F ${b3Rank}3 ${labelText}: ${getDispItem(pB3)}`;}
 else if(b4V){c1Met=true;matDet=`B4F ${b4Rank}3 ${labelText}: ${getDispItem(pB4)}`;}
 if(c1Met||c2Met){
-let html=`${wpHits.join('<br>')}<br><span style="color:#11F514; font-size:11px">${matDet}</span>`;
+let html=`${wpHits.join('<br>')}<br><span style="color:#11F514;font-size:11px">${matDet}</span>`;
 return{isHit:true,jumpFloor:wpFloor,displayHtml:html,specialStyle:c2Met?"1px solid #fa0":""};
 }
 return{isHit:false};
@@ -953,12 +974,12 @@ let hasMatchedD=elistResult.hasMatchedD;
 let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 let specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s => `<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
-let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px; display:flex; flex-direction:column; align-items:flex-start;">${anomalyDetails.map(html => html.replace('<span style="', '<span style="display:inline-block; line-height:1.4; margin-top:4px; ')).join('')}</div>`:'';
+let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html => html.replace('<span style="', '<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
 let mapNameDisp=dispName(searchEngine);
 const html=`
-<span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff; font-size:11px">${mapNameDisp}</span>${locHtml}
+<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
 <div style="margin-top:4px;">${boxHtml}</div>
 ${specialHtml}
 ${anomalyHtml}
@@ -1102,8 +1123,8 @@ stateColor="#fa0";
 stateColor="#f7f";
 }
 }
-let dHtml=info.dValue>0?` <span style="background:#fa0; color:#000; padding:1px 5px; border-radius:3px; font-size:10px; margin-left:4px; white-space:nowrap;">${info.dValue}</span>`:'';
-let line=`<span style="color:#0ff; font-size:12px;">B${info.floor}F: [${info.hex}] <strong style="color:${stateColor};">${info.state}</strong>${dHtml}</span>`;
+let dHtml=info.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px;white-space:nowrap;">${info.dValue}</span>`:'';
+let line=`<span style="color:#0ff;font-size:12px;">B${info.floor}F: [${info.hex}] <strong style="color:${stateColor};">${info.state}</strong>${dHtml}</span>`;
 const st=info.state;
 let surviveCount=0;
 if(st.includes(EL_4))surviveCount=4;
@@ -1118,11 +1139,11 @@ return line;
 const locHtml=_cachedLocData?LocaHtmlFromData(_cachedLocData,conds):"";
 let bugIcon=isFloorIncreased?'📈':'';
 const html=`
-<span style="color:#ffd700; font-weight:bold; font-size:15px;">${hex4(seed)}</span>
+<span style="color:#ffd700;font-weight:bold;font-size:15px;">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
-<div style="background:#111; padding:4px 8px; border-radius:4px; margin:4px 0; border:1px solid #333;">
-<span style="color:#aaa; font-size:11px">[Source]${origName}|B${origFloors}F|${origBoss}</span><br>
-<span style="color:#f8f; font-size:11px">[Bug]${bugName}|B${bugFloors}F|${bugBoss}${bugIcon}</span>
+<div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
+<span style="color:#aaa;font-size:11px">[Source]${origName}|B${origFloors}F|${origBoss}</span><br>
+<span style="color:#f8f;font-size:11px">[Bug]${bugName}|B${bugFloors}F|${bugBoss}${bugIcon}</span>
 </div>${locHtml}${boxHtml}
 <div style="padding-top:2px;">${elistHtmlStr}</div>
 `;
@@ -1145,9 +1166,9 @@ if(hitResult&&hitResult.isHit){
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 let mapNameDisp=dispName(searchEngine);
 const html=`
-<span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff; font-size:11px; margin-bottom:2px; display:inline-block;">${mapNameDisp}</span>${locHtml}
+<span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
 <div style="margin-top:4px;">${boxHtml}</div>
 <div style="margin-top:4px;">${hitResult.displayHtml}</div>
 `;
@@ -1221,7 +1242,7 @@ for(let f=0;f<limit;f++){const c=_uspFloorCost(eng,f);if(c===null)return null;pf
 const fm=v=>(Number.isInteger(v)?v:v.toFixed(1));
 let html=`<div style="margin-top:4px;"><span style="color:#ffc90e;font-weight:bold;font-size:14px">${fm(sum)}</span></div>`;
 if(!hideFloors){
-const floors=pf.map((c,f)=>{const isGoal=(!hasLimit&&f===limit-1);return `<span style="color:${isGoal?'#fc6':'#9ab'}">B${f+1}F${isGoal?'✦':''}<b style="color:#cde">${fm(c)}</b></span>`;}).join('<span style="color:#445"> · </span>');
+const floors=pf.map((c,f)=>{const isGoal=(!hasLimit&&f===limit-1);return`<span style="color:${isGoal?'#fc6':'#9ab'}">B${f+1}F${isGoal?'✦':''}<b style="color:#cde">${fm(c)}</b></span>`;}).join('<span style="color:#445"> · </span>');
 html+=`<div style="margin-top:3px;font-size:11px;font-family:monospace;line-height:1.7">${floors}</div>`;
 }
 return{html,cost:sum};
@@ -1238,7 +1259,7 @@ const _onlyMonExpectedStr=job._onlyMonExpectedStr;
 searchEngine.calculateDetail(true);
 if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
 if(!benchmarkMode&&searchEngine._details[0]===12){
-const allowGrey=(parseInt(conds.boss)===12||conds.elist||conds.onlyMon);
+const allowGrey=(parseInt(conds.boss)===12||conds.elist||conds.onlyMon||job.params.slowest||conds.depth2);
 if(!allowGrey)return null;
 }
 if(conds.onlyMon){
@@ -1261,10 +1282,25 @@ let anomalyDetails=anomResult.anomalyDetails;
 let hasMatchedD=elistResult.hasMatchedD;
 let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
 let upToFloor=-1;
-if(!benchmarkMode&&(conds.elist||conds.onlyMon)&&elistResult.jumpToFloor!==-1){
+const _fastMode=job.params.fastestMode;
+if(!benchmarkMode){
+if(_fastMode==='floor'){
+if((conds.elist||conds.onlyMon)&&elistResult.jumpToFloor!==-1){
+upToFloor=elistResult.jumpToFloor;
+}else if(conds.depth2){
+const _d2=parseInt(conds.depth2);
+if(searchEngine.floorCount<_d2)return null;
+upToFloor=_d2;
+if(jumpToFloor===-1)jumpToFloor=_d2-1;
+}
+}else if(_fastMode==='map'){
+upToFloor=-1;
+}else if((conds.elist||conds.onlyMon)&&elistResult.jumpToFloor!==-1){
 upToFloor=elistResult.jumpToFloor;
 }
-let fastestRes=_uspFastestHtml(searchEngine,benchmarkMode?{hideFloors:false,upToFloor:-1}:{hideFloors:true,upToFloor:upToFloor});
+}
+const _showFloors=benchmarkMode||!!job.params.showFloors;
+let fastestRes=_uspFastestHtml(searchEngine,benchmarkMode?{hideFloors:false,upToFloor:-1}:{hideFloors:!_showFloors,upToFloor:upToFloor});
 if(fastestRes===null)return null;
 let fastestHtml=fastestRes.html;
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
@@ -1272,7 +1308,7 @@ let specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${speci
 let anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html=>html.replace('<span style="','<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
 let mapNameDisp=dispName(searchEngine);
 const html=`
-<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
 <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
 ${fastestHtml}
@@ -1280,7 +1316,7 @@ ${fastestHtml}
 ${specialHtml}
 ${anomalyHtml}
 `;
-return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor,sortCost:fastestRes.cost};
+return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor,sortCost:fastestRes.cost,fc:searchEngine.floorCount};
 };
 async function coreRunScanJob(job,io){
 const conds=job.conds;
@@ -1391,7 +1427,7 @@ let jumpToFloor=elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.
 hitCount++;
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 let specialHtml=elistResult.specialHitDetails.length>0?`<div style="margin-top:4px;">${elistResult.specialHitDetails.map(s=>`<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'';
-let anomalyHtml=anomResult.anomalyDetails.length>0?`<div style="margin-top:6px; display:flex; flex-direction:column; align-items:flex-start;">${anomResult.anomalyDetails.map(h=>h.replace('<span style="','<span style="display:inline-block; line-height:1.4; margin-top:4px; ')).join('')}</div>`:'';
+let anomalyHtml=anomResult.anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomResult.anomalyDetails.map(h=>h.replace('<span style="','<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
 let mapNameDisp=dispName(searchEngine);
 const{deft}=formatDeftness(atinfo.atN1);
 let diffsHtml='';
@@ -1403,9 +1439,9 @@ diffsHtml=_buildDiffsHtml(patData.foundOffsets,N,deft);
 }
 let atHtml=_buildATCard(seed,N,atinfo.atN,atinfo.atN1,diffsHtml);
 const html=`
-<span style="color:#ffd700; font-weight:bold">${hex4(seed)}</span>
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
 <span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff; font-size:11px">${mapNameDisp}</span>${locHtml}
+<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
 <div style="margin-top:4px;">${boxHtml}</div>
 ${specialHtml}
 ${anomalyHtml}
@@ -1445,7 +1481,7 @@ const diffsHtml=_buildDiffsHtml(foundOffsets,job.POPIndex,deft);
 specificAtHtml=_buildATCard(seed,job.POPIndex,popValue,defValue,diffsHtml);
 }
 const html=`
-<span style="color:#ffd700; font-weight:bold; font-size:13px;">${hex4(seed)}</span><br>
+<span style="color:#ffd700;font-weight:bold;font-size:13px;">${hex4(seed)}</span><br>
 ${_buildPatternBox(job.patternName,job.probText,_buildOffsetsHtml(foundOffsets))}
 ${specificAtHtml}
 `;
