@@ -749,6 +749,31 @@ checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks}
 });
 }
 function startSearch(){QuickloadSearch();}
+function NineSearch(){
+const targetItem=document.getElementById('searchItem').value;
+const b9fItems=["Sainted soma","Yggdrasil leaf","Reset stone","S weapon"];
+const isB9F=b9fItems.includes(targetItem);
+if(["Cannibox","Mimic","Pandora's box"].includes(targetItem)){alert(A03);return;}
+const millionaireItems=ITEMS_MILLIONAIRE;
+const sWeapons=ITEMS_S_WEAPONS;
+let reqCount,targetFloors,checkItems;
+if(isB9F){
+reqCount=2;
+targetFloors=[8];
+checkItems=(targetItem==='S weapon')?sWeapons:[targetItem];
+}else{
+reqCount=b3fThreeItems.includes(targetItem)?3:2;
+targetFloors=b3fThreeItems.includes(targetItem)?[2]:[2,3];
+checkItems=(targetItem==='Millionaire')?millionaireItems:[targetItem];
+}
+const chestRanks=getChestRanksForItems(checkItems);
+executeItemSearch({
+btnId:'BtnNine',btnText:'⑨',btnBg:'linear-gradient(135deg,#b19cd9,#6a5acd)',
+filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[chestRanks],isB9F?2:0),
+checker:'quickload9',
+checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks}
+});
+}
 function ThirdChestSearch(isS3){
 let checkItems,btnConfig,targetFloors,colorStyle;
 if(isS3){
@@ -2431,7 +2456,7 @@ const legends=[
 ['🔱',L==='EN'?'Poker':L==='JP'?'きしんのまそう':'鬼神槍'],
 ];
 return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;">'
-+legends.map(([e,n])=>e+'<span style="color:#888;">'+n+'</span>').join('  ')
++legends.map(([e,n])=>e+'<span style="color:#888;">'+n+'</span>').join('')
 +'</div>';
 }
 const JOB_STATS=[

@@ -710,6 +710,7 @@ job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
 const ITEM_BASIC_REQS={
 free:(eng,p,conds)=>eng.floorCount>=p.reqFloorCount,
 quickload:(eng,p,conds)=>eng.floorCount>=(p.isB9F?9:3)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isB9F?2:0).length>0,
+quickload9:(eng,p,conds)=>eng.floorCount>=(p.isB9F?9:3)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isB9F?2:0).length>0,
 third:(eng,p,conds)=>eng.floorCount>=(p.isS3?14:4)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isS3?3:0).length>0,
 jfire:(eng,p,conds)=>eng.monsterRank===9&&eng.floorCount>=9,
 tk:(eng,p,conds)=>eng.floorCount>=3,
@@ -788,6 +789,28 @@ hitTypes.push(`<span style="color:#ff99bb;font-size:11px">${prefixStr}${STR_SOLO
 }
 if(partyC>=p.reqCount){
 hitTypes.push(`<span style="color:#ffd700;font-size:11px">${prefixStr}${STR_PARTY} x${partyC}</span>`);
+}
+}
+if(hitTypes.length>0){
+return{isHit:true,jumpFloor:firstHitFloor,displayHtml:hitTypes.join('<br>')};
+}
+return{isHit:false};
+},
+quickload9:(eng,p)=>{
+const checkSet=new Set(p.checkItems);
+let hitTypes=[];
+let firstHitFloor=-1;
+for(let f of p.targetFloors){
+if(f>=eng.floorCount)continue;
+const names=eng.getFloorItemNames(f,4);
+let cnt=0;
+for(let b=0;b<names.length;b++){
+if(checkSet.has(names[b]))cnt++;
+}
+if(cnt>=p.reqCount){if(firstHitFloor===-1)firstHitFloor=f;}
+let prefixStr=p.isB9F?'B9F ':`B${f+1}F `;
+if(cnt>=p.reqCount){
+hitTypes.push(`<span style="color:#b19cd9;font-size:11px">${prefixStr}⑨ x${cnt}</span>`);
 }
 }
 if(hitTypes.length>0){
