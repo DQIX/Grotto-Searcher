@@ -80,6 +80,14 @@ body{margin:0;overflow:hidden}
 </div>
 <div class="tb-group tb-row3">
 <div class="timer-box">
+<label style="color:#88b;font-size:11px;">Start</label>
+<select id="timerStart" style="background:#000;color:#ffd700;border:1px solid #555;padding:2px 4px;font-size:12px;font-family:inherit;border-radius:3px;height:26px;width:52px;">
+<option value="-3">-3</option>
+<option value="0">0</option>
+<option value="4">4</option>
+<option value="4.5">4.5</option>
+<option value="5">5</option>
+</select>
 <div class="timer-display" id="timerDisp"><span id="timerText">-03.00</span></div>
 <button class="ctrl-btn start" id="btnStart" onclick="toggleTimer()">▶</button>
 <button class="ctrl-btn reset" id="btnReset" onclick="resetTimer()">⟲</button>
@@ -932,8 +940,8 @@ const d=engine.di[f];
 for(let b=0;b<d[8];b++){
 const info=engine.getBoxInfo(f,b);
 chestList.push({
-floor: f,floorNum: f+1,floorLabel: 'B'+(f+1)+'F',
-box: b,rank: info.rank,rankName: RANK_NAMES[info.rank]||'?'
+floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',
+box: b,rank: info.rank,rankName:RANK_NAMES[info.rank]||'?'
 });
 }
 }
@@ -1007,6 +1015,7 @@ if(timerRAF){ cancelAnimationFrame(timerRAF);timerRAF=null;}
 _btnStart.textContent='\u25B6';
 _btnStart.classList.remove('running');
 }else{
+// realSec may be fractional (e.g. 4.5); origin anchors elapsed time correctly
 timerOrigin=Date.now()-realSec*1000;
 timerRunning=true;
 _btnStart.textContent='\u23F8';
@@ -1014,12 +1023,17 @@ _btnStart.classList.add('running');
 timerLoop();
 }
 }
+function getStartSec(){
+const v=parseFloat(document.getElementById('timerStart').value);
+return isNaN(v)?-3:v;
+}
 function resetTimer(){
 if(timerRunning){ cancelAnimationFrame(timerRAF);timerRAF=null;timerRunning=false;}
-realSec=-3;
+const s=getStartSec();
+realSec=s;
 _btnStart.textContent='\u25B6';
 _btnStart.classList.remove('running');
-updateStopwatch(-3000);
+updateStopwatch(s*1000);
 renderRows();
 }
 function setFilter(f){
@@ -1105,5 +1119,16 @@ if(customHL1Item) ITEM_HL[customHL1Item]=CUSTOM_HL1;
 if(customHL2Item) ITEM_HL[customHL2Item]=CUSTOM_HL2;
 renderRows();
 }
-window.addEventListener('DOMContentLoaded',()=>{cacheEls();saveBuiltinHL();populateCustomHL();compute();updateStopwatch(-3000);});
+window.addEventListener('DOMContentLoaded',()=>{
+cacheEls();
+saveBuiltinHL();
+populateCustomHL();
+compute();
+const s=getStartSec();
+realSec=s;
+updateStopwatch(s*1000);
+document.getElementById('timerStart').addEventListener('change',()=>{
+if(!timerRunning)resetTimer();
+});
+});
 </script></body></html>
