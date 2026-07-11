@@ -16,7 +16,7 @@ body{margin:0;overflow:hidden}
 .filter-btn{height:26px;padding:0 7px;border:1px solid #555;background:#1a1a2e;color:#aaa;cursor:pointer;font-size:11px;border-radius:3px;font-family:inherit}
 .filter-btn.active{background:#2a2a4a;color:#ffd700;border-color:#ffd700}
 .timer-box{display:flex;align-items:center;gap:3px}
-.timer-display{background:#0f0f2a;padding:2px 6px;border:2px solid #333;border-radius:4px;font-size:16px;font-weight:bold;color:#f88;min-width:80px;text-align:center;letter-spacing:1px;height:26px;line-height:22px}
+.timer-display{background:#0f0f2a;padding:2px 6px;border:2px solid #333;border-radius:4px;font-size:16px;font-weight:bold;color:#f88;min-width:102px;text-align:center;letter-spacing:1px;height:26px;line-height:22px}
 .ctrl-btn{width:26px;height:26px;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center}
 .ctrl-btn.start{background:#060;color:#0f0;border:2px solid #0a0}
 .ctrl-btn.start:active{background:#080}
@@ -83,9 +83,11 @@ body{margin:0;overflow:hidden}
 <label style="color:#88b;font-size:11px;">Start</label>
 <select id="timerStart" style="background:#000;color:#ffd700;border:1px solid #555;padding:2px 4px;font-size:12px;font-family:inherit;border-radius:3px;height:26px;width:52px;">
 <option value="-3">-3</option>
-<option value="0">0</option>
+<option value="0" selected>0</option>
+<option value="4.6">4.6</option>
 <option value="4">4</option>
 <option value="4.5">4.5</option>
+<option value="4.7">4.7</option>
 <option value="5">5</option>
 </select>
 <div class="timer-display" id="timerDisp"><span id="timerText">-03.00</span></div>
@@ -871,6 +873,7 @@ let timerRunning=false;
 let timerRAF=null;
 let timerOrigin=0;
 let realSec=-3;
+let timerElapsedMs=-3000;
 // Cached timer DOM elements (avoid getElementById at 60fps)
 let _timerText=null,_timerDisp=null,_btnStart=null;
 function cacheEls(){_timerText=document.getElementById('timerText');_timerDisp=document.getElementById('timerDisp');_btnStart=document.getElementById('btnStart');}
@@ -878,6 +881,7 @@ function cacheEls(){_timerText=document.getElementById('timerText');_timerDisp=d
 let _seedTimer=null;
 function debouncedInput(){clearTimeout(_seedTimer);_seedTimer=setTimeout(onInputChange,200);}
 // Measure longest item name per chest rank -> exact per-column width
+// Enumerate the rank's full reachable pool (TableO/P/Q/R); exact, no sampling misses
 function measureRankWidths(){
 const canvas=document.createElement('canvas');
 const ctx=canvas.getContext('2d');
@@ -887,12 +891,12 @@ ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'
 rankWidths={};
 const ranks=new Set(chestList.map(cd=>cd.rank));
 for(const rank of ranks){
-const sample=chestList.find(cd=>cd.rank===rank);
-if(!sample)continue;
-let maxW=0;
-for(let s=0;s<300;s++){
-const [en,jp]=engine.getBoxItem(sample.floor,sample.box,s);
-const name=isEN?(en||'\u2014'):(jp||en||'\u2014');
+let maxW=0,acc=0;
+for(let i3=TableO[rank-1];i3<TableO[rank];i3++){
+if(acc>99)break;// weights already cover num1 0..99; tail items unreachable
+acc+=TableP[i3];
+const r=TableR[TableQ[i3]];
+const name=isEN?(r[0]||'\u2014'):(r[1]||r[0]||'\u2014');
 const w=ctx.measureText(name).width;
 if(w>maxW)maxW=w;
 }
@@ -902,18 +906,17 @@ rankWidths[rank]=Math.ceil(maxW)+12;
 function internalSec(){return realSec-5;}
 function timerLoop(){
 if(!timerRunning)return;
-const elapsed=Date.now()-timerOrigin;
-const newSec=Math.floor(elapsed / 1000);
-updateStopwatch(elapsed);
+timerElapsedMs=Date.now()-timerOrigin;
+const newSec=Math.floor(timerElapsedMs / 1000);
+updateStopwatch(timerElapsedMs);
 if(newSec!==realSec){realSec=newSec;renderRows();}
 timerRAF=requestAnimationFrame(timerLoop);
 }
 function updateStopwatch(elapsedMs){
 const isPrep=elapsedMs<0;
 const absMs=Math.abs(elapsedMs);
-const totalSec=absMs/1000;
-const s=Math.floor(totalSec);
-const cs=Math.floor((totalSec-s)*100);
+const s=Math.floor(absMs/1000);
+const cs=Math.floor((absMs%1000)/10);
 const text=isPrep?'-'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0'):String(s).padStart(3,'0')+'.'+String(cs).padStart(2,'0');
 _timerText.textContent=text;
 _timerDisp.style.color=isPrep?'#f88':'#0f0';
@@ -1015,8 +1018,8 @@ if(timerRAF){ cancelAnimationFrame(timerRAF);timerRAF=null;}
 _btnStart.textContent='\u25B6';
 _btnStart.classList.remove('running');
 }else{
-// realSec may be fractional (e.g. 4.5); origin anchors elapsed time correctly
-timerOrigin=Date.now()-realSec*1000;
+// Anchor from timerElapsedMs (ms-precise across pause/resume; carries minus/fractional start values)
+timerOrigin=Date.now()-timerElapsedMs;
 timerRunning=true;
 _btnStart.textContent='\u23F8';
 _btnStart.classList.add('running');
@@ -1031,9 +1034,10 @@ function resetTimer(){
 if(timerRunning){ cancelAnimationFrame(timerRAF);timerRAF=null;timerRunning=false;}
 const s=getStartSec();
 realSec=s;
+timerElapsedMs=s*1000;
 _btnStart.textContent='\u25B6';
 _btnStart.classList.remove('running');
-updateStopwatch(s*1000);
+updateStopwatch(timerElapsedMs);
 renderRows();
 }
 function setFilter(f){
@@ -1126,7 +1130,8 @@ populateCustomHL();
 compute();
 const s=getStartSec();
 realSec=s;
-updateStopwatch(s*1000);
+timerElapsedMs=s*1000;
+updateStopwatch(timerElapsedMs);
 document.getElementById('timerStart').addEventListener('change',()=>{
 if(!timerRunning)resetTimer();
 });
