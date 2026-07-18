@@ -86,6 +86,13 @@ const atHtmlString=`[35] ${atValues[0]}<br>[36] ${atValues[1]}<br>[37] ${atValue
 const rn=calcR2N2(mapData.MapSeed);
 const fmtRN=v=>v===-1?`<span style="color:#555;">—</span>`:`<span style="color:#0f0;">${v}</span>`;
 const rnHtml=`<span style="color:#f88;">[R2] ${fmtRN(rn.r2)}</span><br><span style="color:#f88;">[+3] ${fmtRN(rn.r2_3)}</span><br><span style="color:#8cf;">[N2] ${fmtRN(rn.n2)}</span>`;
+let wSum=0,wReach=true;
+for(let f=0;f<mapData.floorCount;f++){
+const c=_uspFloorCost(mapData,f);
+if(c===null){wReach=false;break;}
+wSum+=c;
+}
+const wHtml=wReach?`<span style="color:#ffc90e;">${Number.isInteger(wSum) ? wSum : wSum.toFixed(1)}</span>`:`<span style="color:#555;">—</span>`;
 const boxData=mapData.getMapBoxCounts();
 const boxCounts=boxData.counts;
 const totalBoxes=boxData.total;
@@ -117,6 +124,9 @@ let html=`<div class="info-bar">
 </span>
 <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C07}:
 <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
+</span>
+<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;"title="${T('Sum of per-floor shortest walking cost (Dijkstra, same rule as Fastest Map Search)','全樓層最短步數之和（Dijkstra，與最短地圖搜尋同規則）','全フロア最短歩数の合計（Dijkstra、最短地図検索と同ルール）')}">A*:
+<strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${wHtml}</strong>
 </span>
 </div>
 <div class="info-bar"style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
@@ -155,6 +165,13 @@ activeFloor=f;
 document.querySelectorAll('.floor-tab').forEach((t,i)=>t.classList.toggle('active',i===f));
 renderFloor(f);
 }
+function getCanvasTilePoint(canvas,event){
+const rect=canvas.getBoundingClientRect();
+return{
+x:Math.floor((event.clientX-rect.left)/TILE_SIZE),
+y:Math.floor((event.clientY-rect.top)/TILE_SIZE),
+};
+}
 function renderFloor(f){
 const container=document.getElementById('floor-content');
 const w=mapData.getFloorWidth(f);
@@ -190,7 +207,7 @@ else if(stCls.kind==='only')grayFrom=0;
 const onlyMonId=(ONLY_MONSTERS[envType]&&ONLY_MONSTERS[envType][floorMR])||'';
 const isOnlyMode=(stCls.kind==='only');
 let monsterSpans=normals.map((entry,i)=>{
-const md=MONSTER_DATA[entry[0]];
+const md=MONSTER_DB[entry[0]];
 if(!md)return'';
 const name=isJP?md.jp:md.en;
 let isGray;
@@ -238,9 +255,7 @@ container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${
 document.querySelector('.map-container').style.position='relative';
 const mapCanvas=document.getElementById('mapCanvas');
 mapCanvas.addEventListener('mousemove',(e)=>{
-const rect=mapCanvas.getBoundingClientRect();
-const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
-const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
+const{x:mx,y:my}=getCanvasTilePoint(mapCanvas,e);
 const coordEl=document.getElementById('coordDisplay');
 if(mx>=0&&mx<w&&my>=0&&my<h){
 const tNames={0:D01,1:D02,2:D03,3:D02,4:C11,5:C11,6:D07,8:D04};
@@ -258,15 +273,13 @@ mapCanvas.style.cursor='default';
 const boxPositions=new Map();
 for(let i=0;i<boxCount;i++){
 const b=mapData.getBoxInfo(f,i);
-boxPositions.set(b.x+','+b.y,i+1);
+boxPositions.set(b.x+','+b.y,{num:i+1,rank:b.rank});
 }
 mapCanvas.addEventListener('click',(e)=>{
-const rect=mapCanvas.getBoundingClientRect();
-const mx=Math.floor((e.clientX-rect.left)/TILE_SIZE);
-const my=Math.floor((e.clientY-rect.top)/TILE_SIZE);
+const{x:mx,y:my}=getCanvasTilePoint(mapCanvas,e);
 if(boxPositions&&boxPositions.has(mx+','+my)){
-const boxNum=boxPositions.get(mx+','+my);
-showChestTimer(f,boxNum-1,mx,my);
+const boxObj=boxPositions.get(mx+','+my);
+showChestTimer(f,boxObj.num-1,mx,my);
 }
 });
 const canvas=document.getElementById('mapCanvas');
@@ -280,8 +293,8 @@ const px=x*TILE_SIZE;
 const py=y*TILE_SIZE;
 const isUpStair=(x===up.x&&y===up.y);
 const isDownStair=(x===down.x&&y===down.y);
-const boxNum=boxPositions.get(x+','+y)||0;
-const isBox=boxNum>0;
+const boxObj=boxPositions.get(x+','+y)||null;
+const isBox=!!boxObj;
 let displayTile=tile;
 if(isUpStair)displayTile=4;
 else if(isDownStair)displayTile=5;
@@ -307,9 +320,14 @@ ctx.fillStyle='#000';
 ctx.font='bold 12px sans-serif';
 ctx.fillText('▼',px+TILE_SIZE/2,py+TILE_SIZE/2);
 }else if(isBox){
+const chestLabel=(CHEST_RANK[boxObj.rank]||'?')+boxObj.num;
+ctx.save();
 ctx.fillStyle='#000';
-ctx.font='bold 11px sans-serif';
-ctx.fillText(boxNum,px+TILE_SIZE/2,py+TILE_SIZE/2);
+ctx.font='11px sans-serif';
+ctx.translate(px+TILE_SIZE/2,py+TILE_SIZE/2);
+ctx.scale(1,1.35);
+ctx.fillText(chestLabel,0,0);
+ctx.restore();
 }
 }
 }
@@ -363,8 +381,8 @@ body.style.overflowY='hidden';
 body.style.display='flex';
 body.style.flexDirection='column';
 body.innerHTML=`<div class="modal-tabs">
-<div id="ctTabEN"style="padding: 6px 16px;background: #1a1a3a;color: #ffd700;border: 1px solid #4a4a8a;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;"onclick="switchCtTab('EN')">English</div>
-<div id="ctTabJP"style="padding: 6px 16px;background: #224;color: #888;border: 1px solid #333;border-bottom: none;border-radius: 6px 6px 0 0;cursor: pointer;font-size: 13px;font-weight: bold;margin-bottom: -2px;transition: all 0.2s;"onclick="switchCtTab('JP')">日本語</div>
+<div id="ctTabEN"class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated"style="background:#1a1a3a;color:#ffd700;border-color:#4a4a8a"onclick="switchCtTab('EN')">English</div>
+<div id="ctTabJP"class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated"style="background:#224;color:#888;border-color:#333"onclick="switchCtTab('JP')">日本語</div>
 </div>
 <div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
 <div id="ctListEN"style="display: block;">${htmlEN}</div>
@@ -374,9 +392,21 @@ body.innerHTML=`<div class="modal-tabs">
 modal.style.display='flex';
 switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
 }
+const MODAL_TAB_KEYS=['TW','EN','JP','SP'];
+const MODAL_THEMES={
+gold:['#ffd700','#4a4a8a','#224','#888','#333'],
+cyan:['#0ff','#4a4a8a','#224','#888','#333'],
+teal:['#0ca','#055','#001a1a','#598','#033'],
+};
+const MODAL_CONFIGS={
+chest:{id:'chestModal',prefix:'ct',theme:MODAL_THEMES.gold},
+disclaimer:{id:'disclaimerModal',prefix:'disc',theme:MODAL_THEMES.gold},
+h1:{id:'h1Modal',prefix:'h1',theme:MODAL_THEMES.cyan},
+h2:{id:'h2Modal',prefix:'h2',theme:MODAL_THEMES.cyan},
+h3:{id:'h3Modal',prefix:'h3',theme:MODAL_THEMES.teal},
+};
 function switchTab(prefix,lang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
-const keys=['TW','EN','JP','SP'];
-keys.forEach(key=>{
+MODAL_TAB_KEYS.forEach(key=>{
 let tab=document.getElementById(prefix+'Tab'+key);
 let list=document.getElementById(prefix+'List'+key);
 if(!tab||!list)return;
@@ -395,20 +425,31 @@ const targetLang=['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW';
 switchTab(tabPrefix,targetLang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder);
 }
 }
-function closeChestModal(){document.getElementById('chestModal').style.display='none';}
-function switchCtTab(lang){switchTab('ct',lang,'#ffd700','#4a4a8a','#224','#888','#333');}
-function openDisclaimerModal(){openModal('disclaimerModal','disc','#ffd700','#4a4a8a','#224','#888','#333');}
-function closeDisclaimerModal(){document.getElementById('disclaimerModal').style.display='none';}
-function switchDisclaimerTab(lang){switchTab('disc',lang,'#ffd700','#4a4a8a','#224','#888','#333');}
-function openh1Modal(){openModal('h1Modal','h1','#0ff','#4a4a8a','#224','#888','#333');}
-function closeh1Modal(){document.getElementById('h1Modal').style.display='none';}
-function switchH1Tab(lang){switchTab('h1',lang,'#0ff','#4a4a8a','#224','#888','#333');}
-function openh2Modal(){openModal('h2Modal','h2','#0ff','#4a4a8a','#224','#888','#333');}
-function closeh2Modal(){document.getElementById('h2Modal').style.display='none';}
-function switchH2Tab(lang){switchTab('h2',lang,'#0ff','#4a4a8a','#224','#888','#333');}
-function openh3Modal(){openModal('h3Modal','h3','#0ca','#055','#001a1a','#598','#033');}
-function closeh3Modal(){document.getElementById('h3Modal').style.display='none';}
-function switchH3Tab(lang){switchTab('h3',lang,'#0ca','#055','#001a1a','#598','#033');}
+function switchConfiguredModalTab(configKey,lang){
+const config=MODAL_CONFIGS[configKey];
+switchTab(config.prefix,lang,...config.theme);
+}
+function openConfiguredModal(configKey){
+const config=MODAL_CONFIGS[configKey];
+openModal(config.id,config.prefix,...config.theme);
+}
+function closeConfiguredModal(configKey){
+document.getElementById(MODAL_CONFIGS[configKey].id).style.display='none';
+}
+function closeChestModal(){closeConfiguredModal('chest');}
+function switchCtTab(lang){switchConfiguredModalTab('chest',lang);}
+function openDisclaimerModal(){openConfiguredModal('disclaimer');}
+function closeDisclaimerModal(){closeConfiguredModal('disclaimer');}
+function switchDisclaimerTab(lang){switchConfiguredModalTab('disclaimer',lang);}
+function openh1Modal(){openConfiguredModal('h1');}
+function closeh1Modal(){closeConfiguredModal('h1');}
+function switchH1Tab(lang){switchConfiguredModalTab('h1',lang);}
+function openh2Modal(){openConfiguredModal('h2');}
+function closeh2Modal(){closeConfiguredModal('h2');}
+function switchH2Tab(lang){switchConfiguredModalTab('h2',lang);}
+function openh3Modal(){openConfiguredModal('h3');}
+function closeh3Modal(){closeConfiguredModal('h3');}
+function switchH3Tab(lang){switchConfiguredModalTab('h3',lang);}
 window.addEventListener('DOMContentLoaded',()=>{
 function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
 let selectElement=document.getElementById(selectId);
@@ -442,7 +483,7 @@ let sel=document.getElementById('cond_only_mon');
 if(sel){
 const createOpt=(id)=>{
 let opt=document.createElement('option');
-let data=MONSTER_DATA[id];
+let data=MONSTER_DB[id];
 opt.value=data.en;
 opt.textContent=`${data.en} ${data.jp}`;
 return opt;
@@ -600,7 +641,7 @@ seedEl.value=urlSeed;
 calculate();
 });
 let isModalDragging=false;
-const allModalIds=['chestModal','disclaimerModal','h1Modal','h2Modal','h3Modal'];
+const allModalIds=Object.values(MODAL_CONFIGS).map(config=>config.id);
 window.addEventListener('mousedown',(e)=>{
 if(allModalIds.includes(e.target.id)){isModalDragging=false;}
 else{isModalDragging=true;}
@@ -633,11 +674,7 @@ if(/^(Caves|Ruins|Ice|Water|Fire|洞窟|遺跡|氷|水|火山)$/i.test(line))ret
 return true;
 });
 let resultText=resultLines.join(" / ");
-if(/^(B3F|B4F)\s+(Solo|Party|一人旅|即開)/i.test(resultText)){
-const itemName=document.getElementById('searchItem').value;
-resultText=`${getDispItem(itemName)} ${resultText}`;
-}
-else if(/^B9F\s+(Solo|Party|一人旅|即開)/i.test(resultText)){
+if(/^(B3F|B4F|B9F|B10F)\s+(Solo|Party|一人旅|即開)/i.test(resultText)||/^B\d+F\s+[⑤⑨]\s*x/.test(resultText)){
 const itemName=document.getElementById('searchItem').value;
 resultText=`${getDispItem(itemName)} ${resultText}`;
 }

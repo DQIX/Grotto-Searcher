@@ -21,6 +21,24 @@ wkChain=wkChain.then(()=>runChunk(m)).catch((err)=>{
 console.error('Worker chunk error:',err);
 self.postMessage({type:'error',gen:m.gen,chunkId:m.chunkId,message:''+(err&&err.message||err)});
 });
+return;
+}
+if(m.type==='solve'){
+try{
+DISPLAY_LANG=m.lang||'EN';
+_L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
+self.window=self;
+self.document={getElementById:(id)=>(m.dom&&(id in m.dom))?{checked:!!m.dom[id]}:null};
+_readCharStats=()=>m.chars;
+window._solverComboMap={};window._solverComboId=m.idBase||0;
+window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
+const html=_solverRender(m.render.bat,m.render.monGroups,m.render.monId,m.render.mapDeft,m.render.canRound2);
+self.postMessage({type:'solveDone',solveId:m.solveId,html,
+comboMap:window._solverComboMap,buckets:window._solverBuckets});
+}catch(err){
+self.postMessage({type:'solveError',solveId:m.solveId,message:''+(err&&err.stack||err)});
+}
+return;
 }
 };
 async function runChunk(c){

@@ -108,6 +108,21 @@ button.go:active{transform:scale(0.95)}
 .timer-row:hover{background:#224;}
 .modal-tabs{display:flex;background:#111128;padding:12px 16px 0 16px;border-bottom:2px solid #4a4a8a;flex-shrink:0}
 .modal-tabs>*+*{margin-left:4px}
+.modal-overlay-credits{z-index:1001}
+.modal-overlay-help{z-index:1002}
+.modal-content-md{max-width:600px}
+.modal-content-lg{max-width:650px}
+.modal-lang-body{padding:0;display:flex;flex-direction:column;overflow-y:hidden}
+.modal-lang-body-credits{max-height:70vh}
+.modal-lang-body-help{max-height:75vh}
+.modal-lang-scroll{padding:16px 20px;overflow-y:auto;flex:1;font-size:13px;color:#ccc}
+.modal-lang-scroll-credits{line-height:1.6}
+.modal-lang-scroll-help{line-height:1.7}
+.modal-lang-tab{padding:6px 16px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:bold;margin-bottom:-2px}
+.modal-lang-tab-bordered{border:1px solid #333;border-bottom:none}
+.modal-lang-tab-animated{transition:all 0.2s}
+.modal-lang-tab-nowrap{white-space:nowrap}
+.modal-lang-tab-compact{padding-left:8px;padding-right:8px}
 .timer-range{color:#8cc8ff;font-family:monospace;font-size:14px;}
 .timer-item{color:#fff;}
 .h1t td,.h1t th{border:1px solid #4a4a8a;padding:4px}
@@ -177,23 +192,29 @@ button.go:active{transform:scale(0.95)}
 #marathonModal{display:none;position:fixed;inset:0;z-index:9999;background:#0a0a1a;flex-direction:column;font-family:'Courier New',monospace}
 #marathonModal .hidden{display:none!important}
 #marathonModal.open{display:flex}
-#marathonModal .mrt-topbar{background:#111128;padding:4px 8px;display:flex;flex-wrap:wrap;align-items:center;gap:3px;border-bottom:2px solid #333;z-index:10}
+#marathonModal .mrt-topbar{background:#111128;padding:4px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:3px;border-bottom:2px solid #333;z-index:10}
+#marathonModal .mrt-tbg{display:flex;align-items:center;gap:3px;min-width:0}
+#marathonModal .mrt-row1{flex:1 1 auto}
+#marathonModal .mrt-row3{margin-left:auto}
 #marathonModal .mrt-topbar label{color:#88b;font-size:11px}
-#marathonModal .mrt-topbar input,#marathonModal .mrt-topbar select{background:#000;color:#ffd700;border:1px solid #555;padding:2px 4px;font-size:12px;font-family:inherit;border-radius:3px}
+#marathonModal .mrt-topbar input,#marathonModal .mrt-topbar select{background:#000;color:#ffd700;border:1px solid #555;padding:2px 4px;font-size:12px;font-family:inherit;border-radius:3px;height:26px}
 #marathonModal .mrt-topbar input{width:48px;text-align:center}
 #marathonModal .mrt-topbar select{max-width:170px}
-#marathonModal .mrt-sep{border-left:1px solid #444;height:20px;margin:0 1px}
-#marathonModal .mrt-fbtn{padding:2px 7px;border:1px solid #555;background:#1a1a2e;color:#aaa;cursor:pointer;font-size:11px;border-radius:3px;font-family:inherit}
+#marathonModal select.mrt-presets{color:#0ca;flex:1 1 0;min-width:0;max-width:none}
+#marathonModal select.mrt-hlsel{min-width:0;max-width:110px;font-size:10px;color:#fff}
+#marathonModal select.mrt-hl1{background:#801}
+#marathonModal select.mrt-hl2{background:#3f48cc}
+#marathonModal select.mrt-start{width:52px}
+#marathonModal .mrt-fbtn{height:26px;padding:0 7px;border:1px solid #555;background:#1a1a2e;color:#aaa;cursor:pointer;font-size:11px;border-radius:3px;font-family:inherit}
 #marathonModal .mrt-fbtn.active{background:#2a2a4a;color:#ffd700;border-color:#ffd700}
-#marathonModal .mrt-timer-box{display:flex;align-items:center;gap:3px;margin-left:auto}
-#marathonModal .mrt-timer-display{background:#0f0f2a;padding:3px 6px;border:2px solid #333;border-radius:4px;font-size:18px;font-weight:bold;color:#f88;min-width:90px;text-align:center;letter-spacing:1px}
-#marathonModal .mrt-ctrl{width:32px;height:32px;border:none;border-radius:4px;font-size:16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center}
+#marathonModal .mrt-timer-display{background:#0f0f2a;padding:2px 6px;border:2px solid #333;border-radius:4px;font-size:16px;font-weight:bold;color:#f88;min-width:102px;text-align:center;letter-spacing:1px;height:26px;line-height:22px}
+#marathonModal .mrt-ctrl{width:26px;height:26px;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center}
 #marathonModal .mrt-ctrl.start{background:#060;color:#0f0;border:2px solid #0a0}
 #marathonModal .mrt-ctrl.start:active{background:#080}
 #marathonModal .mrt-ctrl.start.running{background:#600;color:#f88;border-color:#a00}
-#marathonModal .mrt-ctrl.reset{background:#333;color:#888;border:2px solid #555;font-size:13px}
+#marathonModal .mrt-ctrl.reset{background:#333;color:#888;border:2px solid #555;font-size:11px}
 #marathonModal .mrt-ctrl.reset:active{background:#444}
-#marathonModal .mrt-close{background:none;border:1px solid #666;color:#f66;font-size:14px;cursor:pointer;width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:inherit}
+#marathonModal .mrt-close{background:none;border:1px solid #666;color:#f66;font-size:14px;cursor:pointer;width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-family:inherit}
 #marathonModal .mrt-close:hover{background:#400}
 #marathonModal .mrt-main{display:block;flex:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 #marathonModal .mrt-vgrid{display:grid;width:max-content}
@@ -206,4 +227,4 @@ button.go:active{transform:scale(0.95)}
 #marathonModal .mrt-vtime.mrt-vrow-cur{background:#0a1a0a;color:#4f4;font-weight:bold}
 #marathonModal .mrt-vcell.mrt-vrow-cur{background:#0a1a0a}
 #marathonModal .mrt-vcell-en{font-family:system-ui,-apple-system,sans-serif}
-@media(max-width:600px){#marathonModal .mrt-vcell,#marathonModal .mrt-vhdr{padding:3px 3px;font-size:10px}#marathonModal .mrt-vtime{font-size:9px;min-width:36px}}
+@media(max-width:600px){#marathonModal .mrt-vcell,#marathonModal .mrt-vhdr{padding:3px 3px;font-size:10px}#marathonModal .mrt-vtime{font-size:9px;min-width:36px}#marathonModal .mrt-tbg{width:100%}#marathonModal .mrt-row3{justify-content:flex-end}}
