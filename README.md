@@ -23,22 +23,22 @@ Ultimate search
 - Chest amount in each Chest rank
 - Wandering Monster bugged floor status (ElistOfs)
 - Single monster floor (Only)
-- Nipple Map (inaccessible chest), Chamber Map (inaccessible area), Softlock, etc.
+- Nipple Map (inaccessible chest), Chamber Map (inaccessible area), Softlock, Fastest Map Search, etc.
 - 4-player Multiplay Bug (Multibug)
-- Fastest Map Search (短)
 - CPU Benchmark (💻)
 
 Chest Timer related search
 - Quickload B3/B4/B9 same item x2 (QL)
 - Quickload + 3rd Chest same item (Combo)
 - 3rd Chest same item x2 (3rd)
+- (New!) Dropdown List: PPAP(5s,9s) & Fast Quickload/PPAP Map Search support
 - Chest free search (up to 3 chests)
 - Chest Timer Marathon Tool (support both Japanese and English)
 
 Map Method (AT) search
 - AT search (1) List all map Seeds of selected item drop pattern
 - AT search (2) List all map Seeds for specific Whistle-summoned monster
-- AT search (Detail) Enter map Seed to check details
+- AT search (Detail) Enter map Seed to check details, Map Method Skill Combo Solver for Battle (WIP)
 
 # In-tool Documents
 
@@ -46,7 +46,7 @@ Ultimate Search
 - Grotto mechanics
 
 Chest Timer Search
-- Basic knowledge of Chest Timer
+- Basic knowledge of Chest Timer, Quickload and PPAP
 
 Map Method (AT) Search
 - Map Method mechanics
