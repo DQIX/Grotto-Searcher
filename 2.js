@@ -12,18 +12,132 @@ const RANKS={
 "C9":{fqMin:201,fqMax:220},
 "DD":{fqMin:221,fqMax:248}
 };
+const BQ_MIN=2,BQ_MAX=248;
+const BQ_D_MIN=245;
+const LOCATION_FQ_BANDS=[
+{fqMin:BQ_MIN,fqMax:50,locationMax:47},
+{fqMin:51,fqMax:80,locationMax:131},
+{fqMin:81,fqMax:BQ_MAX,locationMax:150}
+];
+const QUEST015="Quest 015";
+const QUEST015_EXC={seed:0x0032,fq:0x02,loc:5,bqFill:2};
+const BQ_MODULO=new Int32Array(256);
+const BQ_TENTH=new Float64Array(256);
+const BQ_FQ_LO=new Int32Array(256);
+const BQ_FQ_HI=new Int32Array(256);
+function hasConditionValue(raw){
+return raw!==null&&raw!==undefined&&String(raw).trim()!=="";
+}
+function isValidBaseQuality(value){
+return Number.isInteger(value)&&value>=BQ_MIN&&value<=BQ_MAX;
+}
+function parseBaseQuality(raw){
+if(!hasConditionValue(raw))return null;
+const value=Number(String(raw).trim());
+return isValidBaseQuality(value)?value:NaN;
+}
+function parseLocationCode(raw){
+if(!hasConditionValue(raw))return null;
+const text=String(raw).trim();
+if(!/^[0-9A-Fa-f]{1,2}$/.test(text))return NaN;
+const value=parseInt(text,16);
+return value>=0x01&&value<=0x96?value:NaN;
+}
+function getLocationBQFilters(conds){
+const location=parseLocationCode(conds&&conds.location);
+const baseQ=parseBaseQuality(conds&&conds.bq);
+return{location,baseQ,valid:!Number.isNaN(location)&&!Number.isNaN(baseQ)};
+}
 function getLocationMax(finalQuality){
-if(finalQuality<=50)return 47;
-if(finalQuality<=80)return 131;
-return 150;
+for(const band of LOCATION_FQ_BANDS){
+if(finalQuality<=band.fqMax)return band.locationMax;
+}
+return LOCATION_FQ_BANDS[LOCATION_FQ_BANDS.length-1].locationMax;
+}
+function calcFinalQualityValid(baseQ,r1){
+const final=baseQ+Math.trunc(r1%BQ_MODULO[baseQ]-BQ_TENTH[baseQ]);
+return final<BQ_MIN?BQ_MIN:final>BQ_MAX?BQ_MAX:final;
 }
 function calcFinalQuality(baseQ,r1){
-const modulo=Math.floor(baseQ/10)*2+1;
-const offset=Math.trunc(r1%modulo-baseQ/10);
-let final=baseQ+offset;
-if(final<2)final=2;
-if(final>248)final=248;
-return final;
+return isValidBaseQuality(baseQ)?calcFinalQualityValid(baseQ,r1):NaN;
+}
+function getFinalQualityBounds(rawBaseQ){
+const baseQ=parseBaseQuality(rawBaseQ);
+if(!isValidBaseQuality(baseQ))return null;
+return{baseQ,minFinalQ:BQ_FQ_LO[baseQ],maxFinalQ:BQ_FQ_HI[baseQ]};
+}
+for(let b=BQ_MIN;b<=BQ_MAX;b++){
+const m=Math.floor(b/10)*2+1;
+BQ_MODULO[b]=m;
+BQ_TENTH[b]=b/10;
+let lo=BQ_MAX,hi=BQ_MIN;
+for(let r=0;r<m;r++){
+const f=calcFinalQualityValid(b,r);
+if(f<lo)lo=f;
+if(f>hi)hi=f;
+}
+BQ_FQ_LO[b]=lo;
+BQ_FQ_HI[b]=hi;
+}
+const bqScanRangeCache={};
+function getBaseQScanRange(fqMin,fqMax){
+const key=fqMin+':'+fqMax;
+let r=bqScanRangeCache[key];
+if(r)return r;
+let lo=BQ_MIN,hi=BQ_MAX;
+while(lo<=BQ_MAX&&BQ_FQ_HI[lo]<fqMin)lo++;
+while(hi>=BQ_MIN&&BQ_FQ_LO[hi]>fqMax)hi--;
+r=bqScanRangeCache[key]={lo,hi};
+return r;
+}
+let bqDCache=null;
+function getBqDFq(){
+if(bqDCache===null){
+bqDCache=BQ_MAX;
+for(let bq=BQ_D_MIN;bq<=BQ_MAX;bq++){
+if(BQ_FQ_LO[bq]<bqDCache)bqDCache=BQ_FQ_LO[bq];
+}
+}
+return bqDCache;
+}
+let bqCountFeasibility=null;
+function getBqCountFeasibility(){
+if(bqCountFeasibility)return bqCountFeasibility;
+const keys=Object.keys(RANKS);
+const acc={};
+for(const k of keys)acc[k]={minTotal:Infinity,minGroup:Infinity};
+const pre=new Int32Array(BQ_MAX+2);
+const cnt=(lo,hi)=>hi<lo?0:pre[hi]-pre[lo-1];
+for(let r1=0;r1<32768;r1++){
+pre.fill(0);
+for(let bq=BQ_MIN;bq<=BQ_MAX;bq++)pre[calcFinalQualityValid(bq,r1)]++;
+for(let q=1;q<pre.length;q++)pre[q]+=pre[q-1];
+for(const k of keys){
+const{fqMin,fqMax}=RANKS[k];
+const tot=cnt(fqMin,fqMax);
+if(tot===0)continue;
+const a=acc[k];
+if(tot<a.minTotal)a.minTotal=tot;
+for(const band of LOCATION_FQ_BANDS){
+const groupCount=cnt(
+Math.max(fqMin,band.fqMin),
+Math.min(fqMax,band.fqMax)
+);
+if(groupCount>0&&groupCount<a.minGroup)a.minGroup=groupCount;
+}
+}
+}
+bqCountFeasibility=acc;
+return acc;
+}
+function isBqCountRankPossible(rank,mode){
+const info=RANKS[hex2(rank)];
+if(!info)return true;
+if(mode==='D'||mode==='Dp')return info.fqMax>=getBqDFq();
+if(mode==='1p'&&QUEST015_EXC.fq>=info.fqMin&&QUEST015_EXC.fq<=info.fqMax)return true;
+const f=getBqCountFeasibility()[hex2(rank)];
+if(!f)return true;
+return(mode==='1'?f.minTotal:f.minGroup)===1;
 }
 function formatRanges(nums){
 if(nums.length===0)return C16;
@@ -49,8 +163,7 @@ for(let t=0;t<65536;t++){
 const x1=lcg(t);
 const x2=lcg(x1);
 const s=(x2>>>16)&0x7FFF;
-if(!SEED_TO_TIMERS_CACHE[s])SEED_TO_TIMERS_CACHE[s]=[];
-SEED_TO_TIMERS_CACHE[s].push(t);
+(SEED_TO_TIMERS_CACHE[s]??=[]).push(t);
 }
 }
 function timerToR1R3(timer){
@@ -65,90 +178,78 @@ const seenLocations={};
 const outputOrder=[];
 ensureSeedTimerCache();
 const timers=SEED_TO_TIMERS_CACHE[seed]||[];
-for(const timer of timers){
-const{r1,r3}=timerToR1R3(timer);
-const locToBq={};
-for(let baseQ=2;baseQ<=248;baseQ++){
-const finalQ=calcFinalQuality(baseQ,r1);
-if(finalQ<fqMin||finalQ>fqMax)continue;
-const locMax=getLocationMax(finalQ);
-const calcLoc=(r3%locMax)+1;
-if(!locToBq[calcLoc])locToBq[calcLoc]=new Set();
-locToBq[calcLoc].add(baseQ);
-}
-for(const loc of Object.keys(locToBq).map(Number)){
-let minBq=255;
-for(const bq of locToBq[loc]){
-if(bq<minBq)minBq=bq;
-}
+const addLoc=(timer,loc,bqs)=>{
 if(!seenLocations[loc]){
+const minBq=Math.min(...bqs);
 seenLocations[loc]=new Set();
 outputOrder.push({timer,location:loc,minBq});
 }
-for(const bq of locToBq[loc]){
-seenLocations[loc].add(bq);
+for(const bq of bqs)seenLocations[loc].add(bq);
+};
+const scan=getBaseQScanRange(fqMin,fqMax);
+for(const timer of timers){
+const{r1,r3}=timerToR1R3(timer);
+const locToBq={};
+for(let baseQ=scan.lo;baseQ<=scan.hi;baseQ++){
+const finalQ=calcFinalQualityValid(baseQ,r1);
+if(finalQ<fqMin||finalQ>fqMax)continue;
+const locMax=getLocationMax(finalQ);
+const calcLoc=(r3%locMax)+1;
+(locToBq[calcLoc]??=[]).push(baseQ);
 }
+for(const loc in locToBq)addLoc(timer,+loc,locToBq[loc]);
 }
-}
-if(rStr==="02"&&seed===0x0032){
-if(2>=fqMin&&2<=fqMax){
-if(!seenLocations[5]){
-seenLocations[5]=new Set();
-outputOrder.push({timer:"Quest 015",location:5,minBq:2});
-}
-seenLocations[5].add(2);
-}
-}
+const q15=QUEST015_EXC;
+if(seed===q15.seed&&q15.fq>=fqMin&&q15.fq<=fqMax)addLoc(QUEST015,q15.loc,[q15.bqFill]);
 outputOrder.sort((a,b)=>{
-if(a.timer==="Quest 015")return 1;
-if(b.timer==="Quest 015")return-1;
+if(a.timer===QUEST015)return 1;
+if(b.timer===QUEST015)return-1;
 if(a.timer!==b.timer)return a.timer-b.timer;
 return a.minBq-b.minBq;
 });
 return{outputOrder,seenLocations};
 }
 let _cachedLocData=null;
-function checkUltimateCondsMatch(engine,seed,targetRankKey,conds,searchFilterLoc){
+let _cachedLocSeed=null;
+let _cachedLocRankKey=null;
+function resetLocationCache(){
 _cachedLocData=null;
-if(!checkBasicConds(engine,conds))return false;
-if(!checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey,true).match)return false;
-return true;
+_cachedLocSeed=null;
+_cachedLocRankKey=null;
 }
-function ChestHtml(engine,conds){
-if(!conds.hasBoxCond)return{isMatch:true,html:""};
-let boxStr=[];
-for(let r=10;r>=1;r--){
-if(conds.reqBox[r]>0){
-if(engine._details2[r-1]!==conds.reqBox[r])return{isMatch:false,html:""};
-boxStr.push(`${CHEST_RANK[r]}${conds.reqBox[r]}`);
-}
-}return{
-isMatch:true,
-html:`<span style="color:#ffcc00;font-size:11px;background:#420;padding:2px 4px;border-radius:3px;">${boxStr.join(' ')}</span>`
-};
-}
-function LocaHtmlFromData(locData,conds){
-if(!locData||locData.outputOrder.length===0)return"";
-let targetLocNum=conds.location?parseInt(conds.location,16):null;
-let targetBqNum=conds.bq?parseInt(conds.bq):null;
-let matchedLocs=[];
-for(let locObj of locData.outputOrder){
-let locNum=locObj.location;
-let isMatch=true;
-if(targetLocNum!==null&&locNum!==targetLocNum)isMatch=false;
-if(targetBqNum!==null&&!locData.seenLocations[locNum].has(targetBqNum))isMatch=false;
-if(isMatch){matchedLocs.push(hex2(locNum));}
-}
-if(matchedLocs.length>0){
-return`<span style="margin-left:4px;color:#ccc;font-size:10px;background:#222;padding:1px 4px;border-radius:3px;">${matchedLocs.join(' / ')}</span>`;
-}
-return"";
-}
-function getLocHtmlCached(seed,targetRankKey,conds){
-if(!_cachedLocData&&seed<=0x7FFF&&targetRankKey!==null){
+function getLocDataCached(seed,targetRankKey){
+if(!Number.isInteger(seed)||seed<0||seed>0x7FFF||targetRankKey==null)return null;
+if(!_cachedLocData||_cachedLocSeed!==seed||_cachedLocRankKey!==targetRankKey){
 _cachedLocData=calcLocations(seed,targetRankKey);
+_cachedLocSeed=seed;
+_cachedLocRankKey=targetRankKey;
 }
-return _cachedLocData?LocaHtmlFromData(_cachedLocData,conds):"";
+return _cachedLocData;
+}
+function peekLocDataCached(seed,targetRankKey){
+return _cachedLocData&&_cachedLocSeed===seed&&_cachedLocRankKey===targetRankKey
+?_cachedLocData:null;
+}
+function matchesLocationBQ(locData,locNum,targetLocNum,targetBqNum){
+const bqs=locData&&locData.seenLocations[locNum];
+return!!bqs
+&&(targetLocNum===null||locNum===targetLocNum)
+&&(targetBqNum===null||bqs.has(targetBqNum));
+}
+function hex2(n){return n.toString(16).toUpperCase().padStart(2,'0');}
+function hex4(n){return n.toString(16).toUpperCase().padStart(4,'0');}
+function dispName(eng){return DISPLAY_LANG!=='EN'?eng.mapNameJP:eng.mapName;}
+function dispBoss(eng){return DISPLAY_LANG!=='EN'?eng.bossNameJP:eng.bossName;}
+function buildOnlyMonExpectedStr(conds){
+if(!conds?.onlyMon)return'';
+let targetJpName=conds.onlyMon;
+for(let id in MONSTER_DB){
+if(MONSTER_DB[id].en===conds.onlyMon){targetJpName=MONSTER_DB[id].jp;break;}
+}
+return(DISPLAY_LANG!=='EN'?targetJpName:conds.onlyMon)+(DISPLAY_LANG!=='EN'?"オンリー":" only");
+}
+function resolveRankKey(rStr,rankNum){
+return RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:((rankNum!==undefined&&RANKS[rankNum])?rankNum:null));
 }
 function checkBasicConds(searchEngine,conds){
 if(conds.prefix&&searchEngine._details[5]!=conds.prefix)return false;
@@ -162,21 +263,77 @@ if(conds.boss&&searchEngine._details[0]!=conds.boss)return false;
 return true;
 }
 function checkOnlyMonPossible(searchEngine,conds){
-if(!conds.onlyMon)return true;
+if(!conds?.onlyMon)return true;
 let baseMR=searchEngine.monsterRank;
 let maxFloorMR=Math.min(12,baseMR+Math.floor((searchEngine.floorCount-1)/4));
 let envMonsters=ONLY_MONSTERS[searchEngine._details[3]];
 if(envMonsters){
 for(let fMR=baseMR;fMR<=maxFloorMR;fMR++){
 let mId=envMonsters[fMR];
-if(mId&&MONSTER_DB[mId]&&MONSTER_DB[mId].en===conds.onlyMon)return true;
+if(mId&&MONSTER_DB[mId]?.en===conds.onlyMon)return true;
 }
 }
 return false;
 }
+function checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey,applyBqCount){
+const filters=getLocationBQFilters(conds);
+if(!filters.valid)return{match:false};
+const targetLocNum=filters.location;
+const targetBqNum=filters.baseQ;
+const bqCountFilter=applyBqCount?(conds.bqCount||""):"";
+if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc&&!bqCountFilter)return{match:true};
+if(seed>0x7FFF||targetRankKey==null)return{match:false};
+const locData=getLocDataCached(seed,targetRankKey);
+if(!locData||locData.outputOrder.length===0)return{match:false};
+if(targetLocNum!==null||targetBqNum!==null){
+let targetFound=false;
+for(const locObj of locData.outputOrder){
+if(matchesLocationBQ(locData,locObj.location,targetLocNum,targetBqNum)){
+targetFound=true;
+break;
+}
+}
+if(!targetFound)return{match:false};
+}
+if(bqCountFilter==="1"){
+let allBqs=new Set();
+for(let loc in locData.seenLocations){
+for(let bq of locData.seenLocations[loc])allBqs.add(bq);
+}
+if(allBqs.size!==1)return{match:false};
+}else if(bqCountFilter==="D"){
+for(let loc in locData.seenLocations){
+for(let bq of locData.seenLocations[loc])if(bq<BQ_D_MIN)return{match:false};
+}
+}else if(bqCountFilter==="Dp"){
+let found=false;
+for(let loc in locData.seenLocations){
+let all=true;
+for(let bq of locData.seenLocations[loc])if(bq<BQ_D_MIN){all=false;break;}
+if(all){found=true;break;}
+}
+if(!found)return{match:false};
+}else if(bqCountFilter==="1p"){
+let found=false;
+for(let loc in locData.seenLocations){
+if(locData.seenLocations[loc].size===1){found=true;break;}
+}
+if(!found)return{match:false};
+}
+return{match:true};
+}
+function checkUltimateCondsMatch(engine,seed,targetRankKey,conds,searchFilterLoc){
+resetLocationCache();
+if(!checkBasicConds(engine,conds))return false;
+if(!checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey,true).match)return false;
+return true;
+}
+function makeDBadge(dValue){
+return dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;">${dValue}</span>`:'';
+}
 function getElistMonsterBadge(envType,floorMR,targetCount,onlyMonNameStr){
 let result={badge:'',isCombinedHit:false};
-let spawnDb=SPAWN_DB[envType][floorMR];
+let spawnDb=SPAWN_DB[envType]?.[floorMR];
 if(!spawnDb)return result;
 let survivingNames=[];
 let survivingNamesEn=[];
@@ -214,9 +371,6 @@ else if(elistCond==='SIZE_15'&&searchEngine.di[f][2]===15)isElistHit=true;
 }
 return{targetCount,isElistHit};
 }
-function makeDBadge(dValue){
-return dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;">${dValue}</span>`:'';
-}
 function checkElistAndD(searchEngine,conds,searchOnlyWithD,_onlyMonExpectedStr){
 let result={match:true,specialHitDetails:[],jumpToFloor:-1,hasMatchedD:false};
 if(!(conds.elist||conds.onlyMon||searchOnlyWithD))return result;
@@ -228,10 +382,10 @@ if(isCombinedSearch){
 elistMatched=false;
 onlyMatched=false;
 }
-let specialFloorCount=0,currentMapSpecials=[];
+let specialFloorCount=0;
+const currentMapSpecials=[];
 const envType=searchEngine._details[3];
 const baseMR=searchEngine._details[2];
-const isJP=(DISPLAY_LANG!=='EN');
 for(let f=0;f<searchEngine.floorCount;f++){
 let info=getFloorElistInfo(searchEngine,f);
 if(!info.state)continue;
@@ -249,9 +403,8 @@ monBadge=badgeData.badge;
 isCombinedMatchedThisFloor=badgeData.isCombinedHit;
 }
 specialFloorCount++;
-let dBadge=makeDBadge(info.dValue);
-let displayText=`B${f+1}F: ${info.state}${dBadge}${monBadge}`;
-currentMapSpecials.push({f,state:info.state,dValue:info.dValue,monBadge});
+let displayText=`B${f + 1}F: ${info.state}${makeDBadge(info.dValue)}${monBadge}`;
+currentMapSpecials.push({f,dValue:info.dValue,text:displayText});
 if(isCombinedSearch){
 if(isCombinedMatchedThisFloor){
 if(info.dValue>0)result.hasMatchedD=true;
@@ -285,9 +438,7 @@ if(conds.elist==='MULTI_SPECIAL'){
 if(specialFloorCount>=2){
 elistMatched=true;
 currentMapSpecials.forEach(s=>{
-let dBadge=makeDBadge(s.dValue);
-let text=`B${s.f+1}F: ${s.state}${dBadge}${s.monBadge}`;
-if(!result.specialHitDetails.includes(text))result.specialHitDetails.push(text);
+if(!result.specialHitDetails.includes(s.text))result.specialHitDetails.push(s.text);
 if(s.dValue>0)result.hasMatchedD=true;
 });
 if(result.jumpToFloor===-1&&currentMapSpecials.length>0)result.jumpToFloor=currentMapSpecials[0].f;
@@ -302,103 +453,71 @@ if(!result.hasMatchedD)result.match=false;
 }
 return result;
 }
-function checkLocationBQ(seed,conds,searchFilterLoc,targetRankKey,applyBqCount){
-let targetLocNum=conds.location?parseInt(conds.location,16):null;
-let targetBqNum=conds.bq?parseInt(conds.bq):null;
-const bqCountFilter=applyBqCount?(conds.bqCount||""):"";
-if(targetLocNum===null&&targetBqNum===null&&!searchFilterLoc&&!bqCountFilter)return{match:true};
-if(seed>0x7FFF||targetRankKey===null)return{match:false};
-_cachedLocData=calcLocations(seed,targetRankKey);
-let locData=_cachedLocData;
-if(locData.outputOrder.length===0)return{match:false};
-if(targetLocNum!==null){
-if(!locData.seenLocations[targetLocNum])return{match:false};
-if(targetBqNum!==null&&!locData.seenLocations[targetLocNum].has(targetBqNum))return{match:false};
-}else if(targetBqNum!==null){
-let bqFound=false;
-for(let loc in locData.seenLocations){if(locData.seenLocations[loc].has(targetBqNum)){bqFound=true;break;}}
-if(!bqFound)return{match:false};
-}
-if(bqCountFilter==="1"){
-let allBqs=new Set();
-for(let loc in locData.seenLocations){
-for(let bq of locData.seenLocations[loc])allBqs.add(bq);
-}
-if(allBqs.size!==1)return{match:false};
-}else if(bqCountFilter==="1p"){
-let found=false;
-for(let loc in locData.seenLocations){
-if(locData.seenLocations[loc].size===1){found=true;break;}
-}
-if(!found)return{match:false};
-}
-return{match:true};
-}
+const _ANOM_RULE={
+chest:s=>[s.first.chest!==-1,s.first.chest],
+nochest:s=>[s.first.nochest!==-1,s.first.nochest],
+chamber:s=>[s.first.chamber!==-1,s.first.chamber],
+stair:s=>[s.first.stair!==-1,s.first.stair],
+ghost:s=>[s.first.ghost!==-1,s.first.ghost],
+all_invalid:s=>[s.first.allInvalid!==-1,s.first.allInvalid],
+multi_region:s=>[s.first.multiRegion!==-1,s.first.multiRegion],
+multi_chamber:s=>[s.chamberFloors>=2,s.first.chamber],
+chest_chamber:s=>[s.combo,s.first.chest!==-1?s.first.chest:s.first.chamber]
+};
 function checkAnomalies(searchEngine,conds){
 let result={match:true,anomalyDetails:[],jumpToFloor:-1};
 if(conds.anomaly==="")return result;
-let hasAnyChestAnomaly=false,hasAnyCorridorAnomaly=false,hasAnyStairAnomaly=false;
-let hasAnyNoChestAnomaly=false,hasAnyMultiRegionAnomaly=false,hasAnyChestCorridorCombo=false;
-let hasAnyGhostAnomaly=false,hasAnyAllInvalidAnomaly=false,corridorFloorCount=0;
-let firstChestFloor=-1,firstCorridorFloor=-1,firstStairFloor=-1;
-let firstNoChestFloor=-1,firstMultiRegionFloor=-1,firstGhostFloor=-1,firstAllInvalidFloor=-1;
+const first={chest:-1,nochest:-1,chamber:-1,stair:-1,ghost:-1,allInvalid:-1,multiRegion:-1};
+const mark=(k,f)=>{if(first[k]===-1)first[k]=f;};
+let combo=false,chamberFloors=0;
 for(let f=0;f<searchEngine.floorCount;f++){
 if(conds.anomaly==='all_invalid'){
-if(searchEngine.isStairOverflow[f]){hasAnyAllInvalidAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#cc0000;padding:1px 4px;border-radius:3px;border:1px solid #f44;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_2}</span>`);if(firstAllInvalidFloor===-1)firstAllInvalidFloor=f;}
+if(searchEngine.isStairOverflow[f]){
+result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#c00;padding:1px 4px;border-radius:3px;border:1px solid #f44;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f + 1}F ${TKB3_2}</span>`);
+mark('allInvalid',f);
+}
 continue;
 }
 if(conds.anomaly==='ghost'){
-const di=searchEngine.di[f];const W=di[2],H=di[3];
-const upX=di[4],upY=di[5],downX=di[6],downY=di[7];
 const gs=[];
-for(let y=0;y<H;y++){const yOfs=(y<<4)+792;for(let x=0;x<W;x++){const t=di[yOfs+x];if(t===4||t===5){if(!((x===upX&&y===upY)||(x===downX&&y===downY)))gs.push(`(${x},${y})`);}}}
-if(gs.length>0){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#555577;padding:1px 4px;border-radius:3px;border:1px solid #8888aa;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${gs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
+scanGhostStairs(searchEngine.di[f],gs);
+if(gs.length>0){
+result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#557;padding:1px 4px;border-radius:3px;border:1px solid #88a;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f + 1}F ${TKB3_1}: ${gs.join(', ')}</span>`);
+mark('ghost',f);
+}
 continue;
 }
-const needsIso=conds.anomaly==='corridor'||conds.anomaly==='multi_corridor'||conds.anomaly==='multi_region'||conds.anomaly==='chest_corridor';
+const needsIso=conds.anomaly==='chamber'||conds.anomaly==='multi_chamber'||conds.anomaly==='multi_region'||conds.anomaly==='chest_chamber';
 let anom=getFloorAnomalies(searchEngine,f,false,!needsIso);
-if(anom.isAllInvalidStair){hasAnyAllInvalidAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#cc0000;padding:1px 4px;border-radius:3px;border:1px solid #f44;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_2}</span>`);if(firstAllInvalidFloor===-1)firstAllInvalidFloor=f;}
-if(anom.hasInaccessibleStair){hasAnyStairAnomaly=true;result.anomalyDetails.push(`<span style="color:#ff0000;font-size:11px;font-weight:bold;background:#550000;padding:1px 4px;border-radius:3px;">B${f+1}F ${TKB3_0}</span>`);if(firstStairFloor===-1)firstStairFloor=f;}
-if(anom.hasInaccessibleChest){hasAnyChestAnomaly=true;if(anom.totalChests===1){hasAnyNoChestAnomaly=true;result.anomalyDetails.push(`<span style="color:#0ff;font-size:11px;font-weight:bold;background:#004466;padding:1px 4px;border-radius:3px;border:1px solid #08a;">B${f+1}F ${TKB1_3}</span>`);if(firstNoChestFloor===-1)firstNoChestFloor=f;}else{result.anomalyDetails.push(`<span style="color:#ff69b4;font-size:11px;font-weight:bold;">B${f+1}F ${TKB1_1}</span>`);}if(firstChestFloor===-1)firstChestFloor=f;}
-if(anom.hasIsolatedCorridor){hasAnyCorridorAnomaly=true;corridorFloorCount++;if(anom.isolatedRegions.length>=2){hasAnyMultiRegionAnomaly=true;if(firstMultiRegionFloor===-1)firstMultiRegionFloor=f;}let countBadges=anom.isolatedRegions.map(size=>`<span style="background:#ff6ec7;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;margin-left:4px;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">${size}</span>`).join('');result.anomalyDetails.push(`<span style="color:#fa0;font-size:11px;">B${f+1}F ${TKB2_1} ${countBadges}</span>`);if(firstCorridorFloor===-1)firstCorridorFloor=f;}
-if(anom.hasGhostStair){hasAnyGhostAnomaly=true;result.anomalyDetails.push(`<span style="color:#fff;font-size:11px;font-weight:bold;background:#555577;padding:1px 4px;border-radius:3px;border:1px solid #8888aa;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">B${f+1}F ${TKB3_1}: ${anom.GhostStairs.join(', ')}</span>`);if(firstGhostFloor===-1)firstGhostFloor=f;}
-if(anom.hasInaccessibleChest&&anom.hasIsolatedCorridor)hasAnyChestCorridorCombo=true;
+if(anom.hasInaccessibleStair){
+result.anomalyDetails.push(`<span style="color:#ff0000;font-size:11px;font-weight:bold;background:#550000;padding:1px 4px;border-radius:3px;">B${f + 1}F ${TKB3_0}</span>`);
+mark('stair',f);
 }
-if(conds.anomaly==='chest'&&!hasAnyChestAnomaly)result.match=false;
-else if(conds.anomaly==='nochest'&&!hasAnyNoChestAnomaly)result.match=false;
-else if(conds.anomaly==='corridor'&&!hasAnyCorridorAnomaly)result.match=false;
-else if(conds.anomaly==='stair'&&!hasAnyStairAnomaly)result.match=false;
-else if(conds.anomaly==='ghost'&&!hasAnyGhostAnomaly)result.match=false;
-else if(conds.anomaly==='all_invalid'&&!hasAnyAllInvalidAnomaly)result.match=false;
-else if(conds.anomaly==='chest_corridor'&&!hasAnyChestCorridorCombo)result.match=false;
-else if(conds.anomaly==='multi_corridor'&&corridorFloorCount<2)result.match=false;
-else if(conds.anomaly==='multi_region'&&!hasAnyMultiRegionAnomaly)result.match=false;
-if(result.match){
-if(conds.anomaly==='chest')result.jumpToFloor=firstChestFloor;
-else if(conds.anomaly==='nochest')result.jumpToFloor=firstNoChestFloor;
-else if(conds.anomaly==='corridor'||conds.anomaly==='multi_corridor')result.jumpToFloor=firstCorridorFloor;
-else if(conds.anomaly==='multi_region')result.jumpToFloor=firstMultiRegionFloor;
-else if(conds.anomaly==='stair')result.jumpToFloor=firstStairFloor;
-else if(conds.anomaly==='ghost')result.jumpToFloor=firstGhostFloor;
-else if(conds.anomaly==='all_invalid')result.jumpToFloor=firstAllInvalidFloor;
-else if(conds.anomaly==='chest_corridor')result.jumpToFloor=(firstChestFloor!==-1)?firstChestFloor:firstCorridorFloor;
+if(anom.hasInaccessibleChest){
+if(anom.totalChests===1){
+result.anomalyDetails.push(`<span style="color:#0ff;font-size:11px;font-weight:bold;background:#004466;padding:1px 4px;border-radius:3px;border:1px solid #08a;">B${f + 1}F ${TKB1_3}</span>`);
+mark('nochest',f);
+}else{
+result.anomalyDetails.push(`<span style="color:#ff69b4;font-size:11px;font-weight:bold;">B${f + 1}F ${TKB1_1}</span>`);
+}
+mark('chest',f);
+}
+if(anom.hasChamber){
+chamberFloors++;
+if(anom.isolatedRegions.length>=2)mark('multiRegion',f);
+let countBadges=anom.isolatedRegions.map(size=>`<span style="background:#ff6ec7;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;margin-left:4px;box-shadow:1px 1px 2px rgba(0,0,0,0.5);">${size}</span>`).join('');
+result.anomalyDetails.push(`<span style="color:#fa0;font-size:11px;">B${f + 1}F ${TKB2_1} ${countBadges}</span>`);
+mark('chamber',f);
+}
+if(anom.hasInaccessibleChest&&anom.hasChamber)combo=true;
+}
+const rule=_ANOM_RULE[conds.anomaly];
+if(rule){
+const[ok,jump]=rule({first,chamberFloors,combo});
+if(ok)result.jumpToFloor=jump;
+else result.match=false;
 }
 return result;
-}
-function hex2(n){return n.toString(16).toUpperCase().padStart(2,'0');}
-function hex4(n){return n.toString(16).toUpperCase().padStart(4,'0');}
-function dispName(eng){return DISPLAY_LANG!=='EN'?eng.mapNameJP:eng.mapName;}
-function dispBoss(eng){return DISPLAY_LANG!=='EN'?eng.bossNameJP:eng.bossName;}
-function buildOnlyMonExpectedStr(conds){
-if(!conds.onlyMon)return'';
-let targetJpName=conds.onlyMon;
-for(let id in MONSTER_DB){
-if(MONSTER_DB[id].en===conds.onlyMon){targetJpName=MONSTER_DB[id].jp;break;}
-}
-return(DISPLAY_LANG!=='EN'?targetJpName:conds.onlyMon)+(DISPLAY_LANG!=='EN'?"オンリー":" only");
-}
-function resolveRankKey(rStr,rankNum){
-return RANKS[rStr]?rStr:(RANKS["0x"+rStr]?"0x"+rStr:((rankNum!==undefined&&RANKS[rankNum])?rankNum:null));
 }
 function rankCanDropInMRRange(r,numMin,numMax){
 for(let num=numMin;num<=numMax;num++){
@@ -410,59 +529,35 @@ return false;
 }
 function getRankSMRInfo(rank,conds){
 let rStr=hex2(rank);
-if(conds&&conds.bq){
-let baseQ=parseInt(conds.bq);
-let modulo=Math.floor(baseQ/10)*2+1;
-let minOffset=Math.trunc(0-baseQ/10);
-let maxOffset=Math.trunc((modulo-1)-baseQ/10);
-let minFinalQ=Math.max(2,baseQ+minOffset);
-let maxFinalQ=Math.min(248,baseQ+maxOffset);
-let rankInfo=RANKS[rStr];
+if(conds&&hasConditionValue(conds.bq)){
+const bounds=getFinalQualityBounds(conds.bq);
+if(!bounds)return null;
+const{minFinalQ,maxFinalQ}=bounds;
+const rankInfo=RANKS[rStr];
 if(rankInfo&&(maxFinalQ<rankInfo.fqMin||minFinalQ>rankInfo.fqMax))return null;
 }
-let minSMR=1,maxSMR=9;
-for(let i=0;i<8;i++){
-if(rank>=TableC[i*4]&&rank<=TableC[i*4+1]){
-minSMR=TableC[i*4+2];
-maxSMR=TableC[i*4+3];
-break;
-}
-}
-if(conds&&conds.monster){
+const[minSMR,maxSMR]=row4(TableC,8,rank,[1,9]);
+if(conds?.monster){
 let targetSMR=parseInt(conds.monster);
 if(targetSMR<minSMR||targetSMR>maxSMR)return null;
 }
-let floorLo=2,floorHi=16;
-for(let i=0;i<9;i++){
-if(rank>=TableB[i*4]&&rank<=TableB[i*4+1]){
-floorLo=TableB[i*4+2];
-floorHi=TableB[i*4+3];
-break;
-}
-}
+const[floorLo,floorHi]=row4(TableB,9,rank,[2,16]);
 let maxFloorCount=floorHi;
-if(conds&&conds.depth){
+if(conds?.depth){
 let d=parseInt(conds.depth);
 if(d<floorLo||d>floorHi)return null;
 maxFloorCount=d;
 }
-if(conds&&conds.depth2){
+if(conds?.depth2){
 let d2=parseInt(conds.depth2);
 if(d2>floorHi)return null;
 }
-let minBoss=1,maxBoss=12;
-for(let i=0;i<9;i++){
-if(rank>=TableD[i*4]&&rank<=TableD[i*4+1]){
-minBoss=TableD[i*4+2];
-maxBoss=TableD[i*4+3];
-break;
-}
-}
-if(conds&&conds.boss){
+const[minBoss,maxBoss]=row4(TableD,9,rank,[1,12]);
+if(conds?.boss){
 let b=parseInt(conds.boss);
 if(b<minBoss||b>maxBoss)return null;
 }
-if(conds&&conds.lv){
+if(conds?.lv){
 const clampLv=v=>v<1?1:v>99?99:v;
 let dLo=conds.depth?parseInt(conds.depth):floorLo;
 let dHi=conds.depth?parseInt(conds.depth):floorHi;
@@ -475,43 +570,35 @@ let lvHi=clampLv((bHi+dHi+sHi-4)*3+5);
 let L=parseInt(conds.lv);
 if(L<lvLo||L>lvHi)return null;
 }
-return{minSMR,maxSMR,maxFloorCount};
+return{minSMR,maxSMR,maxFloorCount,minBoss,maxBoss};
 }
 function sharedRankFilter(ranksToSearch,conds,isBugSearch=false){
-if(!conds.onlyMon&&!conds.monster&&!conds.bq&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix&&!conds.lv&&!conds.depth&&!conds.depth2&&!conds.boss){
+if(!getLocationBQFilters(conds).valid)return[];
+if(conds.bqCount){
+ranksToSearch=ranksToSearch.filter(rank=>isBqCountRankPossible(rank,conds.bqCount));
+}
+if(!conds.onlyMon&&!conds.monster&&!hasConditionValue(conds.bq)&&!conds.hasBoxCond&&!conds.prefix&&!conds.suffix&&!conds.lv&&!conds.depth&&!conds.depth2&&!conds.boss){
 return ranksToSearch;
 }
 return ranksToSearch.filter(rank=>{
 const info=getRankSMRInfo(rank,conds);
 if(!info)return false;
-const{minSMR,maxSMR,maxFloorCount}=info;
+const{minSMR,maxSMR,maxFloorCount,minBoss,maxBoss}=info;
 if(conds.prefix){
 const p=parseInt(conds.prefix);
 let ok=false;
 for(let smr=minSMR;smr<=maxSMR&&!ok;smr++){
-for(let j=0;j<5;j++){
-if(smr>=TableH[j*4]&&smr<=TableH[j*4+1]){
-if(p>=TableH[j*4+2]&&p<=TableH[j*4+3])ok=true;
-break;
-}
-}
+const[pLo,pHi]=row4(TableH,5,smr,NO_ROW);
+if(p>=pLo&&p<=pHi)ok=true;
 }
 if(!ok)return false;
 }
 if(conds.suffix){
 const sf=parseInt(conds.suffix);
 let ok=false;
-for(let i=0;i<9&&!ok;i++){
-if(rank>=TableD[i*4]&&rank<=TableD[i*4+1]){
-for(let b=TableD[i*4+2];b<=TableD[i*4+3]&&!ok;b++){
-for(let j=0;j<4;j++){
-if(b>=TableI[j*4]&&b<=TableI[j*4+1]){
-if(sf>=TableI[j*4+2]&&sf<=TableI[j*4+3])ok=true;
-break;
-}
-}
-}
-}
+for(let b=minBoss;b<=maxBoss&&!ok;b++){
+const[sLo,sHi]=row4(TableI,4,b,NO_ROW);
+if(sf>=sLo&&sf<=sHi)ok=true;
 }
 if(!ok)return false;
 }
@@ -529,7 +616,7 @@ for(let env=1;env<=5;env++){
 if(targetEnv&&env!==targetEnv)continue;
 for(let fMR=1;fMR<=12;fMR++){
 let mId=ONLY_MONSTERS[env][fMR];
-if(mId&&MONSTER_DB[mId]&&MONSTER_DB[mId].en===conds.onlyMon){
+if(mId&&MONSTER_DB[mId]?.en===conds.onlyMon){
 let smrStart=conds.monster?parseInt(conds.monster):minSMR;
 let smrEnd=conds.monster?parseInt(conds.monster):maxSMR;
 for(let smr=smrStart;smr<=smrEnd;smr++){
@@ -570,7 +657,7 @@ const{minSMR,maxSMR,maxFloorCount}=info;
 if(!chestRankGroups||chestRankGroups.length===0)return true;
 let minOffset=0;
 let maxOffset=Math.floor((maxFloorCount-1)/4);
-if(targetFloorOffset!==undefined&&targetFloorOffset!==null){
+if(targetFloorOffset!=null){
 let requiredFloors=(targetFloorOffset*4)+1;
 if(maxFloorCount<requiredFloors)return false;
 minOffset=targetFloorOffset;
@@ -638,7 +725,7 @@ else formattedVals.push(`<span style="color:#666;">${v}</span>`);
 }
 return formattedVals.join(', ');
 }
-function _scanPattern(seed,maxSteps,threshold,pType,minStart,popIndex){
+function scanSeedForAtPattern(seed,maxSteps,threshold,pType,minStart,popIndex){
 const valsBuffer=new Int32Array(10);
 let rng=seed,historyBits=0,validCount=0;
 let foundOffsets=[];
@@ -667,33 +754,69 @@ historyBits=0;validCount=0;
 }
 return{foundOffsets,popValue,defValue};
 }
-function _buildOffsetsHtml(foundOffsets){
+function LocaHtmlFromData(locData,conds){
+if(!locData||locData.outputOrder.length===0)return"";
+const filters=getLocationBQFilters(conds);
+if(!filters.valid)return"";
+const matchedLocs=[];
+for(const locObj of locData.outputOrder){
+const locNum=locObj.location;
+if(matchesLocationBQ(locData,locNum,filters.location,filters.baseQ)){
+matchedLocs.push(hex2(locNum));
+}
+}
+if(matchedLocs.length>0){
+return`<span style="margin-left:4px;color:#ccc;font-size:10px;background:#222;padding:1px 4px;border-radius:3px;">${matchedLocs.join(' / ')}</span>`;
+}
+return"";
+}
+function getLocHtmlCached(seed,targetRankKey,conds){
+const locData=getLocDataCached(seed,targetRankKey);
+return locData?LocaHtmlFromData(locData,conds):"";
+}
+function ChestHtml(engine,conds){
+if(!conds.hasBoxCond)return{isMatch:true,html:""};
+let boxStr=[];
+for(let r=10;r>=1;r--){
+if(conds.reqBox[r]>0){
+if(engine._details2[r-1]!==conds.reqBox[r])return{isMatch:false,html:""};
+boxStr.push(`${CHEST_RANK[r]}${conds.reqBox[r]}`);
+}
+}return{
+isMatch:true,
+html:`<span style="color:#fc0;font-size:11px;background:#420;padding:2px 4px;border-radius:3px;">${boxStr.join(' ')}</span>`
+};
+}
+const fmtStep=v=>Number.isInteger(v)?''+v:v.toFixed(1);
+const fmtStepD=v=>v==null?'—':fmtStep(v);
+const minAstar=arr=>{const m=Math.min(...arr.map(v=>v==null?Infinity:v));return m===Infinity?null:m;};
+function buildSearchDetailHtml(specialHitDetails,anomalyDetails){
+return{
+specialHtml:specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s => `<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'',
+anomalyHtml:anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html => html.replace('<span style="', '<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'',
+};
+}
+function buildAtOffsetsHtml(foundOffsets){
 return foundOffsets.map(o=>`<span style="color:#0ff;font-size:12px;">AT +${o.start} <span style="color:#888;">[${o.valsHtml}]</span></span>`).join('<br>');
 }
-function _buildDiffsHtml(foundOffsets,N,deft){
+function buildBattleAtDiffsHtml(foundOffsets,N,deft){
 const lines=foundOffsets.map(o=>{
 const d1=o.start-(N+3),d2=o.start-(N+4),d4=o.start-(N+5);
 return`<span class="at-dynamic-battle" data-target="${o.start}" data-n="${N}" data-req="${deft}" style="font-size:11px;text-shadow:0 0 2px rgba(255,170,0,0.5);">${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}</span>`;
 }).join(`<br><span style="color:transparent;font-size:11px;">${BATTLE_LABEL} </span>`);
 return`<span style="color:#fa0;margin-left:12px;font-size:11px;">${BATTLE_LABEL} ${lines}</span>`;
 }
-function _buildATCard(seed,N,atN,atN1,diffsHtml){
+function buildAtInfoCardHtml(seed,N,atN,atN1,diffsHtml){
 const{deft,color:deftColor,label:deftLabel}=formatDeftness(atN1);
 return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px;padding:5px 8px;background:#0a1a1a;border:1px solid #055;border-radius:3px;">
-<span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]:</span><span class="at-m-atval">${atN}</span></span>
-<strong class="at-dynamic-mon"data-at="${atN}"style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
-<br><span class="at-m-deft"style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18}${deftLabel}</span>
-${diffsHtml}</div>`;
+    <span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]: </span><span class="at-m-atval">${atN}</span></span>
+    <strong class="at-dynamic-mon" data-at="${atN}" style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
+    <br><span class="at-m-deft" style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18} ${deftLabel}</span>
+    ${diffsHtml}</div>`;
 }
-function _buildPatternBox(patternName,probText,offsetsHtml){
+function buildAtPatternBoxHtml(patternName,probText,offsetsHtml){
 return`<div style="margin-top:4px;padding:4px 8px;background:#111;border:1px solid #333;border-radius:4px;">
-<span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName}(${probText})</span><br>${offsetsHtml}</div>`;
-}
-function buildSearchDetailHtml(specialHitDetails,anomalyDetails){
-return{
-specialHtml:specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(s => `<span style="color:#ffccff;font-size:11px">${s}</span>`).join('<br>')}</div>`:'',
-anomalyHtml:anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html => html.replace('<span style="', '<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'',
-};
+  <span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName} (${probText})</span><br>${offsetsHtml}</div>`;
 }
 function initItemI18n(){
 if(typeof TableR!=='undefined'){TableR.forEach(pair=>{i18nDict['I_'+pair[0]]=T(pair[0],pair[1],pair[1]);});}
@@ -707,18 +830,39 @@ ultimate:(engine,job)=>{
 engine.trackOverflow=(job.conds.anomaly==='all_invalid'||job.conds.anomaly==='ghost');
 job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
 },
+item:null,
 multibug:(engine,job)=>{
 job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
 },
+fastest:(engine,job)=>{
+engine.trackOverflow=(job.conds.anomaly==='all_invalid'||job.conds.anomaly==='ghost');
+engine._force_16_floors=(job.params.fastestMode==='maxtile');
+job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
+}
 };
+const meetsQuickloadBasicReq=(eng,p,conds)=>eng.floorCount>=(p.isB9F?9:3)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isB9F?2:0).length>0;
 const ITEM_BASIC_REQS={
 free:(eng,p,conds)=>eng.floorCount>=p.reqFloorCount,
-quickload:(eng,p,conds)=>eng.floorCount>=(p.isB9F?9:3)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isB9F?2:0).length>0,
-quickload9:(eng,p,conds)=>eng.floorCount>=(p.isB9F?9:3)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isB9F?2:0).length>0,
+quickload:meetsQuickloadBasicReq,
+quickload9:meetsQuickloadBasicReq,
 quickload9all:(eng,p,conds)=>eng.floorCount>=2&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],null).length>0,
 third:(eng,p,conds)=>eng.floorCount>=(p.isS3?14:4)&&filterMapRanksBySMRAndChest([eng.MapRank],conds,[p.chestRanks],p.isS3?3:0).length>0,
 jfire:(eng,p,conds)=>eng.monsterRank===9&&eng.floorCount>=9,
 tk:(eng,p,conds)=>eng.floorCount>=3,
+};
+const getQuickloadMark=(p)=>{
+const sec=(p.qlSec==null)?4:p.qlSec;
+return{sec,mk:sec===0?'⑤':'⑨',mkColor:sec===0?'#7fd4ff':'#b19cd9'};
+};
+const buildQuickloadResult=(eng,p,st)=>{
+if(st.useB10)return st.multi.length>0?{isHit:true,multi:st.multi}:{isHit:false};
+if(st.hitTypes.length===0)return{isHit:false};
+const res={isHit:true,jumpFloor:st.firstHitFloor,displayHtml:st.hitTypes.join('<br>')};
+if(st.astarBoxes){
+res.astar=calcSameFloorChestChainCost(eng,st.astarFloor,st.astarBoxes);
+if(st.astarBoxes.length>p.reqCount)res.astarX3=true;
+}
+return res;
 };
 const DUNGEON_CHECKERS={
 free:(eng,p)=>{
@@ -747,7 +891,7 @@ if(k.startsWith(`${f}_${b}_`)){isBoxUsed=true;break;}
 if(isBoxUsed)continue;
 hitFoundForGroup=true;
 usedHits.add(boxKey);
-gHtmlStr=`<span style="color:#ffd700;font-size:11px;">B${f+1}F ${CHEST_RANK[boxInfo.rank]}${b+1} (Any)</span>`;
+gHtmlStr=`<span style="color:#ffd700;font-size:11px;">B${f + 1}F ${CHEST_RANK[boxInfo.rank]}${b + 1} (Any)</span>`;
 break boxLoop;
 }
 let checkSecStart=g.timerVal===-1?0:g.timerVal-5;
@@ -764,7 +908,7 @@ hitFoundForGroup=true;
 usedHits.add(hitKey);
 let tDisp=s+5;
 let itemDisp=getDispItem(itemEN);
-gHtmlStr=`<span style="color:#ffd700;font-size:11px;">B${f+1}F ${CHEST_RANK[boxInfo.rank]}${b+1} (${tDisp}s): ${itemDisp}</span>`;
+gHtmlStr=`<span style="color:#ffd700;font-size:11px;">B${f + 1}F ${CHEST_RANK[boxInfo.rank]}${b + 1} (${tDisp}s): ${itemDisp}</span>`;
 break boxLoop;
 }
 }
@@ -798,10 +942,10 @@ firstHitFloor=f;
 if(p.wantAstar){astarFloor=f;astarBoxes=soloC>=p.reqCount?soloIdx:partyIdx;}
 }
 }
-let prefixStr=(p.isB9F&&!useB10)?'B9F ':`B${f+1}F `;
+let prefixStr=(p.isB9F&&!useB10)?'B9F ':`B${f + 1}F `;
 const fHits=[];
 if(soloC>=p.reqCount){
-fHits.push(`<span style="color:#ff99bb;font-size:11px">${prefixStr}${STR_SOLO} x${soloC}</span>`);
+fHits.push(`<span style="color:#f9b;font-size:11px">${prefixStr}${STR_SOLO} x${soloC}</span>`);
 }
 if(partyC>=p.reqCount){
 fHits.push(`<span style="color:#ffd700;font-size:11px">${prefixStr}${STR_PARTY} x${partyC}</span>`);
@@ -809,26 +953,13 @@ fHits.push(`<span style="color:#ffd700;font-size:11px">${prefixStr}${STR_PARTY} 
 hitTypes.push(...fHits);
 if(useB10&&fHits.length>0){
 const boxes=soloC>=p.reqCount?soloIdx:partyIdx;
-multi.push({floor:f,displayHtml:fHits.join('<br>'),astar:_uspChestChainCost(eng,f,boxes),isB10:f===9,isX3:boxes.length>p.reqCount});
+multi.push({floor:f,displayHtml:fHits.join('<br>'),astar:calcSameFloorChestChainCost(eng,f,boxes),isB10:f===9,isX3:boxes.length>p.reqCount});
 }
 }
-if(useB10){
-return multi.length>0?{isHit:true,multi}:{isHit:false};
-}
-if(hitTypes.length>0){
-const res={isHit:true,jumpFloor:firstHitFloor,displayHtml:hitTypes.join('<br>')};
-if(astarBoxes){
-res.astar=_uspChestChainCost(eng,astarFloor,astarBoxes);
-if(astarBoxes.length>p.reqCount)res.astarX3=true;
-}
-return res;
-}
-return{isHit:false};
+return buildQuickloadResult(eng,p,{useB10,multi,hitTypes,firstHitFloor,astarFloor,astarBoxes});
 },
 quickload9:(eng,p)=>{
-const sec=(p.qlSec==null)?4:p.qlSec;
-const mk=sec===0?'⑤':'⑨';
-const mkColor=sec===0?'#7fd4ff':'#b19cd9';
+const{sec,mk,mkColor}=getQuickloadMark(p);
 const checkSet=new Set(p.checkItems);
 let hitTypes=[];
 let firstHitFloor=-1;
@@ -850,30 +981,17 @@ firstHitFloor=f;
 if(p.wantAstar){astarFloor=f;astarBoxes=hitIdx;}
 }
 }
-let prefixStr=(p.isB9F&&!useB10)?'B9F ':`B${f+1}F `;
+let prefixStr=(p.isB9F&&!useB10)?'B9F ':`B${f + 1}F `;
 if(cnt>=p.reqCount){
 const line=`<span style="color:${mkColor};font-size:11px">${prefixStr}${mk} x${cnt}</span>`;
 hitTypes.push(line);
-if(useB10)multi.push({floor:f,displayHtml:line,astar:_uspChestChainCost(eng,f,hitIdx),isB10:f===9,isX3:hitIdx.length>p.reqCount});
+if(useB10)multi.push({floor:f,displayHtml:line,astar:calcSameFloorChestChainCost(eng,f,hitIdx),isB10:f===9,isX3:hitIdx.length>p.reqCount});
 }
 }
-if(useB10){
-return multi.length>0?{isHit:true,multi}:{isHit:false};
-}
-if(hitTypes.length>0){
-const res={isHit:true,jumpFloor:firstHitFloor,displayHtml:hitTypes.join('<br>')};
-if(astarBoxes){
-res.astar=_uspChestChainCost(eng,astarFloor,astarBoxes);
-if(astarBoxes.length>p.reqCount)res.astarX3=true;
-}
-return res;
-}
-return{isHit:false};
+return buildQuickloadResult(eng,p,{useB10,multi,hitTypes,firstHitFloor,astarFloor,astarBoxes});
 },
 quickload9all:(eng,p)=>{
-const sec=(p.qlSec==null)?4:p.qlSec;
-const mk=sec===0?'⑤':'⑨';
-const mkColor=sec===0?'#7fd4ff':'#b19cd9';
+const{sec,mk,mkColor}=getQuickloadMark(p);
 const checkSet=new Set(p.checkItems);
 const anchorSet=new Set(p.anchorFloors||[]);
 let anchorHit=false;
@@ -892,7 +1010,7 @@ if(isAnchor)anchorHit=true;
 const needAnchor=anchorSet.size>0;
 const oneOK=!p.needOneWith||hitFloors.some(h=>h.cnt>=p.needOneWith);
 if(hitFloors.length>=2&&(!needAnchor||anchorHit)&&oneOK){
-const parts=hitFloors.map(h=>`<span style="color:${mkColor};font-size:11px">B${h.f+1}F ${mk} x${h.cnt}</span>`);
+const parts=hitFloors.map(h=>`<span style="color:${mkColor};font-size:11px">B${h.f + 1}F ${mk} x${h.cnt}</span>`);
 return{isHit:true,jumpFloor:hitFloors[0].f,displayHtml:parts.join('<br>')};
 }
 return{isHit:false};
@@ -910,32 +1028,25 @@ let r2=CHEST_RANK[eng.getBoxInfo(f2,2).rank]||'?';
 if(p.checkItems.includes(p1)&&p.checkItems.includes(p2)){
 const res={
 isHit:true,jumpFloor:f1,
-displayHtml:`<span style="color:${p.colorStyle};font-size:11px">B${f1+1}F ${r1}3: ${getDispItem(p1)}<br>B${f2+1}F ${r2}3: ${getDispItem(p2)}</span>`
+displayHtml:`<span style="color:${p.colorStyle};font-size:11px">B${f1 + 1}F ${r1}3: ${getDispItem(p1)}<br>B${f2 + 1}F ${r2}3: ${getDispItem(p2)}</span>`
 };
 if(p.wantAstar){
 const d1=eng.di[f1],d2=eng.di[f2];
 const sumLegs=(...legs)=>legs.some(v=>v==null)?null:legs.reduce((a,b)=>a+b,0);
-let prefix=0;
-for(let f=0;f<f1;f++){
-const c=_uspFloorCost(eng,f);
-if(c==null){prefix=null;break;}
-prefix+=c;
-}
+const prefix=calcWalkCostUpToFloor(eng,f1);
 const forward=sumLegs(
 prefix,
-_uspPointCost(eng,f1,d1[4],d1[5],d1[17],d1[18]),
-_tkLegCost(eng,f1,d1[17],d1[18],f2,d2[17],d2[18])
+calcPointWalkCost(eng,f1,d1[4],d1[5],d1[17],d1[18]),
+calcCrossFloorLegCost(eng,f1,d1[17],d1[18],f2,d2[17],d2[18])
 );
 const reverse=sumLegs(
 prefix,
-_tkLegCost(eng,f1,d1[4],d1[5],f2,d2[17],d2[18]),
-_tkLegCost(eng,f2,d2[17],d2[18],f1,d1[17],d1[18])
+calcCrossFloorLegCost(eng,f1,d1[4],d1[5],f2,d2[17],d2[18]),
+calcCrossFloorLegCost(eng,f2,d2[17],d2[18],f1,d1[17],d1[18])
 );
 const vals=[forward,reverse];
-const mnV=Math.min(...vals.map(v=>v==null?Infinity:v));
-const fmt=v=>v==null?'—':(Number.isInteger(v)?v:v.toFixed(1));
-res.astar=mnV===Infinity?null:mnV;
-res.astarText=vals.map(fmt).join(' / ');
+res.astar=minAstar(vals);
+res.astarText=vals.map(fmtStepD).join(' / ');
 res.astarTitle=''+T('Forward / Reverse full A* route','順走 / 逆走完整 A* 路線','順走 / 逆走の完全 A* ルート');
 }
 return res;
@@ -947,7 +1058,6 @@ jfire:(eng,p)=>{
 const uniSec=(p.qlSec==null)?null:p.qlSec;
 const shift=uniSec==null?0:uniSec-2;
 const SOMA="Sainted soma",ELIXIR="Sage's elixir";
-const fmt=v=>v==null?'—':(Number.isInteger(v)?v:v.toFixed(1));
 const scanWp=(wpFloor,thirdFloors,chooseShortest)=>{
 if(wpFloor>=eng.floorCount)return null;
 const wpBoxCount=eng.getBoxCount(wpFloor);
@@ -963,10 +1073,10 @@ wpMet=true;
 if(s===SOMA)wpSoloIdx.push(b);
 if(pp===SOMA)wpPartyIdx.push(b);
 let t=uniSec!=null?`${uniSec + 5}s`:((s===pp)?STR_BOTH:(pp===SOMA?STR_PARTY:STR_SOLO));
-let color="#ff99d7";
+let color="#f9d";
 if(uniSec!=null)color=uniSec===0?'#7fd4ff':'#b19cd9';
 else if(t===STR_PARTY)color="#ffd700";
-wpHits.push(`<span style="color:${color};font-size:11px">B${wpFloor+1}F S${b+1}: ${getDispItem(SOMA)} (${t})</span>`);
+wpHits.push(`<span style="color:${color};font-size:11px">B${wpFloor + 1}F S${b + 1}: ${getDispItem(SOMA)} (${t})</span>`);
 }
 }
 const wpCases=()=>{
@@ -984,14 +1094,13 @@ for(const fIdx of thirdFloors){
 if(fIdx>=eng.floorCount||eng.getBoxCount(fIdx)<3||eng.getBoxInfo(fIdx,2).rank!==10)continue;
 const pItem=eng.getBoxItem(fIdx,2,2+shift)[0];
 if(pItem!==SOMA&&pItem!==ELIXIR)continue;
-const target={floor:fIdx,det:`B${fIdx+1}F S3: ${getDispItem(pItem)}`};
+const target={floor:fIdx,det:`B${fIdx + 1}F S3: ${getDispItem(pItem)}`};
 if(p.wantAstar){
 const d3=eng.di[fIdx];
 const tgt=[{g:fIdx,gx:d3[17],gy:d3[18]}];
-const vals=wpCases().map(bx=>_tkAstar(eng,wpFloor,bx,tgt));
-const mnV=Math.min(...vals.map(v=>v==null?Infinity:v));
-target.astar=mnV===Infinity?null:mnV;
-if(vals.length===2)target.astarText=`${fmt(vals[0])} / ${fmt(vals[1])}`;
+const vals=wpCases().map(bx=>calcCrossFloorChestRouteCost(eng,wpFloor,bx,tgt));
+target.astar=minAstar(vals);
+if(vals.length===2)target.astarText=`${fmtStepD(vals[0])} / ${fmtStepD(vals[1])}`;
 }
 targets.push(target);
 }
@@ -1040,10 +1149,10 @@ let t=uniSec!=null?`${uniSec + 5}s`:((wpSet.has(s)&&wpSet.has(pp))?STR_BOTH:(wpS
 let hitItem=wpSet.has(pp)?pp:s;
 let hitItemStr=getDispItem(hitItem);
 let rName=CHEST_RANK[eng.getBoxInfo(fIdx,b).rank]||'?';
-let color="#ff99bb";
+let color="#f9b";
 if(uniSec!=null)color=uniSec===0?'#7fd4ff':'#b19cd9';
 else if(t===STR_PARTY)color="#ffd700";
-wpHits.push(`<span style="color:${color};font-size:11px">B${fIdx+1}F ${rName}${b+1}: ${hitItemStr} (${t})</span>`);
+wpHits.push(`<span style="color:${color};font-size:11px">B${fIdx + 1}F ${rName}${b + 1}: ${hitItemStr} (${t})</span>`);
 wpMet=true;
 wpFloor=fIdx;
 if(wpSet.has(s))wpSoloIdx.push(b);
@@ -1082,13 +1191,9 @@ const res={isHit:true,jumpFloor:2,displayHtml:html,specialStyle:"1px solid #f66"
 if(p.wantAstar){
 const d3=eng.di[2];
 const tgt=[{g:2,gx:d3[17],gy:d3[18]}];
-const vals=wpCases().map(bx=>_tkAstar(eng,2,bx,tgt));
-const mnV=Math.min(...vals.map(v=>v==null?Infinity:v));
-res.astar=mnV===Infinity?null:mnV;
-if(vals.length===2){
-const fmt=v=>v==null?'—':(Number.isInteger(v)?v:v.toFixed(1));
-res.astarText=`${fmt(vals[0])} / ${fmt(vals[1])}`;
-}
+const vals=wpCases().map(bx=>calcCrossFloorChestRouteCost(eng,2,bx,tgt));
+res.astar=minAstar(vals);
+if(vals.length===2)res.astarText=`${fmtStepD(vals[0])} / ${fmtStepD(vals[1])}`;
 }
 return res;
 }
@@ -1136,32 +1241,105 @@ const res={isHit:true,jumpFloor:wpFloor,displayHtml:html,specialStyle:c2Met?"1px
 if(p.wantAstar){
 const t3=b3V?{g:2,gx:eng.di[2][17],gy:eng.di[2][18]}:null;
 const t4=b4V?{g:3,gx:eng.di[3][17],gy:eng.di[3][18]}:null;
-const fmt=v=>v==null?'—':(Number.isInteger(v)?v:v.toFixed(1));
-const mnOf=arr=>{const m=Math.min(...arr.map(v=>v==null?Infinity:v));return m===Infinity?null:m;};
 const cases=wpCases();
 if(cases.length===1){
 if(c2Met){
-const a3=_tkAstar(eng,wpFloor,cases[0],[t3]);
-const a4=_tkAstar(eng,wpFloor,cases[0],[t4]);
-const ab=_tkAstar(eng,wpFloor,cases[0],[t3,t4]);
-res.astar=mnOf([a3,a4,ab]);
-res.astarText=`${fmt(a3)} / ${fmt(a4)} / ${fmt(ab)}`;
+const a3=calcCrossFloorChestRouteCost(eng,wpFloor,cases[0],[t3]);
+const a4=calcCrossFloorChestRouteCost(eng,wpFloor,cases[0],[t4]);
+const ab=calcCrossFloorChestRouteCost(eng,wpFloor,cases[0],[t3,t4]);
+res.astar=minAstar([a3,a4,ab]);
+res.astarText=`${fmtStepD(a3)} / ${fmtStepD(a4)} / ${fmtStepD(ab)}`;
 }else{
-res.astar=_tkAstar(eng,wpFloor,cases[0],[b3V?t3:t4]);
+res.astar=calcCrossFloorChestRouteCost(eng,wpFloor,cases[0],[b3V?t3:t4]);
 }
 }else if(cases.length===2){
 const vals=cases.map(bx=>c2Met
-?mnOf([_tkAstar(eng,wpFloor,bx,[t3]),_tkAstar(eng,wpFloor,bx,[t4]),_tkAstar(eng,wpFloor,bx,[t3,t4])])
-:_tkAstar(eng,wpFloor,bx,[b3V?t3:t4]));
-res.astar=mnOf(vals);
-res.astarText=`${fmt(vals[0])} / ${fmt(vals[1])}`;
+?minAstar([calcCrossFloorChestRouteCost(eng,wpFloor,bx,[t3]),calcCrossFloorChestRouteCost(eng,wpFloor,bx,[t4]),calcCrossFloorChestRouteCost(eng,wpFloor,bx,[t3,t4])])
+:calcCrossFloorChestRouteCost(eng,wpFloor,bx,[b3V?t3:t4]));
+res.astar=minAstar(vals);
+res.astarText=`${fmtStepD(vals[0])} / ${fmtStepD(vals[1])}`;
 }
 }
 return res;
 }
 return{isHit:false};
-},
+}
 };
+function countFloorTiles(eng,f){
+const di=eng.di[f];
+const W=di[2],H=di[3];
+if(W<=0||H<=0)return 0;
+let count=0;
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(isMainWalkable(di[(y<<4)+x+792]))count++;}
+return count;
+}
+const _MAXTILE_DIMS=[16,15,14,13,12,11,10];
+const _MAXTILE_REP_FLOORS=[0,4,8,12];
+const _MAXTILE_CHEST_VARIANT_FLOORS=[2,3];
+const _MAXTILE_EDGE_SEED=0x7FFF;
+const _MAXTILE_EDGE_FLOORS=[1,2,3,5,6,7,9,10,11,13,14,15];
+function listMetricSampleFloors(eng,includeChestVariants=false,edgeSeed=_MAXTILE_EDGE_SEED){
+const floors=_MAXTILE_REP_FLOORS.slice();
+if(includeChestVariants)floors.push(..._MAXTILE_CHEST_VARIANT_FLOORS);
+if(eng.MapSeed===edgeSeed)floors.push(..._MAXTILE_EDGE_FLOORS);
+return[...new Set(floors)];
+}
+function findFloorMaxChamberArea(eng,f){
+const a=getFloorAnomalies(eng,f,false,false);
+let mx=0;for(const s of a.isolatedRegions)if(s>mx)mx=s;
+return mx>=3?mx:null;
+}
+function countFloorGhostStairs(eng,f){
+const c=scanGhostStairs(eng.di[f]);
+return c>0?c:null;
+}
+function collectMetricPerFloor(eng,metricFn,includeChestVariants=false,edgeSeed=_MAXTILE_EDGE_SEED){
+const out=[];const fc=eng.floorCount;
+for(const f of listMetricSampleFloors(eng,includeChestVariants,edgeSeed)){
+if(f>=fc)continue;
+const di=eng.di[f];const W=di[2],H=di[3];
+if(W<=0||H<=0||W!==H||!_MAXTILE_DIMS.includes(W))continue;
+const val=metricFn(eng,f);
+if(val===null||val===undefined)continue;
+out.push({f,val,dim:W+'x'+H});
+}
+return out;
+}
+function collectMetricByFloorSize(eng,metricFn,better,includeChestVariants=false,edgeSeed=_MAXTILE_EDGE_SEED){
+const fc=eng.floorCount;const r={};
+for(const f of listMetricSampleFloors(eng,includeChestVariants,edgeSeed)){
+if(f>=fc)continue;
+const di=eng.di[f];const W=di[2],H=di[3];
+if(W<=0||H<=0||W!==H)continue;
+if(!_MAXTILE_DIMS.includes(W))continue;
+const dim=W+'x'+H;
+const val=metricFn(eng,f);
+if(val===null||val===undefined)continue;
+if(!r[dim])r[dim]={bestVal:val,bestFloor:f,floors:[]};
+r[dim].floors.push({f,val});
+if(better(val,r[dim].bestVal)){r[dim].bestVal=val;r[dim].bestFloor=f;}
+}
+return r;
+}
+function buildMetricCardHtml(dimData,fmtFn){
+const fm=fmtFn||fmtStep;
+return`<span style="color:#ffc90e;font-weight:bold;font-size:13px">${fm(dimData.bestVal)}</span> <span style="color:#9ab;font-size:11px">B${dimData.bestFloor + 1}F</span>`;
+}
+function buildFastestMapHtml(eng,opts){
+opts=opts||{};
+const hideFloors=!!opts.hideFloors;
+const fcAll=eng.floorCount;if(fcAll<=0)return null;
+const hasLimit=(typeof opts.upToFloor==='number'&&opts.upToFloor>=0);
+const limit=hasLimit?Math.min(opts.upToFloor,fcAll):fcAll;
+const pf=new Array(limit);let sum=0;
+for(let f=0;f<limit;f++){const c=calcFloorWalkCost(eng,f);if(c===null)return null;pf[f]=c;sum+=c;}
+let html=`<div style="margin-top:4px;"><span style="color:#ffc90e;font-weight:bold;font-size:14px">${fmtStep(sum)}</span></div>`;
+if(!hideFloors){
+const floors=pf.map((c,f)=>{const isGoal=(!hasLimit&&f===limit-1);return`<span style="color:${isGoal ? '#fc6' : '#9ab'}">B${f + 1}F${isGoal ? '✦' : ''}<b style="color:#cde">${fmtStep(c)}</b></span>`;}).join('<span style="color:#445"> · </span>');
+html+=`<div style="margin-top:3px;font-size:11px;font-family:monospace;line-height:1.7">${floors}</div>`;
+}
+return{html,cost:sum};
+}
 const SEED_PROCESSORS={
 ultimate:(searchEngine,seed,rStr,targetRankKey,job)=>{
 const conds=job.conds;
@@ -1193,13 +1371,13 @@ let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 const{specialHtml,anomalyHtml}=buildSearchDetailHtml(specialHitDetails,anomalyDetails);
 let mapNameDisp=dispName(searchEngine);
 const html=`
-<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
-<span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
-<div style="margin-top:4px;">${boxHtml}</div>
-${specialHtml}
-${anomalyHtml}
-`;
+    <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
+    <span style="color:#888">(Rank ${rStr})</span><br>
+    <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+    <div style="margin-top:4px;">${boxHtml}</div>
+    ${specialHtml}
+    ${anomalyHtml}
+    `;
 return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor};
 },
 multibug:(searchEngine,seed,rStr,targetRankKey,job)=>{
@@ -1352,17 +1530,18 @@ line+=getElistMonsterBadge(info.envType,info.floorMR,surviveCount,null).badge;
 }
 return line;
 }).join('<br>');
-const locHtml=_cachedLocData?LocaHtmlFromData(_cachedLocData,conds):"";
+const cachedLocData=peekLocDataCached(seed,targetRankKey);
+const locHtml=cachedLocData?LocaHtmlFromData(cachedLocData,conds):"";
 let bugIcon=isFloorIncreased?'📈':'';
 const html=`
-<span style="color:#ffd700;font-weight:bold;font-size:15px;">${hex4(seed)}</span>
-<span style="color:#888">(Rank ${rStr})</span><br>
-<div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
-<span style="color:#aaa;font-size:11px">[Source]${origName}|B${origFloors}F|${origBoss}</span><br>
-<span style="color:#f8f;font-size:11px">[Bug]${bugName}|B${bugFloors}F|${bugBoss}${bugIcon}</span>
-</div>${locHtml}${boxHtml}
-<div style="padding-top:2px;">${elistHtmlStr}</div>
-`;
+      <span style="color:#ffd700;font-weight:bold;font-size:15px;">${hex4(seed)}</span>
+      <span style="color:#888">(Rank ${rStr})</span><br>
+      <div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
+      <span style="color:#aaa;font-size:11px">[Source] ${origName} | B${origFloors}F | ${origBoss}</span><br>
+      <span style="color:#f8f;font-size:11px">[Bug] ${bugName} | B${bugFloors}F | ${bugBoss} ${bugIcon}</span>
+      </div>${locHtml}${boxHtml}
+      <div style="padding-top:2px;">${elistHtmlStr}</div>
+      `;
 searchEngine._force_16_floors=false;
 return{seed,rStr,html,hasD:hasAnyD};
 },
@@ -1381,14 +1560,14 @@ let hitResult=DUNGEON_CHECKERS[p.checker](searchEngine,p);
 if(hitResult&&hitResult.isHit){
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 let mapNameDisp=dispName(searchEngine);
-const fmtAstar=a=>` <span style="color:#ffc90e;font-size:11px;font-family:monospace;">${a == null ? '—' : (Number.isInteger(a) ? a : a.toFixed(1))}</span>`;
+const fmtAstar=a=>` <span style="color:#ffc90e;font-size:11px;font-family:monospace;">${fmtStepD(a)}</span>`;
 const buildHtml=(astarHtml,displayHtml)=>`
-<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
-<span style="color:#888">(Rank ${rStr})</span>${astarHtml}<br>
-<span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
-<div style="margin-top:4px;">${boxHtml}</div>
-<div style="margin-top:4px;">${displayHtml}</div>
-`;
+        <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
+        <span style="color:#888">(Rank ${rStr})</span>${astarHtml}<br>
+        <span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
+        <div style="margin-top:4px;">${boxHtml}</div>
+        <div style="margin-top:4px;">${displayHtml}</div>
+        `;
 if(hitResult.multi){
 return hitResult.multi.map(row=>({
 seed,rStr,html:buildHtml(row.astarText!==undefined
@@ -1411,190 +1590,7 @@ return ret;
 }
 return null;
 },
-};
-const _uspDIST=new Float64Array(256);
-const _uspHC=new Float64Array(4096);
-const _uspHN=new Int32Array(4096);
-let _uspHS=0,_uspPC=0;
-function _uspPush(c,n){
-let i=_uspHS++;_uspHC[i]=c;_uspHN[i]=n;
-while(i>0){
-const p=(i-1)>>1;if(_uspHC[p]<=_uspHC[i])break;
-let t=_uspHC[p];_uspHC[p]=_uspHC[i];_uspHC[i]=t;
-t=_uspHN[p];_uspHN[p]=_uspHN[i];_uspHN[i]=t;i=p;
-}
-}
-function _uspPop(){
-const nd=_uspHN[0];_uspPC=_uspHC[0];const last=--_uspHS;
-if(last>0){
-_uspHC[0]=_uspHC[last];_uspHN[0]=_uspHN[last];let i=0;
-for(;;){
-const l=2*i+1,r=2*i+2;let m=i;
-if(l<_uspHS&&_uspHC[l]<_uspHC[m])m=l;
-if(r<_uspHS&&_uspHC[r]<_uspHC[m])m=r;
-if(m===i)break;
-let t=_uspHC[m];_uspHC[m]=_uspHC[i];_uspHC[i]=t;
-t=_uspHN[m];_uspHN[m]=_uspHN[i];_uspHN[i]=t;i=m;
-}
-}
-return nd;
-}
-function _uspPointCost(eng,f,sx,sy,gx,gy){
-const di=eng.di[f];
-const W=di[2],H=di[3];
-if(W<=0||H<=0)return null;
-if(sx===gx&&sy===gy)return 0;
-if(sx<0||sx>=W||sy<0||sy>=H||gx<0||gx>=W||gy<0||gy>=H)return null;
-const tl=(x,y)=>di[(y<<4)+x+792];
-const wk=(x,y)=>(x>=0&&x<W&&y>=0&&y<H&&tl(x,y)!==1&&tl(x,y)!==3);
-_uspDIST.fill(Infinity,0,(H<<4));
-const s=(sy<<4)+sx;_uspDIST[s]=0;_uspHS=0;_uspPush(0,s);
-while(_uspHS>0){
-const nd=_uspPop();const co=_uspPC;
-if(co>_uspDIST[nd])continue;
-const cx=nd&0xF,cy=nd>>4;
-if(cx===gx&&cy===gy)return co;
-if(wk(cx,cy-1)){const ni=((cy-1)<<4)+cx,nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx,cy+1)){const ni=((cy+1)<<4)+cx,nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx-1,cy)){const ni=(cy<<4)+(cx-1),nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx+1,cy)){const ni=(cy<<4)+(cx+1),nc=co+1;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx+1,cy+1)&&wk(cx+1,cy)&&wk(cx,cy+1)){const ni=((cy+1)<<4)+(cx+1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx+1,cy-1)&&wk(cx+1,cy)&&wk(cx,cy-1)){const ni=((cy-1)<<4)+(cx+1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx-1,cy+1)&&wk(cx-1,cy)&&wk(cx,cy+1)){const ni=((cy+1)<<4)+(cx-1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-if(wk(cx-1,cy-1)&&wk(cx-1,cy)&&wk(cx,cy-1)){const ni=((cy-1)<<4)+(cx-1),nc=co+1.5;if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;_uspPush(nc,ni);}}
-}
-return null;
-}
-function _uspFloorCost(eng,f){
-const di=eng.di[f];
-return _uspPointCost(eng,f,di[4],di[5],di[6],di[7]);
-}
-function _uspChestChainCost(eng,floor,boxes){
-let sum=0;
-for(let f=0;f<floor;f++){
-const c=_uspFloorCost(eng,f);
-if(c===null)return null;
-sum+=c;
-}
-const d=eng.di[floor];
-const n=boxes.length;
-const px=[d[4]],py=[d[5]];
-for(const b of boxes){px.push(d[b*2+13]);py.push(d[b*2+14]);}
-const dist=[];
-for(let i=0;i<=n;i++){
-dist[i]=[];
-for(let j=1;j<=n;j++)dist[i][j]=(i===j)?0:_uspPointCost(eng,floor,px[i],py[i],px[j],py[j]);
-}
-let best=null;
-const walk=(rest,cur,cost)=>{
-if(best!==null&&cost>=best)return;
-if(rest.length===0){best=cost;return;}
-for(let k=0;k<rest.length;k++){
-const leg=dist[cur][rest[k]];
-if(leg===null)continue;
-walk(rest.slice(0,k).concat(rest.slice(k+1)),rest[k],cost+leg);
-}
-};
-walk(boxes.map((_,i)=>i+1),0,0);
-return best===null?null:sum+best;
-}
-function _tkLegCost(eng,f,x,y,g,gx,gy){
-if(f===g)return _uspPointCost(eng,f,x,y,gx,gy);
-const df=eng.di[f],dg=eng.di[g];
-let a,b;
-if(g===f+1){a=_uspPointCost(eng,f,x,y,df[6],df[7]);b=(a===null)?null:_uspPointCost(eng,g,dg[4],dg[5],gx,gy);}
-else{a=_uspPointCost(eng,f,x,y,df[4],df[5]);b=(a===null)?null:_uspPointCost(eng,g,dg[6],dg[7],gx,gy);}
-return b===null?null:a+b;
-}
-function _tkAstar(eng,wpFloor,wpIdx,targets){
-let prefix=0;
-for(let i=0;i<wpFloor;i++){
-const c=_uspFloorCost(eng,i);
-if(c===null)return null;
-prefix+=c;
-}
-const d=eng.di[wpFloor];
-const wpPts=wpIdx.map(b=>[d[b*2+13],d[b*2+14]]);
-const orders=wpPts.length===2?[[0,1],[1,0]]:[wpPts.map((_,i)=>i)];
-let bestWp=null,bestTotal=null;
-for(const ord of orders){
-let cx=d[4],cy=d[5],wpCost=0,ok=true;
-for(const oi of ord){
-const c=_uspPointCost(eng,wpFloor,cx,cy,wpPts[oi][0],wpPts[oi][1]);
-if(c===null){ok=false;break;}
-wpCost+=c;cx=wpPts[oi][0];cy=wpPts[oi][1];
-}
-if(!ok)continue;
-const tOrders=targets.length===2?[[0,1],[1,0]]:[targets.map((_,i)=>i)];
-let segBest=null;
-for(const tOrd of tOrders){
-let f=wpFloor,x=cx,y=cy,seg=0,tOk=true;
-for(const ti of tOrd){
-const t=targets[ti];
-const c=_tkLegCost(eng,f,x,y,t.g,t.gx,t.gy);
-if(c===null){tOk=false;break;}
-seg+=c;f=t.g;x=t.gx;y=t.gy;
-}
-if(tOk&&(segBest===null||seg<segBest))segBest=seg;
-}
-if(segBest===null)continue;
-const total=wpCost+segBest;
-if(bestWp===null||wpCost<bestWp||(wpCost===bestWp&&total<bestTotal)){bestWp=wpCost;bestTotal=total;}
-}
-return bestTotal===null?null:prefix+bestTotal;
-}
-function _uspFloorTileCount(eng,f){
-const di=eng.di[f];
-const W=di[2],H=di[3];
-if(W<=0||H<=0)return 0;
-let count=0;
-for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(isMainWalkable(di[(y<<4)+x+792]))count++;}
-return count;
-}
-const _MAXTILE_DIMS=[16,15,14,13,12,11,10];
-const _MAXTILE_REP_FLOORS=[0,4,8,12];
-function _uspMetricByDim(eng,metricFn,better){
-const fc=eng.floorCount;const r={};
-for(const f of _MAXTILE_REP_FLOORS){
-if(f>=fc)continue;
-const di=eng.di[f];const W=di[2],H=di[3];
-if(W<=0||H<=0||W!==H)continue;
-if(!_MAXTILE_DIMS.includes(W))continue;
-const dim=W+'x'+H;
-const val=metricFn(eng,f);
-if(val===null||val===undefined)continue;
-if(!r[dim])r[dim]={bestVal:val,bestFloor:f,floors:[]};
-r[dim].floors.push({f,val});
-if(better(val,r[dim].bestVal)){r[dim].bestVal=val;r[dim].bestFloor=f;}
-}
-return r;
-}
-function _uspMakeMetricHtml(dimData,fmtFn){
-const fm=fmtFn||(v=>Number.isInteger(v)?''+v:v.toFixed(1));
-return`<span style="color:#ffc90e;font-weight:bold;font-size:13px">${fm(dimData.bestVal)}</span> <span style="color:#9ab;font-size:11px">B${dimData.bestFloor+1}F</span>`;
-}
-function _uspFastestHtml(eng,opts){
-opts=opts||{};
-const hideFloors=!!opts.hideFloors;
-const fcAll=eng.floorCount;if(fcAll<=0)return null;
-const hasLimit=(typeof opts.upToFloor==='number'&&opts.upToFloor>=0);
-const limit=hasLimit?Math.min(opts.upToFloor,fcAll):fcAll;
-const pf=new Array(limit);let sum=0;
-for(let f=0;f<limit;f++){const c=_uspFloorCost(eng,f);if(c===null)return null;pf[f]=c;sum+=c;}
-const fm=v=>(Number.isInteger(v)?v:v.toFixed(1));
-let html=`<div style="margin-top:4px;"><span style="color:#ffc90e;font-weight:bold;font-size:14px">${fm(sum)}</span></div>`;
-if(!hideFloors){
-const floors=pf.map((c,f)=>{const isGoal=(!hasLimit&&f===limit-1);return`<span style="color:${isGoal?'#fc6':'#9ab'}">B${f+1}F${isGoal?'✦':''}<b style="color:#cde">${fm(c)}</b></span>`;}).join('<span style="color:#445"> · </span>');
-html+=`<div style="margin-top:3px;font-size:11px;font-family:monospace;line-height:1.7">${floors}</div>`;
-}
-return{html,cost:sum};
-}
-SEED_SETUP.fastest=(engine,job)=>{
-engine.trackOverflow=(job.conds.anomaly==='all_invalid'||job.conds.anomaly==='ghost');
-engine._force_16_floors=(job.params.fastestMode==='maxtile');
-job._onlyMonExpectedStr=buildOnlyMonExpectedStr(job.conds);
-};
-SEED_PROCESSORS.fastest=(searchEngine,seed,rStr,targetRankKey,job)=>{
+fastest:(searchEngine,seed,rStr,targetRankKey,job)=>{
 const conds=job.conds;
 const searchOnlyWithD=job.params.searchOnlyWithD;
 const benchmarkMode=!!job.params.benchmarkMode;
@@ -1604,9 +1600,9 @@ searchEngine.calculateDetail(true);
 if(_fastMode!=='maxtile'){
 if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
 }
-if(!benchmarkMode&&_fastMode!=='maxtile'&&searchEngine._details[0]===12){
-const allowGrey=(parseInt(conds.boss)===12||conds.elist||conds.onlyMon||job.params.slowest||conds.depth2);
-if(!allowGrey)return null;
+const excludeGrey=(_fastMode==='map'&&!job.params.slowest);
+if(!benchmarkMode&&excludeGrey&&searchEngine._details[0]===12&&parseInt(conds.boss)!==12){
+return null;
 }
 if(conds.onlyMon&&_fastMode!=='maxtile'){
 let isCombinedSearch=['2','3','4','PARTIAL_NONE'].includes(conds.elist);
@@ -1615,23 +1611,36 @@ if(!isCombinedSearch&&!checkOnlyMonPossible(searchEngine,conds))return null;
 searchEngine.createDungeonDetail();
 if(_fastMode==='maxtile'){
 const _metric=job.params.metricType||'maxtile';
+const _chestSensitive=(_metric!=='maxghost');
+const _edgeSeed=(job.params.metricEdgeSeed===undefined)?job.endSeed:job.params.metricEdgeSeed;
+if(_metric==='maxiso'||_metric==='maxghost'){
+const rows=collectMetricPerFloor(searchEngine,_metric==='maxiso'?findFloorMaxChamberArea:countFloorGhostStairs,_chestSensitive,_edgeSeed);
+if(rows.length===0)return null;
+return rows.map(r=>({
+seed,rStr:'DD',
+html:`<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span><br>`
++`<span style="color:#ffc90e;font-weight:bold;font-size:13px">${r.val}</span> `
++`<span style="color:#9ab;font-size:11px">B${r.f + 1}F</span> `
++`<span style="color:#678;font-size:10px">${r.dim}</span>`,
+jumpFloor:r.f,sortCost:r.val,fc:searchEngine.floorCount,_dimLabel:r.dim
+}));
+}
 let metricFn,better,fmtFn;
 if(_metric==='maxwalk'){
-metricFn=_uspFloorCost;better=(a,b)=>a>b;fmtFn=(v=>Number.isInteger(v)?''+v:v.toFixed(1));
+metricFn=calcFloorWalkCost;better=(a,b)=>a>b;fmtFn=fmtStep;
 }else if(_metric==='mintile'){
-metricFn=_uspFloorTileCount;better=(a,b)=>a<b;fmtFn=null;
+metricFn=countFloorTiles;better=(a,b)=>a<b;fmtFn=null;
 }else{
-metricFn=_uspFloorTileCount;better=(a,b)=>a>b;fmtFn=null;
+metricFn=countFloorTiles;better=(a,b)=>a>b;fmtFn=null;
 }
-const byDim=_uspMetricByDim(searchEngine,metricFn,better);
-const results=[];
-for(const dim of _MAXTILE_DIMS){
-const dl=dim+'x'+dim;
-const dd=byDim[dl];if(!dd)continue;
-const mHtml=_uspMakeMetricHtml(dd,fmtFn);
-const cardHtml=`<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span><br>${mHtml}`;
-results.push({seed,rStr:'DD',html:cardHtml,jumpFloor:dd.bestFloor,sortCost:dd.bestVal,fc:searchEngine.floorCount,_dimLabel:dl});
-}
+const rows=collectMetricPerFloor(searchEngine,metricFn,_chestSensitive,_edgeSeed);
+const results=rows.map(r=>{
+const valHtml=fmtFn?fmtFn(r.val):r.val;
+const cardHtml=`<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span><br>`
++`<span style="color:#ffc90e;font-weight:bold;font-size:13px">${valHtml}</span> `
++`<span style="color:#9ab;font-size:11px">B${r.f + 1}F</span>`;
+return{seed,rStr:'DD',html:cardHtml,jumpFloor:r.f,sortCost:r.val,fc:searchEngine.floorCount,_dimLabel:r.dim};
+});
 return results.length>0?results:null;
 }
 let boxHtml="";
@@ -1666,22 +1675,23 @@ upToFloor=elistResult.jumpToFloor;
 }
 }
 const _showFloors=benchmarkMode||!!job.params.showFloors;
-let fastestRes=_uspFastestHtml(searchEngine,benchmarkMode?{hideFloors:false,upToFloor:-1}:{hideFloors:!_showFloors,upToFloor:upToFloor});
+let fastestRes=buildFastestMapHtml(searchEngine,benchmarkMode?{hideFloors:false,upToFloor:-1}:{hideFloors:!_showFloors,upToFloor:upToFloor});
 if(fastestRes===null)return null;
 let fastestHtml=fastestRes.html;
 let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 const{specialHtml,anomalyHtml}=buildSearchDetailHtml(specialHitDetails,anomalyDetails);
 let mapNameDisp=dispName(searchEngine);
 const html=`
-<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
-<span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
-${fastestHtml}
-<div style="margin-top:4px;">${boxHtml}</div>
-${specialHtml}
-${anomalyHtml}
-`;
+    <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
+    <span style="color:#888">(Rank ${rStr})</span><br>
+    <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+    ${fastestHtml}
+    <div style="margin-top:4px;">${boxHtml}</div>
+    ${specialHtml}
+    ${anomalyHtml}
+    `;
 return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor,sortCost:fastestRes.cost,fc:searchEngine.floorCount};
+}
 };
 async function coreRunScanJob(job,io){
 const conds=job.conds;
@@ -1706,7 +1716,7 @@ await io.yield();
 }
 searchEngine.MapSeed=seed;
 searchEngine.MapRank=rank;
-_cachedLocData=null;
+resetLocationCache();
 let item=proc(searchEngine,seed,rStr,targetRankKey,job);
 if(item){
 hitCount++;
@@ -1746,7 +1756,7 @@ const toDelete=[];
 let scanned=0;
 for(const[seed]of atMchSeeds){
 if((++scanned&255)===0){if(io.cancelled())return 0;await io.yield();}
-const{foundOffsets}=_scanPattern(seed,atMaxSteps,atThreshold,pType,N+3,0);
+const{foundOffsets}=scanSeedForAtPattern(seed,atMaxSteps,atThreshold,pType,N+3,0);
 if(foundOffsets.length>0){
 atPtnDetails.set(seed,{foundOffsets});
 }else{
@@ -1772,7 +1782,7 @@ await io.yield();
 }
 searchEngine.MapSeed=seed;
 searchEngine.MapRank=rank;
-_cachedLocData=null;
+resetLocationCache();
 searchEngine.calculateDetail(true);
 if(!checkBasicConds(searchEngine,conds)){processed++;continue;}
 if(!checkOnlyMonPossible(searchEngine,conds)){processed++;continue;}
@@ -1799,20 +1809,20 @@ let diffsHtml='';
 let patHtml='';
 const patData=atPtnDetails.get(seed);
 if(pType>0&&patData){
-patHtml=_buildPatternBox(job.patternName,job.probText,_buildOffsetsHtml(patData.foundOffsets));
-diffsHtml=_buildDiffsHtml(patData.foundOffsets,N,deft);
+patHtml=buildAtPatternBoxHtml(job.patternName,job.probText,buildAtOffsetsHtml(patData.foundOffsets));
+diffsHtml=buildBattleAtDiffsHtml(patData.foundOffsets,N,deft);
 }
-let atHtml=_buildATCard(seed,N,atinfo.atN,atinfo.atN1,diffsHtml);
+let atHtml=buildAtInfoCardHtml(seed,N,atinfo.atN,atinfo.atN1,diffsHtml);
 const html=`
-<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
-<span style="color:#888">(Rank ${rStr})</span><br>
-<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
-<div style="margin-top:4px;">${boxHtml}</div>
-${specialHtml}
-${anomalyHtml}
-${atHtml}
-${patHtml}
-`;
+      <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
+      <span style="color:#888">(Rank ${rStr})</span><br>
+      <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+      <div style="margin-top:4px;">${boxHtml}</div>
+      ${specialHtml}
+      ${anomalyHtml}
+      ${atHtml}
+      ${patHtml}
+      `;
 batch.push({seed,rStr,html,hasD:elistResult.hasMatchedD,jumpFloor:jumpToFloor,pop:atinfo.atN});
 processed++;
 }
@@ -1836,20 +1846,20 @@ if(batch.length>0){io.batch(batch);batch=[];}
 await io.yield();
 }
 processed++;
-const{foundOffsets,popValue,defValue}=_scanPattern(seed,job.maxSteps,job.threshold,job.pType,job.POPIndex+3,job.POPIndex);
+const{foundOffsets,popValue,defValue}=scanSeedForAtPattern(seed,job.maxSteps,job.threshold,job.pType,job.POPIndex+3,job.POPIndex);
 if(foundOffsets.length>0){
 hitCount++;
 let specificAtHtml='';
 if(popValue!==null&&defValue!==null){
 const{deft}=formatDeftness(defValue);
-const diffsHtml=_buildDiffsHtml(foundOffsets,job.POPIndex,deft);
-specificAtHtml=_buildATCard(seed,job.POPIndex,popValue,defValue,diffsHtml);
+const diffsHtml=buildBattleAtDiffsHtml(foundOffsets,job.POPIndex,deft);
+specificAtHtml=buildAtInfoCardHtml(seed,job.POPIndex,popValue,defValue,diffsHtml);
 }
 const html=`
-<span style="color:#ffd700;font-weight:bold;font-size:13px;">${hex4(seed)}</span><br>
-${_buildPatternBox(job.patternName,job.probText,_buildOffsetsHtml(foundOffsets))}
-${specificAtHtml}
-`;
+        <span style="color:#ffd700;font-weight:bold;font-size:13px;">${hex4(seed)}</span><br>
+        ${buildAtPatternBoxHtml(job.patternName, job.probText, buildAtOffsetsHtml(foundOffsets))}
+        ${specificAtHtml}
+        `;
 batch.push({seed,rStr:null,html,pop:popValue!==null?popValue:99999});
 }
 }
@@ -1863,7 +1873,7 @@ const SKILL_DB=[
 {cat:"spell",jp:"メラガイアー",en:"Kafrizzle",target:"S",at:[55,0],miss:41,ev:0,blk:1,el:5,metal:0,cls:[2],dmg:{s:23,b:292,m:600,st:"might",lo:480,hi:999}},
 {cat:"skill",weapon:"Boomerang",jp:"ギガスロー",en:"Gigathrow",target:"S",at:[39,0],miss:29,ev:1,blk:1,el:8,metal:0,hiden:1},
 {cat:"skill",weapon:"Whip",jp:"双竜打ち (単体)",en:"Twin Dragon Lash (Single)",target:"S",at:[30,12],ev:1,blk:1,el:0,metal:0,hitRange:{normalMin:2,max:2},mul:1.25},
-{cat:"spell",jp:"マヒャド",en:"Kacrack",target:"A",at:[30,1],ev:0,blk:1,el:6,metal:0,cls:[2],dmg:{s:12,b:92,m:216,st:"might",lo:200,hi:999}},
+{cat:"spell",jp:"マヒャド",en:"Kacrack",target:"A",at:[29,1],ev:0,blk:1,el:6,metal:0,cls:[2],dmg:{s:12,b:92,m:216,st:"might",lo:200,hi:999}},
 {cat:"skill",weapon:"Whip",jp:"地這い大蛇",en:"Serpent's Bite",target:"G",at:[29,1],ev:1,blk:1,el:9,metal:0,hiden:1,mul:2},
 {cat:"skill",weapon:"Hammer",jp:"ランドインパクト",en:"Crackerwhack",target:"A",at:[29,1],ev:0,blk:1,el:9,metal:0,dmg:{s:15,b:175}},
 {cat:"skill",weapon:"Bow",jp:"シャイニングボウ",en:"Shining Shot",target:"A",at:[29,1],ev:0,blk:1,el:11,metal:0,dmg:{s:5,b:150},hiden:1},
@@ -2122,24 +2132,24 @@ for(const _wjp in WEAPON_META){
 const _wm=WEAPON_META[_wjp];
 if(_wm.generic&&_WTYPE_T[_wm.cat]!==undefined)_WTYPE_GENERIC_BY_T[_WTYPE_T[_wm.cat]]={cat:_wm.cat,jp:_wjp};
 }
-function _weaponTypeMul(equip,monId){
+function getWeaponTypeMultiplier(equip,monId){
 if(!equip)return 1;
 const wm=WEAPON_META[equip];
 const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[monId]:null;
 return(wm&&mon&&_WTYPE_T[wm.cat]===mon.t)?1.1:1;
 }
 const _FOURCE_BONUS=1.1;
-function _rankVal(r){return r==='gold'?2:r==='orange'?1:0;}
-function _bsMinTrue(lo,hi,pred){
+function getRankOrderValue(r){return r==='gold'?2:r==='orange'?1:0;}
+function binarySearchMinTrue(lo,hi,pred){
 while(lo<hi){const m=(lo+hi)>>1;if(pred(m))hi=m;else lo=m+1;}
 return lo;
 }
-function _bsMaxTrue(lo,hi,pred){
+function binarySearchMaxTrue(lo,hi,pred){
 let cap=lo-1;
 while(lo<=hi){const m=(lo+hi)>>1;if(pred(m)){cap=m;lo=m+1;}else hi=m-1;}
 return cap;
 }
-function _physRange(x,y,mul){
+function calcPhysicalDamageRange(x,y,mul){
 const ratio=x>0?y/x:999;
 if(ratio>=2)return{min:0,max:1};
 if(ratio>=1.75)return{min:0,max:Math.floor(x/16)};
@@ -2214,7 +2224,7 @@ const base=skill.hit||fixedRange||(dh?dh/2:1);
 let hits=(hasDoubling&&!fixedRange)?(dh||base*2):base;
 return hits;
 }
-function _getDmgStat(statKey,stats){
+function getDamageStat(statKey,stats){
 switch(statKey){
 case'might':return stats.might||0;
 case'str':return stats.str||0;
@@ -2230,7 +2240,7 @@ if(skill.fixedDmg)return{min:skill.fixedDmg,max:skill.fixedDmg};
 const d=skill.dmg;
 if(!d){return null;}
 if(!d.m||d.b===d.m){return{min:d.b-d.s,max:d.b+d.s};}
-const sv=_getDmgStat(d.st,stats);
+const sv=getDamageStat(d.st,stats);
 const clamped=Math.max(d.lo,Math.min(sv,d.hi));
 const calcBase=d.b+Math.floor((clamped-d.lo)*(d.m-d.b)/(d.hi-d.lo));
 return{min:calcBase-d.s,max:calcBase+d.s};
@@ -2240,7 +2250,7 @@ const mon=MONSTER_DB[monId];
 if(!mon)return null;
 let base=calcBaseDmg(skill,stats);
 if(!base){
-base=_physRange(Math.min(stats.atk||0,999),mon.s[2],skill.mul);
+base=calcPhysicalDamageRange(Math.min(stats.atk||0,999),mon.s[2],skill.mul);
 }
 let dMin=applyTypeMul(base.min,skill,monId);
 let dMax=applyTypeMul(base.max,skill,monId);
@@ -2263,12 +2273,12 @@ const _TENSION=[
 {eggs:3,lv:50,mul:4.0},
 ];
 const _TENSION_MULS=_TENSION.map(t=>t.mul);
-const _tensionLvOf=(mul)=>mul>=4?50:mul>=2.5?20:5;
+const getTensionLevel=(mul)=>mul>=4?50:mul>=2.5?20:5;
 const _ACT_EGG={jp:'おうえん',en:'Egg On',at:0,equip:'',note:'',hits:0};
 const _ACT_MERCY={jp:'みのがす',en:'Mercy',at:0,equip:'',note:'',hits:0};
-const _eggPrefix=(n)=>Array(n).fill(_ACT_EGG);
-const _mkFourceAction=(f)=>({jp:f.jp,en:f.en||f.jp,at:0,equip:'',note:'',hits:0});
-function _bestFource(hexId){
+const makeEggOnPrefix=(n)=>Array(n).fill(_ACT_EGG);
+const makeFourceAction=(f)=>({jp:f.jp,en:f.en||f.jp,at:0,equip:'',note:'',hits:0});
+function pickBestFource(hexId){
 const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
 if(!mon)return null;
 let bestJp=null,bestEl=0,bestMod=0;
@@ -2281,7 +2291,7 @@ if(mod>bestMod){bestJp=jp;bestEl=elIdx;bestMod=mod;}
 if(bestMod<=100)return null;
 return{jp:bestJp,en:_FOURCE_EN[bestJp]||bestJp,el:bestEl,mod:bestMod};
 }
-function _isMultiOnly(combo){
+function isMultiTargetOnly(combo){
 const counts={};
 for(const v of combo){
 if(v.jp==='おうえん'||_HIDEN_SKILLS.has(v.jp)){
@@ -2309,33 +2319,33 @@ const _METAL_PADDING=[
 ['メラガイアー','Kafrizzle',41,'miss','💨'],
 ['おうえん','Egg On',0,'',''],
 ];
-function _isMetalTargeting(action){
+function isMetalTargetingAction(action){
 return action.jp==='一閃づき'||action.jp==='魔神斬り'||action.equip==='miss'||(action.skRef&&action.skRef.metal)||action.metal;
 }
-function _checkMetalExecution(actionJp,hexId){
+function canExecuteMetal(actionJp,hexId){
 if(actionJp!=='一閃づき'&&actionJp!=='魔神斬り')return null;
-const isValid=typeof _METAL_MONSTERS!=='undefined'&&typeof _monHex==='function'&&_METAL_MONSTERS.has(_monHex(hexId));
+const isValid=typeof _METAL_MONSTERS!=='undefined'&&typeof toMonsterHexId==='function'&&_METAL_MONSTERS.has(toMonsterHexId(hexId));
 return{isValid};
 }
 const _WEAPON_METAL_SHORT={'メタスラ':1};
-function _weaponMetalFlag(eq){
+function getWeaponMetalFlag(eq){
 if(eq==null||eq===''||eq==='miss')return 0;
 if(eq in _WEAPON_METAL_SHORT)return _WEAPON_METAL_SHORT[eq];
 return(typeof WEAPON_META!=='undefined'&&WEAPON_META[eq]&&WEAPON_META[eq].metal)?1:0;
 }
-function _metalEffect(skillMetal,weaponMetal){return(skillMetal||weaponMetal)?1:0;}
-function _equipHits(sk,eq){
+function getMetalEffect(skillMetal,weaponMetal){return(skillMetal||weaponMetal)?1:0;}
+function getEquipHitCount(sk,eq){
 if(sk.fh)return(eq==='はやぶさの剣')?sk.fh:(sk.hit||Math.floor(sk.fh/2));
 return sk.hit||1;
 }
-function _metalChipMaxDmg(jp,eq){
+function getMetalChipMaxDamage(jp,eq){
 const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[jp]:null;
 if(!sk)return 0;
 if(sk.el&&sk.el>0)return 0;
-if(_metalEffect(sk.metal?1:0,_weaponMetalFlag(eq))===0)return 0;
-return 2*_equipHits(sk,eq);
+if(getMetalEffect(sk.metal?1:0,getWeaponMetalFlag(eq))===0)return 0;
+return 2*getEquipHitCount(sk,eq);
 }
-function _metalChipsOK(comboPads,metalHPs){
+function canMetalChipsKill(comboPads,metalHPs){
 if(!metalHPs||metalHPs.length===0)return true;
 const chips=comboPads.filter(c=>(c.mdmg||0)>0).map(c=>c.mdmg);
 if(chips.length===0)return true;
@@ -2348,7 +2358,7 @@ const maxBin=Math.max(...minHPs.map(h=>h-1));
 if(maxChip>maxBin)return false;
 return true;
 }
-function _solverFindMetal(bat,monCount,maxSlots,metalCount,metalHPs,excludedPads,hexId){
+function solveMetalCombo(bat,monCount,maxSlots,metalCount,metalHPs,excludedPads,hexId){
 if(hexId&&(typeof _METAL_MONSTERS!=='undefined')&&!_METAL_MONSTERS.has(hexId)){
 return[];
 }
@@ -2362,7 +2372,7 @@ const issen={jp:'一閃づき',en:'Thunder Thrust',at:14,equip:'',note:'',hits:1
 const issenTail=Array(metalCount).fill(issen);
 if(remaining===0)return[issenTail.slice()];
 const pads=_METAL_PADDING
-.map(([jp,en,at,eq,note])=>({jp,en,at,equip:eq,note,hits:1,mdmg:(eq==='miss'?0:_metalChipMaxDmg(jp,eq))}))
+.map(([jp,en,at,eq,note])=>({jp,en,at,equip:eq,note,hits:1,mdmg:(eq==='miss'?0:getMetalChipMaxDamage(jp,eq))}))
 .filter(p=>p.equip==='miss'||p.at===0||p.mdmg>0)
 .filter(p=>!excludedPads||!excludedPads.has(p.jp));
 pads.sort((a,b)=>b.at-a.at);
@@ -2372,7 +2382,7 @@ const padSlots=maxSlots-metalCount;
 function dfs(startIdx,rem,combo){
 if(results.length>=MAX)return;
 if(rem===0){
-if(_metalChipsOK(combo,metalHPs))results.push([...combo,...issenTail]);
+if(canMetalChipsKill(combo,metalHPs))results.push([...combo,...issenTail]);
 return;
 }
 if(rem<0||combo.length>=padSlots)return;
@@ -2435,13 +2445,13 @@ const _SOLVER_SK={};
 for(const e of _SOLVER_ENTRIES){
 _SOLVER_SK[e.jp]=SKILL_IDX[e.alias||e.jp]||null;
 }
-function _skOf(jp){return _SOLVER_SK[jp]||SKILL_IDX[jp];}
-function _sdOf(jp){const rsk=_SOLVER_SK[jp];return rsk?_SOLVER_SKILL_DATA[rsk.jp]:_SOLVER_SKILL_DATA[jp];}
+function lookupSkill(jp){return _SOLVER_SK[jp]||SKILL_IDX[jp];}
+function lookupSkillData(jp){const rsk=_SOLVER_SK[jp];return rsk?_SOLVER_SKILL_DATA[rsk.jp]:_SOLVER_SKILL_DATA[jp];}
 let _solverGroupCounts=null;
 let _solverFieldTotal=null;
 let _solverIssenNeed=0;
 let _solverUseStats=true;
-function _solverExpand(monCount,protectedSups,hexId){
+function expandSolverCombos(monCount,protectedSups,hexId){
 const variants=[];
 for(const e of _SOLVER_ENTRIES){
 const sk=SKILL_IDX[e.alias||e.jp];
@@ -2450,7 +2460,7 @@ if(protectedSups&&protectedSups.length&&sk.target!=='S'){
 let couldKillSup=false;
 for(const supHex of protectedSups){
 const supMon=MONSTER_DB[supHex];
-if(supMon&&_maxSkillDmg(e.alias||e.jp,supHex)>=supMon.s[0]){couldKillSup=true;break;}
+if(supMon&&calcMaxSkillDamage(e.alias||e.jp,supHex)>=supMon.s[0]){couldKillSup=true;break;}
 }
 if(couldKillSup)continue;
 }
@@ -2531,36 +2541,44 @@ if(kAT!==nAT)variants.push({jp:e.jp,en,at:kAT,equip:'キラーピアス',note:'�
 if(_solverIssenNeed>0)variants.unshift({jp:'一閃づき',en:'Thunder Thrust',at:14,equip:'',note:'',hits:1});
 return variants;
 }
-function _solverFind(bat,monCount,maxSlots,protectedSups,hexId){
+function solveBattleCombo(bat,monCount,maxSlots,protectedSups,hexId){
 if(bat<=0)return[];
-const variants=_solverExpand(monCount,protectedSups,hexId);
+const variants=expandSolverCombos(monCount,protectedSups,hexId);
 const results=[];
 let depthCap=0;
 const _mon=(hexId&&typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
 const useScreen=!!(_mon&&monCount<=1&&_solverUseStats);
-const _bf=useScreen?_bestFource(hexId):null;
+const _bf=useScreen?pickBestFource(hexId):null;
 const _bfEls=(_bf&&typeof _FOURCE_EL!=='undefined')?(_FOURCE_EL[_bf.jp]||null):null;
 let raw=0;const RAW_CAP=6000;
 const score=(combo)=>{
-const r1=_rankVal(_solverDmgCheck(combo,hexId,_mon,null,1,null,{},undefined));
+const r1=getRankOrderValue(checkSolverDamage(combo,hexId,_mon,null,1,null,{},undefined));
 if(r1===2)return 9*10000;
-const rf=_bfEls?_rankVal(_solverDmgCheck(combo,hexId,_mon,null,1,_bfEls,{},undefined)):0;
+const rf=_bfEls?getRankOrderValue(checkSolverDamage(combo,hexId,_mon,null,1,_bfEls,{},undefined)):0;
 if(rf===2)return 7*10000;
-const q1=_solverMinStat(combo,hexId,1,null);
+const q1=calcSolverMinStat(combo,hexId,1,null);
 if(q1)return 5*10000-Math.min(q1.min,9999);
 if(r1===1)return 4*10000+5000;
-const qf=_bf?_solverMinStat(combo,hexId,1,_bf):null;
+const qf=_bf?calcSolverMinStat(combo,hexId,1,_bf):null;
 if(qf)return 4*10000-Math.min(qf.min,9999);
 if(rf===1)return 3*10000+5000;
 for(const T of _TENSION_MULS){
-if(_solverDmgCheck(combo,hexId,_mon,null,T,null,{},undefined)||(_bfEls&&_solverDmgCheck(combo,hexId,_mon,null,T,_bfEls,{},undefined)))return 3*10000;
-const qt=_solverMinStat(combo,hexId,T,null);
+if(checkSolverDamage(combo,hexId,_mon,null,T,null,{},undefined)||(_bfEls&&checkSolverDamage(combo,hexId,_mon,null,T,_bfEls,{},undefined)))return 3*10000;
+const qt=calcSolverMinStat(combo,hexId,T,null);
 if(qt)return 2*10000-Math.min(qt.min,9999);
-const qtf=_bf?_solverMinStat(combo,hexId,T,_bf):null;
+const qtf=_bf?calcSolverMinStat(combo,hexId,T,_bf):null;
 if(qtf)return 1*10000-Math.min(qtf.min,9999);
 }
 return 0;
 };
+const NV=variants.length;
+const sufMin=new Int32Array(NV+1),sufMax=new Int32Array(NV+1);
+sufMin[NV]=0x7fffffff;sufMax[NV]=-0x7fffffff;
+for(let i=NV-1;i>=0;i--){
+const a=variants[i].at;
+sufMin[i]=(a>0&&a<sufMin[i+1])?a:sufMin[i+1];
+sufMax[i]=(a>0&&a>sufMax[i+1])?a:sufMax[i+1];
+}
 function dfs(startIdx,remaining,combo,maxDepth,sink){
 if((!useScreen&&sink.length>=depthCap)||raw>=RAW_CAP)return;
 if(remaining===0&&combo.length===maxDepth){
@@ -2570,12 +2588,16 @@ else sink.push({c:combo.slice(),sc:0,ord:sink.length});
 return;
 }
 if(remaining<=0||combo.length>=maxDepth)return;
+const slots=maxDepth-combo.length-1;
 for(let i=startIdx;i<variants.length;i++){
 const v=variants[i];
 if(v.at===0)continue;
 if(v.at>remaining)continue;
+const rem=remaining-v.at;
+if(slots===0){if(rem!==0)continue;}
+else if(rem<sufMin[i]*slots||rem>sufMax[i]*slots)continue;
 combo.push(v);
-dfs(i,remaining-v.at,combo,maxDepth,sink);
+dfs(i,rem,combo,maxDepth,sink);
 combo.pop();
 }
 }
@@ -2603,7 +2625,7 @@ const JOB_STATS=[
 {jp:'ｽｰﾊﾟｰｽﾀｰ',en:'Luminary',s:[334,377,248,561,618,469]},
 {jp:'種ﾄﾞｰﾋﾟﾝｸﾞ',en:'Boosted',s:[999,999,999,999,999,999]},
 ];
-function _readCharStats(){
+function readCharStatsFromDom(){
 const chars=[];
 for(let i=1;i<=4;i++){
 const v=(id)=>parseInt(document.getElementById(id)?.value)||0;
@@ -2622,39 +2644,39 @@ slot:i,
 chars.sort((a,b)=>b.agi-a.agi);
 return chars;
 }
-function _charsSafe(){return(typeof chars!=='undefined')?chars:_readCharStats();}
+function getCharsSafe(){return(typeof chars!=='undefined')?chars:readCharStatsFromDom();}
 const _EXT_STATS={atk:999,might:999,str:999,mending:999,deft:999};
-function _extremeRatingOK(combo,hexId,mon,killTargets,statsOverride){
-const orig=_readCharStats;
+function passesExtremeRating(combo,hexId,mon,killTargets,statsOverride){
+const orig=readCharStatsFromDom;
 const _st=statsOverride||_EXT_STATS;
-_readCharStats=()=>orig().map(c=>({...c,stats:{..._st}}));
-try{const b=_bestAssign(combo,hexId,mon,killTargets,1,null);return{rating:b.rating,finIdx:b.finIdx};}
-finally{_readCharStats=orig;}
+readCharStatsFromDom=()=>orig().map(c=>({...c,stats:{..._st}}));
+try{const b=findBestAssignment(combo,hexId,mon,killTargets,1,null);return{rating:b.rating,finIdx:b.finIdx};}
+finally{readCharStatsFromDom=orig;}
 }
-function _maxSkillDmg(jp,hexId,wmul){
+function calcMaxSkillDamage(jp,hexId,wmul){
 const sd=SKILL_IDX[jp];
 const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
 if(!sd||!mon)return 9999;
 const tFactor=(sd.tmul&&sd.tmul[mon.t])||1;
 const base=calcBaseDmg(sd,{atk:999,str:999,might:999,mending:999,deft:999});
 if(!base){
-const phyMax=_physRange(999,mon.s[2],sd.mul).max;
+const phyMax=calcPhysicalDamageRange(999,mon.s[2],sd.mul).max;
 return Math.max(0,Math.floor(applyElementMod(phyMax,sd.el,hexId)*tFactor*(wmul||1)));
 }
 return Math.max(0,Math.floor(applyElementMod(base.max,sd.el,hexId)*tFactor*(wmul||1)));
 }
-function _monHex(monId){
+function toMonsterHexId(monId){
 if(!monId)return null;
 if(typeof monId==='string')return monId.toUpperCase();
 return monId.toString(16).toUpperCase().padStart(3,'0');
 }
-function _monDispName(hx){
+function getMonsterDisplayName(hx){
 const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hx]:null;
 return m?(DISPLAY_LANG==='EN'?m.en:m.jp):hx;
 }
 let _solverDmgCache=new WeakMap();
-function _solverResetDmgCache(){_solverDmgCache=new WeakMap();}
-function _solverCalcSkillDamage(sk,st,hexId,fEls,wmul){
+function resetSolverDamageCache(){_solverDmgCache=new WeakMap();}
+function calcSolverSkillDamage(sk,st,hexId,fEls,wmul){
 let byContext=_solverDmgCache.get(sk);
 if(!byContext){byContext=new Map();_solverDmgCache.set(sk,byContext);}
 const contextKey=hexId+'|'+(fEls?fEls.join(','):'')+'|'+(wmul||1);
@@ -2670,7 +2692,7 @@ const result=calcSkillDamage(sk,st,hexId,fEls,wmul);
 byStats.set(statsKey,result);
 return result;
 }
-function _solverMinStat(combo,hexId,tensionMul,fource){
+function calcSolverMinStat(combo,hexId,tensionMul,fource){
 tensionMul=tensionMul||1;
 const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
 if(!mon)return null;
@@ -2683,25 +2705,25 @@ const skArr=[],hitsArr=[],wmArr=[];
 for(const v of combo){
 skArr.push(_SOLVER_SK[v.jp]||(typeof SKILL_IDX!=='undefined'?SKILL_IDX[v.jp]:null));
 hitsArr.push(v.hits||1);
-wmArr.push(_weaponTypeMul(v.equip,hexId));
-paper+=_maxSkillDmg(v.jp,hexId,wmArr[wmArr.length-1])*(v.hits||1);
+wmArr.push(getWeaponTypeMultiplier(v.equip,hexId));
+paper+=calcMaxSkillDamage(v.jp,hexId,wmArr[wmArr.length-1])*(v.hits||1);
 }
 if(paper<hp80m)return null;
 const dmgMemo=skArr.map(()=>new Map());
 const dmgAt=(i,key,s)=>{
 if(!skArr[i]||combo[i].at===0)return{min:0,max:0,perHitMax:0};
-if(_checkMetalExecution(combo[i].jp,hexId))return{min:0,max:0,perHitMax:0};
+if(canExecuteMetal(combo[i].jp,hexId))return{min:0,max:0,perHitMax:0};
 const keyCode=key==='atk'?0:key==='might'?1:key==='str'?2:key==='mending'?3:key==='deft'?4:5;
 const memoKey=keyCode*1024+s,memo=dmgMemo[i];
 if(memo.has(memoKey))return memo.get(memoKey);
 const st={..._EXT_STATS};if(key)st[key]=s;
-const r=_solverCalcSkillDamage(skArr[i],st,hexId,fEls,wmArr[i]);
+const r=calcSolverSkillDamage(skArr[i],st,hexId,fEls,wmArr[i]);
 const out=r?{min:r.min*hitsArr[i],max:r.max*hitsArr[i],perHitMax:r.max}:{min:0,max:0,perHitMax:0};
 memo.set(memoKey,out);return out;
 };
 let best=null;
 for(let fi=0;fi<combo.length;fi++){
-const key=_solverDriveStat(skArr[fi]);
+const key=getSkillDriveStat(skArr[fi]);
 if(!key)continue;
 const finHits=hitsArr[fi];
 const evalAt=(s)=>{
@@ -2720,29 +2742,29 @@ if(finHits>1&&(finHits-1)*Math.floor(e.f.perHitMax*tensionMul)>=hp80m-e.cMax)ret
 return true;
 };
 if(!goldOK(999))continue;
-const minS=_bsMinTrue(0,999,goldOK);
+const minS=binarySearchMinTrue(0,999,goldOK);
 if(!capOK(minS))continue;
-const cand={key,fi,minS,capS:_bsMaxTrue(minS,999,capOK)};
+const cand={key,fi,minS,capS:binarySearchMaxTrue(minS,999,capOK)};
 if(!best||cand.minS<best.minS||(cand.minS===best.minS&&cand.capS>best.capS))best=cand;
 }
 if(!best)return null;
 const perPos=(()=>{
 const fFi=best.fi;
-if(!_solverDriveStat(skArr[fFi]))return null;
+if(!getSkillDriveStat(skArr[fFi]))return null;
 const posD=(i,s)=>{
-const d=dmgAt(i,_solverDriveStat(skArr[i]),s);
+const d=dmgAt(i,getSkillDriveStat(skArr[i]),s);
 return{min:d.min,max:d.max,phm:d.perHitMax};
 };
 const varPos=[];
 for(let i=0;i<combo.length;i++){
-if(i===fFi||!_solverDriveStat(skArr[i]))continue;
+if(i===fFi||!getSkillDriveStat(skArr[i]))continue;
 if(posD(i,999).min>posD(i,0).min)varPos.push(i);
 }
 let constMin=0,constMax=0;
 for(let i=0;i<combo.length;i++){if(i===fFi||varPos.indexOf(i)>=0)continue;const d=posD(i,0);constMin+=d.min;constMax+=d.max;}
 const posCap={};let chipMaxCap=constMax,chipMinCap=constMin;
 for(const j of varPos){
-const cap=_bsMaxTrue(0,999,(m)=>chipMaxCap+posD(j,m).max<hp80m);
+const cap=binarySearchMaxTrue(0,999,(m)=>chipMaxCap+posD(j,m).max<hp80m);
 if(cap<0)return null;
 posCap[j]=cap;chipMaxCap+=posD(j,cap).max;chipMinCap+=posD(j,cap).min;
 }
@@ -2750,19 +2772,19 @@ const finHitsP=hitsArr[fFi];
 let sFinCap=999;
 if(finHitsP>1){
 const headA=hp80m-chipMaxCap;
-sFinCap=_bsMaxTrue(0,999,(m)=>(finHitsP-1)*Math.floor(posD(fFi,m).phm*tensionMul)<headA);
+sFinCap=binarySearchMaxTrue(0,999,(m)=>(finHitsP-1)*Math.floor(posD(fFi,m).phm*tensionMul)<headA);
 if(sFinCap<0)return null;
 }
 const finNeed=hp100-chipMinCap;
 const finMinT=(s)=>Math.floor(posD(fFi,s).min*tensionMul);
 if(finMinT(sFinCap)<finNeed)return null;
-const sFin=_bsMinTrue(0,sFinCap,(m)=>finMinT(m)>=finNeed);
-return{finFi:fFi,fKey:_solverDriveStat(skArr[fFi]),sFin,sFinCap,varPos,posCap};
+const sFin=binarySearchMinTrue(0,sFinCap,(m)=>finMinT(m)>=finNeed);
+return{finFi:fFi,fKey:getSkillDriveStat(skArr[fFi]),sFin,sFinCap,varPos,posCap};
 })();
 let posLabel='';
 if(perPos){
 const _nm=(i)=>combo[i].jp+(combo[i].note||'');
-const _kL=(i)=>{const k=_solverDriveStat(skArr[i]);return(k&&k!=='atk')?'('+_statLabel(k)+')':'';};
+const _kL=(i)=>{const k=getSkillDriveStat(skArr[i]);return(k&&k!=='atk')?'('+getStatLabel(k)+')':'';};
 const parts=[];
 const capParts=[];
 for(const j of perPos.varPos){
@@ -2776,12 +2798,12 @@ parts.push(finSeg);
 posLabel=parts.join(' · ');
 }
 const jpTag='@'+combo[best.fi].jp+(combo[best.fi].note||'');
-if(best.capS>=999)return{stat:best.key,min:best.minS,finIdx:best.fi,perPos,posLabel,label:_statLabel(best.key)+'≥'+best.minS+jpTag};
-return{stat:best.key,min:best.minS,max:best.capS,finIdx:best.fi,perPos,posLabel,label:_statLabel(best.key)+' '+best.minS+'~'+best.capS+jpTag};
+if(best.capS>=999)return{stat:best.key,min:best.minS,finIdx:best.fi,perPos,posLabel,label:getStatLabel(best.key)+'≥'+best.minS+jpTag};
+return{stat:best.key,min:best.minS,max:best.capS,finIdx:best.fi,perPos,posLabel,label:getStatLabel(best.key)+' '+best.minS+'~'+best.capS+jpTag};
 }
 const v=combo[0],hits=v.hits||1;
-if(_checkMetalExecution(v.jp,hexId))return null;
-const rsk=_SOLVER_SK[v.jp];const sd=_sdOf(v.jp);
+if(canExecuteMetal(v.jp,hexId))return null;
+const rsk=_SOLVER_SK[v.jp];const sd=lookupSkillData(v.jp);
 let elMul;
 if(fource&&!(sd&&sd.el)){
 elMul=(fource.mod/100)*_FOURCE_BONUS;
@@ -2793,7 +2815,7 @@ elMul=1;
 }
 if(elMul<=0)return{stat:null,min:Infinity,label:'×'};
 const mul=tensionMul*elMul;
-const _wmulV=_weaponTypeMul(v.equip,hexId);
+const _wmulV=getWeaponTypeMultiplier(v.equip,hexId);
 const hp80=Math.floor(hp*0.8);
 const _capSolve=(statKey,minStat)=>{
 const sk2=rsk||(typeof SKILL_IDX!=='undefined'?SKILL_IDX[v.jp]:null);
@@ -2801,18 +2823,18 @@ if(!sk2)return-1;
 const fEls2=fource?((typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[fource.jp])||null):null;
 const capOK=(s)=>{
 const st={atk:0,might:0,str:0,mending:0,deft:0};st[statKey]=s;
-const r=_solverCalcSkillDamage(sk2,st,hexId,fEls2,_wmulV);
+const r=calcSolverSkillDamage(sk2,st,hexId,fEls2,_wmulV);
 return r?((hits-1)*Math.floor(r.max*tensionMul)<hp80):false;
 };
 if(!capOK(minStat))return-1;
-return _bsMaxTrue(minStat,999,capOK);
+return binarySearchMaxTrue(minStat,999,capOK);
 };
 const _rangeWrap=(statKey,minStat,baseLabel)=>{
 if(hits<=1)return{stat:statKey,min:minStat,label:baseLabel};
 const capMax=_capSolve(statKey,minStat);
 if(capMax<0)return null;
 if(capMax>=999)return{stat:statKey,min:minStat,label:baseLabel};
-return{stat:statKey,min:minStat,max:capMax,label:_statLabel(statKey)+' '+minStat+'~'+capMax};
+return{stat:statKey,min:minStat,max:capMax,label:getStatLabel(statKey)+' '+minStat+'~'+capMax};
 };
 if(sd&&sd.dmg){
 const d=sd.dmg;
@@ -2822,26 +2844,26 @@ if(hits>1&&(hits-1)*Math.floor((d.b+d.s)*mul)>=hp80)return null;
 return{stat:null,min:0,label:''};
 }
 const needBase=Math.ceil(hp/(mul*hits))+d.s;
-if(needBase<=d.b)return _rangeWrap(d.st,d.lo,_statLabel(d.st)+'≥'+d.lo);
+if(needBase<=d.b)return _rangeWrap(d.st,d.lo,getStatLabel(d.st)+'≥'+d.lo);
 if(needBase>d.m)return null;
 const need=Math.ceil(d.lo+(needBase-d.b)*(d.hi-d.lo)/(d.m-d.b));
-return _rangeWrap(d.st,Math.min(need,999),_statLabel(d.st)+'≥'+Math.min(need,999));
+return _rangeWrap(d.st,Math.min(need,999),getStatLabel(d.st)+'≥'+Math.min(need,999));
 }
 if(!sd||!sd.el){
 const sk=rsk||(typeof SKILL_IDX!=='undefined'?SKILL_IDX[v.jp]:null);
 if(!sk)return null;
 const fEls=fource?((typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[fource.jp])||null):null;
 const killAt=(a)=>{
-const r=_solverCalcSkillDamage(sk,{atk:a,might:0,str:0,mending:0,deft:0},hexId,fEls,_wmulV);
+const r=calcSolverSkillDamage(sk,{atk:a,might:0,str:0,mending:0,deft:0},hexId,fEls,_wmulV);
 return r?(Math.floor(r.min*tensionMul)*hits>=hp):false;
 };
 if(!killAt(999))return null;
-const lo=_bsMinTrue(0,999,killAt);
+const lo=binarySearchMinTrue(0,999,killAt);
 return _rangeWrap('atk',lo,'ATK≥'+lo);
 }
 return null;
 }
-function _statLabel(st){
+function getStatLabel(st){
 switch(st){
 case'might':return'M';
 case'str':return'STR';
@@ -2851,23 +2873,23 @@ case'mending':return'Mend';
 default:return'ATK';
 }
 }
-function _largestGroupOf(list,gik){
+function findLargestGroup(list,gik){
 const groups={};
 for(const inst of list)(groups[inst[gik]]=groups[inst[gik]]||[]).push(inst);
 let best=null,bestLen=0;
 for(const g in groups){if(groups[g].length>bestLen){bestLen=groups[g].length;best=groups[g];}}
 return best||[];
 }
-function _isMetalActionSk(action,sk){
+function isMetalActionSkill(action,sk){
 return action.jp==='一閃づき'||action.jp==='魔神斬り'||action.equip==='miss'||!!(sk&&sk.metal);
 }
-function _findMetalInst(alive){
-return(typeof _METAL_MONSTERS!=='undefined')?alive.find(i=>_METAL_MONSTERS.has(_monHex(i.hex))):undefined;
+function findMetalInstance(alive){
+return(typeof _METAL_MONSTERS!=='undefined')?alive.find(i=>_METAL_MONSTERS.has(toMonsterHexId(i.hex))):undefined;
 }
-function _charDmgSpan(sk,hx,eq,hits,charsArr){
+function buildCharDamageSpan(sk,hx,eq,hits,charsArr){
 let minDmg=Infinity,maxDmg=0;
 for(const c of charsArr){
-const r=calcSkillDamage(sk,c.stats,hx,null,_weaponTypeMul(eq,hx));
+const r=calcSkillDamage(sk,c.stats,hx,null,getWeaponTypeMultiplier(eq,hx));
 if(r){
 if(r.min*hits<minDmg)minDmg=r.min*hits;
 if(r.max*hits>maxDmg)maxDmg=r.max*hits;
@@ -2876,32 +2898,32 @@ if(r.max*hits>maxDmg)maxDmg=r.max*hits;
 if(minDmg===Infinity)minDmg=0;
 return{min:minDmg,max:maxDmg};
 }
-function _skillClassLock(action){
-const sk=_skOf(action.jp);
+function getSkillClassLock(action){
+const sk=lookupSkill(action.jp);
 return(sk&&sk.cat==='spell'&&Array.isArray(sk.cls))?sk.cls:null;
 }
-function _bestAssign(combo,hexId,mon,killTargets,tensionMul,fourceEls){
-const chars=_readCharStats();
+function findBestAssignment(combo,hexId,mon,killTargets,tensionMul,fourceEls){
+const chars=readCharStatsFromDom();
 const N=chars.length,n=combo.length;
 if(n>N){
 const out={};
-const rating=_solverDmgCheck(combo,hexId,mon,killTargets,tensionMul,fourceEls,out);
-return{rating,assign:null,defend:[],eggAssign:out.eggAssign||null,round1Removed:out.round1Removed,finIdx:out.finIdx,positional:true};
+const rating=checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,out);
+return{rating,assign:null,defend:[],eggAssign:out.eggAssign||null,finIdx:out.finIdx,positional:true};
 }
-const locks=combo.map(_skillClassLock);
+const locks=combo.map(getSkillClassLock);
 const idxs=[];for(let i=0;i<N;i++)idxs.push(i);
 let best=null;
 const pick=[];
 const used=new Uint8Array(N);
 const dfs=()=>{
-if(best&&_rankVal(best.rating)===2)return;
+if(best&&getRankOrderValue(best.rating)===2)return;
 if(pick.length===n){
 for(let i=0;i<n;i++){if(locks[i]){const j=chars[pick[i]].job;if(j===null||!locks[i].includes(j))return;}}
 const assign=pick.slice();
 const out={};
-const rating=_solverDmgCheck(combo,hexId,mon,killTargets,tensionMul,fourceEls,out,assign);
-if(!best||_rankVal(rating)>_rankVal(best.rating)){
-best={rating,assign,defend:idxs.filter(k=>!assign.includes(k)),eggAssign:out.eggAssign||null,round1Removed:out.round1Removed,finIdx:out.finIdx};
+const rating=checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,out,assign);
+if(!best||getRankOrderValue(rating)>getRankOrderValue(best.rating)){
+best={rating,assign,defend:idxs.filter(k=>!assign.includes(k)),eggAssign:out.eggAssign||null,finIdx:out.finIdx};
 }
 return;
 }
@@ -2913,43 +2935,43 @@ pick.pop();used[i]=0;
 }
 };
 dfs();
-if(!best)return{rating:null,assign:null,defend:idxs.slice(),eggAssign:null,round1Removed:null,infeasible:true};
+if(!best)return{rating:null,assign:null,defend:idxs.slice(),eggAssign:null,infeasible:true};
 return best;
 }
-function _hasChipMiss(combo,hexId,assign,finIdx,fourceEls){
+function hasChipMiss(combo,hexId,assign,finIdx,fourceEls){
 if(!assign)return false;
-const chars=_readCharStats();
+const chars=readCharStatsFromDom();
 for(let ci=0;ci<combo.length&&ci<chars.length;ci++){
 if(ci===finIdx)continue;
 const v=combo[ci];
 if(v.at===0||v.fixedDmg)continue;
-if(_checkMetalExecution(v.jp,hexId))continue;
-const sk=_skOf(v.jp);
+if(canExecuteMetal(v.jp,hexId))continue;
+const sk=lookupSkill(v.jp);
 if(!sk)continue;
 const cIdx=assign[ci];
 if(cIdx===undefined||!chars[cIdx])continue;
-const result=calcSkillDamage(sk,chars[cIdx].stats,hexId,fourceEls,_weaponTypeMul(v.equip,hexId));
+const result=calcSkillDamage(sk,chars[cIdx].stats,hexId,fourceEls,getWeaponTypeMultiplier(v.equip,hexId));
 if(!result||result.min<=0)return true;
 }
 return false;
 }
-function _solverDmgCheck(combo,hexId,mon,killTargets,tensionMul,fourceEls,outInfo,assign){
-const chars=_readCharStats();
+function checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,outInfo,assign){
+const chars=readCharStatsFromDom();
 if(!mon)return null;
 tensionMul=tensionMul||1;
 if(!killTargets||(killTargets.length===1&&killTargets[0].count<=1)){
 const perSkill=[];
 for(let ci=0;ci<combo.length&&ci<chars.length;ci++){
-const sk=_skOf(combo[ci].jp);
+const sk=lookupSkill(combo[ci].jp);
 if(!sk){perSkill.push({min:0,max:0,perHitMax:0,hits:1});continue;}
 if(combo[ci].at===0){perSkill.push({min:0,max:0,perHitMax:0,hits:1});continue;}
 const hits=combo[ci].hits||1;
-const exec=_checkMetalExecution(combo[ci].jp,hexId);
+const exec=canExecuteMetal(combo[ci].jp,hexId);
 if(exec){
 perSkill.push(exec.isValid?{min:9999,max:9999,perHitMax:9999,hits:1}:{min:0,max:0,perHitMax:0,hits:1});
 continue;
 }
-const result=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hexId,fourceEls,_weaponTypeMul(combo[ci].equip,hexId));
+const result=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hexId,fourceEls,getWeaponTypeMultiplier(combo[ci].equip,hexId));
 perSkill.push(result
 ?{min:result.min*hits,max:result.max*hits,perHitMax:result.max,hits}
 :{min:0,max:0,perHitMax:0,hits:1});
@@ -3001,7 +3023,7 @@ const effectiveFEls=inlineFource?(_FOURCE_EL[inlineFource.jp]||[]):fourceEls;
 const hasFource=effectiveFEls&&effectiveFEls.length>0;
 const skillDmg=[];
 for(let ci=0;ci<combo.length&&ci<chars.length;ci++){
-const sk=_skOf(combo[ci].jp);
+const sk=lookupSkill(combo[ci].jp);
 const hits=combo[ci].hits||1;
 const tgt=!sk?null:(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
 const dmg={},dmgF={};
@@ -3009,23 +3031,23 @@ for(const hex of uniqueHexes){
 if(!sk){dmg[hex]={min:0,max:0,phMax:0};dmgF[hex]=dmg[hex];continue;}
 const tMon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hex]:null;
 if(!tMon){dmg[hex]={min:0,max:0,phMax:0};dmgF[hex]=dmg[hex];continue;}
-if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(_monHex(hex))){
+if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(hex))){
 const _elem=!!(sk.el&&sk.el>0);
-const _me=_metalEffect(sk.metal||0,_weaponMetalFlag(combo[ci].equip));
+const _me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(combo[ci].equip));
 const _md=(!_elem&&_me)?{min:1*hits,max:2*hits,phMax:2}:{min:0,max:0,phMax:0};
 dmg[hex]=_md;dmgF[hex]=_md;
 continue;
 }
-const r=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,null,_weaponTypeMul(combo[ci].equip,hex));
+const r=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,null,getWeaponTypeMultiplier(combo[ci].equip,hex));
 dmg[hex]=r?{min:r.min*hits,max:r.max*hits,phMax:r.max}:{min:0,max:0,phMax:0};
 if(hasFource){
-const rF=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,effectiveFEls,_weaponTypeMul(combo[ci].equip,hex));
+const rF=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,effectiveFEls,getWeaponTypeMultiplier(combo[ci].equip,hex));
 dmgF[hex]=rF?{min:rF.min*hits,max:rF.max*hits,phMax:rF.max}:dmg[hex];
 }else{
 dmgF[hex]=dmg[hex];
 }
 }
-skillDmg.push({dmg,dmgF,tgt,hits,ci,jp:combo[ci].jp,mAct:_isMetalActionSk(combo[ci],sk)});
+skillDmg.push({dmg,dmgF,tgt,hits,ci,jp:combo[ci].jp,mAct:isMetalActionSkill(combo[ci],sk)});
 }
 const eggCIs=[];
 const dmgCIs=[];
@@ -3111,7 +3133,7 @@ let grpInsts;
 if(combo[ci].tgtGroup!==undefined){
 grpInsts=alive.filter(inst=>inst.groupIdx===combo[ci].tgtGroup);
 }else{
-grpInsts=_largestGroupOf(alive,'groupIdx');
+grpInsts=findLargestGroup(alive,'groupIdx');
 }
 for(const inst of grpInsts){
 const d=(dTable[inst.hex]||{})[useDmg]||0;
@@ -3124,7 +3146,7 @@ if(inst.hp<=0){inst.alive=false;if(inst.groupIdx===0)mainKilled=true;}
 }else{
 alive.sort((a,b)=>b.hp-a.hp);
 let target=alive[0];
-const _mt=sd.mAct?_findMetalInst(alive):undefined;
+const _mt=sd.mAct?findMetalInstance(alive):undefined;
 if(_mt){
 target=_mt;
 }else if(combo[ci].soloGroup){
@@ -3136,7 +3158,7 @@ if(!target)return{allDead:false,rejectAt:ci,reason:'soloGroup'};
 target=alive.find(x=>x.groupIdx===combo[ci].tgtGroup);
 if(!target)return{allDead:false,rejectAt:ci,reason:'tgtdead'};
 }
-const exec=_checkMetalExecution(combo[ci].jp,target.hex);
+const exec=canExecuteMetal(combo[ci].jp,target.hex);
 if(exec){
 if(!exec.isValid)return{allDead:false,rejectAt:ci,reason:'non_metal_issen'};
 target.hp=0;target.hpLow=0;target.alive=false;
@@ -3154,56 +3176,6 @@ if(target.hp<=0){target.alive=false;if(target.groupIdx===0)mainKilled=true;}
 }
 }
 return{allDead:sim.every(i=>!i.alive),rejectAt:-1,reason:null};
-}
-function _round1Removed(eggAssign){
-const sim=instances.map(inst=>({hex:inst.hex,groupIdx:inst.groupIdx,death:inst.death,hp:inst.hp,alive:true}));
-let fourceOn=!inlineFource&&hasFource;
-const init=sim.length;
-let r1MainKilled=false;
-for(let ci=0;ci<skillDmg.length&&ci<4;ci++){
-const sd=skillDmg[ci];
-if(combo[ci].jp==='みのがす'){for(const x of sim){if(x.alive&&x.death>0&&(x.groupIdx>0||r1MainKilled))x.alive=false;}continue;}
-if(combo[ci].jp==='おうえん')continue;
-if(inlineFource&&combo[ci].jp===inlineFource.jp&&!fourceOn){fourceOn=true;continue;}
-if(!sd.tgt)continue;
-const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
-const dTable=fourceOn?sd.dmgF:sd.dmg;
-const alive=sim.filter(i=>i.alive);
-if(alive.length===0)break;
-if(sd.tgt==='A'){
-for(const x of alive){x.hp-=Math.floor(((dTable[x.hex]||{}).min||0)*mul);if(x.hp<=0){x.alive=false;if(x.groupIdx===0)r1MainKilled=true;}}
-}else if(sd.tgt==='G'){
-let grp;
-if(combo[ci].tgtGroup!==undefined){
-grp=alive.filter(x=>x.groupIdx===combo[ci].tgtGroup);
-}else{
-grp=_largestGroupOf(alive,'groupIdx');
-}
-for(const x of grp){x.hp-=Math.floor(((dTable[x.hex]||{}).min||0)*mul);if(x.hp<=0){x.alive=false;if(x.groupIdx===0)r1MainKilled=true;}}
-}else{
-alive.sort((a,b)=>b.hp-a.hp);
-let t=alive[0];
-const _mt1=sd.mAct?_findMetalInst(alive):undefined;
-if(_mt1){
-t=_mt1;
-}else if(combo[ci].soloGroup){
-const gc={};
-for(const x of alive)gc[x.groupIdx]=(gc[x.groupIdx]||0)+1;
-t=alive.find(x=>gc[x.groupIdx]===1);
-if(!t)continue;
-}else if(combo[ci].tgtGroup!==undefined){
-t=alive.find(x=>x.groupIdx===combo[ci].tgtGroup);
-if(!t)continue;
-}
-const exec=_checkMetalExecution(combo[ci].jp,t.hex);
-if(exec){
-if(exec.isValid){t.hp=0;t.alive=false;if(t.groupIdx===0)r1MainKilled=true;}
-continue;
-}
-t.hp-=Math.floor(((dTable[t.hex]||{}).min||0)*mul);if(t.hp<=0){t.alive=false;if(t.groupIdx===0)r1MainKilled=true;}
-}
-}
-return sim.filter(i=>i.alive).length<init;
 }
 const assigns=eggCIs.length>0?_genEggAssigns():[externalAssign];
 const _lastCI=skillDmg.length-1;
@@ -3225,13 +3197,13 @@ if(rMax.allDead){bestRating='orange';bestAssign=assign;break;}
 }
 }
 }
-if(outInfo){if(bestAssign)outInfo.eggAssign=bestAssign;outInfo.round1Removed=_round1Removed(bestAssign);outInfo.cleanIncomplete=_cleanIncomplete;}
+if(outInfo){if(bestAssign)outInfo.eggAssign=bestAssign;outInfo.cleanIncomplete=_cleanIncomplete;}
 return bestRating;
 }
-function _comboCanAntiBlk(combo){
+function canComboAntiBlock(combo){
 for(const v of combo){
 if(v.at===0)continue;
-const sd=_sdOf(v.jp);
+const sd=lookupSkillData(v.jp);
 if(sd&&sd.blk===0)continue;
 if(v.equip)return false;
 let hasAntiBlk=false;
@@ -3244,27 +3216,27 @@ if(!hasAntiBlk)return false;
 }
 return true;
 }
-function _planAFinisher(combo,hexId,mon,killTargets,maxSlots){
+function planAFinisher(combo,hexId,mon,killTargets,maxSlots){
 if(!killTargets||killTargets.length<2)return null;
 if(!combo.every(v=>v.at>0))return null;
 const aIdx=[];
-for(let i=0;i<combo.length;i++){const sk=_skOf(combo[i].jp);if(sk&&sk.target==='A')aIdx.push(i);}
+for(let i=0;i<combo.length;i++){const sk=lookupSkill(combo[i].jp);if(sk&&sk.target==='A')aIdx.push(i);}
 if(aIdx.length!==1)return null;
 const fin=combo[aIdx[0]];
 if((fin.hits||1)>1)return null;
 const chips=combo.filter((v,i)=>i!==aIdx[0]);
 const freeCI=[];
 for(let ci=0;ci<chips.length;ci++){
-const sk=_skOf(chips[ci].jp);
+const sk=lookupSkill(chips[ci].jp);
 if(!sk)return null;
 if(sk.target==='S'&&!chips[ci].soloGroup&&chips[ci].tgtGroup===undefined){freeCI.push(ci);continue;}
 if(sk.target==='G'&&chips[ci].tgtGroup!==undefined)continue;
 return null;
 }
-const chars=_readCharStats();
+const chars=readCharStatsFromDom();
 const nG=killTargets.length;
 const dmgOf=(v)=>{
-const sk=_skOf(v.jp);const hits=v.hits||1;const out={};
+const sk=lookupSkill(v.jp);const hits=v.hits||1;const out={};
 for(const t of killTargets){
 let mn=0,mx=0;
 for(const c of chars){const r=calcSkillDamage(sk,c.stats,t.hex,null);if(r){if(r.min>mn)mn=r.min;if(r.max>mx)mx=r.max;}}
@@ -3302,11 +3274,11 @@ freeCI.forEach((ci,k)=>{const g=idxs[k];const hx=killTargets[g].hex;minS[g]+=chi
 let ok=true;
 for(let g=0;g<nG;g++){if(minS[g]<needG[g]||maxS[g]>capG[g]){ok=false;break;}}
 if(ok){
-const prefix=_eggPrefix(tier.eggs);
+const prefix=makeEggOnPrefix(tier.eggs);
 const planned=[...prefix,...chips.map((c,ci)=>{const k=freeCI.indexOf(ci);return k>=0?Object.assign({},c,{tgtGroup:idxs[k]}):c;}),fin];
 if(--vBudget<0)return null;
-const pb=_bestAssign(planned,hexId,mon,killTargets,1,null);
-if(pb.rating==='gold')return{combo:planned,eggAssign:pb.eggAssign,assign:pb.assign,defend:pb.defend,round1Removed:pb.round1Removed,multiOnly:tier.eggs>=2};
+const pb=findBestAssignment(planned,hexId,mon,killTargets,1,null);
+if(pb.rating==='gold')return{combo:planned,eggAssign:pb.eggAssign,assign:pb.assign,defend:pb.defend,multiOnly:tier.eggs>=2};
 }
 let j=0;
 while(j<idxs.length&&++idxs[j]>=nG){idxs[j]=0;j++;}
@@ -3315,7 +3287,7 @@ if(j>=idxs.length)break;
 }
 return null;
 }
-function _trimGroups(groups,max){
+function trimGroups(groups,max){
 groups=groups.slice();
 let total=groups.reduce((s,v)=>s+v,0);
 while(total>max){
@@ -3331,7 +3303,7 @@ if(!changed)break;
 }
 return groups;
 }
-function _solverDriveStat(sk){
+function getSkillDriveStat(sk){
 if(sk&&sk.fixedDmg)return null;
 if(!sk||!sk.dmg)return'atk';
 if(sk.dmg.st){
@@ -3340,9 +3312,9 @@ return(s==='might'||s==='str'||s==='mending')?s:null;
 }
 return null;
 }
-function _solverStatBound(sk,monId,hits,hp,dir,fEls,tensionMul,wmul){
+function calcSkillStatBound(sk,monId,hits,hp,dir,fEls,tensionMul,wmul){
 tensionMul=tensionMul||1;
-const key=_solverDriveStat(sk);
+const key=getSkillDriveStat(sk);
 if(!key)return null;
 const dmgAt=(v)=>{const st={atk:0,might:0,str:0,mending:0,deft:0};st[key]=v;const r=calcSkillDamage(sk,st,monId,fEls,wmul);return r||{min:0,max:0};};
 const minT=(v)=>Math.floor(dmgAt(v).min*tensionMul);
@@ -3350,29 +3322,29 @@ const maxT=(v)=>Math.floor(dmgAt(v).max*tensionMul);
 const MAXV=999;
 if(dir==='kill'){
 if(minT(MAXV)*hits<hp)return{key,val:Infinity};
-return{key,val:_bsMinTrue(0,MAXV,(m)=>minT(m)*hits>=hp)};
+return{key,val:binarySearchMinTrue(0,MAXV,(m)=>minT(m)*hits>=hp)};
 }
 if(dir==='chip'){
 if(maxT(MAXV)*hits<hp)return{key,val:Infinity};
-return{key,val:Math.max(0,_bsMaxTrue(0,MAXV,(m)=>maxT(m)*hits<hp))};
+return{key,val:Math.max(0,binarySearchMaxTrue(0,MAXV,(m)=>maxT(m)*hits<hp))};
 }
 if(dir==='detcap'){
 if(hits<=1)return{key,val:Infinity};
 if((hits-1)*maxT(MAXV)<hp)return{key,val:Infinity};
-return{key,val:Math.max(0,_bsMaxTrue(0,MAXV,(m)=>(hits-1)*maxT(m)<hp))};
+return{key,val:Math.max(0,binarySearchMaxTrue(0,MAXV,(m)=>(hits-1)*maxT(m)<hp))};
 }
 return null;
 }
-function _solverHintStr(sk,monId,hits,hpHigh,hpLow,fEls,tensionMul,wmul){
-const key=_solverDriveStat(sk);
+function buildSolverHintText(sk,monId,hits,hpHigh,hpLow,fEls,tensionMul,wmul){
+const key=getSkillDriveStat(sk);
 if(!key)return'<span style="color:#667;">固定傷害 · 無屬性門檻</span>';
 const label={atk:'攻擊力',might:'攻魔',str:'力',mending:'回魔'}[key]||key;
-const chip=_solverStatBound(sk,monId,hits,Math.max(1,hpLow),'chip',fEls,tensionMul,wmul);
-const kill=_solverStatBound(sk,monId,hits,Math.max(1,hpHigh),'kill',fEls,tensionMul,wmul);
+const chip=calcSkillStatBound(sk,monId,hits,Math.max(1,hpLow),'chip',fEls,tensionMul,wmul);
+const kill=calcSkillStatBound(sk,monId,hits,Math.max(1,hpHigh),'kill',fEls,tensionMul,wmul);
 const parts=[];
 parts.push('削血≤'+(chip?(chip.val===Infinity?'任意':chip.val):'?'));
 parts.push('收尾'+(kill?(kill.val===Infinity?'(殺不死)':'≥'+kill.val):'?'));
-if(hits>1){const det=_solverStatBound(sk,monId,hits,Math.max(1,hpLow),'detcap',fEls,tensionMul,wmul);if(det&&det.val!==Infinity)parts.push('滿hit≤'+det.val);}
+if(hits>1){const det=calcSkillStatBound(sk,monId,hits,Math.max(1,hpLow),'detcap',fEls,tensionMul,wmul);if(det&&det.val!==Infinity)parts.push('滿hit≤'+det.val);}
 if(hpLow<=0)parts.unshift('<span style="color:#f80;">前置招恐已殺</span>');
 return'<span style="color:#789;">['+label+'] '+parts.join(' · ')+'</span>';
 }
@@ -3464,15 +3436,15 @@ if(match)return true;
 }
 return false;
 }
-function _eachPoolEntry(rawPool,fn){
+function forEachPoolEntry(rawPool,fn){
 for(const e of rawPool){
 if(!Array.isArray(e))continue;
 if(typeof e[0]==='string')fn(e);
 for(const x of e){if(Array.isArray(x)&&typeof x[0]==='string')fn(x);}
 }
 }
-function _renderKathwack(monId,monGroups){
-const hexId=_monHex(monId);
+function renderKathwackPlan(monId,monGroups){
+const hexId=toMonsterHexId(monId);
 const useJP=DISPLAY_LANG!=='EN';
 const name=useJP?'ザラキーマ':'Kathwack';
 const groups=(monGroups&&monGroups.length)?monGroups:(hexId?[{hex:hexId,count:1}]:[]);
@@ -3482,7 +3454,7 @@ if(!m||m.s[12]<=0){
 return`<div style="font-size:10px;margin-left:16px;color:#666;">${name} <span style="color:#f44;">✗</span> <span style="font-size:9px;color:#888;">death=0</span></div>`;
 }
 }
-const chars=_readCharStats();
+const chars=readCharStatsFromDom();
 const might=Math.max(...chars.map(c=>c.stats.might||0));
 let baseAcc;
 if(might>=799)baseAcc=100;
@@ -3503,7 +3475,7 @@ const eff=baseAcc*res/100;
 wipe*=Math.pow(eff/100,cnt);
 if(res<100)anyRes=true;
 if(res<100||multi){
-const nm=multi?_monDispName(g.hex)+(cnt>1?'×'+cnt:'')+' ':'';
+const nm=multi?getMonsterDisplayName(g.hex)+(cnt>1?'×'+cnt:'')+' ':'';
 html+=` <span style="color:#f80;font-size:9px;">${nm}×d=${res} → ${fmtAcc(eff)}</span>`;
 }
 }
@@ -3518,34 +3490,103 @@ html+=!anyRes
 html+='</div>';
 return html;
 }
-function _solverRender(bat,monGroups,monId,mapDeft,canRound2){
+function evalRound1Removal(combo,targets,eggAssign,assign,chars){
+if(!targets||targets.length===0)return'none';
+const inst=[];
+for(let ti=0;ti<targets.length;ti++){
+const t=targets[ti];
+const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[t.hex]:null;
+const hp=m?m.s[0]:9999;
+for(let c=0;c<t.count;c++)
+inst.push({hex:t.hex,hp,hpLow:Math.floor(hp*0.8),death:t.death!==undefined?t.death:100,
+alive:true,groupIdx:ti});
+}
+const inlineFource=combo.find(v=>v.at===0&&typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[v.jp]);
+const fEls=inlineFource?(_FOURCE_EL[inlineFource.jp]||[]):null;
+let fourceOn=false,mainKilled=false,definite=false,uncertain=false;
+for(let ci=0;ci<combo.length&&ci<4;ci++){
+const action=combo[ci];
+const alive=inst.filter(i=>i.alive);
+if(alive.length===0)break;
+if(action.jp==='みのがす'){
+const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||mainKilled));
+for(const i of removed)i.alive=false;
+if(removed.length)definite=true;
+continue;
+}
+if(action.jp==='おうえん')continue;
+if(inlineFource&&action.jp===inlineFource.jp&&!fourceOn){fourceOn=true;continue;}
+const sk=lookupSkill(action.jp);
+if(!sk)continue;
+const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
+const hitTargets=tgt==='A'?alive.slice():
+tgt==='G'?(action.tgtGroup!==undefined?alive.filter(i=>i.groupIdx===action.tgtGroup)
+:findLargestGroup(alive,'groupIdx')):
+(()=>{
+if(isMetalActionSkill(action,sk)){const mt=findMetalInstance(alive);if(mt)return[mt];}
+if(action.tgtGroup!==undefined&&!action.soloGroup){
+const t=alive.filter(i=>i.groupIdx===action.tgtGroup).sort((a,b)=>b.hp-a.hp)[0];
+if(t)return[t];
+}
+return[alive.slice().sort((a,b)=>b.hp-a.hp)[0]];
+})();
+const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
+const hits=action.hits||1;
+for(const i of hitTargets){
+if(!i)continue;
+const exec=canExecuteMetal(action.jp,i.hex);
+if(exec){
+if(exec.isValid){i.hp=0;i.hpLow=0;i.alive=false;definite=true;if(i.groupIdx===0)mainKilled=true;}
+continue;
+}
+if(!chars)continue;
+let dMin,dMax;
+if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(i.hex))){
+const elemental=!!(sk.el&&sk.el>0);
+const me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(action.equip));
+if(!elemental&&me){dMin=1*hits;dMax=2*hits;}else{dMin=0;dMax=0;}
+}else{
+const c=chars[assign?assign[ci]:ci]||chars[0]||{stats:{}};
+const r=calcSkillDamage(sk,c.stats,i.hex,fourceOn?fEls:null,getWeaponTypeMultiplier(action.equip,i.hex));
+dMin=r?Math.floor(r.min*hits*mul):0;
+dMax=r?Math.floor(r.max*hits*mul):0;
+}
+if(i.hp-dMin<=0)definite=true;
+else if(i.hpLow-dMax<=0)uncertain=true;
+i.hp-=dMin;i.hpLow-=dMax;
+if(i.hp<=0){i.alive=false;if(i.groupIdx===0)mainKilled=true;}
+}
+}
+return uncertain?'uncertain':definite?'definite':'none';
+}
+function renderSolverResult(bat,monGroups,monId,mapDeft,canRound2){
 if(canRound2===undefined)canRound2=mapDeft<1000;
 try{
 if(bat<0)return'';
 const useStats=!!document.getElementById('si_useStats')?.checked;
 _solverUseStats=useStats;
-_solverResetDmgCache();
+resetSolverDamageCache();
 const T=monGroups.reduce((s,g)=>s+g.count,0);
 const realT=monGroups.reduce((s,g)=>s+(g.count||1),0);
 const tc2=Math.floor(realT/2);
 if(bat===0){
 const allD=monGroups.every(g=>{const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[g.hex]:null;return m&&m.s[12]>0;});
-if(allD)return _renderKathwack(monId,monGroups);
+if(allD)return renderKathwackPlan(monId,monGroups);
 return'<div style="color:#666;font-size:10px;margin-left:16px;">—</div>';
 }
-const hexId=_monHex(monId);
+const hexId=toMonsterHexId(monId);
 const isMetal=hexId&&_METAL_MONSTERS.has(hexId);
 const mainGroup=monGroups[0];
 const sups=monGroups.filter(g=>!g.isMain);
 const hasSups=sups.length>0&&sups.some(g=>g.count>0);
-const _nonMetalSups=sups.filter(g=>(g.count>0)&&g.hex&&!_METAL_MONSTERS.has(_monHex(g.hex)));
+const _nonMetalSups=sups.filter(g=>(g.count>0)&&g.hex&&!_METAL_MONSTERS.has(toMonsterHexId(g.hex)));
 const _metalSupCount=(!isMetal&&typeof _METAL_MONSTERS!=='undefined')
-?sups.reduce((s,g)=>s+((g.count>0&&g.hex&&_METAL_MONSTERS.has(_monHex(g.hex)))?g.count:0),0):0;
+?sups.reduce((s,g)=>s+((g.count>0&&g.hex&&_METAL_MONSTERS.has(toMonsterHexId(g.hex)))?g.count:0),0):0;
 let excludedPads=null;
 if(isMetal&&_nonMetalSups.length>0&&typeof calcSkillDamage==='function'){
 excludedPads=new Set();
 const _seen=new Set();
-const _currentChars=_charsSafe();
+const _currentChars=getCharsSafe();
 for(const row of _METAL_PADDING){
 const jp=row[0];
 if(_seen.has(jp))continue;_seen.add(jp);
@@ -3558,12 +3599,12 @@ if(!m)continue;
 const hp100=m.s[0];
 const hp80=Math.floor(hp100*0.8);
 const eq=row[3];
-const span=_charDmgSpan(sk,_monHex(g.hex),eq,_equipHits(sk,eq),_currentChars);
+const span=buildCharDamageSpan(sk,toMonsterHexId(g.hex),eq,getEquipHitCount(sk,eq),_currentChars);
 if(span.max>=hp80&&span.min<hp100){excludedPads.add(jp);break;}
 }
 }
 }
-const _mercyLv=(typeof _readCharStats==='function')?Math.max(...(_readCharStats().map(c=>c.lv||99))):99;
+const _mercyLv=(typeof readCharStatsFromDom==='function')?Math.max(...(readCharStatsFromDom().map(c=>c.lv||99))):99;
 const _effDeath=(g)=>{
 if(!(g.death>0))return 0;
 const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[g.hex]:null;
@@ -3600,7 +3641,7 @@ const maxGrp=Math.max(...killTargets.map(g=>g.count||1));
 let cap=0;
 for(const v of combo){
 if(!(v.at>0))continue;
-const sk=_skOf(v.jp);
+const sk=lookupSkill(v.jp);
 const tgt=sk?sk.target:'S';
 if(tgt==='A'){cap=K;break;}
 else if(tgt==='G'||tgt==='RG')cap+=maxGrp;
@@ -3608,7 +3649,7 @@ else if(tgt==='RA'||tgt==='RS')cap+=Math.max(v.hits||0,(sk&&sk.hitRange&&sk.hitR
 else cap+=1;
 }
 if(cap<K)return false;
-const _isMetalG=killTargets.map(g=>typeof _METAL_MONSTERS!=='undefined'&&_METAL_MONSTERS.has(_monHex(g.hex)));
+const _isMetalG=killTargets.map(g=>typeof _METAL_MONSTERS!=='undefined'&&_METAL_MONSTERS.has(toMonsterHexId(g.hex)));
 const gMaxW=killTargets.map(g=>g.count||0);
 let mAliveW=0;
 for(let gi=0;gi<killTargets.length;gi++)if(_isMetalG[gi])mAliveW+=gMaxW[gi];
@@ -3632,7 +3673,7 @@ if(_metalSupNeed>0&&_isExecW(v)){
 if(mAliveW<1)return false;
 mAliveW-=1;continue;
 }
-const skW=_skOf(v.jp);
+const skW=lookupSkill(v.jp);
 const nmLowW=Math.max(0,nmMaxW-nmCapW);
 const aliveMaxW=nmMaxW+mAliveW;
 const aliveLowW=Math.max(1,nmLowW+mAliveW);
@@ -3669,7 +3710,7 @@ const eggOnAction=_ACT_EGG;
 const _metalHPs=[];
 let _metalCount=0;
 for(const g of monGroups){
-const gHex=g.hex?_monHex(g.hex):null;
+const gHex=g.hex?toMonsterHexId(g.hex):null;
 const gIsMetal=gHex&&(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(gHex);
 if(gIsMetal){
 const s=((typeof MONSTER_DB!=='undefined'&&MONSTER_DB[g.hex])||{}).s;
@@ -3679,40 +3720,40 @@ for(let i=0;i<(g.count||1);i++){_metalHPs.push(h);_metalCount++;}
 }
 if(isMetal&&_metalCount===0)_metalCount=T;
 if(planType==='kill_all'){
-combos=_metalSupFilter(isMetal?_solverFindMetal(bat,T,4,_metalCount,_metalHPs,excludedPads,hexId):_solverFind(bat,T,4,[],hexId)).filter(_walkOK);
+combos=_metalSupFilter(isMetal?solveMetalCombo(bat,T,4,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,T,4,[],hexId)).filter(_walkOK);
 if(combos.length===0&&canRound2){
-const r2a=isMetal?_solverFindMetal(bat,T,8,_metalCount,_metalHPs,excludedPads,hexId):_solverFind(bat,T,8,[],hexId);
+const r2a=isMetal?solveMetalCombo(bat,T,8,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,T,8,[],hexId);
 const r2b=tc2>0
-?(isMetal?_solverFindMetal(bat-tc2,T,8,_metalCount,_metalHPs,excludedPads,hexId):_solverFind(bat-tc2,T,8,[],hexId))
+?(isMetal?solveMetalCombo(bat-tc2,T,8,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat-tc2,T,8,[],hexId))
 :[];
 combos=_metalSupFilter([...r2a,...r2b]).filter(c=>c.length>=5).filter(_walkOK);
 isRound2=combos.length>0;
 }
 }else if(planType==='mercy_first'){
-const r1Dmg=_metalSupFilter(isMetal?_solverFindMetal(bat,postAlive,3,_metalCount,_metalHPs,excludedPads,hexId):_solverFind(bat,postAlive,3,[]));
+const r1Dmg=_metalSupFilter(isMetal?solveMetalCombo(bat,postAlive,3,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,postAlive,3,[]));
 combos=r1Dmg.map(c=>[mercyAction,...c]).filter(_walkOK);
 if(combos.length===0&&canRound2){
 if(tc2>0){
-const s0=_metalSupFilter(isMetal?_solverFindMetal(bat-tc2,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId):_solverFind(bat-tc2,postAlive,7,[]))
+const s0=_metalSupFilter(isMetal?solveMetalCombo(bat-tc2,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat-tc2,postAlive,7,[]))
 .filter(c=>c.length>=4)
 .map(c=>[mercyAction,...c]).filter(_walkOK);
 combos=combos.concat(s0);
 }
-const s4=_metalSupFilter(isMetal?_solverFindMetal(bat,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId):_solverFind(bat,postAlive,7,[]))
+const s4=_metalSupFilter(isMetal?solveMetalCombo(bat,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,postAlive,7,[]))
 .filter(c=>c.length>=5)
 .map(c=>[...c.slice(0,4),mercyAction,...c.slice(4)]).filter(_walkOK);
 combos=combos.concat(s4);
 isRound2=combos.length>0;
 }
 }else{
-const phaseAVars=_solverExpand(T,[]);
+const phaseAVars=expandSolverCombos(T,[]);
 const sSkills=phaseAVars.filter(v=>{
 if(_metalSupNeed>0&&(v.jp==='一閃づき'||v.jp==='魔神斬り'))return false;
-const sk=_skOf(v.jp);
+const sk=lookupSkill(v.jp);
 return sk&&(sk.target==='S'||sk.target==='RS')&&v.at>0&&v.at<=bat;
 });
-const kmcFource=(!isMetal&&hexId)?_bestFource(hexId):null;
-const kmcFourceAction=kmcFource?_mkFourceAction(kmcFource):null;
+const kmcFource=(!isMetal&&hexId)?pickBestFource(hexId):null;
+const kmcFourceAction=kmcFource?makeFourceAction(kmcFource):null;
 const _kmcBuild=(target,loLen,hiLen,cap)=>{
 const res=[];
 const pushV=(arr)=>{if(arr.length>=loLen&&arr.length<=hiLen&&res.length<cap)res.push(arr);};
@@ -3730,7 +3771,7 @@ const bTgt=target-aSum;
 if(bTgt>0){
 const maxLenB=hiLen-seqA.length-1;
 if(maxLenB>=1){
-const bCombos=_solverFind(bTgt,postAlive,maxLenB,[]);
+const bCombos=solveBattleCombo(bTgt,postAlive,maxLenB,[]);
 for(const b of bCombos){
 pushV([...seqA,mercyAction,...b]);
 pushV([eggOnAction,...seqA,mercyAction,...b]);
@@ -3777,7 +3818,7 @@ if(combos.length===0)return'<div style="color:#666;font-size:10px;margin-left:16
 const useJP=(DISPLAY_LANG!=='EN');
 const mon=hexId&&typeof MONSTER_DB!=='undefined'?MONSTER_DB[hexId]:null;
 const filtered=[];
-const fource=(!isMetal&&hexId)?_bestFource(hexId):null;
+const fource=(!isMetal&&hexId)?pickBestFource(hexId):null;
 const canFilter=mon&&!isMetal&&useStats;
 const monEvade=mon?mon.s[3]:0;
 const monBlock=mon?mon.s[4]:0;
@@ -3788,12 +3829,12 @@ if(isMetal&&combo.some(v=>v.needle))continue;
 const dmgParts=combo.filter(v=>v.at>0);
 if(dmgParts.length===1){
 const v=dmgParts[0];
-const rsk=_SOLVER_SK[v.jp];const sd=_sdOf(v.jp);
-const statType=((rsk&&rsk.fixedDmg)?'fix'+rsk.fixedDmg:(sd&&sd.dmg&&sd.dmg.st)?sd.dmg.st:(sd&&sd.el?'el'+sd.el:'atk'))+(_weaponTypeMul(v.equip,hexId)>1?'_w11':'');
+const rsk=_SOLVER_SK[v.jp];const sd=lookupSkillData(v.jp);
+const statType=((rsk&&rsk.fixedDmg)?'fix'+rsk.fixedDmg:(sd&&sd.dmg&&sd.dmg.st)?sd.dmg.st:(sd&&sd.el?'el'+sd.el:'atk'))+(getWeaponTypeMultiplier(v.equip,hexId)>1?'_w11':'');
 const key=v.at+'_'+statType;
 const vEv=sd?sd.ev:1;
 const vBlk=sd?sd.blk:1;
-const curReq=_solverMinStat(combo,hexId,1,null);
+const curReq=calcSolverMinStat(combo,hexId,1,null);
 const curMin=curReq?curReq.min:Infinity;
 if(seen1.has(key)){
 const prev=seen1.get(key);
@@ -3813,99 +3854,98 @@ seen1.set(key,{jp:v.jp,ev:vEv,blk:vBlk,reqMin:curMin});
 }
 }
 if(canFilter){
-const baseBest=_bestAssign(combo,hexId,mon,killTargets,1,null);
-const dmgInfo={eggAssign:baseBest.eggAssign,round1Removed:baseBest.round1Removed};
+const baseBest=findBestAssignment(combo,hexId,mon,killTargets,1,null);
 const kill=baseBest.rating;
-const req=_solverMinStat(combo,hexId);
-const _baseRk=_rankVal(kill);
+const req=calcSolverMinStat(combo,hexId);
+const _baseRk=getRankOrderValue(kill);
 if(kill){
-if(!_hasChipMiss(combo,hexId,baseBest.assign,baseBest.finIdx,null))
-filtered.push({combo,kill,req,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),eggAssign:dmgInfo.eggAssign||null,round1Removed:dmgInfo.round1Removed,assign:baseBest.assign,defend:baseBest.defend,finIdx:baseBest.finIdx});
+if(!hasChipMiss(combo,hexId,baseBest.assign,baseBest.finIdx,null))
+filtered.push({combo,kill,req,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),eggAssign:baseBest.eggAssign||null,assign:baseBest.assign,defend:baseBest.defend,finIdx:baseBest.finIdx});
 }else if(req&&req.min<Infinity){
 const gateOut={};
-_solverDmgCheck(combo,hexId,mon,killTargets,1,null,gateOut,undefined);
-let ext=_extremeRatingOK(combo,hexId,mon,killTargets);
+checkSolverDamage(combo,hexId,mon,killTargets,1,null,gateOut,undefined);
+let ext=passesExtremeRating(combo,hexId,mon,killTargets);
 if(ext.rating!=='gold'&&req&&req.max!==undefined&&req.min<=req.max&&req.stat){
-ext=_extremeRatingOK(combo,hexId,mon,killTargets,{..._EXT_STATS,[req.stat]:req.min});
+ext=passesExtremeRating(combo,hexId,mon,killTargets,{..._EXT_STATS,[req.stat]:req.min});
 }
 if(gateOut.cleanIncomplete&&ext.rating==='gold'){
-filtered.push({combo,kill:null,req,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),round1Removed:dmgInfo.round1Removed,finIdx:ext.finIdx});
+filtered.push({combo,kill:null,req,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),finIdx:ext.finIdx});
 }
 }
 if(planType!=='kill_mercy_clear'&&dmgParts.length<4&&_baseRk<2){
 for(const t of _TENSION){
 if(combo.length+t.eggs>4)break;
-const prefix=_eggPrefix(t.eggs);
+const prefix=makeEggOnPrefix(t.eggs);
 const eggCombo=[...prefix,...combo];
-const eggBest=_bestAssign(eggCombo,hexId,mon,killTargets,t.mul,null);
-if(eggBest.rating&&(_rankVal(eggBest.rating)>_baseRk||(eggBest.rating==='orange'&&_baseRk===1))){
-if(!_hasChipMiss(eggCombo,hexId,eggBest.assign,eggBest.finIdx,null)){
-const eggReq=_solverMinStat(combo,hexId,t.mul);
-filtered.push({combo:eggCombo,kill:eggBest.rating,req:eggReq,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),multiOnly:t.eggs>=2,eggAssign:eggBest.eggAssign,round1Removed:eggBest.round1Removed,assign:eggBest.assign,defend:eggBest.defend,finIdx:eggBest.finIdx});
+const eggBest=findBestAssignment(eggCombo,hexId,mon,killTargets,t.mul,null);
+if(eggBest.rating&&(getRankOrderValue(eggBest.rating)>_baseRk||(eggBest.rating==='orange'&&_baseRk===1))){
+if(!hasChipMiss(eggCombo,hexId,eggBest.assign,eggBest.finIdx,null)){
+const eggReq=calcSolverMinStat(combo,hexId,t.mul);
+filtered.push({combo:eggCombo,kill:eggBest.rating,req:eggReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2,eggAssign:eggBest.eggAssign,assign:eggBest.assign,defend:eggBest.defend,finIdx:eggBest.finIdx});
 break;
 }
 }
 }
 }
-if(fource&&combo.length<4&&_baseRk<2&&combo.some(v=>{const s=_skOf(v.jp);return s&&!s.el;})){
+if(fource&&combo.length<4&&_baseRk<2&&combo.some(v=>{const s=lookupSkill(v.jp);return s&&!s.el;})){
 const fEls=_FOURCE_EL[fource.jp]||[];
-const fCombo=[_mkFourceAction(fource),...combo];
-const fBest=_bestAssign(fCombo,hexId,mon,killTargets,1,fEls);
-if(fBest.rating&&(_rankVal(fBest.rating)>_baseRk||(fBest.rating==='orange'&&_baseRk===1))){
-if(!_hasChipMiss(fCombo,hexId,fBest.assign,fBest.finIdx,fEls)){
-const fReq=_solverMinStat(combo,hexId,1,fource);
-filtered.push({combo:fCombo,kill:fBest.rating,req:fReq,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),eggAssign:fBest.eggAssign,round1Removed:fBest.round1Removed,assign:fBest.assign,defend:fBest.defend,finIdx:fBest.finIdx});
+const fCombo=[makeFourceAction(fource),...combo];
+const fBest=findBestAssignment(fCombo,hexId,mon,killTargets,1,fEls);
+if(fBest.rating&&(getRankOrderValue(fBest.rating)>_baseRk||(fBest.rating==='orange'&&_baseRk===1))){
+if(!hasChipMiss(fCombo,hexId,fBest.assign,fBest.finIdx,fEls)){
+const fReq=calcSolverMinStat(combo,hexId,1,fource);
+filtered.push({combo:fCombo,kill:fBest.rating,req:fReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),eggAssign:fBest.eggAssign,assign:fBest.assign,defend:fBest.defend,finIdx:fBest.finIdx});
 }
 }
 }
-if(fource&&_baseRk<2&&combo.some(v=>{const s=_skOf(v.jp);return s&&!s.el;})){
+if(fource&&_baseRk<2&&combo.some(v=>{const s=lookupSkill(v.jp);return s&&!s.el;})){
 const fEls=_FOURCE_EL[fource.jp]||[];
 for(const t of _TENSION){
 if(combo.length+t.eggs+1>4)break;
-const eggPrefix=_eggPrefix(t.eggs);
-const fourceEntry=_mkFourceAction(fource);
+const eggPrefix=makeEggOnPrefix(t.eggs);
+const fourceEntry=makeFourceAction(fource);
 const efCombo=[...eggPrefix,fourceEntry,...combo];
-const efBest=_bestAssign(efCombo,hexId,mon,killTargets,t.mul,fEls);
-if(efBest.rating&&(_rankVal(efBest.rating)>_baseRk||(efBest.rating==='orange'&&_baseRk===1))){
-if(!_hasChipMiss(efCombo,hexId,efBest.assign,efBest.finIdx,fEls)){
-const efReq=_solverMinStat(combo,hexId,t.mul,fource);
-filtered.push({combo:efCombo,kill:efBest.rating,req:efReq,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),multiOnly:t.eggs>=2,eggAssign:efBest.eggAssign,round1Removed:efBest.round1Removed,assign:efBest.assign,defend:efBest.defend,finIdx:efBest.finIdx});
+const efBest=findBestAssignment(efCombo,hexId,mon,killTargets,t.mul,fEls);
+if(efBest.rating&&(getRankOrderValue(efBest.rating)>_baseRk||(efBest.rating==='orange'&&_baseRk===1))){
+if(!hasChipMiss(efCombo,hexId,efBest.assign,efBest.finIdx,fEls)){
+const efReq=calcSolverMinStat(combo,hexId,t.mul,fource);
+filtered.push({combo:efCombo,kill:efBest.rating,req:efReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2,eggAssign:efBest.eggAssign,assign:efBest.assign,defend:efBest.defend,finIdx:efBest.finIdx});
 break;
 }
 }
 }
 }
 }else if(mon&&T===1&&!isMetal){
-const req=_solverMinStat(combo,hexId);
+const req=calcSolverMinStat(combo,hexId);
 if(!req||req.min<=999){
-filtered.push({combo,kill:null,req,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo)});
+filtered.push({combo,kill:null,req,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo)});
 }
 if(planType!=='kill_mercy_clear'&&combo.length<4){
 for(const t of _TENSION){
 if(combo.length+t.eggs>4)break;
-const eggReq=_solverMinStat(combo,hexId,t.mul);
+const eggReq=calcSolverMinStat(combo,hexId,t.mul);
 if(eggReq&&eggReq.min<=999&&(!req||eggReq.min<req.min)){
-const prefix=_eggPrefix(t.eggs);
-filtered.push({combo:[...prefix,...combo],kill:null,req:eggReq,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),multiOnly:t.eggs>=2});
+const prefix=makeEggOnPrefix(t.eggs);
+filtered.push({combo:[...prefix,...combo],kill:null,req:eggReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2});
 break;
 }
 }
 }
 if(fource&&combo.length<4&&combo.some(v=>!_SOLVER_SKILL_DATA[v.jp]?.el)){
-const fReq=_solverMinStat(combo,hexId,1,fource);
+const fReq=calcSolverMinStat(combo,hexId,1,fource);
 if(fReq&&fReq.min<=999&&(!req||fReq.min<req.min)){
-const fCombo=[_mkFourceAction(fource),...combo];
-filtered.push({combo:fCombo,kill:null,req:fReq,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo)});
+const fCombo=[makeFourceAction(fource),...combo];
+filtered.push({combo:fCombo,kill:null,req:fReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo)});
 }
 }
 if(fource&&combo.some(v=>!_SOLVER_SKILL_DATA[v.jp]?.el)){
 for(const t of _TENSION){
 if(combo.length+t.eggs+1>4)break;
-const efReq=_solverMinStat(combo,hexId,t.mul,fource);
+const efReq=calcSolverMinStat(combo,hexId,t.mul,fource);
 if(efReq&&efReq.min<=999&&(!req||efReq.min<req.min)){
-const eggPrefix=_eggPrefix(t.eggs);
-const fourceEntry=_mkFourceAction(fource);
-filtered.push({combo:[...eggPrefix,fourceEntry,...combo],kill:null,req:efReq,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo),multiOnly:t.eggs>=2});
+const eggPrefix=makeEggOnPrefix(t.eggs);
+const fourceEntry=makeFourceAction(fource);
+filtered.push({combo:[...eggPrefix,fourceEntry,...combo],kill:null,req:efReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2});
 break;
 }
 }
@@ -3913,9 +3953,9 @@ break;
 }else{
 if(isMetal&&killTargets&&killTargets.length&&T>1){
 let validCombo=true;
-const _currentChars=_charsSafe();
+const _currentChars=getCharsSafe();
 for(const g of killTargets){
-const isGrpMetal=typeof _METAL_MONSTERS!=='undefined'&&_METAL_MONSTERS.has(_monHex(g.hex));
+const isGrpMetal=typeof _METAL_MONSTERS!=='undefined'&&_METAL_MONSTERS.has(toMonsterHexId(g.hex));
 if(isGrpMetal)continue;
 const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[g.hex]:null;
 if(!m)continue;
@@ -3929,9 +3969,9 @@ if(g.death>0){hpMaxWorld=0;hpMinWorld=0;}
 continue;
 }
 if(v.at===0)continue;
-const sk=_skOf(v.jp);
+const sk=lookupSkill(v.jp);
 if(!sk||sk.target==='S'||sk.target==='G')continue;
-const span=_charDmgSpan(sk,_monHex(g.hex),v.equip,v.hits||1,_currentChars);
+const span=buildCharDamageSpan(sk,toMonsterHexId(g.hex),v.equip,v.hits||1,_currentChars);
 hpMaxWorld-=span.min;
 hpMinWorld-=span.max;
 if(hpMinWorld<=0&&hpMaxWorld>0){
@@ -3945,11 +3985,11 @@ validCombo=false;break;
 }
 if(!validCombo)continue;
 }
-filtered.push({combo,kill:isMetal?'metal':null,req:null,dmgSkills:dmgParts.length,canAntiBlk:_comboCanAntiBlk(combo)});
+filtered.push({combo,kill:isMetal?'metal':null,req:null,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo)});
 }
 }
 for(const entry of filtered){
-if(!entry.multiOnly)entry.multiOnly=_isMultiOnly(entry.combo);
+if(!entry.multiOnly)entry.multiOnly=isMultiTargetOnly(entry.combo);
 }
 if(!document.getElementById('si_multiPlayer')?.checked){
 for(let i=filtered.length-1;i>=0;i--){
@@ -3982,7 +4022,7 @@ damage.sort(_cmp);
 damage.sort((a,b)=>{
 const dp=_pri(b)-_pri(a);
 if(dp!==0)return dp;
-return _maxSkillDmg(a.v.jp,hexId)-_maxSkillDmg(b.v.jp,hexId);
+return calcMaxSkillDamage(a.v.jp,hexId)-calcMaxSkillDamage(b.v.jp,hexId);
 });
 }
 const order=[...support,...damage,...(finIt?[finIt]:[])];
@@ -4027,16 +4067,16 @@ const _isExecP=(v)=>v.jp==='一閃づき'||v.jp==='魔神斬り';
 perms=perms.filter(p=>{let seen=false;for(const v of p){if(_isExecP(v))seen=true;else if(seen)return false;}return true;});
 if(!perms.length)continue;
 }
-let bestCombo=entry.combo,bestRating=entry.kill,bestEgg=entry.eggAssign,bestRound1=entry.round1Removed,bestCharAssign=entry.assign,bestDefend=entry.defend;
+let bestCombo=entry.combo,bestRating=entry.kill,bestEgg=entry.eggAssign,bestCharAssign=entry.assign,bestDefend=entry.defend;
 const evalCombo=(perm,tgs)=>{
 const testCombo=entry.combo.slice();
 for(let j=0;j<perm.length;j++){
 const tg=tgs?tgs[j]:undefined;
 testCombo[dmgIdx[j]]=tg===undefined?perm[j]:Object.assign({},perm[j],{tgtGroup:tg});
 }
-const pBest=_bestAssign(testCombo,hexId,mon,killTargets,1,null);
-if(_rankVal(pBest.rating)>_rankVal(bestRating)){
-bestCombo=testCombo;bestRating=pBest.rating;bestEgg=pBest.eggAssign;bestRound1=pBest.round1Removed;bestCharAssign=pBest.assign;bestDefend=pBest.defend;
+const pBest=findBestAssignment(testCombo,hexId,mon,killTargets,1,null);
+if(getRankOrderValue(pBest.rating)>getRankOrderValue(bestRating)){
+bestCombo=testCombo;bestRating=pBest.rating;bestEgg=pBest.eggAssign;bestCharAssign=pBest.assign;bestDefend=pBest.defend;
 }
 return bestRating==='gold';
 };
@@ -4047,7 +4087,7 @@ let budget=216;
 outer:
 for(const perm of perms){
 const opts=perm.map(v=>{
-const sk=_skOf(v.jp);
+const sk=lookupSkill(v.jp);
 if(!sk||sk.target!=='S'||v.soloGroup||v.tgtGroup!==undefined)return[undefined];
 if(v.jp==='一閃づき'||v.jp==='魔神斬り')return[undefined];
 const o=[undefined];
@@ -4067,8 +4107,8 @@ if(--budget<=0)break outer;
 }
 }
 if(bestRating!=='gold'&&_metalSupNeed===0){
-const plan=_planAFinisher(entry.combo,hexId,mon,killTargets,entry.combo.length<=4?4:8);
-if(plan){bestCombo=plan.combo;bestRating='gold';bestEgg=plan.eggAssign;bestRound1=plan.round1Removed;bestCharAssign=plan.assign;bestDefend=plan.defend;if(plan.multiOnly)entry.multiOnly=true;}
+const plan=planAFinisher(entry.combo,hexId,mon,killTargets,entry.combo.length<=4?4:8);
+if(plan){bestCombo=plan.combo;bestRating='gold';bestEgg=plan.eggAssign;bestCharAssign=plan.assign;bestDefend=plan.defend;if(plan.multiOnly)entry.multiOnly=true;}
 }
 if(bestRating!=='gold'&&bestCombo.length<=4){
 const _mercyIdx35=bestCombo.findIndex(v=>v.jp==='みのがす');
@@ -4076,22 +4116,22 @@ if(_mercyIdx35>=0&&killTargets&&killTargets.length>=2){
 const _dmgOnly35=bestCombo.filter(v=>v.at>0);
 if(_dmgOnly35.length>=2){
 const _lastDmg35=_dmgOnly35[_dmgOnly35.length-1];
-const _lastSk35=_skOf(_lastDmg35.jp);
+const _lastSk35=lookupSkill(_lastDmg35.jp);
 if(_lastSk35&&(_lastSk35.target==='A'||_lastSk35.target==='RA')
 &&_lastSk35.at&&_lastSk35.at.length>=2&&_lastSk35.at[1]===0){
-const plan35=_planAFinisher(_dmgOnly35,hexId,mon,killTargets,bestCombo.length);
+const plan35=planAFinisher(_dmgOnly35,hexId,mon,killTargets,bestCombo.length);
 if(plan35){
 bestCombo=plan35.combo;bestRating='gold';bestEgg=plan35.eggAssign;
-bestRound1=plan35.round1Removed;bestCharAssign=plan35.assign;bestDefend=plan35.defend;
+bestCharAssign=plan35.assign;bestDefend=plan35.defend;
 if(plan35.multiOnly)entry.multiOnly=true;
 }
 if(bestRating!=='gold'){
 const _swap35=bestCombo.slice();
 _swap35[_mercyIdx35]=_ACT_EGG;
-const _swBest35=_bestAssign(_swap35,hexId,mon,killTargets,1,null);
-if(_rankVal(_swBest35.rating)>_rankVal(bestRating)){
+const _swBest35=findBestAssignment(_swap35,hexId,mon,killTargets,1,null);
+if(getRankOrderValue(_swBest35.rating)>getRankOrderValue(bestRating)){
 bestCombo=_swap35;bestRating=_swBest35.rating;bestEgg=_swBest35.eggAssign;
-bestRound1=_swBest35.round1Removed;bestCharAssign=_swBest35.assign;bestDefend=_swBest35.defend;
+bestCharAssign=_swBest35.assign;bestDefend=_swBest35.defend;
 }
 }
 }
@@ -4101,20 +4141,21 @@ bestRound1=_swBest35.round1Removed;bestCharAssign=_swBest35.assign;bestDefend=_s
 entry.combo=bestCombo;
 entry.kill=bestRating;
 entry.eggAssign=bestEgg;
-entry.round1Removed=bestRound1;
 entry.assign=bestCharAssign;
 entry.defend=bestDefend;
 }
 }
 if(isRound2&&tc2>0){
+const _r1Chars=useStats?readCharStatsFromDom():null;
+const _r1Targets=killTargets||(monGroups?monGroups.map(g=>({hex:g.hex,count:g.count,death:_effDeath(g)})):null);
 for(let i=filtered.length-1;i>=0;i--){
 const e=filtered[i];
 if(e.combo.length<5)continue;
+const st=evalRound1Removal(e.combo,_r1Targets,e.eggAssign,e.assign,_r1Chars);
+if(st==='uncertain'){filtered.splice(i,1);continue;}
+e.r1Removal=(st==='definite');
 const atSum=e.combo.reduce((s,v)=>s+(v.at||0),0);
-const r1=(e.round1Removed!==undefined?e.round1Removed:false)
-||e.combo.slice(0,4).some(a=>a.jp==='みのがす'||a.jp==='一閃づき');
-const expected=r1?(bat-tc2):bat;
-if(atSum!==expected)filtered.splice(i,1);
+if(atSum!==(e.r1Removal?bat-tc2:bat))filtered.splice(i,1);
 }
 }
 if(killTargets){
@@ -4141,15 +4182,15 @@ for(let ci=0;ci<c.length&&ci<lastDI;ci++){
 if(ci===exemptCI)continue;
 if(c[ci].jp==='みのがす'){for(const i of sim)if(i.alive&&i.death>0&&(i.gi>0||r1mk))i.alive=false;continue;}
 if(c[ci].at===0)continue;
-const sk=_skOf(c[ci].jp);
+const sk=lookupSkill(c[ci].jp);
 if(!sk)continue;
 const hits=c[ci].hits||1;
 const alive=sim.filter(i=>i.alive);
 if(alive.length===0)break;
 const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
 const hitList=tgt==='A'?alive:tgt==='S'?(()=>{
-if(_isMetalActionSk(c[ci],sk)){
-const mt=_findMetalInst(alive);
+if(isMetalActionSkill(c[ci],sk)){
+const mt=findMetalInstance(alive);
 if(mt)return[mt];
 }
 const t=(c[ci].tgtGroup!==undefined&&!c[ci].soloGroup)
@@ -4157,17 +4198,17 @@ const t=(c[ci].tgtGroup!==undefined&&!c[ci].soloGroup)
 :alive.sort((a,b)=>b.hp-a.hp)[0];
 return t?[t]:[];})():
 (()=>{if(c[ci].tgtGroup!==undefined)return alive.filter(i=>i.gi===c[ci].tgtGroup);
-return _largestGroupOf(alive,'gi');})();
+return findLargestGroup(alive,'gi');})();
 for(const inst of hitList){
-const exec=_checkMetalExecution(c[ci].jp,inst.hex);
+const exec=canExecuteMetal(c[ci].jp,inst.hex);
 if(exec){
 if(exec.isValid){inst.hp=0;inst.alive=false;if(inst.gi===0)r1mk=true;}
 continue;
 }
 let rMin,rMax;
-if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(_monHex(inst.hex))){
+if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(inst.hex))){
 const _elem=!!(sk.el&&sk.el>0);
-const _me=_metalEffect(sk.metal||0,_weaponMetalFlag(c[ci].equip));
+const _me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(c[ci].equip));
 rMin=(!_elem&&_me)?1:0;rMax=(!_elem&&_me)?2:0;
 }else{
 const r=calcSkillDamage(sk,_EXT_STATS,inst.hex,null);
@@ -4190,7 +4231,7 @@ for(let i=0;i<filtered.length;i++){
 const sig=_sigOf(filtered[i]);
 if(seenSig.has(sig)){
 const j=seenSig.get(sig);
-if(_rankVal(filtered[i].kill)>_rankVal(filtered[j].kill))filtered[j]=filtered[i];
+if(getRankOrderValue(filtered[i].kill)>getRankOrderValue(filtered[j].kill))filtered[j]=filtered[i];
 filtered.splice(i,1);i--;
 }else seenSig.set(sig,i);
 }
@@ -4198,7 +4239,7 @@ filtered.splice(i,1);i--;
 const _isAUnifiedFinish=(e)=>{
 const fi=(e.finIdx!=null)?e.finIdx:e.combo.length-1;
 const fs=e.combo[fi];if(!fs)return false;
-const sk=_skOf(fs.jp);
+const sk=lookupSkill(fs.jp);
 if(!sk||sk.target!=='A')return false;
 return e.combo.some((v,i)=>i!==fi&&v.at>0);
 };
@@ -4206,8 +4247,8 @@ filtered.sort((a,b)=>{
 if(a.combo.length===1&&b.combo.length===1&&a.req&&b.req&&a.req.stat===b.req.stat){
 if(a.req.min!==b.req.min)return a.req.min-b.req.min;
 }
-const ka=2-_rankVal(a.kill);
-const kb=2-_rankVal(b.kill);
+const ka=2-getRankOrderValue(a.kill);
+const kb=2-getRankOrderValue(b.kill);
 if(ka!==kb)return ka-kb;
 const oa=a.chipOverkill?1:0;
 const ob=b.chipOverkill?1:0;
@@ -4238,7 +4279,7 @@ const shownList=filtered.slice(0,SHOW_MAX);
 const bucketId='sb'+(window._solverBucketId++);
 window._solverBuckets=window._solverBuckets||{};
 const renderOne=(e,hidden)=>{
-const{combo,kill,req,eggAssign,round1Removed,assign,defend}=e;
+const{combo,kill,req,eggAssign,assign,defend}=e;
 const cid=window._solverComboId++;
 const _simTargets=killTargets?killTargets:((T===1&&monGroups)?monGroups.map(g=>({hex:g.hex,count:g.count,death:_effDeath(g)})):null);
 window._solverComboMap[cid]={combo,killTargets:_simTargets,eggAssign,assign,defend};
@@ -4247,11 +4288,11 @@ const name=useJP?v.jp:v.en;
 let s='<span style="color:#ccc;">'+name+'</span>';
 if(v.note)s+='<span style="font-size:9px;">'+v.note+'</span>';
 if(eggAssign&&eggAssign[ci]){
-const tLv=_tensionLvOf(eggAssign[ci]);
+const tLv=getTensionLevel(eggAssign[ci]);
 s+='<span style="color:#ff0;font-size:8px;">⊕T'+tLv+'</span>';
 }
 if(monBlock>0&&v.at>0&&!v.equip){
-const sd=_sdOf(v.jp);
+const sd=lookupSkillData(v.jp);
 if(sd&&sd.blk===1){
 const abWeapons=[];
 for(const[wn,wm]of Object.entries(WEAPON_META)){
@@ -4272,16 +4313,14 @@ tag+=' <span style="color:'+reqColor+';font-size:9px;">'+(req.posLabel||req.labe
 }
 let comboHtml;
 if(isRound2&&parts.length>4){
-const t1Removal=(round1Removed!==undefined?round1Removed:false)
-||combo.slice(0,4).some(a=>a.jp==='みのがす'||a.jp==='一閃づき');
-const tc=t1Removal?tc2:0;
+const tc=e.r1Removal?tc2:0;
 const transSkill=' <span style="color:#f80;font-weight:bold;font-size:9px;">⮕2回目(+'+tc+')</span> ';
 comboHtml=parts.slice(0,4).join(' + ')+transSkill+parts.slice(4).join(' + ');
 }else{
 comboHtml=parts.join(' + ');
 }
 const disp=hidden?'display:none;':'';
-return'<div class="'+bucketId+'_row" style="'+disp+'font-size:10px;margin-left:16px;color:#aaa;cursor:pointer;" onclick="_expandCombo('+cid+')">'
+return'<div class="'+bucketId+'_row" style="'+disp+'font-size:10px;margin-left:16px;color:#aaa;cursor:pointer;" onclick="expandCombo('+cid+')">'
 +comboHtml+tag+' <span style="color:#555;font-size:8px;">▶詳</span></div>'
 +'<div id="combo_detail_'+cid+'" style="display:none;"></div>';
 };
@@ -4289,7 +4328,7 @@ const lines=shownList.map((e,i)=>renderOne(e,i>=SHOW_INIT));
 window._solverBuckets[bucketId]={shown:Math.min(SHOW_INIT,shownList.length),total:shownList.length};
 if(shownList.length>SHOW_INIT){
 const remain=shownList.length-SHOW_INIT;
-lines.push('<div id="'+bucketId+'_more" style="font-size:9px;margin-left:16px;color:#39C5BB;cursor:pointer;text-decoration:underline;" onclick="_showMoreCombos(\''+bucketId+'\')">+'+remain+' more ▾</div>');
+lines.push('<div id="'+bucketId+'_more" style="font-size:9px;margin-left:16px;color:#39C5BB;cursor:pointer;text-decoration:underline;" onclick="showMoreCombos(\''+bucketId+'\')">+'+remain+' more ▾</div>');
 }
 const shownRound2=shownList.slice(0,SHOW_INIT).some(e=>e.combo.length>4);
 if(shownRound2)lines.unshift('<div style="font-size:9px;margin-left:16px;color:#f80;">⚠ 2T (5~8 moves)｜⮕2回目 標各組合 AT 追加(+n/2 或 +0)</div>');

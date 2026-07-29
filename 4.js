@@ -67,6 +67,7 @@ const locData=calcLocations(mapData.MapSeed,rStr);
 let locHtmlString='';
 if(locData.outputOrder.length>0){
 const locStrings=locData.outputOrder.map(item=>{
+if(item.timer===QUEST015)return`<span style="color:#F88;">${hex2(item.location)} (Quest)</span>`;
 const bqs=Array.from(locData.seenLocations[item.location]);
 return`${hex2(item.location)} (${formatRanges(bqs)})`;
 });
@@ -86,13 +87,8 @@ const atHtmlString=`[35] ${atValues[0]}<br>[36] ${atValues[1]}<br>[37] ${atValue
 const rn=calcR2N2(mapData.MapSeed);
 const fmtRN=v=>v===-1?`<span style="color:#555;">—</span>`:`<span style="color:#0f0;">${v}</span>`;
 const rnHtml=`<span style="color:#f88;">[R2] ${fmtRN(rn.r2)}</span><br><span style="color:#f88;">[+3] ${fmtRN(rn.r2_3)}</span><br><span style="color:#8cf;">[N2] ${fmtRN(rn.n2)}</span>`;
-let wSum=0,wReach=true;
-for(let f=0;f<mapData.floorCount;f++){
-const c=_uspFloorCost(mapData,f);
-if(c===null){wReach=false;break;}
-wSum+=c;
-}
-const wHtml=wReach?`<span style="color:#ffc90e;">${Number.isInteger(wSum) ? wSum : wSum.toFixed(1)}</span>`:`<span style="color:#555;">—</span>`;
+const wSum=calcWalkCostUpToFloor(mapData,mapData.floorCount);
+const wHtml=wSum!==null?`<span style="color:#ffc90e;">${fmtStep(wSum)}</span>`:`<span style="color:#555;">—</span>`;
 const boxData=mapData.getMapBoxCounts();
 const boxCounts=boxData.counts;
 const totalBoxes=boxData.total;
@@ -109,34 +105,36 @@ boxCountHtmlArr.push(`<span style="margin-right:6px;display:inline-block;backgro
 }
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
 let html=`<div class="info-bar">
-<span>Rank:<strong>${rStr}</strong></span>
-<span>Seed:<strong>${seedHex}</strong></span>
-<span style="display:inline-flex;align-items:flex-start;"><span>${C01}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapName}</span><span style="display:block;color:#ffd700">${mapData.mapNameJP}</span></strong></span>
-<span style="display:inline-flex;align-items:flex-start;"><span>${C02}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapTypeName}</span><span style="display:block;color:#ffd700">${mapData.mapTypeNameJP}</span></strong></span>
-<span>${C03}:<strong>${mapData.monsterRank}</strong></span>
-<span>${C04}:<strong>${mapData.floorCount}</strong></span>
-<span style="display:inline-flex;align-items:flex-start;"><span>Boss:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.bossName}</span><span style="display:block;color:#ffd700">${mapData.bossNameJP}</span></strong></span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C05}:
-<strong style="display:block;color:#0ff;font-family:monospace;font-size:12px;margin-top:2px;">${locHtmlString}</strong>
-</span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C06}:
-<strong style="display:block;color:#4c4;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${atHtmlString}</strong>
-</span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;">${C07}:
-<strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
-</span>
-<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:15px;margin-left:5px;"title="${T('Sum of per-floor shortest walking cost (Dijkstra, same rule as Fastest Map Search)','全樓層最短步數之和（Dijkstra，與最短地圖搜尋同規則）','全フロア最短歩数の合計（Dijkstra、最短地図検索と同ルール）')}">A*:
-<strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${wHtml}</strong>
-</span>
-</div>
-<div class="info-bar"style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
-<span style="color:#88b;font-weight:bold;white-space:nowrap;">${C08}</span>
-<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;min-width:0;">
-${boxString}
-</div>
-<span style="white-space:nowrap;padding-left:8px;border-left:2px solid #4a4a8a;color:#8cc8ff;font-weight:bold;">📦${totalBoxes}</span>
-<div id="controls_target_area"style="display:flex;align-items:center;"></div>
-</div>`;
+    <span>Rank: <strong>${rStr}</strong></span>
+    <span>Seed: <strong>${seedHex}</strong></span>
+    <span style="display:inline-flex;align-items:flex-start;"><span>${C01}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapName}</span><span style="display:block;color:#ffd700">${mapData.mapNameJP}</span></strong></span>
+    <span style="display:inline-flex;align-items:flex-start;"><span>${C02}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapTypeName}</span><span style="display:block;color:#ffd700">${mapData.mapTypeNameJP}</span></strong></span>
+    <span>${C03}: <strong>${mapData.monsterRank}</strong></span>
+    <span>${C04}: <strong>${mapData.floorCount}</strong></span>
+    <span style="display:inline-flex;align-items:flex-start;"><span>Boss:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.bossName}</span><span style="display:block;color:#ffd700">${mapData.bossNameJP}</span></strong></span>
+
+    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C05}:
+    <strong style="display:block;color:#0ff;font-family:monospace;font-size:12px;margin-top:2px;">${locHtmlString}</strong>
+    </span>
+    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C06}:
+    <strong style="display:block;color:#4c4;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${atHtmlString}</strong>
+    </span>
+    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C07}:
+    <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
+    </span>
+    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;" title="${T('Sum of per-floor shortest walking cost (Dijkstra, same rule as Fastest Map Search)','全樓層最短步數之和（Dijkstra，與最短地圖搜尋同規則）','全フロア最短歩数の合計（Dijkstra、最短地図検索と同ルール）')}">A*:
+    <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${wHtml}</strong>
+    </span>
+    </div>
+
+    <div class="info-bar" style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
+    <span style="color:#88b;font-weight:bold;white-space:nowrap;">${C08}</span>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;min-width:0;">
+    ${boxString}
+    </div>
+    <span style="white-space:nowrap;padding-left:8px;border-left:2px solid #4a4a8a;color:#8cc8ff;font-weight:bold;">📦 ${totalBoxes}</span>
+    <div id="controls_target_area" style="display:flex;align-items:center;"></div>
+    </div>`;
 setTimeout(()=>{
 const target=document.getElementById('controls_target_area');
 const controls=document.getElementById('single_map_controls');
@@ -230,13 +228,16 @@ const box=mapData.getBoxInfo(f,i);
 const rn=CHEST_RANK[box.rank]||box.rank;
 const[soloEN,soloJP]=mapData.getBoxItem(f,i,1).map(v=>v||'?');
 const[partyEN,partyJP]=mapData.getBoxItem(f,i,2).map(v=>v||'?');
+const[ppapEN,ppapJP]=mapData.getBoxItem(f,i,4).map(v=>v||'?');
 const dispSolo=DISPLAY_LANG!=='EN'?soloJP:soloEN;
 const dispParty=DISPLAY_LANG!=='EN'?partyJP:partyEN;
+const dispPpap=DISPLAY_LANG!=='EN'?ppapJP:ppapEN;
 infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
-<div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span>(${box.x},${box.y})</div>
-<div class="chest-item"><span class="chest-item-solo">Item(${STR_SOLO}):${dispSolo}</span></div>
-<div class="chest-item"><span class="chest-item-party">Item(${STR_PARTY}):${dispParty}</span></div>
-</td></tr>`;
+        <div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span> (${box.x}, ${box.y})</div>
+        <div class="chest-item"><span class="chest-item-solo">Item (${STR_SOLO}): ${dispSolo}</span></div>
+        <div class="chest-item"><span class="chest-item-party">Item (${STR_PARTY}): ${dispParty}</span></div>
+        <div class="chest-item"><span class="chest-item-ppap">Item (PPAP): ${dispPpap}</span></div>
+      </td></tr>`;
 }
 }else{
 infoHtml+=`<tr><td>${C15}</td><td>${C16}</td></tr>`;
@@ -368,27 +369,27 @@ const isHighlight=(res.start<=2&&res.end>=1);
 const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15);border-left: 3px solid #ffd700;padding-left: 8px;':'';
 const textStyle=isHighlight?'color: #ffd700;font-weight: bold;':'';
 htmlEN+=`<div class="timer-row" style="${rowStyle}">
-<span class="timer-range"style="${textStyle}">${rangeStr}</span>
-<span class="timer-item"style="${textStyle}">${res.itemEN}</span>
-</div>`;
+    <span class="timer-range" style="${textStyle}">${rangeStr}</span>
+    <span class="timer-item" style="${textStyle}">${res.itemEN}</span>
+    </div>`;
 htmlJP+=`<div class="timer-row" style="${rowStyle}">
-<span class="timer-range"style="${textStyle}">${rangeStr}</span>
-<span class="timer-item"style="${textStyle}">${res.itemJP}</span>
-</div>`;
+    <span class="timer-range" style="${textStyle}">${rangeStr}</span>
+    <span class="timer-item" style="${textStyle}">${res.itemJP}</span>
+    </div>`;
 });
 body.style.padding='0';
 body.style.overflowY='hidden';
 body.style.display='flex';
 body.style.flexDirection='column';
 body.innerHTML=`<div class="modal-tabs">
-<div id="ctTabEN"class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated"style="background:#1a1a3a;color:#ffd700;border-color:#4a4a8a"onclick="switchCtTab('EN')">English</div>
-<div id="ctTabJP"class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated"style="background:#224;color:#888;border-color:#333"onclick="switchCtTab('JP')">日本語</div>
-</div>
-<div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
-<div id="ctListEN"style="display: block;">${htmlEN}</div>
-<div id="ctListJP"style="display: none;">${htmlJP}</div>
-</div>
-`;
+  <div id="ctTabEN" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#1a1a3a;color:#ffd700;border-color:#4a4a8a" onclick="switchCtTab('EN')">English</div>
+  <div id="ctTabJP" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#224;color:#888;border-color:#333" onclick="switchCtTab('JP')">日本語</div>
+  </div>
+  <div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
+  <div id="ctListEN" style="display: block;">${htmlEN}</div>
+  <div id="ctListJP" style="display: none;">${htmlJP}</div>
+  </div>
+  `;
 modal.style.display='flex';
 switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
 }
@@ -539,12 +540,12 @@ if(!container)return;
 let floorOpts=`<option value="0">---</option>`;
 for(let i=3;i<=16;i++)floorOpts+=`<option value="${i}">B${i}F</option>`;
 let boxOpts=`
-<option value="-1">---</option>
-<option value="0">1</option>
-<option value="1">2</option>
-<option value="2">3${T('rd','(整列)','(整列)')}</option>
-<option value="3">${T('Non-3','非整列','非整列')}</option>
-`;
+    <option value="-1">---</option>
+    <option value="0">1</option>
+    <option value="1">2</option>
+    <option value="2">3${T('rd','(整列)','(整列)')}</option>
+    <option value="3">${T('Non-3','非整列','非整列')}</option>
+    `;
 let rankOpts=`<option value="0">---</option>`;
 ['S','A','B','C','D','E','F','G','H','I'].forEach((r,idx)=>{rankOpts+=`<option value="${10-idx}">${r}</option>`;});
 window.updateFSItems=function(groupId){
@@ -609,14 +610,14 @@ itemSelect.value="ANY";
 };
 for(let i=1;i<=3;i++){
 container.innerHTML+=`
-<div style="display:flex;gap:2px;align-items:center;">
-<span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
-<select id="fs_f_${i}"style="width:45px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${floorOpts}</select>
-<select id="fs_b_${i}"style="width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${boxOpts}</select>
-<select id="fs_r_${i}"onchange="updateFSItems(${i})"style="width:40px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${rankOpts}</select>
-<select id="fs_i_${i}"style="flex:1;width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-overflow:ellipsis;"></select>
-<input type="number"id="fs_t_${i}"value="7"min="5"placeholder="sec"style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
-</div>`;
+      <div style="display:flex;gap:2px;align-items:center;">
+      <span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
+      <select id="fs_f_${i}" style="width:45px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${floorOpts}</select>
+      <select id="fs_b_${i}" style="width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${boxOpts}</select>
+      <select id="fs_r_${i}" onchange="updateFSItems(${i})" style="width:40px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${rankOpts}</select>
+      <select id="fs_i_${i}" style="flex:1;width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-overflow:ellipsis;"></select>
+      <input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
+      </div>`;
 }
 for(let i=1;i<=3;i++){
 updateFSItems(i);

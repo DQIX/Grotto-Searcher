@@ -85,7 +85,49 @@ const USP_FAST_MODES={
 'usp_maxtile':{mode:'maxtile',metric:'maxtile',slowest:false,showFloors:false},
 'usp_mintile':{mode:'maxtile',metric:'mintile',slowest:false,showFloors:false},
 'usp_maxwalk':{mode:'maxtile',metric:'maxwalk',slowest:false,showFloors:false},
+'usp_maxiso':{mode:'maxtile',metric:'maxiso',slowest:false,showFloors:false},
+'usp_maxghost':{mode:'maxtile',metric:'maxghost',slowest:false,showFloors:false},
 };
+function renderMetricSearchResults(metric){
+const mkHdr=(txt)=>{const h=document.createElement('div');
+h.style.cssText='width:100%;color:#fc6;font-weight:bold;font-size:13px;margin:12px 0 4px;border-bottom:1px solid #555;padding-bottom:2px;';
+h.textContent=txt;return h;};
+const cutTies=(g,n)=>{let c=Math.min(n,g.length);
+if(c>0&&c<g.length){const thr=g[c-1].sortCost;while(c<g.length&&g[c].sortCost===thr)c++;}
+return g.slice(0,c);};
+if(metric==='maxghost')return(arr,sortCmp,grid)=>{
+arr.sort(sortCmp);
+const top=cutTies(arr,50);
+const fr=document.createDocumentFragment();
+fr.appendChild(mkHdr('Top '+top.length));
+for(const it of top)fr.appendChild(materializeResultItem(it));
+grid.appendChild(fr);
+};
+if(metric==='maxiso')return(arr,sortCmp,grid)=>{
+const groups={};
+for(const it of arr)(groups[it.sortCost]=groups[it.sortCost]||[]).push(it);
+const fr=document.createDocumentFragment();
+for(const k of Object.keys(groups).map(Number).sort((a,b)=>b-a)){
+const g=groups[k];g.sort(sortCmp);
+fr.appendChild(mkHdr(k+' '+T('tiles','格','マス')+' — '+g.length));
+for(const it of g)fr.appendChild(materializeResultItem(it));
+}
+grid.appendChild(fr);
+};
+return(arr,sortCmp,grid)=>{
+const groups={};
+for(const it of arr){const d=it._dimLabel||'?';if(!groups[d])groups[d]=[];groups[d].push(it);}
+const fr=document.createDocumentFragment();
+for(const dim of _MAXTILE_DIMS){
+const dl=dim+'x'+dim;const g=groups[dl];if(!g||g.length===0)continue;
+g.sort(sortCmp);
+const top=cutTies(g,10);
+fr.appendChild(mkHdr(dl+' — Top '+top.length));
+for(const it of top)fr.appendChild(materializeResultItem(it));
+}
+grid.appendChild(fr);
+};
+}
 function getUltimateConds(){
 const getV=(id)=>{const el=document.getElementById(id);return el?el.value.trim():"";};
 const reqBox={};
@@ -100,6 +142,13 @@ return conds;
 }
 let isSearching=false;
 let searchCancel=false;
+function showConditionConflictResult(){
+const resultDiv=document.getElementById('searchResults');
+if(!resultDiv)return;
+resultDiv.innerHTML='<div style="color:#aaa;font-size:13px;margin-bottom:8px">'
++B01+' <span id="searchProgress" style="color:#fff;font-weight:bold">100% ('
++B07+')</span></div><div id="searchGrid" class="search-grid"></div>';
+}
 function makeResultClickHandler(seed,rStr,jumpFloor){
 return()=>{
 const seedHex=hex4(seed);
@@ -140,7 +189,7 @@ let _dq9PoolFailed=false;
 let _dq9PreflightDone=false;
 let _dq9Gen=0;
 let _dq9Active=null;
-(function _workerPreflight(){
+(function runWorkerPreflight(){
 if(typeof Worker==='undefined'||typeof Blob==='undefined'||typeof URL.createObjectURL!=='function'){
 _dq9PoolFailed=true;_dq9PreflightDone=true;return;
 }
@@ -165,6 +214,14 @@ _dq9PoolFailed=true;_dq9PreflightDone=true;
 }
 })();
 const DQ9_CHUNK_SIZES={scan:1024,atMonster:2048,atPattern:2048};
+const DQ9_CHUNK_MIN={scan:64,atMonster:128,atPattern:128};
+const DQ9_CHUNKS_PER_WORKER=12;
+function pickChunkSize(kind,totalUnits,workerCount){
+const hi=DQ9_CHUNK_SIZES[kind]||1024;
+const lo=Math.min(DQ9_CHUNK_MIN[kind]||64,hi);
+const want=Math.ceil(totalUnits/Math.max(1,workerCount*DQ9_CHUNKS_PER_WORKER));
+return Math.max(lo,Math.min(hi,want));
+}
 function getWorkerCount(){
 try{
 const q=new URLSearchParams(window.location.search).get('workers');
@@ -176,18 +233,18 @@ return Math.min(Math.floor(window.DQ9_WORKER_COUNT),256);
 return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
 }
 let _dq9BlobURL=null;
-function _dq9GetBlobURL(){return '5.js';}
+function getWorkerBlobURL(){return '5.js';}
 function getSearchWorkerPool(){
 if(_dq9Pool)return _dq9Pool;
 if(!_dq9PreflightDone||_dq9PoolFailed||typeof Worker==='undefined')return null;
 try{
-const blobURL=_dq9GetBlobURL();
+const blobURL=getWorkerBlobURL();
 const count=getWorkerCount();
 const workers=[];
 for(let i=0;i<count;i++){
 const w=new Worker(blobURL);
-w.onmessage=(e)=>_poolHandleMessage(i,e.data);
-w.onerror=(e)=>_poolHandleFatal(i,e);
+w.onmessage=(e)=>handlePoolMessage(i,e.data);
+w.onerror=(e)=>handlePoolFatalError(i,e);
 workers.push(w);
 }
 _dq9Pool={workers,idle:workers.map((_,i)=>i)};
@@ -199,10 +256,10 @@ _dq9Pool=null;
 }
 return _dq9Pool;
 }
-function _poolBroadcast(msg){
+function broadcastToPool(msg){
 if(_dq9Pool)for(const w of _dq9Pool.workers)w.postMessage(msg);
 }
-function _poolDispatch(){
+function dispatchPoolJobs(){
 const a=_dq9Active,p=_dq9Pool;
 if(a&&p&&!a.finished){
 while(a.queue.length>0&&p.idle.length>0){
@@ -212,9 +269,9 @@ a.inFlight.set(chunkId,0);
 p.workers[wi].postMessage(Object.assign({type:'chunk',gen:a.gen},a.chunks[chunkId]));
 }
 }
-if(typeof _siSolveDispatch==='function')_siSolveDispatch();
+if(typeof dispatchSolveQueue==='function')dispatchSolveQueue();
 }
-function _poolFlushReady(a){
+function flushReadyResults(a){
 while(a.nextFlush<a.chunks.length&&a.slots[a.nextFlush]!==undefined){
 const items=a.slots[a.nextFlush];
 a.slots[a.nextFlush]=undefined;
@@ -222,7 +279,7 @@ a.nextFlush++;
 if(items.length>0&&a.callbacks.onBatch)a.callbacks.onBatch(items);
 }
 }
-function _poolFlushRemaining(a){
+function flushRemainingResults(a){
 for(let i=a.nextFlush;i<a.chunks.length;i++){
 const items=a.slots[i];
 if(items!==undefined){
@@ -232,17 +289,17 @@ if(items.length>0&&a.callbacks.onBatch)a.callbacks.onBatch(items);
 }
 a.nextFlush=a.chunks.length;
 }
-function _poolProgress(a){
+function updatePoolProgress(a){
 if(a.finished||!a.callbacks.onProgress)return;
 let processed=a.unitsDone;
 for(const entry of a.inFlight)processed+=a.chunks[entry[0]].units*entry[1];
 a.callbacks.onProgress({processed,total:a.totalUnits,hits:a.hits,rStr:a.lastRStr,seedHex:a.lastSeedHex});
 }
-function _poolFinish(a,result,errMsg){
+function finishPoolRun(a,result,errMsg){
 if(a.finished)return;
 a.finished=true;
 if(a._watchdog){clearTimeout(a._watchdog);a._watchdog=null;}
-_poolFlushRemaining(a);
+flushRemainingResults(a);
 if(_dq9Active===a)_dq9Active=null;
 if(errMsg==='_RETRY_MAIN_THREAD_'&&a._retryJob&&a._retryCallbacks){
 console.info('[DQ9] Retrying search on main thread...');
@@ -251,31 +308,31 @@ return;
 }
 if(errMsg!==undefined){if(a.callbacks.onError)a.callbacks.onError(errMsg);}
 else{if(a.callbacks.onDone)a.callbacks.onDone(result);}
-if(typeof _siSolveDispatch==='function')setTimeout(_siSolveDispatch,0);
+if(typeof dispatchSolveQueue==='function')setTimeout(dispatchSolveQueue,0);
 }
-function _poolHandleMessage(workerIdx,m){
+function handlePoolMessage(workerIdx,m){
 const p=_dq9Pool;
 if(!m)return;
 if(m.type==='solveDone'||m.type==='solveError'){
-if(typeof _siSolveHandle==='function')_siSolveHandle(workerIdx,m);
+if(typeof handleSolveMessage==='function')handleSolveMessage(workerIdx,m);
 return;
 }
 if(m.type==='chunkDone'||m.type==='error'){
 if(p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
 }
 const a=_dq9Active;
-if(!a||m.gen!==a.gen||a.finished){_poolDispatch();return;}
+if(!a||m.gen!==a.gen||a.finished){dispatchPoolJobs();return;}
 if(a._watchdog){clearTimeout(a._watchdog);a._watchdog=null;}
 if(m.type==='tick'){
 if(a.inFlight.has(m.chunkId))a.inFlight.set(m.chunkId,m.frac||0);
 if(m.rStr!==undefined&&m.rStr!==null)a.lastRStr=m.rStr;
 if(m.seedHex!==undefined&&m.seedHex!==null)a.lastSeedHex=m.seedHex;
-_poolProgress(a);
+updatePoolProgress(a);
 return;
 }
 if(m.type==='chunkDone'){
 a.inFlight.delete(m.chunkId);
-if(m.aborted){a.queue.unshift(m.chunkId);_poolDispatch();return;}
+if(m.aborted){a.queue.unshift(m.chunkId);dispatchPoolJobs();return;}
 a.hits+=m.hits||0;
 a.unitsDone+=a.chunks[m.chunkId].units;
 a.doneCount++;
@@ -284,60 +341,62 @@ const items=m.items||[];
 if(items.length>0&&a.callbacks.onBatch)a.callbacks.onBatch(items);
 }else{
 a.slots[m.chunkId]=m.items||[];
-_poolFlushReady(a);
+flushReadyResults(a);
 }
-_poolProgress(a);
-if(a.doneCount===a.chunks.length){_poolFinish(a,{hits:a.hits,cancelled:false});}
-else{_poolDispatch();}
+updatePoolProgress(a);
+if(a.doneCount===a.chunks.length){finishPoolRun(a,{hits:a.hits,cancelled:false});}
+else{dispatchPoolJobs();}
 return;
 }
 if(m.type==='error'){
 console.error('Worker chunk error:',m.message);
-_poolBroadcast({type:'cancel'});
-_poolFinish(a,null,m.message);
+broadcastToPool({type:'cancel'});
+finishPoolRun(a,null,m.message);
 return;
 }
 }
-function _poolStartWatchdog(a){
+function startPoolWatchdog(a){
 a._watchdog=setTimeout(()=>{
 if(a.doneCount===0&&!a.finished){
 console.warn('[DQ9] Workers unresponsive — falling back to main thread');
-if(typeof _siSolveAbortAll==='function')_siSolveAbortAll('Workers unresponsive');
+if(typeof abortAllSolveTasks==='function')abortAllSolveTasks('Workers unresponsive');
 for(const w of _dq9Pool.workers)w.terminate();
 _dq9Pool=null;
 _dq9PoolFailed=true;
-_poolFinish(a,null,'_RETRY_MAIN_THREAD_');
+finishPoolRun(a,null,'_RETRY_MAIN_THREAD_');
 }
 },3000);
 }
-function _poolHandleFatal(workerIdx,e){
+function handlePoolFatalError(workerIdx,e){
 console.error('Search worker fatal error:',e&&(e.message||e));
 if(typeof _siSolveBusy!=='undefined'&&_siSolveBusy.has(workerIdx)){
 const t=_siSolveBusy.get(workerIdx);
 _siSolveBusy.delete(workerIdx);
 t.reject(new Error((e&&e.message)||'Worker error'));
-_siSolveReplaceWorker(workerIdx);
+replaceSolveWorker(workerIdx);
 }
 const a=_dq9Active;
 if(a&&!a.finished){
-_poolBroadcast({type:'cancel'});
-_poolFinish(a,null,(e&&e.message)||'Worker error');
+broadcastToPool({type:'cancel'});
+finishPoolRun(a,null,(e&&e.message)||'Worker error');
 }
 }
 function requestSearchCancel(){
 searchCancel=true;
 const a=_dq9Active;
 if(a&&!a.finished){
-_poolBroadcast({type:'cancel'});
-_poolFinish(a,{hits:a.hits,cancelled:true});
+broadcastToPool({type:'cancel'});
+finishPoolRun(a,{hits:a.hits,cancelled:true});
 }
 }
 function runSearchJob(job,callbacks){
 const pool=getSearchWorkerPool();
 if(pool){
-if(typeof _siSolveRequeueBusy==='function')_siSolveRequeueBusy();
+if(typeof requeueBusySolveTasks==='function')requeueBusySolveTasks();
 const gen=++_dq9Gen;
-const chunkSize=DQ9_CHUNK_SIZES[job.kind]||1024;
+const seedSpan=job.endSeed-job.startSeed+1;
+const rankCount=(job.kind==='scan'&&job.ranks)?job.ranks.length:1;
+const chunkSize=pickChunkSize(job.kind,seedSpan*rankCount,pool.workers.length);
 const chunks=[];
 if(job.kind==='scan'){
 for(const rank of job.ranks){
@@ -370,9 +429,9 @@ lastSeedHex:hex4(job.startSeed),
 finished:false,
 _retryJob:job,_retryCallbacks:callbacks,
 };
-_poolBroadcast({type:'job',gen,job});
-_poolDispatch();
-_poolStartWatchdog(_dq9Active);
+broadcastToPool({type:'job',gen,job});
+dispatchPoolJobs();
+startPoolWatchdog(_dq9Active);
 return;
 }
 (async()=>{
@@ -404,7 +463,7 @@ node.innerHTML=item.html;
 node.onclick=makeResultClickHandler(item.seed,item.rStr,item.jumpFloor);
 return node;
 }
-function _uspDedupBetter(cand,cur){
+function isBetterMetricResult(cand,cur){
 if(cand.fc!==cur.fc)return cand.fc>cur.fc;
 const cD=(cand.rStr==='DD'),uD=(cur.rStr==='DD');
 if(cD!==uD)return cD;
@@ -416,6 +475,10 @@ const conds=getUltimateConds();
 if(config.condsTransform)config.condsTransform(conds);
 const searchFilterLoc=config.searchFilterLoc!==undefined?config.searchFilterLoc
 :true;
+if(!getLocationBQFilters(conds).valid){
+showConditionConflictResult();
+return;
+}
 if(config.validateConds&&!config.validateConds(conds,searchFilterLoc)){return;}
 const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);return;}
@@ -448,16 +511,18 @@ const sortTopN=config.sortTopN;
 const sortDesc=!!config.sortDesc;
 const dedupBySeed=!!config.dedupBySeed;
 const dedupMap=dedupBySeed?new Map():null;
-const dedupBetter=config.dedupBetter||_uspDedupBetter;
+const dedupBetter=config.dedupBetter||isBetterMetricResult;
 const dedupKeyFn=config.dedupKeyFn||(it=>it.seed);
 const sortBucket=(sortTopN!==undefined&&!dedupBySeed)?[]:null;
 const sortCmp=(a,b)=>sortDesc?(b.sortCost-a.sortCost):(a.sortCost-b.sortCost);
 const pruneCap=(sortTopN!==undefined&&sortTopN!==Infinity)?Math.max(sortTopN*4,200):Infinity;
 const restoreBtn=()=>{if(btn){btn.textContent=config.btnText;btn.style.background=config.btnBg;btn.style.color=config.btnColor||'#000';}};
+const jobParams=Object.assign({},config.params||{});
+if(config.metricEdgeFromEndSeed)jobParams.metricEdgeSeed=endSeed;
 const job={
 kind:'scan',
 processor:config.processor,
-params:config.params||{},
+params:jobParams,
 conds,searchFilterLoc,
 ranks:ranksToSearch,
 startSeed,endSeed,
@@ -632,25 +697,9 @@ dedupBetter:isMaxTile?(metricType==='mintile'
 :((cand,cur)=>cand.sortCost>cur.sortCost||(cand.sortCost===cur.sortCost&&cand.jumpFloor<cur.jumpFloor))
 ):undefined,
 dedupKeyFn:isMaxTile?(it=>(it._dimLabel||'')+':'+(it.seed+it.jumpFloor+1)):undefined,
-renderFinal:isMaxTile?((arr,sortCmp,grid)=>{
-const groups={};
-for(const it of arr){const d=it._dimLabel||'?';if(!groups[d])groups[d]=[];groups[d].push(it);}
-const fragment=document.createDocumentFragment();
-for(const dim of _MAXTILE_DIMS){
-const dl=dim+'x'+dim;const g=groups[dl];if(!g||g.length===0)continue;
-g.sort(sortCmp);
-let cutoff=Math.min(10,g.length);
-if(cutoff>0&&cutoff<g.length){const thr=g[cutoff-1].sortCost;while(cutoff<g.length&&g[cutoff].sortCost===thr)cutoff++;}
-const top=g.slice(0,cutoff);
-const hdr=document.createElement('div');
-hdr.style.cssText='width:100%;color:#fc6;font-weight:bold;font-size:13px;margin:12px 0 4px;border-bottom:1px solid #555;padding-bottom:2px;';
-hdr.textContent=dl+' — Top '+top.length;
-fragment.appendChild(hdr);
-for(const it of top)fragment.appendChild(materializeResultItem(it));
-}
-grid.appendChild(fragment);
-}):undefined,
+renderFinal:isMaxTile?renderMetricSearchResults(metricType):undefined,
 validateConds:()=>true,
+metricEdgeFromEndSeed:isMaxTile,
 condsTransform:(c)=>{
 if(USP_FAST_MODES[c.anomaly])c.anomaly='';
 if(useDepth2){c.depth2=c.depth;c.depth='';}
@@ -828,7 +877,7 @@ btnId:'searchBtn',btnText:H01,btnBg:'linear-gradient(135deg,#4c4,#080)',
 filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[chestRanks],isB9F?2:0),
 checker:'quickload',
 sortTopN:wantAstar?Infinity:undefined,
-preSort:(wantAstar&&isB9F)?_qlB10PreSort:undefined,
+preSort:(wantAstar&&isB9F)?preSortQuickloadB10Rows:undefined,
 groupTail:wantAstar?{match:it=>it.isX3,label:'x'+(reqCount+1)}:undefined,
 checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks,wantAstar,checkB10:wantAstar&&isB9F}
 });
@@ -836,11 +885,11 @@ checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks,wantAstar,check
 function qlMode(){const el=document.getElementById('ql_mode');return el?el.value:'';}
 function qlModeSec(){const m=qlMode();return(m==='5'||m==='5A'||m==='5D')?0:(m==='9'||m==='9A'||m==='9D')?4:null;}
 function qlModeAstar(){const m=qlMode();return m==='D'||m==='5D'||m==='9D';}
-function _qlB10PreSort(arr){
+function preSortQuickloadB10Rows(arr){
 const b10=arr.filter(it=>it.isB10).sort((a,b)=>a.sortCost-b.sortCost).slice(0,5);
 return arr.filter(it=>!it.isB10).concat(b10);
 }
-function _jfireB10PreSort(arr){
+function preSortJfireB10Rows(arr){
 const b10wp=arr.filter(it=>it.isJfireB10).sort((a,b)=>a.sortCost-b.sortCost).slice(0,5);
 return arr.filter(it=>!it.isJfireB10).concat(b10wp);
 }
@@ -888,7 +937,7 @@ btnId:'searchBtn',btnText:H01,btnBg,
 filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[chestRanks],multiFloor?null:(isB9F?2:0)),
 checker:multiFloor?'quickload9all':'quickload9',
 sortTopN:wantAstar?Infinity:undefined,
-preSort:(wantAstar&&isB9F)?_qlB10PreSort:undefined,
+preSort:(wantAstar&&isB9F)?preSortQuickloadB10Rows:undefined,
 groupTail:wantAstar?{match:it=>it.isX3,label:'x'+(reqCount+1)}:undefined,
 checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks,qlSec,wantAstar,checkB10:wantAstar&&isB9F}
 });
@@ -937,15 +986,10 @@ function JFireSearch(qlSec){
 const wantAstar=qlModeAstar();
 executeItemSearch({
 btnId:'BtnTK',btnText:H02,btnBg:'linear-gradient(135deg,#f80,#c40)',
-filterRanks:(ranks)=>ranks.filter(rank=>{
-for(let i=0;i<8;i++){
-if(rank>=TableC[i*4]&&rank<=TableC[i*4+1])return TableC[i*4+3]>=9;
-}
-return false;
-}),
+filterRanks:(ranks)=>ranks.filter(rank=>row4(TableC,8,rank,NO_ROW)[1]>=9),
 checker:'jfire',
 sortTopN:wantAstar?Infinity:undefined,
-preSort:wantAstar?_jfireB10PreSort:undefined,
+preSort:wantAstar?preSortJfireB10Rows:undefined,
 checkerParams:{qlSec:qlSec==null?null:qlSec,wantAstar}
 });
 }
@@ -1602,6 +1646,12 @@ atmin=entry[1];atmax=entry[2];break;
 if(atmin<0){isSearching=false;restoreBtn();return;}
 const md=MONSTER_DB[monId];
 const conds=getUltimateConds();
+if(!getLocationBQFilters(conds).valid){
+showConditionConflictResult();
+isSearching=false;
+restoreBtn();
+return;
+}
 if(!validateElistOnlyMonCombo(conds)){isSearching=false;restoreBtn();return;}
 const searchFilterLoc=true;
 const searchOnlyWithD=document.getElementById('searchOnlyWithD').checked;
@@ -1631,8 +1681,8 @@ headerExtra+=` ｜ ${patternName} (${probText})`;
 }
 const resultDiv=document.getElementById('searchResults');
 resultDiv.innerHTML=`<div style="color:#aaa;font-size:13px;margin-bottom:8px;">
-<div style="color:#0ca;font-size:12px;margin-bottom:6px;">${ENV_NAMES[monEnvType][1]}Rank ${monFloorMR}｜${md.jp}(${md.en})｜POP=${N}(Zoom=${nVal})｜AT:${atmin}～${atmax}${headerExtra}</div>
-${B01}<span id="searchProgress"style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid"class="search-grid"></div>`;
+  <div style="color:#0ca;font-size:12px;margin-bottom:6px;">${ENV_NAMES[monEnvType][1]} Rank ${monFloorMR} ｜ ${md.jp} (${md.en}) ｜ POP=${N} (Zoom=${nVal}) ｜ AT: ${atmin}～${atmax} ${headerExtra}</div>
+  ${B01} <span id="searchProgress" style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>`;
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
 let hitCount=0;
@@ -1657,7 +1707,7 @@ for(const it of items)allResults.push({node:materializeResultItem(it),pop:it.pop
 },
 onDone:(d)=>{
 hitCount=d.hits;
-_finalizeATResults(allResults,grid,document.getElementById('at_sortPOP').checked);
+finalizeAtSearchResults(allResults,grid,document.getElementById('at_sortPOP').checked);
 restoreSearchUI(restoreBtn);
 progressSpan.textContent=searchDoneMsg(hitCount);
 },
@@ -1666,7 +1716,7 @@ handleSearchError("AT Monster Search error:",msg,restoreBtn,progressSpan,hitCoun
 }
 });
 }
-function _finalizeATResults(results,grid,sortByPOP){
+function finalizeAtSearchResults(results,grid,sortByPOP){
 if(sortByPOP)results.sort((a,b)=>a.pop-b.pop);
 const fragment=document.createDocumentFragment();
 for(const res of results)fragment.appendChild(res.node);
@@ -1702,8 +1752,8 @@ const probSel=document.getElementById('at_threshold');
 const probText=probSel.options[probSel.selectedIndex].text;
 const resultDiv=document.getElementById('searchResults');
 resultDiv.innerHTML=`<div style="color:#aaa;font-size:13px;margin-bottom:8px;">
-<div style="color:#f80;font-size:12px;margin-bottom:6px;">${patternName}｜${probText}｜N=${POPIndex}(n=${nVal||0})｜Rank ${rStr}</div>
-${B01}<span id="searchProgress"style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid"class="search-grid"></div>`;
+    <div style="color:#f80;font-size:12px;margin-bottom:6px;">${patternName} ｜ ${probText} ｜ N=${POPIndex} (n=${nVal||0}) ｜ Rank ${rStr}</div>
+    ${B01} <span id="searchProgress" style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>`;
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
 let hitCount=0;
@@ -1726,7 +1776,7 @@ for(const it of items)allATResults.push({node:materializeResultItem(it),pop:it.p
 },
 onDone:(d)=>{
 hitCount=d.hits;
-_finalizeATResults(allATResults,grid,document.getElementById('at_sortPOP').checked);
+finalizeAtSearchResults(allATResults,grid,document.getElementById('at_sortPOP').checked);
 restoreSearchUI(restoreBtn);
 progressSpan.textContent=searchDoneMsg(hitCount);
 },
@@ -1735,7 +1785,7 @@ handleSearchError("AT Pattern Search error:",msg,restoreBtn,progressSpan,hitCoun
 }
 });
 }
-function _solverLegend(){
+function buildSolverLegendHtml(){
 const L=DISPLAY_LANG;
 const legends=[
 ['⚔',L==='EN'?'Falcon Blade':L==='JP'?'はやぶさの剣':'隼劍'],
@@ -1765,7 +1815,7 @@ updateSeedInspector();
 window._solverComboMap={};
 window._solverComboId=0;
 window._solverBucketId=0;
-function _showMoreCombos(bucketId){
+function showMoreCombos(bucketId){
 const st=window._solverBuckets&&window._solverBuckets[bucketId];
 if(!st)return;
 const SHOW_STEP=10;
@@ -1779,23 +1829,23 @@ if(st.shown>=st.total)moreEl.style.display='none';
 else moreEl.textContent='+'+(st.total-st.shown)+' more ▾';
 }
 }
-function _expandCombo(id){
+function expandCombo(id){
 const el=document.getElementById('combo_detail_'+id);
 if(!el)return;
 if(el.innerHTML){el.style.display=el.style.display==='none'?'block':'none';return;}
 const data=window._solverComboMap[id];
 if(!data)return;
-el.innerHTML=_solverSimTrace(data);
+el.innerHTML=renderSolverSimTrace(data);
 el.style.display='block';
 }
-function _solverSimTrace(data){
+function renderSolverSimTrace(data){
 const{combo,killTargets,eggAssign,assign,defend}=data;
 if(!killTargets||killTargets.length===0)return'<div style="color:#666;font-size:9px;margin-left:24px;">—</div>';
 const instances=[];
 for(let ti=0;ti<killTargets.length;ti++){
 const t=killTargets[ti];
 const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[t.hex]:null;
-const baseName=_monDispName(t.hex);
+const baseName=getMonsterDisplayName(t.hex);
 for(let c=0;c<t.count;c++){
 instances.push({name:t.count>1?baseName+(c+1):baseName,
 hex:t.hex,hp:m?m.s[0]:9999,hpLow:m?Math.floor(m.s[0]*0.8):9999,death:t.death!==undefined?t.death:100,
@@ -1805,7 +1855,7 @@ alive:true,groupIdx:ti,mon:m});
 if(!document.getElementById('si_useStats')?.checked){
 return'<div style="color:#888;font-size:9px;margin-left:24px;">中立模式（未勾選 Stats）：不採用任何攻擊力假設，逐招上下界條件待加入</div>';
 }
-const chars=_readCharStats();
+const chars=readCharStatsFromDom();
 const inlineFource=combo.find(v=>v.at===0&&typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[v.jp]);
 const _charLabel=(c)=>{
 if(!c)return'?';
@@ -1824,7 +1874,7 @@ for(let ci=0;ci<combo.length;ci++){
 const action=combo[ci];
 const char=chars[assign?assign[ci]:ci]||chars[0]||{stats:{}};
 const whoTag='<span style="color:#6cf;font-size:8px;">'+_charLabel(char)+'</span> ';
-const sk=_skOf(action.jp);
+const sk=lookupSkill(action.jp);
 const alive=instances.filter(i=>i.alive);
 if(action.jp==='みのがす'){
 const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||_traceMainKilled));
@@ -1861,10 +1911,10 @@ let details='';
 const hitTargets=tgt==='A'?alive.slice():
 tgt==='G'?(()=>{
 if(action.tgtGroup!==undefined)return alive.filter(i=>i.groupIdx===action.tgtGroup);
-return _largestGroupOf(alive,'groupIdx');})():
+return findLargestGroup(alive,'groupIdx');})():
 (()=>{
-if(_isMetalActionSk(action,sk)){
-const mt=_findMetalInst(alive);
+if(isMetalActionSkill(action,sk)){
+const mt=findMetalInstance(alive);
 if(mt)return[mt];
 }
 if(action.tgtGroup!==undefined&&!action.soloGroup){
@@ -1877,8 +1927,8 @@ const repInst=hitTargets.reduce((a,b)=>(b&&(!a||b.hp>a.hp))?b:a,null);
 const repHpHigh=repInst?repInst.hp:0;
 const repHpLow=repInst?repInst.hpLow:0;
 for(const inst of hitTargets){
-const isMetalTgt=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(_monHex(inst.hex));
-const exec=_checkMetalExecution(action.jp,inst.hex);
+const isMetalTgt=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(inst.hex));
+const exec=canExecuteMetal(action.jp,inst.hex);
 if(exec){
 if(exec.isValid){
 details+=inst.name+': HP'+inst.hp+'→<span style="color:#f44;">💀金屬必殺</span> ';
@@ -1891,10 +1941,10 @@ continue;
 let dMin,dMax;
 if(isMetalTgt){
 const elemental=!!(sk.el&&sk.el>0);
-const me=(typeof _metalEffect==='function')&&_metalEffect(sk.metal||0,(typeof _weaponMetalFlag==='function'?_weaponMetalFlag(action.equip):0));
+const me=(typeof getMetalEffect==='function')&&getMetalEffect(sk.metal||0,(typeof getWeaponMetalFlag==='function'?getWeaponMetalFlag(action.equip):0));
 if(!elemental&&me){dMin=1*hits;dMax=2*hits;}else{dMin=0;dMax=0;}
 }else{
-const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,_weaponTypeMul(action.equip,inst.hex));
+const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,getWeaponTypeMultiplier(action.equip,inst.hex));
 dMin=r?Math.floor(r.min*hits*mul):0;
 dMax=r?Math.floor(r.max*hits*mul):0;
 }
@@ -1910,8 +1960,8 @@ const left=instances.filter(i=>i.alive);
 html+='<div>第'+(ci+1)+'招 '+whoTag+'<span style="color:#ccc;">'+action.jp+'</span>'+mulStr+' ['+tgt+'] '+details;
 html+='→ 剩: '+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):'✓清場')+'</div>';
 if(repInst){
-const repIsMetal=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(_monHex(repInst.hex));
-if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+_solverHintStr(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,_weaponTypeMul(action.equip,repInst.hex))+'</div>';
+const repIsMetal=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(repInst.hex));
+if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSolverHintText(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,getWeaponTypeMultiplier(action.equip,repInst.hex))+'</div>';
 }
 }
 if(defend&&defend.length){
@@ -2024,7 +2074,7 @@ let d2=target-(N+totalStartCost+1);
 let d4=target-(N+totalStartCost+2);
 seqHtml=siBuildSeqHtml(foundSequence);
 const showCombos=d1>0&&d1<=970;
-const hexId=_monHex(monId);
+const hexId=toMonsterHexId(monId);
 const mainMon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
 const mainDeath=mainMon?mainMon.s[12]:100;
 const mainDeath0=mainDeath===0;
@@ -2038,10 +2088,10 @@ const canSup2=!isAlone&&mainEntry&&mainEntry[6]>0;
 const _rawPool=(!isAlone&&typeof GROTTO_SUPPORT!=='undefined'&&GROTTO_SUPPORT[envType])?(GROTTO_SUPPORT[envType][floorMR]||[]):[];
 const supportPool=(()=>{
 const out=[],seenHex=new Set();
-_eachPoolEntry(_rawPool,(a)=>{if(!seenHex.has(a[0])){seenHex.add(a[0]);out.push([a[0],a[1],a[2]]);}});
+forEachPoolEntry(_rawPool,(a)=>{if(!seenHex.has(a[0])){seenHex.add(a[0]);out.push([a[0],a[1],a[2]]);}});
 return out;
 })();
-const monNameFn=_monDispName;
+const monNameFn=getMonsterDisplayName;
 battleStr='';
 if(showCombos){
 const useJP=(DISPLAY_LANG!=='EN');
@@ -2055,18 +2105,18 @@ const _kC=(hA,SA,hB,SB,M)=>'C_'+hA+'_'+SA+'_'+hB+'_'+SB+'_'+M;
 {
 const pMain=1/(mainMax-mainMin+1);
 const wByHex=new Map();let wDen=0;
-_eachPoolEntry(_rawPool,(a)=>{if(!wByHex.has(a[0])){wByHex.set(a[0],{num:a[3]||0,min:a[1],max:a[2]});wDen=wDen||a[4]||0;}});
+forEachPoolEntry(_rawPool,(a)=>{if(!wByHex.has(a[0])){wByHex.set(a[0],{num:a[3]||0,min:a[1],max:a[2]});wDen=wDen||a[4]||0;}});
 const P1=(!isAlone&&mainEntry&&mainEntry[5]>0)?mainEntry[4]/mainEntry[5]:0;
 const P2=(!isAlone&&mainEntry&&mainEntry[7]>0)?mainEntry[6]/mainEntry[7]:0;
 const P0=Math.max(0,1-P1-P2);
 for(let mR=mainMin;mR<=mainMax;mR++){
-{const[M]=_trimGroups([mR],battleMax);_pAdd(_kA(M),P0*pMain);}
+{const[M]=trimGroups([mR],battleMax);_pAdd(_kA(M),P0*pMain);}
 if(wDen>0&&(P1>0||P2>0)){
 if(P1>0)for(const[hx,w]of wByHex){
 if(!w.num)continue;
 const pS=w.num/wDen,nC=w.max-w.min+1;
 for(let sR=w.min;sR<=w.max;sR++){
-const[M,S]=_trimGroups([mR,sR],battleMax);
+const[M,S]=trimGroups([mR,sR],battleMax);
 const p=P1*pMain*pS/nC;
 if(S===0)_pAdd(_kA(M),p);else _pAdd(_kB(hx,M,S),p);
 }
@@ -2079,7 +2129,7 @@ if(!wA||!wB||!wA.num||!wB.num)continue;
 const pSS=(wA.num/wDen)*(wB.num/wDen);
 const nAB=(wA.max-wA.min+1)*(wB.max-wB.min+1);
 for(let aR=wA.min;aR<=wA.max;aR++)for(let bR=wB.min;bR<=wB.max;bR++){
-const[M,SA,SB]=_trimGroups([mR,aR,bR],battleMax);
+const[M,SA,SB]=trimGroups([mR,aR,bR],battleMax);
 const p=P2*pMain*pSS/nAB;
 if(SA===0&&SB===0){_pAdd(_kA(M),p);continue;}
 if(SB===0){_pAdd(_kB(hAx,M,SA),p);continue;}
@@ -2121,7 +2171,7 @@ bucket.mixes.push({effMon,desc,monGroups});
 }
 const seenMainOnly=new Set();
 for(let raw=mainMin;raw<=mainMax;raw++){
-const[M]=_trimGroups([raw],battleMax);
+const[M]=trimGroups([raw],battleMax);
 if(M<2||seenMainOnly.has(M))continue;
 seenMainOnly.add(M);
 const mgA=[{hex:hexId,count:M,death:mainDeath,isMain:true}];
@@ -2144,7 +2194,7 @@ const sameAsMain=supHex===hexId;
 const seen=new Set();
 for(let mR=mainMin;mR<=mainMax;mR++){
 for(let sR=supMin;sR<=supMax;sR++){
-const[M,S]=_trimGroups([mR,sR],battleMax);
+const[M,S]=trimGroups([mR,sR],battleMax);
 if(S===0)continue;
 const key=M+'_'+S;
 if(seen.has(key))continue;
@@ -2191,7 +2241,7 @@ const seen=new Set();
 for(let mR=mainMin;mR<=mainMax;mR++){
 for(let aR=sA[1];aR<=sA[2];aR++){
 for(let bR=sB[1];bR<=sB[2];bR++){
-const[M,SA,SB]=_trimGroups([mR,aR,bR],battleMax);
+const[M,SA,SB]=trimGroups([mR,aR,bR],battleMax);
 if(SA===0||SB===0)continue;
 const key=M+'_'+SA+'_'+SB;
 if(seen.has(key))continue;
@@ -2228,12 +2278,12 @@ _addResult(T,T,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span styl
 }
 }
 window._siBuckets={d1,d2,d4,monId,mapDeft,canRound2,hexId,mainDeath,resultsByT,useJP};
-const _batBtn=(val,bk,lbl)=>`<span onclick="_siShowBucket('${bk}')" title="敵怪 ${lbl} 推薦組合" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
+const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="敵怪 ${lbl} 推薦組合" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
 battleStr=`<div style="margin:2px 0;">${BATTLE_LABEL} ${_batBtn(d1, 'd1', '×1')} / ${_batBtn(d2, 'd2', '×2-3')} / ${_batBtn(d4, 'd4', '×4-5')}</div>`
 +`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">▸ 點 AT 值查看該怪數的推薦組合</div>`;
 }else if(d1===0){
 battleStr+=`<div style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">0</span> <span style="color:#888;font-size:10px;">×1</span></div>`
-+_solverRender(0,[{hex:hexId,count:1,death:mainDeath,isMain:true}],monId,mapDeft);
++renderSolverResult(0,[{hex:hexId,count:1,death:mainDeath,isMain:true}],monId,mapDeft);
 }
 battleStr+=`<div style="color:#888;font-size:11px;margin-top:3px;">`+C22+`</div>`
 +`<div style="margin-top:3px;">${seqHtml}</div>`;
@@ -2260,21 +2310,21 @@ const effectiveRate=Math.floor((rareRarity*100)/firstThiefLv);
 const ThiefThreshold=Math.floor(32767/effectiveRate)+1;
 const resBox=document.getElementById('si_at_results');
 resBox.innerHTML=`
-<div style="display:flex;justify-content:space-between;">
-<span>AT ${N}:<span class="si-highlight">${atN_val}</span>→${monName}</span>
-<span style="font-size:11px;">${patternMsg}</span>
-</div>
-<div>AT ${N+1}:<span style="color:#39C5BB;">${atN1_val}</span>➔`+G27+`:<span class="si-highlight">${mapDeft}</span></div>
-<div style="margin-top:5px;padding-top:5px;border-top:1px dashed #335;">
-${battleStr}
-</div>`;
+  <div style="display:flex;justify-content:space-between;">
+  <span>AT ${N}: <span class="si-highlight">${atN_val}</span> → ${monName}</span>
+  <span style="font-size:11px;">${patternMsg}</span>
+  </div>
+  <div>AT ${N+1}: <span style="color:#39C5BB;">${atN1_val}</span> ➔ `+G27+`: <span class="si-highlight">${mapDeft}</span></div>
+  <div style="margin-top:5px;padding-top:5px;border-top:1px dashed #335;">
+  ${battleStr}
+  </div>`;
 const targetBox=document.getElementById('si_target_results');
 targetBox.innerHTML=`
-<div>AT<span style="color:#fff;">${targetTotalStep}</span>:<span class="si-highlight"style="color:#f44;font-size:15px;">${atTarget_val}</span></div>
-<div style="font-size:11px;margin-top:5px;color:#ccc;">
-`+C25+`(≤${DropThreshold}):${atTarget_val<=DropThreshold?'✅ YES':'❌ NO'}<br>
-`+C26+`(Lv${firstThiefLv}≤${ThiefThreshold}):${atTarget_val<=ThiefThreshold?'✅ YES':'❌ NO'}
-</div>`;
+  <div>AT <span style="color:#fff;">${targetTotalStep}</span>: <span class="si-highlight" style="color:#f44;font-size:15px;">${atTarget_val}</span></div>
+  <div style="font-size:11px;margin-top:5px;color:#ccc;">
+  `+C25+` (≤${DropThreshold}): ${atTarget_val <= DropThreshold ? '✅ YES' : '❌ NO'}<br>
+  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${atTarget_val <= ThiefThreshold ? '✅ YES' : '❌ NO'}
+  </div>`;
 }
 function openSeedInspector(){
 document.getElementById('seedInspectorModal').style.display='flex';
@@ -2289,33 +2339,33 @@ let _siSolveGen=0;
 let _siSolveSeq=0;
 const _siSolveQueue=[];
 const _siSolveBusy=new Map();
-function _siPoolIdleTake(){
+function takeIdlePoolWorker(){
 const p=_dq9Pool;
 if(!p||p.idle.length===0)return-1;
 const a=_dq9Active;
 if(a&&!a.finished&&a.queue.length>0)return-1;
 return p.idle.pop();
 }
-function _siSolveDispatch(){
+function dispatchSolveQueue(){
 while(_siSolveQueue.length>0){
-const wi=_siPoolIdleTake();
+const wi=takeIdlePoolWorker();
 if(wi<0)return;
 const t=_siSolveQueue.shift();
 _siSolveBusy.set(wi,t);
 _dq9Pool.workers[wi].postMessage(t.msg);
 }
 }
-function _siSolveHandle(workerIdx,m){
+function handleSolveMessage(workerIdx,m){
 const t=_siSolveBusy.get(workerIdx);
 if(!t||m.solveId!==t.solveId)return;
 _siSolveBusy.delete(workerIdx);
 const p=_dq9Pool;
 if(p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
-_poolDispatch();
+dispatchPoolJobs();
 if(m.type==='solveDone')t.resolve(m);
 else t.reject(new Error(m.message||'Solver Worker error'));
 }
-function _siSolveTask(render,options,idBase,bucketBase){
+function queueSolveTask(render,options,idBase,bucketBase){
 const pool=getSearchWorkerPool();
 if(!pool)return Promise.reject(new Error('Worker pool unavailable'));
 const solveId=++_siSolveSeq;
@@ -2325,87 +2375,87 @@ type:'solve',solveId,lang:DISPLAY_LANG,
 dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},
 chars:options.chars,render,idBase,bucketBase
 }});
-_siSolveDispatch();
+dispatchSolveQueue();
 });
 }
-function _siSolveReplaceWorker(wi){
+function replaceSolveWorker(wi){
 const p=_dq9Pool;
 if(!p)return;
 try{p.workers[wi].onmessage=null;p.workers[wi].onerror=null;p.workers[wi].terminate();}catch(e){}
-const w=new Worker(_dq9GetBlobURL());
-w.onmessage=(e)=>_poolHandleMessage(wi,e.data);
-w.onerror=(e)=>_poolHandleFatal(wi,e);
+const w=new Worker(getWorkerBlobURL());
+w.onmessage=(e)=>handlePoolMessage(wi,e.data);
+w.onerror=(e)=>handlePoolFatalError(wi,e);
 p.workers[wi]=w;
 const a=_dq9Active;
 if(a&&!a.finished&&a._retryJob)w.postMessage({type:'job',gen:a.gen,job:a._retryJob});
 if(p.idle.indexOf(wi)===-1)p.idle.push(wi);
 }
-function _siSolveCancelAll(reason){
+function cancelAllSolveTasks(reason){
 _siSolveGen++;
 const err=new Error(reason||'Solver cancelled');
 for(const t of _siSolveQueue)t.reject(err);
 _siSolveQueue.length=0;
 if(_siSolveBusy.size>0){
-for(const[wi,t]of _siSolveBusy){t.reject(err);_siSolveReplaceWorker(wi);}
+for(const[wi,t]of _siSolveBusy){t.reject(err);replaceSolveWorker(wi);}
 _siSolveBusy.clear();
-_poolDispatch();
+dispatchPoolJobs();
 }
 }
-function _siSolveAbortAll(reason){
+function abortAllSolveTasks(reason){
 const err=new Error(reason||'Worker pool lost');
 for(const t of _siSolveQueue)t.reject(err);
 _siSolveQueue.length=0;
 for(const t of _siSolveBusy.values())t.reject(err);
 _siSolveBusy.clear();
 }
-function _siSolveRequeueBusy(){
+function requeueBusySolveTasks(){
 if(_siSolveBusy.size===0)return;
-for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);_siSolveReplaceWorker(wi);}
+for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);replaceSolveWorker(wi);}
 _siSolveBusy.clear();
 }
-function _siSolveTaskMain(render,idBase,bucketBase){
+function runSolveTaskOnMain(render,idBase,bucketBase){
 window._solverComboId=idBase;
 window._solverBucketId=bucketBase;
-return _solverRender(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
+return renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
 }
-const _siSolverOptionsSnapshot=()=>({
-chars:_readCharStats(),
+const snapshotSolverOptions=()=>({
+chars:readCharStatsFromDom(),
 useStats:!!document.getElementById('si_useStats')?.checked,
 multiPlayer:!!document.getElementById('si_multiPlayer')?.checked
 });
-const _siD1Task=(b)=>({
+const makeD1SolveTask=(b)=>({
 bat:b.d1,
 monGroups:[{hex:b.hexId,count:1,death:b.mainDeath,isMain:true}],
 monId:b.monId,
 mapDeft:b.mapDeft,
 canRound2:b.canRound2
 });
-function _siEnsureSubmodal(){
+function ensureSolverSubmodal(){
 if(document.getElementById('si_submodal'))return;
 const ov=document.createElement('div');
 ov.id='si_submodal';
 ov.style.cssText='display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;padding:18px;overflow:auto;';
-ov.onclick=(e)=>{if(e.target===ov)_siCloseBucket();};
+ov.onclick=(e)=>{if(e.target===ov)closeSolverBucket();};
 ov.innerHTML='<div onclick="event.stopPropagation()" style="background:#0a0a1a;border:1px solid #0ff;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:14px;box-shadow:0 0 24px rgba(0,255,255,0.25);">'
 +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:sticky;top:0;background:#0a0a1a;padding-bottom:6px;border-bottom:1px solid #224;">'
 +'<span id="si_submodal_title" style="color:#0ff;font-size:14px;font-weight:bold;"></span>'
-+'<span onclick="_siCloseBucket()" style="cursor:pointer;color:#999;font-size:22px;line-height:1;padding:0 4px;">&times;</span>'
++'<span onclick="closeSolverBucket()" style="cursor:pointer;color:#999;font-size:22px;line-height:1;padding:0 4px;">&times;</span>'
 +'</div><div id="si_submodal_body"></div></div>';
 document.body.appendChild(ov);
 }
-function _siCloseBucket(){
-_siSolveCancelAll('Solver view closed');
+function closeSolverBucket(){
+cancelAllSolveTasks('Solver view closed');
 const ov=document.getElementById('si_submodal');
 if(ov){ov.style.display='none';const b=document.getElementById('si_submodal_body');if(b)b.innerHTML='';}
 }
-function _siShowBucket(bucket){
+function showSolverBucket(bucket){
 const b=window._siBuckets;
 if(!b)return;
-_siSolveCancelAll('Superseded by a new Solver view');
+cancelAllSolveTasks('Superseded by a new Solver view');
 const viewGen=_siSolveGen;
-_siEnsureSubmodal();
+ensureSolverSubmodal();
 window._solverComboMap={};window._solverComboId=0;window._solverBucketId=0;window._solverBuckets={};
-let html=(typeof _solverLegend==='function'?_solverLegend():''),title='';
+let html=(typeof buildSolverLegendHtml==='function'?buildSolverLegendHtml():''),title='';
 const tasks=[],taskElementIds=[];
 const _hdr=(bat,tLbl)=>`<div style="margin:6px 0 2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">${siFormatAT(bat)}</span> <span style="color:#888;font-size:10px;">${tLbl}</span></div>`;
 const _queueTask=(task)=>{
@@ -2416,7 +2466,7 @@ html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px
 if(bucket==='d1'){
 title=`${BATTLE_LABEL} ${siFormatAT(b.d1)}｜敵怪 ×1`;
 html+=_hdr(b.d1,'×1');
-_queueTask(_siD1Task(b));
+_queueTask(makeD1SolveTask(b));
 }else{
 const Ts=bucket==='d2'?[2,3]:[4,5];
 const headBat=bucket==='d2'?b.d2:b.d4;
@@ -2441,7 +2491,7 @@ document.getElementById('si_submodal_title').innerHTML=title;
 document.getElementById('si_submodal_body').innerHTML=html;
 document.getElementById('si_submodal').style.display='flex';
 if(tasks.length===0)return;
-const options=_siSolverOptionsSnapshot();
+const options=snapshotSolverOptions();
 const ID_SPAN=100000,BK_SPAN=1000;
 const _fill=(i,htmlStr)=>{
 const el=document.getElementById(taskElementIds[i]);
@@ -2456,14 +2506,14 @@ if(!pool){
 let i=0;
 const step=()=>{
 if(viewGen!==_siSolveGen||i>=tasks.length)return;
-_fill(i,_siSolveTaskMain(tasks[i],i*ID_SPAN,i*BK_SPAN));
+_fill(i,runSolveTaskOnMain(tasks[i],i*ID_SPAN,i*BK_SPAN));
 i++;setTimeout(step,0);
 };
 setTimeout(step,0);
 return;
 }
 tasks.forEach((task,i)=>{
-_siSolveTask(task,options,i*ID_SPAN,i*BK_SPAN).then((m)=>{
+queueSolveTask(task,options,i*ID_SPAN,i*BK_SPAN).then((m)=>{
 if(viewGen!==_siSolveGen)return;
 _mergeState(m);
 _fill(i,m.html);
@@ -2472,7 +2522,7 @@ if(viewGen!==_siSolveGen)return;
 console.warn('[Solver] Worker solve 失敗,該任務退回主執行緒:',e&&e.message);
 setTimeout(()=>{
 if(viewGen!==_siSolveGen)return;
-_fill(i,_siSolveTaskMain(task,i*ID_SPAN,i*BK_SPAN));
+_fill(i,runSolveTaskOnMain(task,i*ID_SPAN,i*BK_SPAN));
 },0);
 });
 });

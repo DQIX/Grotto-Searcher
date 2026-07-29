@@ -2,7 +2,7 @@ let DISPLAY_LANG='EN';
 let _L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
 function T(en,tw,jp){const a=[en,tw,jp];a.toString=a.valueOf=function(){return this[_L];};return a;}
 const A01=T('Please choose at least one condition.','請至少輸入一個搜尋條件！','少なくとも1つの条件を入力してください。');
-const A02=T('Unexpected error during search. See Console for details.','搜尋過程中發生意外錯誤，已安全中斷。詳情請見 Console。','検索中にエラーが発生しました。詳細は Console を確認してください。');
+const A02=T('Unexpected error during search. See Console (Google Chrome F12) for details.','搜尋過程中發生意外錯誤，已安全中斷。詳情請見 Console (Google Chrome F12)。','検索中にエラーが発生しました。詳細は Console (Google Chrome F12) を確認してください。');
 const A03=T('Sorry! Quickload search is not available for chest monsters.','非常抱歉！寶箱怪只能搜體感。','宝箱モンスターは体感検索のみ対応しています。');
 const A05=T('Sorry! Searching for this item is currently unavailable.','非常抱歉！這個物品的搜尋功能暫未開通。','このアイテムの検索機能は現在未実装です。');
 const A06=T('No output! Please perform a search first.','目前沒有搜尋結果可以匯出！請先執行一次搜索。','出力する結果がありません！先に検索を実行してください。');
@@ -122,7 +122,9 @@ const TKB4_5=T('Slowest Map','最長地圖','最長地図');
 const TKB4_6=T('Slowest Map (Detail)','最長地圖 (詳細版)','最長地図 (詳細版)');
 const TKB4_7=T('Max Floor Tiles','最大樓層格子數','マス目最大 (フロア)');
 const TKB4_8=T('Min Floor Tiles','最小樓層格子數','マス目最小 (フロア)');
-const TKB4_9=T('Max Floor Distance','最大樓層行走距離','最長 (1階分の走行距離)');
+const TKB4_9=T('Max Floor Walk Dist','最大樓層行走距離','マス目最長 (1階分の走行距離)');
+const TKB4_10=T('Max Chamber Area (Floor)','單層最大イケない通路面積','イケない通路 最大面積 (フロア)');
+const TKB4_11=T('Max Ghost Stairs (Floor)','單層最多幽靈樓梯','ゴースト階段 最多 (フロア)');
 const EL_M=T('Multi-Special-Floor','複數特殊層','複数の特殊フロア');
 const EL_P=T('Partially No-enemy','部分敵無','部分敵無');
 const EL_4=T('4-enemy','敵減 4 種','敵減 4 種');
@@ -143,7 +145,7 @@ const i18nDict={
 'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'G27':G27,'GBQ':GBQ,
 'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,'H07':H07,
 'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
-'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,'TKB4_1':TKB4_1,'TKB4_2':TKB4_2,'TKB4_3':TKB4_3,'TKB4_4':TKB4_4,'TKB4_5':TKB4_5,'TKB4_6':TKB4_6,'TKB4_7':TKB4_7,'TKB4_8':TKB4_8,'TKB4_9':TKB4_9,
+'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,'TKB4_1':TKB4_1,'TKB4_2':TKB4_2,'TKB4_3':TKB4_3,'TKB4_4':TKB4_4,'TKB4_5':TKB4_5,'TKB4_6':TKB4_6,'TKB4_7':TKB4_7,'TKB4_8':TKB4_8,'TKB4_9':TKB4_9,'TKB4_10':TKB4_10,'TKB4_11':TKB4_11,
 'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
 };
 const _OG={og1:T('Materials','素材/消耗品','素材/消耗品'),ogS:T('B9F Items','B9F物品','B9Fアイテム'),og2:T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'),og3:T('Cursed Equipment','詛咒裝備','呪い装備'),og4:T('Other Equipment','其他裝備','その他の装備'),og5:T('Chest Monsters','寶箱怪','宝箱モンスター')};
@@ -230,6 +232,11 @@ const TableR=[
 ];
 function debounce(fn,ms){let timer;return function(...args){clearTimeout(timer);timer=setTimeout(()=>fn.apply(this,args),ms);};}
 function lcg(seed){return(Math.imul(seed,1103515245)+12345)>>>0;}
+function row4(t,rows,v,dft){
+for(let i=0;i<rows;i++){const b=i*4;if(v>=t[b]&&v<=t[b+1])return[t[b+2],t[b+3]];}
+return dft;
+}
+const NO_ROW=[1,0];
 class GrottoDetail{
 constructor(){
 this.di=[];
@@ -283,10 +290,8 @@ if(random<num)return table[i*4];
 return 0;
 }
 seek2(table,value,tableSize){
-for(let i=0;i<tableSize;i++)
-if(value>=table[i*4]&&value<=table[i*4+1])
-return this.seek3(table[i*4+2],table[i*4+3]);
-return 0;
+const r=row4(table,tableSize,value,null);
+return r?this.seek3(r[0],r[1]):0;
 }
 seek3(val1,val2){
 const r=this.gRNG();
@@ -294,19 +299,16 @@ const num=val2-val1+1;
 return num===0?val1:(val1+r%num);
 }
 seek4(table1,table2,roopCount){
-for(let i1=0;i1<roopCount;i1++){
-if(this.MapRank>=table1[i1*4]&&this.MapRank<=table1[i1*4+1]){
+const r=row4(table1,roopCount,this.MapRank,null);
+if(!r)return 0;
 let num1=0;
-for(let i2=table1[i1*4+2];i2<=table1[i1*4+3];i2++)
+for(let i2=r[0];i2<=r[1];i2++)
 num1+=table2[(i2-1)*2+1];
 const num2=this.gRNG()%num1;
 let num3=0;
-for(let i3=table1[i1*4+2];i3<=table1[i1*4+3];i3++){
+for(let i3=r[0];i3<=r[1];i3++){
 num3+=table2[(i3-1)*2+1];
 if(num2<num3)return i3;
-}
-break;
-}
 }
 return 0;
 }
@@ -1136,15 +1138,15 @@ const MONSTER_DB={
 "14B":{t:8,en:"Slugly Betsy",jp:"うみうしひめ",g:16,s:[1477,404,236,0,0,150,50,100,100,50,150,100,0,60,170],d:["Watermaul wand",64,"Nomadic deel",128]},
 "14D":{t:2,en:"Hell's Gatekeeper",jp:"ヘルガーディアン",g:20,s:[996,535,645,0,4,100,100,100,150,100,75,150,50,98,115],d:[81,64,80,128]},
 "14E":{t:2,en:"Wishmaster",jp:"ギリメカラ",g:12,s:[663,513,563,0,0,100,150,100,100,50,50,150,50,77,96],d:[71,32,"Holy femail",128]},
-"025":{t:8,en:"Jinkster",jp:"ひとつめピエロ",g:0,s:[60,50,60,2,0,100,100,100,100,100,100,125,100,14,78],d:[0,256,0,256]},
-"032":{t:12,en:"Gum Shield",jp:"ビッグフェイス",g:0,s:[80,80,101,0,4,100,100,100,100,100,100,125,75,18,81],d:["Light shield",64,"Iron broadsword",128]},
-"04B":{t:0,en:"Slime Stack",jp:"スライムタワー",g:0,s:[177,93,68,0,0,100,100,100,125,100,200,100,50,14,102],d:[0,256,0,256]},
-"054":{t:11,en:"Brrearthenwarrior",jp:"ふゆしょうぐん",g:0,s:[125,125,135,0,4,150,50,100,100,75,100,100,50,27,105],d:["Ice crystal",32,"Ice shield",256]},
-"05C":{t:3,en:"Weaken Beakon",jp:"デッドペッカー",g:0,s:[78,72,90,0,0,100,150,75,100,125,100,100,75,19,88],d:[0,256,0,256]},
-"064":{t:2,en:"Tearwolf",jp:"キラーリカント",g:0,s:[136,121,125,0,0,100,75,100,125,100,100,100,50,27,112],d:["Magic beast hide",8,"Cloak of evasion",64]},
-"08A":{t:4,en:"Treeface",jp:"じんめんじゅ",g:0,s:[95,83,78,2,0,125,100,100,100,100,100,100,100,18,63],d:[0,256,0,256]},
-"0AD":{t:11,en:"Stone Guardian",jp:"だいまじん",g:0,s:[255,160,255,0,0,75,75,150,100,100,75,100,0,11,102],d:[49,64,123,256]},
-"100":{t:5,en:"Crabid",jp:"ぐんたいガニ",g:0,s:[72,72,83,0,0,100,100,100,100,100,150,150,100,16,15],d:[0,256,0,256]},
+"025":{t:8,en:"Jinkster",jp:"ひとつめピエロ",s:[60,50,60,2,0,100,100,100,100,100,100,125,100,14,78],d:[0,256,0,256]},
+"032":{t:12,en:"Gum Shield",jp:"ビッグフェイス",s:[80,80,101,0,4,100,100,100,100,100,100,125,75,18,81],d:["Light shield",64,"Iron broadsword",128]},
+"04B":{t:0,en:"Slime Stack",jp:"スライムタワー",s:[177,93,68,0,0,100,100,100,125,100,200,100,50,14,102],d:[0,256,0,256]},
+"054":{t:11,en:"Brrearthenwarrior",jp:"ふゆしょうぐん",s:[125,125,135,0,4,150,50,100,100,75,100,100,50,27,105],d:["Ice crystal",32,"Ice shield",256]},
+"05C":{t:3,en:"Weaken Beakon",jp:"デッドペッカー",s:[78,72,90,0,0,100,150,75,100,125,100,100,75,19,88],d:[0,256,0,256]},
+"064":{t:2,en:"Tearwolf",jp:"キラーリカント",s:[136,121,125,0,0,100,75,100,125,100,100,100,50,27,112],d:["Magic beast hide",8,"Cloak of evasion",64]},
+"08A":{t:4,en:"Treeface",jp:"じんめんじゅ",s:[95,83,78,2,0,125,100,100,100,100,100,100,100,18,63],d:[0,256,0,256]},
+"0AD":{t:11,en:"Stone Guardian",jp:"だいまじん",s:[255,160,255,0,0,75,75,150,100,100,75,100,0,11,102],d:[49,64,123,256]},
+"100":{t:5,en:"Crabid",jp:"ぐんたいガニ",s:[72,72,83,0,0,100,100,100,100,100,150,150,100,16,15],d:[0,256,0,256]},
 };
 const G_VALUES={
 1:[0,116,132,128,128,144,132,140,124,128,124,132,140],
@@ -1318,10 +1320,27 @@ return{hex:ElistOfs.toString(16).toUpperCase(),state:state,dValue:D};
 }
 const _anom_visited=new Uint8Array(256);
 const _anom_queue=new Uint16Array(256);
-const _DX=[0,0,-1,1];
-const _DY=[-1,1,0,0];
+const _DIR_X=new Int8Array([0,0,-1,1,1,1,-1,-1]);
+const _DIR_Y=new Int8Array([-1,1,0,0,1,-1,1,-1]);
+const _DIR_W=new Float64Array([1,1,1,1,1.5,1.5,1.5,1.5]);
 const isMainWalkable=(tile)=>tile!==1&&tile!==3;
 const isIsoWalkable=(tile)=>tile===0||tile===2||tile===8;
+function scanGhostStairs(di,out){
+const width=di[2],height=di[3];
+const upX=di[4],upY=di[5],downX=di[6],downY=di[7];
+let count=0;
+for(let y=0;y<height;y++){
+const yOfs=(y<<4)+792;
+for(let x=0;x<width;x++){
+const tile=di[yOfs+x];
+if(tile!==4&&tile!==5)continue;
+if((x===upX&&y===upY)||(x===downX&&y===downY))continue;
+count++;
+if(out)out.push(`(${x},${y})`);
+}
+}
+return count;
+}
 function runBFS(startX,startY,width,height,di,isValidTile){
 let qHead=0,qTail=0;
 const startIdx=(startY<<4)|startX;
@@ -1334,8 +1353,8 @@ regionSize++;
 const cx=curr&0xF;
 const cy=curr>>4;
 for(let i=0;i<4;i++){
-const nx=cx+_DX[i];
-const ny=cy+_DY[i];
+const nx=cx+_DIR_X[i];
+const ny=cy+_DIR_Y[i];
 if(nx>=0&&nx<width&&ny>=0&&ny<height){
 const nIdx=(ny<<4)|nx;
 if(!_anom_visited[nIdx]){
@@ -1374,8 +1393,7 @@ const yShift=y<<4;
 for(let x=0;x<width;x++){
 const idx=yShift|x;
 if(!_anom_visited[idx]){
-const tile=di[idx+792];
-if(tile===0||tile===2||tile===8){
+if(isIsoWalkable(di[idx+792])){
 const regionSize=runBFS(x,y,width,height,di,isIsoWalkable);
 isolatedRegions.push(regionSize);
 }
@@ -1383,23 +1401,141 @@ isolatedRegions.push(regionSize);
 }
 }
 }
-const hasIsolatedCorridor=isolatedRegions.length>0;
+const hasChamber=isolatedRegions.length>0;
 let GhostStairs=[];
 let hasGhostStair=false;
-if(checkGhostStair){
-for(let y=0;y<height;y++){
-const yOfs=(y<<4)+792;
-for(let x=0;x<width;x++){
-const tile=di[yOfs+x];
-if(tile===4||tile===5){
-if(!((x===upX&&y===upY)||(x===downX&&y===downY))){
-GhostStairs.push(`(${x},${y})`);
-}
-}
-}
-}
-hasGhostStair=GhostStairs.length>0;
-}
+if(checkGhostStair)hasGhostStair=scanGhostStairs(di,GhostStairs)>0;
 const isAllInvalidStair=engine.isStairOverflow[f];
-return{hasIsolatedCorridor,hasInaccessibleChest,hasInaccessibleStair,isolatedRegions,totalChests:boxes,hasGhostStair,GhostStairs,isAllInvalidStair};
+return{hasChamber,hasInaccessibleChest,hasInaccessibleStair,isolatedRegions,totalChests:boxes,hasGhostStair,GhostStairs,isAllInvalidStair};
+}
+const _uspDIST=new Float64Array(256);
+const _uspHC=new Float64Array(4096);
+const _uspHN=new Int32Array(4096);
+let _uspHS=0,_uspPC=0;
+function pushAstarNode(c,n){
+let i=_uspHS++;_uspHC[i]=c;_uspHN[i]=n;
+while(i>0){
+const p=(i-1)>>1;if(_uspHC[p]<=_uspHC[i])break;
+let t=_uspHC[p];_uspHC[p]=_uspHC[i];_uspHC[i]=t;
+t=_uspHN[p];_uspHN[p]=_uspHN[i];_uspHN[i]=t;i=p;
+}
+}
+function popAstarNode(){
+const nd=_uspHN[0];_uspPC=_uspHC[0];const last=--_uspHS;
+if(last>0){
+_uspHC[0]=_uspHC[last];_uspHN[0]=_uspHN[last];let i=0;
+for(;;){
+const l=2*i+1,r=2*i+2;let m=i;
+if(l<_uspHS&&_uspHC[l]<_uspHC[m])m=l;
+if(r<_uspHS&&_uspHC[r]<_uspHC[m])m=r;
+if(m===i)break;
+let t=_uspHC[m];_uspHC[m]=_uspHC[i];_uspHC[i]=t;
+t=_uspHN[m];_uspHN[m]=_uspHN[i];_uspHN[i]=t;i=m;
+}
+}
+return nd;
+}
+function calcPointWalkCost(eng,f,sx,sy,gx,gy){
+const di=eng.di[f];
+const W=di[2],H=di[3];
+if(W<=0||H<=0)return null;
+if(sx===gx&&sy===gy)return 0;
+if(sx<0||sx>=W||sy<0||sy>=H||gx<0||gx>=W||gy<0||gy>=H)return null;
+const wk=(x,y)=>(x>=0&&x<W&&y>=0&&y<H&&isMainWalkable(di[(y<<4)+x+792]));
+_uspDIST.fill(Infinity,0,(H<<4));
+const s=(sy<<4)+sx;_uspDIST[s]=0;_uspHS=0;pushAstarNode(0,s);
+while(_uspHS>0){
+const nd=popAstarNode();const co=_uspPC;
+if(co>_uspDIST[nd])continue;
+const cx=nd&0xF,cy=nd>>4;
+if(cx===gx&&cy===gy)return co;
+for(let k=0;k<8;k++){
+const nx=cx+_DIR_X[k],ny=cy+_DIR_Y[k];
+if(!wk(nx,ny))continue;
+if(k>=4&&(!wk(nx,cy)||!wk(cx,ny)))continue;
+const ni=(ny<<4)+nx,nc=co+_DIR_W[k];
+if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;pushAstarNode(nc,ni);}
+}
+}
+return null;
+}
+function calcFloorWalkCost(eng,f){
+const di=eng.di[f];
+return calcPointWalkCost(eng,f,di[4],di[5],di[6],di[7]);
+}
+function calcWalkCostUpToFloor(eng,upTo){
+let sum=0;
+for(let f=0;f<upTo;f++){
+const c=calcFloorWalkCost(eng,f);
+if(c===null)return null;
+sum+=c;
+}
+return sum;
+}
+const listVisitOrders=(n)=>n===2?[[0,1],[1,0]]:[Array.from({length:n},(_,i)=>i)];
+function calcSameFloorChestChainCost(eng,floor,boxes){
+const sum=calcWalkCostUpToFloor(eng,floor);
+if(sum===null)return null;
+const d=eng.di[floor];
+const n=boxes.length;
+const px=[d[4]],py=[d[5]];
+for(const b of boxes){px.push(d[b*2+13]);py.push(d[b*2+14]);}
+const dist=[];
+for(let i=0;i<=n;i++){
+dist[i]=[];
+for(let j=1;j<=n;j++)dist[i][j]=(i===j)?0:calcPointWalkCost(eng,floor,px[i],py[i],px[j],py[j]);
+}
+let best=null;
+const walk=(rest,cur,cost)=>{
+if(best!==null&&cost>=best)return;
+if(rest.length===0){best=cost;return;}
+for(let k=0;k<rest.length;k++){
+const leg=dist[cur][rest[k]];
+if(leg===null)continue;
+walk(rest.slice(0,k).concat(rest.slice(k+1)),rest[k],cost+leg);
+}
+};
+walk(boxes.map((_,i)=>i+1),0,0);
+return best===null?null:sum+best;
+}
+function calcCrossFloorLegCost(eng,f,x,y,g,gx,gy){
+if(f===g)return calcPointWalkCost(eng,f,x,y,gx,gy);
+const df=eng.di[f],dg=eng.di[g];
+let a,b;
+if(g===f+1){a=calcPointWalkCost(eng,f,x,y,df[6],df[7]);b=(a===null)?null:calcPointWalkCost(eng,g,dg[4],dg[5],gx,gy);}
+else{a=calcPointWalkCost(eng,f,x,y,df[4],df[5]);b=(a===null)?null:calcPointWalkCost(eng,g,dg[6],dg[7],gx,gy);}
+return b===null?null:a+b;
+}
+function calcCrossFloorChestRouteCost(eng,wpFloor,wpIdx,targets){
+const prefix=calcWalkCostUpToFloor(eng,wpFloor);
+if(prefix===null)return null;
+const d=eng.di[wpFloor];
+const wpPts=wpIdx.map(b=>[d[b*2+13],d[b*2+14]]);
+const orders=listVisitOrders(wpPts.length);
+let bestWp=null,bestTotal=null;
+for(const ord of orders){
+let cx=d[4],cy=d[5],wpCost=0,ok=true;
+for(const oi of ord){
+const c=calcPointWalkCost(eng,wpFloor,cx,cy,wpPts[oi][0],wpPts[oi][1]);
+if(c===null){ok=false;break;}
+wpCost+=c;cx=wpPts[oi][0];cy=wpPts[oi][1];
+}
+if(!ok)continue;
+const tOrders=listVisitOrders(targets.length);
+let segBest=null;
+for(const tOrd of tOrders){
+let f=wpFloor,x=cx,y=cy,seg=0,tOk=true;
+for(const ti of tOrd){
+const t=targets[ti];
+const c=calcCrossFloorLegCost(eng,f,x,y,t.g,t.gx,t.gy);
+if(c===null){tOk=false;break;}
+seg+=c;f=t.g;x=t.gx;y=t.gy;
+}
+if(tOk&&(segBest===null||seg<segBest))segBest=seg;
+}
+if(segBest===null)continue;
+const total=wpCost+segBest;
+if(bestWp===null||wpCost<bestWp||(wpCost===bestWp&&total<bestTotal)){bestWp=wpCost;bestTotal=total;}
+}
+return bestTotal===null?null:prefix+bestTotal;
 }

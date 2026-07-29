@@ -57,6 +57,7 @@ button.go:active{transform:scale(0.95)}
 .chest-item{font-size:12px;color:#ccc}
 .chest-item-solo{color:#8cc8ff}
 .chest-item-party{color:#fb6}
+.chest-item-ppap{color:#b19cd9}
 .search-panel{background:#111128;border-top:2px solid #4a4a8a;padding:16px 20px;border-bottom:2px solid #4a4a8a;}
 .search-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
 .search-panel-header>*{margin:2px 5px}
