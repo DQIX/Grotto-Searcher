@@ -88,46 +88,6 @@ const USP_FAST_MODES={
 'usp_maxiso':{mode:'maxtile',metric:'maxiso',slowest:false,showFloors:false},
 'usp_maxghost':{mode:'maxtile',metric:'maxghost',slowest:false,showFloors:false},
 };
-function renderMetricSearchResults(metric){
-const mkHdr=(txt)=>{const h=document.createElement('div');
-h.style.cssText='width:100%;color:#fc6;font-weight:bold;font-size:13px;margin:12px 0 4px;border-bottom:1px solid #555;padding-bottom:2px;';
-h.textContent=txt;return h;};
-const cutTies=(g,n)=>{let c=Math.min(n,g.length);
-if(c>0&&c<g.length){const thr=g[c-1].sortCost;while(c<g.length&&g[c].sortCost===thr)c++;}
-return g.slice(0,c);};
-if(metric==='maxghost')return(arr,sortCmp,grid)=>{
-arr.sort(sortCmp);
-const top=cutTies(arr,50);
-const fr=document.createDocumentFragment();
-fr.appendChild(mkHdr('Top '+top.length));
-for(const it of top)fr.appendChild(materializeResultItem(it));
-grid.appendChild(fr);
-};
-if(metric==='maxiso')return(arr,sortCmp,grid)=>{
-const groups={};
-for(const it of arr)(groups[it.sortCost]=groups[it.sortCost]||[]).push(it);
-const fr=document.createDocumentFragment();
-for(const k of Object.keys(groups).map(Number).sort((a,b)=>b-a)){
-const g=groups[k];g.sort(sortCmp);
-fr.appendChild(mkHdr(k+' '+T('tiles','格','マス')+' — '+g.length));
-for(const it of g)fr.appendChild(materializeResultItem(it));
-}
-grid.appendChild(fr);
-};
-return(arr,sortCmp,grid)=>{
-const groups={};
-for(const it of arr){const d=it._dimLabel||'?';if(!groups[d])groups[d]=[];groups[d].push(it);}
-const fr=document.createDocumentFragment();
-for(const dim of _MAXTILE_DIMS){
-const dl=dim+'x'+dim;const g=groups[dl];if(!g||g.length===0)continue;
-g.sort(sortCmp);
-const top=cutTies(g,10);
-fr.appendChild(mkHdr(dl+' — Top '+top.length));
-for(const it of top)fr.appendChild(materializeResultItem(it));
-}
-grid.appendChild(fr);
-};
-}
 function getUltimateConds(){
 const getV=(id)=>{const el=document.getElementById(id);return el?el.value.trim():"";};
 const reqBox={};
@@ -232,7 +192,6 @@ return Math.min(Math.floor(window.DQ9_WORKER_COUNT),256);
 }
 return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
 }
-let _dq9BlobURL=null;
 function getWorkerBlobURL(){return '5.js';}
 function getSearchWorkerPool(){
 if(_dq9Pool)return _dq9Pool;
@@ -662,6 +621,20 @@ processor:'multibug',
 params:{searchOnlyWithD,requireFloorIncrease,requireBugFloorHit,effectiveElistCond,isCombinedSearch},
 });
 }
+function clearUltimateSearch(){
+const inputIds=Object.values(COND_FIELDS).concat(BOX_RANK_CHARS.map(ch=>'cond_box_'+ch));
+inputIds.forEach(id=>{
+let el=document.getElementById(id);
+if(el){el.value='';}
+});
+let bqEl=document.getElementById('cond_bq');
+if(bqEl){bqEl.disabled=false;bqEl.style.opacity='1';}
+const checkboxIds=['searchAllRanks','searchOnlyWithD','requireFloorIncrease','requireBugFloorHit'];
+checkboxIds.forEach(id=>{
+let el=document.getElementById(id);
+if(el){el.checked=false;}
+});
+}
 function startFastestSearch(){
 const conds=getUltimateConds();
 if(!validateElistOnlyMonCombo(conds))return;
@@ -714,55 +687,45 @@ processor:'fastest',
 params:{searchOnlyWithD,fastestMode:mode,showFloors,slowest,metricType:fm?fm.metric:null},
 });
 }
-function initCPUBenchmark(){
-const h4=document.querySelector('#unified_search_panel h4');
-if(!h4)return;
-const cpuBtn=document.createElement('button');
-cpuBtn.id='cpuBenchBtn';
-cpuBtn.textContent='💻';
-cpuBtn.title='CPU Benchmark';
-cpuBtn.style.cssText='margin-left:6px;background:#224;color:#0ff;border:1px solid #088;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;';
-cpuBtn.onmouseover=function(){this.style.background='#0ff';this.style.color='#000';};
-cpuBtn.onmouseout=function(){this.style.background='#224';this.style.color='#0ff';};
-cpuBtn.onclick=startCPUBenchmark;
-h4.appendChild(cpuBtn);
+function renderMetricSearchResults(metric){
+const mkHdr=(txt)=>{const h=document.createElement('div');
+h.style.cssText='width:100%;color:#fc6;font-weight:bold;font-size:13px;margin:12px 0 4px;border-bottom:1px solid #555;padding-bottom:2px;';
+h.textContent=txt;return h;};
+const cutTies=(g,n)=>{let c=Math.min(n,g.length);
+if(c>0&&c<g.length){const thr=g[c-1].sortCost;while(c<g.length&&g[c].sortCost===thr)c++;}
+return g.slice(0,c);};
+if(metric==='maxghost')return(arr,sortCmp,grid)=>{
+arr.sort(sortCmp);
+const top=cutTies(arr,50);
+const fr=document.createDocumentFragment();
+fr.appendChild(mkHdr('Top '+top.length));
+for(const it of top)fr.appendChild(materializeResultItem(it));
+grid.appendChild(fr);
+};
+if(metric==='maxiso')return(arr,sortCmp,grid)=>{
+const groups={};
+for(const it of arr)(groups[it.sortCost]=groups[it.sortCost]||[]).push(it);
+const fr=document.createDocumentFragment();
+for(const k of Object.keys(groups).map(Number).sort((a,b)=>b-a)){
+const g=groups[k];g.sort(sortCmp);
+fr.appendChild(mkHdr(k+' '+T('tiles','格','マス')+' — '+g.length));
+for(const it of g)fr.appendChild(materializeResultItem(it));
 }
-function startCPUBenchmark(){
-if(isSearching){requestSearchCancel();return;}
-const t0=performance.now();
-executeSharedSearch({
-btnId:'cpuBenchBtn',
-btnText:'💻',
-btnBg:'#224',
-btnColor:'#0ff',
-stopText:'🛑',
-emptyRankMsg:B07,
-searchFilterLoc:true,
-validateConds:()=>true,
-renderCap:0,
-filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
-processor:'fastest',
-params:{searchOnlyWithD:false,benchmarkMode:true},
-onDoneExtra:(d)=>{
-const elapsed=((performance.now()-t0)/1000).toFixed(2);
-const sp=document.getElementById('searchProgress');
-if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
-},
-});
+grid.appendChild(fr);
+};
+return(arr,sortCmp,grid)=>{
+const groups={};
+for(const it of arr){const d=it._dimLabel||'?';if(!groups[d])groups[d]=[];groups[d].push(it);}
+const fr=document.createDocumentFragment();
+for(const dim of _MAXTILE_DIMS){
+const dl=dim+'x'+dim;const g=groups[dl];if(!g||g.length===0)continue;
+g.sort(sortCmp);
+const top=cutTies(g,10);
+fr.appendChild(mkHdr(dl+' — Top '+top.length));
+for(const it of top)fr.appendChild(materializeResultItem(it));
 }
-function clearUltimateSearch(){
-const inputIds=Object.values(COND_FIELDS).concat(BOX_RANK_CHARS.map(ch=>'cond_box_'+ch));
-inputIds.forEach(id=>{
-let el=document.getElementById(id);
-if(el){el.value='';}
-});
-let bqEl=document.getElementById('cond_bq');
-if(bqEl){bqEl.disabled=false;bqEl.style.opacity='1';}
-const checkboxIds=['searchAllRanks','searchOnlyWithD','requireFloorIncrease','requireBugFloorHit'];
-checkboxIds.forEach(id=>{
-let el=document.getElementById(id);
-if(el){el.checked=false;}
-});
+grid.appendChild(fr);
+};
 }
 function executeItemSearch(config){
 executeSharedSearch({
@@ -876,9 +839,7 @@ executeItemSearch({
 btnId:'searchBtn',btnText:H01,btnBg:'linear-gradient(135deg,#4c4,#080)',
 filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[chestRanks],isB9F?2:0),
 checker:'quickload',
-sortTopN:wantAstar?Infinity:undefined,
-preSort:(wantAstar&&isB9F)?preSortQuickloadB10Rows:undefined,
-groupTail:wantAstar?{match:it=>it.isX3,label:'x'+(reqCount+1)}:undefined,
+...astarPresetConfig(wantAstar,{b9Rows:isB9F,x3Count:reqCount+1}),
 checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks,wantAstar,checkB10:wantAstar&&isB9F}
 });
 }
@@ -892,6 +853,15 @@ return arr.filter(it=>!it.isB10).concat(b10);
 function preSortJfireB10Rows(arr){
 const b10wp=arr.filter(it=>it.isJfireB10).sort((a,b)=>a.sortCost-b.sortCost).slice(0,5);
 return arr.filter(it=>!it.isJfireB10).concat(b10wp);
+}
+function astarPresetConfig(wantAstar,opts){
+if(!wantAstar)return{};
+const o=opts||{};
+const cfg={sortTopN:Infinity};
+if(o.b9Rows)cfg.preSort=preSortQuickloadB10Rows;
+else if(o.jfire)cfg.preSort=preSortJfireB10Rows;
+if(o.x3Count!==undefined)cfg.groupTail={match:it=>it.isX3,label:'x'+o.x3Count};
+return cfg;
 }
 function startSearch(){
 const m=qlMode();
@@ -936,9 +906,7 @@ executeItemSearch({
 btnId:'searchBtn',btnText:H01,btnBg,
 filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[chestRanks],multiFloor?null:(isB9F?2:0)),
 checker:multiFloor?'quickload9all':'quickload9',
-sortTopN:wantAstar?Infinity:undefined,
-preSort:(wantAstar&&isB9F)?preSortQuickloadB10Rows:undefined,
-groupTail:wantAstar?{match:it=>it.isX3,label:'x'+(reqCount+1)}:undefined,
+...astarPresetConfig(wantAstar,{b9Rows:isB9F,x3Count:reqCount+1}),
 checkerParams:{targetFloors,checkItems,reqCount,isB9F,chestRanks,qlSec,wantAstar,checkB10:wantAstar&&isB9F}
 });
 }
@@ -963,7 +931,7 @@ executeItemSearch({
 btnId:btnConfig.id,btnText:btnConfig.text,btnBg:btnConfig.bg,
 filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[chestRanks],isS3?3:0),
 checker:'third',
-sortTopN:wantAstar?Infinity:undefined,
+...astarPresetConfig(wantAstar),
 checkerParams:{targetFloors,checkItems,isS3:!!isS3,colorStyle,chestRanks,wantAstar}
 });
 }
@@ -988,8 +956,7 @@ executeItemSearch({
 btnId:'BtnTK',btnText:H02,btnBg:'linear-gradient(135deg,#f80,#c40)',
 filterRanks:(ranks)=>ranks.filter(rank=>row4(TableC,8,rank,NO_ROW)[1]>=9),
 checker:'jfire',
-sortTopN:wantAstar?Infinity:undefined,
-preSort:wantAstar?preSortJfireB10Rows:undefined,
+...astarPresetConfig(wantAstar,{jfire:true}),
 checkerParams:{qlSec:qlSec==null?null:qlSec,wantAstar}
 });
 }
@@ -1040,266 +1007,10 @@ executeItemSearch({
 btnId:'BtnTK',btnText:H02,btnBg:'linear-gradient(135deg, #f80, #c40)',
 filterRanks:(ranks,conds)=>filterMapRanksBySMRAndChest(ranks,conds,[getChestRanksForItems(wpTargets),getChestRanksForItems(allMatTargets)],0),
 checker:'tk',
-sortTopN:wantAstar?Infinity:undefined,
+...astarPresetConfig(wantAstar),
 checkerParams:{targetItem,wpTargets,strictMatTargets,broadMatTargets,isMillionaire,isMonsterBox,minSec,maxSec,qlSec,wantAstar}
 });
 }
-const MRT_PREVIEW_ROWS=30;
-const MRT_S_WEAPONS=ITEMS_S_WEAPONS;
-const MRT_MILLIONAIRE=ITEMS_MILLIONAIRE;
-const MRT_HL={};
-MRT_HL['Sainted soma']={bg:'#FFC90E',fg:'#000',bd:'#da0'};
-MRT_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff',bd:'#2a4'});
-MRT_HL['Ethereal stone']={bg:'#c018a0',fg:'#fff',bd:'#e4c'};
-['Metal slime shield','Metal slime armour','Metal slime helm','Metal slime gauntlets','Metal slime sollerets'].forEach(i=>MRT_HL[i]={bg:'#383850',fg:'#d0d8f0',bd:'#88a'});
-MRT_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff',bd:'#4af'});
-MRT_HL['Lucida shard']={bg:'#B5E61D',fg:'#000',bd:'#8c0'};
-['Dangerous bustier','Fuddle bow'].forEach(i=>MRT_HL[i]={bg:'#FFAEC9',fg:'#000',bd:'#f8a'});
-const MRT_RK_COLORS={10:'#f4f',9:'#fa0',8:'#4cf',7:'#8f8',6:'#ff8',5:'#aaa',4:'#888',3:'#666',2:'#555',1:'#444'};
-const MRT_RK_NAMES=CHEST_RANK;
-const MRT_PRESETS={
-'DD,263C':{custom:{3:[0],4:[0],7:[0],8:[1],9:[0],10:[0],11:[0],12:[0],13:[0],14:[0],15:[0],16:[0]}},
-'B5,3CA2':{custom:{4:[0],5:[0],6:[0],7:[0],8:[0,2],9:[0],10:[1],13:[0],14:[0]}},
-'DD,2E7A':{custom:{3:[0],4:[0],6:[0],7:[1],9:[0],10:[0],11:[0,2],12:[1]}},
-'C9,7FE0':{custom:{3:[0],4:[0,2],5:[0],8:[0],9:[1],10:[0],11:[0],12:[0],13:[0]}},
-'C9,2AC6':{custom:{3:[0,1]}},
-'DD,32BB':{custom:{3:[0,1,2],4:[0,1]}},
-'DD,235E':{custom:{3:[0,1]}},
-'C9,158D':{custom:{3:[0,1]}},
-'DD,5C43':{custom:{3:[0,1],4:[0],5:[1],6:[0],9:[0],10:[0],11:[0],13:[0,1],14:[1]}},
-'DD,47D0':{custom:{3:[0,1],4:[1],5:[0],6:[0],7:[0,1,2],8:[0]}},
-};
-let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null,mrtHiddenChests=new Set(),mrtRankWidths={};
-function mrtMeasureRankWidths(){
-const canvas=document.createElement('canvas');
-const ctx=canvas.getContext('2d');
-const isMobile=window.innerWidth<=600;
-const isEN=mrtLang!=='jp';
-ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'"Hiragino Sans","PingFang TC",sans-serif');
-mrtRankWidths={};
-const ranks=new Set(mrtChests.map(cd=>cd.rank));
-for(const rank of ranks){
-let maxW=0,acc=0;
-for(let i3=TableO[rank-1];i3<TableO[rank];i3++){
-if(acc>99)break;
-acc+=TableP[i3];
-const r=TableR[TableQ[i3]];
-const name=isEN?(r[0]||'\u2014'):(r[1]||r[0]||'\u2014');
-const w=ctx.measureText(name).width;
-if(w>maxW)maxW=w;
-}
-mrtRankWidths[rank]=Math.ceil(maxW)+12;
-}
-}
-let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=0,mrtElapsedMs=0;
-function mrtInternalSec(){return mrtRealSec-5;}
-function mrtGetItem(f,b,s){return s>=0?mrtEngine.getBoxItem(f,b,s):[null,null];}
-function mrtGetStartSec(){
-const el=document.getElementById('mrt_timerStart');
-const v=el?parseFloat(el.value):NaN;
-return isNaN(v)?0:v;
-}
-function mrtOpen(){
-mrtCacheEls();
-mrtLang=DISPLAY_LANG==='EN'?'en':'jp';
-const bl=document.getElementById('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();
-mrtPopulateCustomHL();
-const modal=document.getElementById('marathonModal');
-modal.classList.add('open');
-const rSel=document.getElementById('rank');
-const sSel=document.getElementById('seed');
-if(rSel){const v=rSel.value.replace('0x','');document.getElementById('mrt_inRank').value=v;}
-if(sSel&&sSel.value)document.getElementById('mrt_inSeed').value=sSel.value;
-mrtInputChange();
-mrtResizeMain();
-}
-function mrtClose(){mrtResetTimer();document.getElementById('marathonModal').classList.remove('open');}
-function mrtResizeMain(){
-const tb=document.querySelector('#marathonModal .mrt-topbar');
-const ma=document.getElementById('mrt_mainArea');
-if(tb&&ma)ma.style.height=(window.innerHeight-tb.offsetHeight)+'px';
-}
-function mrtCompute(){
-const seed=parseInt(document.getElementById('mrt_inSeed').value.trim(),16);
-if(isNaN(seed)||seed<0||seed>0x7FFF){document.getElementById('mrt_mainArea').innerHTML='<p style="color:#f44;padding:20px">Invalid Seed</p>';return;}
-mrtEngine=new GrottoDetail();
-mrtEngine.MapSeed=seed;
-mrtEngine.MapRank=parseInt(document.getElementById('mrt_inRank').value,16);
-mrtEngine.calculateDetail();
-mrtChests=[];
-for(let f=0;f<mrtEngine.floorCount;f++){
-const d=mrtEngine.di[f];
-for(let b=0;b<d[8];b++){
-const info=mrtEngine.getBoxInfo(f,b);
-mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:MRT_RK_NAMES[info.rank]||'?'});
-}
-}
-mrtMeasureRankWidths();
-mrtBuildTable();
-mrtRenderRows();
-}
-function mrtIsVis(cd){
-if(mrtFilter==='CUSTOM'&&mrtCustom){const a=mrtCustom[cd.floorNum];return a?a.includes(cd.box):false;}
-if(mrtFilter==='SA')return cd.rank>=9;
-if(mrtFilter==='AB')return cd.rank===9||cd.rank===8;
-return true;
-}
-function mrtBuildTable(keepScroll){
-const area=document.getElementById('mrt_mainArea');
-const savedScroll=keepScroll?area.scrollLeft:0;
-area.scrollLeft=0;area.scrollTop=0;
-mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd)&&!mrtHiddenChests.has(cd.floor+':'+cd.box));
-if(!mrtVisChests.length){area.innerHTML='<p style="color:#555;padding:20px;text-align:center">No chests</p>';return;}
-const gridCols='42px '+mrtVisChests.map(cd=>(mrtRankWidths[cd.rank]||100)+'px').join(' ');
-let hdr='<div class="mrt-vhdr-time">sec</div>';
-for(let ci=0;ci<mrtVisChests.length;ci++){
-const cd=mrtVisChests[ci];
-const clr=MRT_RK_COLORS[cd.rank]||'#888';
-hdr+='<div class="mrt-vhdr" data-ck="'+cd.floor+':'+cd.box+'" style="cursor:pointer"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
-}
-area.innerHTML='<div class="mrt-vgrid" style="grid-template-columns:'+gridCols+'">'+hdr+'<div id="mrt_vbody" style="display:contents"></div></div>';
-area.querySelector('.mrt-vgrid').addEventListener('click',function(e){
-const cell=e.target.closest('[data-ck]');
-if(!cell)return;
-mrtHiddenChests.add(cell.dataset.ck);
-document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));
-mrtBuildTable(true);mrtRenderRows();
-});
-if(savedScroll)area.scrollLeft=savedScroll;
-}
-function mrtRenderRows(){
-const vb=document.getElementById('mrt_vbody');
-if(!vb||!mrtVisChests.length)return;
-const is=mrtInternalSec();
-const st=Math.max(0,is),ed=Math.max(st+MRT_PREVIEW_ROWS,is+MRT_PREVIEW_ROWS);
-const isEN=mrtLang!=='jp';
-const cellCls=isEN?'mrt-vcell mrt-vcell-en':'mrt-vcell';
-const parts=[];
-for(let s=st;s<=ed;s++){
-const cur=(s===is),rCls=cur?' mrt-vrow-cur':'';
-parts.push('<div class="mrt-vtime',rCls,'">',String(s+5).padStart(3,'0'),'</div>');
-for(let ci=0;ci<mrtVisChests.length;ci++){
-const cd=mrtVisChests[ci];
-const[en,jp]=(s>=0)?mrtGetItem(cd.floor,cd.box,s):[null,null];
-const hl=en?MRT_HL[en]:null;
-const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+';cursor:pointer"':' style="cursor:pointer"';
-const label=mrtLang==='jp'?(jp||en||'\u2014'):(en||'\u2014');
-parts.push('<div class="',cellCls,rCls,'" data-ck="',cd.floor,':',cd.box,'"',style,'>',label,'</div>');
-}
-}
-vb.innerHTML=parts.join('');
-}
-function mrtTimerLoop(){
-if(!mrtRunning)return;
-mrtElapsedMs=Date.now()-mrtOrigin;
-const ns=Math.floor(mrtElapsedMs/1000);
-mrtUpdateStopwatch(mrtElapsedMs);
-if(ns!==mrtRealSec){mrtRealSec=ns;mrtRenderRows();}
-mrtRAF=requestAnimationFrame(mrtTimerLoop);
-}
-let _mrtTimerText=null,_mrtTimerDisp=null,_mrtBtnStart=null;
-function mrtCacheEls(){
-_mrtTimerText=document.getElementById('mrt_timerText');
-_mrtTimerDisp=document.getElementById('mrt_timerDisp');
-_mrtBtnStart=document.getElementById('mrt_btnStart');
-}
-function mrtUpdateStopwatch(ms){
-const isPrep=ms<0;
-const absMs=Math.abs(ms);
-const s=Math.floor(absMs/1000);
-const cs=Math.floor((absMs%1000)/10);
-_mrtTimerText.textContent=isPrep?'-'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0')
-:String(s).padStart(3,'0')+'.'+String(cs).padStart(2,'0');
-_mrtTimerDisp.style.color=isPrep?'#f88':'#0f0';
-}
-function mrtToggleTimer(){
-if(mrtRunning){
-mrtRunning=false;
-if(mrtRAF){cancelAnimationFrame(mrtRAF);mrtRAF=null;}
-_mrtBtnStart.textContent='\u25B6';
-_mrtBtnStart.classList.remove('running');
-}else{
-mrtOrigin=Date.now()-mrtElapsedMs;
-mrtRunning=true;
-_mrtBtnStart.textContent='\u23F8';
-_mrtBtnStart.classList.add('running');
-mrtTimerLoop();
-}
-}
-function mrtResetTimer(){
-if(mrtRunning){cancelAnimationFrame(mrtRAF);mrtRAF=null;mrtRunning=false;}
-const s=mrtGetStartSec();
-mrtRealSec=s;mrtElapsedMs=s*1000;
-if(_mrtBtnStart){_mrtBtnStart.textContent='\u25B6';_mrtBtnStart.classList.remove('running');}
-mrtUpdateStopwatch(mrtElapsedMs);
-mrtRenderRows();
-}
-function mrtSetFilter(f){
-mrtFilter=f;mrtCustom=null;mrtHiddenChests.clear();
-document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
-mrtBuildTable();mrtRenderRows();
-}
-function mrtToggleLang(){
-mrtLang=mrtLang==='en'?'jp':'en';
-document.getElementById('mrt_btnLang').textContent=mrtLang.toUpperCase();
-mrtPopulateCustomHL();
-mrtMeasureRankWidths();
-mrtBuildTable();mrtRenderRows();
-}
-function mrtApplyPreset(){
-const sel=document.getElementById('mrt_presets');
-if(!sel.value)return;
-const[rank,seed]=sel.value.split(',');
-document.getElementById('mrt_inRank').value=rank;
-document.getElementById('mrt_inSeed').value=seed;
-const pd=MRT_PRESETS[sel.value];
-if(pd&&pd.custom){mrtFilter='CUSTOM';mrtCustom=pd.custom;document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));}
-mrtHiddenChests.clear();
-mrtResetTimer();mrtCompute();
-}
-function mrtInputChange(){
-const seedVal=document.getElementById('mrt_inSeed').value.trim();
-if(seedVal.length<1||/[^0-9A-Fa-f]/.test(seedVal))return;
-mrtCustom=null;mrtFilter='ALL';mrtHiddenChests.clear();
-document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f==='ALL'));
-mrtResetTimer();mrtCompute();
-}
-const debouncedMrtInput=debounce(mrtInputChange,200);
-const MRT_CUSTOM_HL1={bg:'#801',fg:'#fff',bd:'#c24'};
-const MRT_CUSTOM_HL2={bg:'#3f48cc',fg:'#fff',bd:'#66f'};
-let mrtCustomHL1Item='',mrtCustomHL2Item='';
-const MRT_BUILTIN_HL={};
-for(const k in MRT_HL)MRT_BUILTIN_HL[k]=MRT_HL[k];
-function mrtPopulateCustomHL(){
-if(typeof TableR==='undefined')return;
-const seen={},items=[];
-TableR.forEach(r=>{if(!seen[r[0]]){seen[r[0]]=true;items.push({en:r[0],jp:r[1]});}});
-const isJP=mrtLang==='jp';
-items.sort((a,b)=>isJP?a.jp.localeCompare(b.jp,'ja'):a.en.localeCompare(b.en));
-['mrt_customHL1','mrt_customHL2'].forEach(id=>{
-const sel=document.getElementById(id);
-if(!sel)return;
-const prev=sel.value;
-const label=id.endsWith('1')?'\u2014 HL1 \u2014':'\u2014 HL2 \u2014';
-let html='<option value="">'+label+'</option>';
-items.forEach(it=>{html+='<option value="'+it.en+'">'+(isJP?it.jp:it.en)+'</option>';});
-sel.innerHTML=html;
-sel.value=prev;
-});
-}
-function mrtApplyCustomHL(){
-[mrtCustomHL1Item,mrtCustomHL2Item].forEach(name=>{
-if(!name)return;
-if(MRT_BUILTIN_HL[name])MRT_HL[name]=MRT_BUILTIN_HL[name];
-else delete MRT_HL[name];
-});
-mrtCustomHL1Item=document.getElementById('mrt_customHL1').value;
-mrtCustomHL2Item=document.getElementById('mrt_customHL2').value;
-if(mrtCustomHL1Item)MRT_HL[mrtCustomHL1Item]=MRT_CUSTOM_HL1;
-if(mrtCustomHL2Item)MRT_HL[mrtCustomHL2Item]=MRT_CUSTOM_HL2;
-mrtRenderRows();
-}
-window.addEventListener('resize',()=>{if(document.getElementById('marathonModal').classList.contains('open'))mrtResizeMain();});
 function appendSpawnMonsterOptions(select,spawnList,formatName){
 for(const entry of spawnList){
 if(entry.length<3)continue;
@@ -1316,8 +1027,8 @@ const envType=parseInt(document.getElementById('at_env').value);
 const floorMR=parseInt(document.getElementById('at_mr').value);
 const sel=document.getElementById('at_mon');
 sel.innerHTML='';
-const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
-if(!spawnList)return;
+const spawnList=getSpawnList(envType,floorMR);
+if(!spawnList.length)return;
 appendSpawnMonsterOptions(sel,spawnList,md=>`${md.jp} (${md.en})`);
 if(typeof updateATOnlyMonsters==='function')updateATOnlyMonsters();
 }
@@ -1342,8 +1053,7 @@ if(lbl)lbl.textContent=T('Steps','步數','ｽﾃｯﾌﾟ');
 if(typeof dwInit==='function')dwInit();
 }
 function getMonsterNameByAT(atVal,envType,floorMR){
-const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
-if(!spawnList)return"?";
+const spawnList=getSpawnList(envType,floorMR);
 for(const entry of spawnList){
 if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2]){
 const md=MONSTER_DB[entry[0]];
@@ -1353,8 +1063,7 @@ return md?(DISPLAY_LANG!=='EN'?md.jp:md.en):"?";
 return"?";
 }
 function getMonsterIdByAT(atVal,envType,floorMR){
-const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
-if(!spawnList)return null;
+const spawnList=getSpawnList(envType,floorMR);
 for(const entry of spawnList){
 if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2])return entry[0];
 }
@@ -1369,213 +1078,6 @@ if(!isNaN(atVal)){
 el.textContent=getMonsterNameByAT(atVal,envType,floorMR);
 }
 });
-}
-const DW_PATS=[
-['R2','連續 2 個稀有','2 Rare','レア×2'],
-['R2_3','連續 2 個稀有 (N/N+3)','2 Rare (N/N+3)','レア×2 (チカラめし)'],
-['R3','連續 3 個稀有','3 Rare','レア×3'],
-['R4','連續 4 個稀有','4 Rare','レア×4'],
-['R5','連續 5 個稀有','5 Rare','レア×5'],
-['4_in_6','6 個中 4 個稀有','4 in 6 Rare','レア×4 (6連続)'],
-['3_in_7','7 個中 3 個稀有','3 in 7 Rare','レア×3 (7連続)'],
-['N2','連續 2 個通常','2 Normal','通常×2'],
-['N3','連續 3 個通常','3 Normal','通常×3'],
-['N4','連續 4 個通常','4 Normal','通常×4'],
-['N5','連續 5 個通常','5 Normal','通常×5'],
-['4_in_10','10 個中 4 個通常','4 in 10 Normal','通常×4 (10連続)'],
-['3_in_10','10 個中 3 個通常','3 in 10 Normal','通常×3 (10連続)']
-];
-const DW_L={
-TW:{
-name:md=>md.jp,mainFmt:md=>`${md.jp} (${md.en})`,
-drop:l=>'掉'+l,book:(b,l)=>'書'+b+l,
-tag:['主怪','跟班1','跟班2'],single:'單組',
-corr:n=>`→ 對照上表「${n === 1 ? '敵1組' : n + '組同時'}」表頭列`,
-jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表 5 欄',no:'上表未列',
-anchor:'Pattern 錨點（＝判定 1 的 AT 步數）：',
-more:m=>`（共 ${m} 個，僅列前 12）`,
-nf:'AT 38～2037 步內找不到符合的 Pattern 錨點',
-bad:'Seed 需為 1～4 位十六進位',
-hits:'命中：',leg:'R＝稀有命中　xN＝通常命中　xx＝落空',sep:'、',
-nomon:'此 地形×FloorMR 組合無可選主怪。'
-},
-EN:{
-name:md=>md.en,mainFmt:md=>md.en,
-drop:l=>l?'D-'+l:'D',book:(b,l)=>'B'+b+l,
-tag:['Main','Sup1','Sup2'],single:'Single',
-corr:n=>`→ matches the "(${n === 1 ? '1 group' : n + ' groups'})" header row above`,
-jr:(a,b)=>`Judg. ${a}–${b}`,eq5:'= 5 cols above',no:'not in table',
-anchor:'Pattern anchors (AT step of judgment 1): ',
-more:m=>` (${m} total, first 12 shown)`,
-nf:'No matching pattern anchor within AT steps 38–2037',
-bad:'Seed must be 1–4 hex digits',
-hits:'Hits: ',leg:'R = rare hit / xN = normal hit / xx = miss',sep:', ',
-nomon:'No selectable main monster for this terrain × FloorMR.'
-},
-JP:{
-name:md=>md.jp,mainFmt:md=>md.jp,
-drop:l=>'落'+l,book:(b,l)=>'盗'+b+l,
-tag:['メイン','取り巻き1','取り巻き2'],single:'単組',
-corr:n=>`→ 上表「${n === 1 ? '敵1組' : n + '組同時'}」の見出し行に対応`,
-jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表の5欄',no:'上表対象外',
-anchor:'パターン錨点（＝判定1のATステップ）：',
-more:m=>`（全 ${m} 件、先頭12件のみ表示）`,
-nf:'AT 38～2037 の範囲に一致する錨点なし',
-bad:'Seed は16進数 1～4 桁で入力',
-hits:'命中：',leg:'R＝レア成立　xN＝通常成立　xx＝不成立',sep:'、',
-nomon:'この地形×FloorMRでは選択可能なメインがいません。'
-}
-};
-const DW_CLSC={cr:'#f88',ct:'#39C5BB',cy:'#ffd700',cp:'#c8c',ck:'#cc8'};
-const _dwSel={TW:0,EN:0,JP:0};
-const _dwTmr={};
-function dwSupPool(envType,floorMR){
-const raw=(typeof GROTTO_SUPPORT!=='undefined'&&GROTTO_SUPPORT[envType])?(GROTTO_SUPPORT[envType][floorMR]||[]):[];
-const out=[],seen=new Set();
-for(const e of raw){
-if(!Array.isArray(e))continue;
-if(typeof e[0]==='string'&&!seen.has(e[0])){seen.add(e[0]);out.push(e[0]);}
-for(const x of e){
-if(Array.isArray(x)&&typeof x[0]==='string'&&!seen.has(x[0])){seen.add(x[0]);out.push(x[0]);}
-}
-}
-return out;
-}
-function dwInit(){
-['TW','EN','JP'].forEach((L,li)=>{
-const patSel=document.getElementById('dw_pat_'+L);
-if(patSel){
-patSel.innerHTML='<option value="none">----</option>';
-DW_PATS.forEach(p=>{
-const o=document.createElement('option');
-o.value=p[0];
-o.textContent=p[1+li];
-patSel.appendChild(o);
-});
-}
-dwUpd(L);
-});
-}
-function dwUpd(L){
-const $=id=>document.getElementById(id+'_'+L);
-const envEl=$('dw_env');
-if(!envEl)return;
-_dwSel[L]=0;
-const envType=parseInt(envEl.value);
-const floorMR=parseInt($('dw_mr').value);
-const X=DW_L[L];
-const monSel=$('dw_mon');
-monSel.innerHTML='';
-const spawnList=SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR];
-if(spawnList)appendSpawnMonsterOptions(monSel,spawnList,X.mainFmt);
-const pool=dwSupPool(envType,floorMR);
-['dw_sup1','dw_sup2'].forEach(id=>{
-const sel=$(id);
-if(!sel)return;
-sel.innerHTML='<option value="">—</option>';
-for(const hx of pool){
-const md=MONSTER_DB[hx];
-const opt=document.createElement('option');
-opt.value=hx;
-opt.textContent=md?X.name(md):hx;
-sel.appendChild(opt);
-}
-});
-dwRender(L);
-}
-function dwChanged(L){_dwSel[L]=0;dwRender(L);}
-function dwRenderDeb(L){_dwSel[L]=0;clearTimeout(_dwTmr[L]);_dwTmr[L]=setTimeout(()=>dwRender(L),200);}
-function dwSelStep(L,i){_dwSel[L]=i;dwRender(L);}
-function dwRender(L){
-const $=id=>document.getElementById(id+'_'+L);
-const out=$('dw_out');
-if(!out)return;
-const X=DW_L[L];
-const monHex=$('dw_mon').value;
-if(!monHex){out.innerHTML=`<span style="color:#888;font-size:11px">${X.nomon}</span>`;return;}
-const nameOf=hx=>{const md=MONSTER_DB[hx];return md?X.name(md):hx;};
-const groups=[{name:nameOf(monHex),color:'#fff',tag:X.tag[0]}];
-const s1=$('dw_sup1').value;
-const s2=$('dw_sup2').value;
-if(s1)groups.push({name:nameOf(s1),color:'#a8f',tag:X.tag[1]});
-if(s2)groups.push({name:nameOf(s2),color:'#8cf',tag:X.tag[2]});
-const n=groups.length;
-const LET=['A','B','C'];
-const BOOK_CLS=['','ct','cy','cp','ck'];
-const slots=[];
-for(let g=0;g<n;g++)slots.push({lbl:X.drop(n>1?LET[g]:''),cls:'cr',g});
-for(let b=1;b<=4;b++)
-for(let g=0;g<n;g++)slots.push({lbl:X.book(b,n>1?LET[g]:''),cls:BOOK_CLS[b],g});
-const seedStr=($('dw_seed')?$('dw_seed').value:'').trim();
-const patKey=$('dw_pat')?$('dw_pat').value:'none';
-let scanHtml='',st=null;
-if(seedStr&&patKey&&patKey!=='none'&&typeof SI_PATTERN_INDICES!=='undefined'){
-if(!/^[0-9A-Fa-f]{1,4}$/.test(seedStr)){
-scanHtml=`<div style="color:#f66;font-size:11px;margin-bottom:4px">${X.bad}</div>`;
-}else{
-const seed=parseInt(seedStr,16)>>>0;
-const rr=parseInt($('dw_rr').value);
-const nr=parseInt($('dw_nr').value);
-const lv=Math.min(99,Math.max(1,parseInt($('dw_lv').value)||99));
-const tLvs=[lv,lv,lv,lv];
-const pats=SI_PATTERN_INDICES[patKey];
-const isN=patKey.startsWith('N')||patKey==='4_in_10'||patKey==='3_in_10';
-let rng=seed>>>0;
-for(let i=0;i<37;i++)rng=lcg(rng);
-const matches=[],rngs=[];
-for(let step=38;step<=2037;step++){
-const sim=siRunBattleSim(rng,n,rr,nr,tLvs,false);
-const hits=isN?sim.normHits:sim.rareHits;
-if(siMatchesPattern(hits,pats)){matches.push(step);rngs.push(rng);if(matches.length>=60)break;}
-rng=lcg(rng);
-}
-if(!matches.length){
-scanHtml=`<div style="color:#f80;font-size:11px;margin-bottom:4px">${X.nf}</div>`;
-}else{
-const sel=Math.min(_dwSel[L],matches.length-1);
-_dwSel[L]=sel;
-const seq=siRunBattleSim(rngs[sel],n,rr,nr,tLvs,true).seq;
-st=[];
-let si=-1;
-for(const e of seq){
-if(e.type.indexOf('(R)')>=0){si++;st[si]=e.red?'R':'x';}
-else if(e.red&&st[si]==='x')st[si]='N';
-}
-const chips=matches.slice(0,12).map((s,i)=>
-`<span onclick="dwSelStep('${L}',${i})" style="cursor:pointer;padding:0 5px;border:1px solid ${i === sel ? '#0f0' : '#555'};border-radius:3px;color:${i === sel ? '#0f0' : '#aaa'};margin:0 3px 2px 0;display:inline-block">${s}</span>`).join('');
-const moreTxt=matches.length>12?`<span style="color:#666;font-size:10px">${X.more(matches.length)}</span>`:'';
-scanHtml=`<div style="font-size:11px;margin-bottom:4px;color:#0ca">${X.anchor}${chips}${moreTxt}</div>`;
-}
-}
-}
-let html=scanHtml+'<div style="margin-bottom:6px;font-size:12px">'+
-groups.map((gr,i)=>`<span style="color:#0ff">${n > 1 ? LET[i] : X.single}</span>＝<span style="color:${gr.color}">${gr.name}</span><span style="color:#666;font-size:10px">(${gr.tag})</span>`).join('　')+
-`　<span style="color:#888;font-size:11px">${X.corr(n)}</span></div>`;
-html+='<table class="h3t sm ctr" style="margin-bottom:4px">';
-for(let r=0;r*5<slots.length;r++){
-html+='<tr><td class="bg" style="width:18%">'+X.jr(r*5+1,r*5+5)+
-(r===0?`<br><span style="color:#0ca;font-size:10px">${X.eq5}</span>`:`<br><span style="color:#666;font-size:10px">${X.no}</span>`)+'</td>';
-for(let c=0;c<5;c++){
-const s=slots[r*5+c];
-let stat='',bg='';
-if(st){
-const v=st[r*5+c];
-if(v==='R'){stat='<br><span class="cr b">R</span>';bg=';background:#2a0a0a';}
-else if(v==='N'){stat='<br><span class="cc b">xN</span>';bg=';background:#0a2020';}
-else stat='<br><span class="cx">xx</span>';
-}
-html+=`<td style="padding:4px${bg}"><span class="${s.cls} b">${s.lbl}</span><br><span style="color:${groups[s.g].color};font-size:11px">${groups[s.g].name}</span>${stat}</td>`;
-}
-html+='</tr>';
-}
-html+='</table>';
-if(st){
-const hitR=[],hitN=[];
-st.forEach((v,i)=>{if(v==='R')hitR.push(i);else if(v==='N')hitN.push(i);});
-const fmt=i=>`<span style="color:${DW_CLSC[slots[i].cls]};font-weight:bold">${slots[i].lbl}</span>·<span style="color:${groups[slots[i].g].color}">${groups[slots[i].g].name}</span>`;
-html+=`<div style="font-size:11px;margin-bottom:2px"><span style="color:#0ca">${X.hits}</span><span style="color:#f88;font-weight:bold">R </span>${hitR.length ? hitR.map(fmt).join(X.sep) : '—'}　<span style="color:#ccc;font-weight:bold">N </span>${hitN.length ? hitN.map(fmt).join(X.sep) : '—'}<span style="color:#555;font-size:10px">　${X.leg}</span></div>`;
-}
-out.innerHTML=html;
 }
 function updateBattleAT(){
 const deftInput=document.getElementById('at_deft');
@@ -1794,6 +1296,7 @@ const legends=[
 ['🗡',L==='EN'?'Metal Slime Sword/Spear':L==='JP'?'メタスラの剣／やり':'金屬史萊姆劍／槍'],
 ['🌀',L==='EN'?'Attribeauty':'風林火山'],
 ['💨',L==='EN'?'Miss (AT consumed)':L==='JP'?'ミス (AT消費あり)':'Miss (AT 照常消耗)'],
+['👉',L==='EN'?'Aim at the support, not the metal':L==='JP'?'メタルではなく仲間を指名':'瞄跟班、不瞄金屬'],
 ['🔱',L==='EN'?'Poker':L==='JP'?'きしんのまそう':'鬼神槍'],
 ];
 return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;">'
@@ -1826,7 +1329,7 @@ st.shown=next;
 const moreEl=document.getElementById(bucketId+'_more');
 if(moreEl){
 if(st.shown>=st.total)moreEl.style.display='none';
-else moreEl.textContent='+'+(st.total-st.shown)+' more ▾';
+else moreEl.textContent='+'+(st.total-st.shown)+L16;
 }
 }
 function expandCombo(id){
@@ -1853,7 +1356,7 @@ alive:true,groupIdx:ti,mon:m});
 }
 }
 if(!document.getElementById('si_useStats')?.checked){
-return'<div style="color:#888;font-size:9px;margin-left:24px;">中立模式（未勾選 Stats）：不採用任何攻擊力假設，逐招上下界條件待加入</div>';
+return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
 }
 const chars=readCharStatsFromDom();
 const inlineFource=combo.find(v=>v.at===0&&typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[v.jp]);
@@ -1862,14 +1365,14 @@ if(!c)return'?';
 if(c.job!==null&&c.job!==undefined&&typeof JOB_STATS!=='undefined'&&JOB_STATS[c.job]){
 return DISPLAY_LANG==='EN'?JOB_STATS[c.job].en:JOB_STATS[c.job].jp;
 }
-return'角色'+(c.slot||'?');
+return L20+(c.slot||'?');
 };
 const fEls=inlineFource?(_FOURCE_EL[inlineFource.jp]||[]):null;
 let fourceOn=false;
 let _traceMainKilled=false;
 let html='<div style="font-size:9px;color:#aaa;margin-left:24px;border-left:1px solid #555;padding-left:4px;margin-top:1px;">';
 const _hpRange=(i)=>'HP'+Math.max(0,i.hpLow)+'~'+i.hp;
-html+='<div style="color:#888;">場上: '+instances.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / ')+'</div>';
+html+='<div style="color:#888;">'+L21+instances.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / ')+'</div>';
 for(let ci=0;ci<combo.length;ci++){
 const action=combo[ci];
 const char=chars[assign?assign[ci]:ci]||chars[0]||{stats:{}};
@@ -1881,48 +1384,35 @@ const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||_traceMainKilled));
 for(const i of removed)i.alive=false;
 const mainStuck=alive.some(i=>i.death>0&&i.groupIdx===0&&!_traceMainKilled);
 const left=instances.filter(i=>i.alive);
-html+='<div>第'+(ci+1)+'招 '+whoTag+'<span style="color:#0ff;">みのがす</span> → ';
-html+=removed.length>0?removed.map(i=>i.name).join(',')+' mercy移除':'無效';
-if(mainStuck)html+=' <span style="color:#f80;">(主怪未殺,無法mercy放走)</span>';
-html+=' → 剩: '+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):'✓清場')+'</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#0ff;">みのがす</span> → ';
+html+=removed.length>0?removed.map(i=>i.name).join(',')+L24:L25;
+if(mainStuck)html+=' <span style="color:#f80;">'+L26+'</span>';
+html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
 continue;
 }
 if(action.jp==='おうえん'){
 const tgtCI=eggAssign?Object.keys(eggAssign).find(k=>+k>ci):null;
 const tgtName=tgtCI?(combo[+tgtCI]?.jp||'?'):'?';
-html+='<div>第'+(ci+1)+'招 '+whoTag+'<span style="color:#ff0;">おうえん</span> → 加成給 '+tgtName+'</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ff0;">おうえん</span> → '+L29+tgtName+'</div>';
 continue;
 }
 if(inlineFource&&action.jp===inlineFource.jp&&!fourceOn){
 fourceOn=true;
-html+='<div>第'+(ci+1)+'招 '+whoTag+'<span style="color:#f80;">'+action.jp+'</span> (fource啟動)</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#f80;">'+action.jp+'</span> '+L30+'</div>';
 continue;
 }
 if(!sk||alive.length===0){
-html+='<div>第'+(ci+1)+'招 '+whoTag+action.jp+'</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+action.jp+'</div>';
 continue;
 }
 const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
 const curFEls=fourceOn?fEls:null;
-const hits=action.hits||1;
+const hits=SolverActionGate.hits(action);
 const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
 const mulStr=mul>1?'<span style="color:#ff0;">×'+mul+'</span>':'';
 let details='';
-const hitTargets=tgt==='A'?alive.slice():
-tgt==='G'?(()=>{
-if(action.tgtGroup!==undefined)return alive.filter(i=>i.groupIdx===action.tgtGroup);
-return findLargestGroup(alive,'groupIdx');})():
-(()=>{
-if(isMetalActionSkill(action,sk)){
-const mt=findMetalInstance(alive);
-if(mt)return[mt];
-}
-if(action.tgtGroup!==undefined&&!action.soloGroup){
-const t=alive.filter(i=>i.groupIdx===action.tgtGroup).sort((a,b)=>b.hp-a.hp)[0];
-if(t)return[t];
-}
-return[alive.slice().sort((a,b)=>b.hp-a.hp)[0]];
-})();
+const picked=SolverActionGate.targets(alive,action,sk,'groupIdx');
+const hitTargets=picked.targets;
 const repInst=hitTargets.reduce((a,b)=>(b&&(!a||b.hp>a.hp))?b:a,null);
 const repHpHigh=repInst?repInst.hp:0;
 const repHpLow=repInst?repInst.hpLow:0;
@@ -1931,41 +1421,40 @@ const isMetalTgt=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toM
 const exec=canExecuteMetal(action.jp,inst.hex);
 if(exec){
 if(exec.isValid){
-details+=inst.name+': HP'+inst.hp+'→<span style="color:#f44;">💀金屬必殺</span> ';
+details+=inst.name+': HP'+inst.hp+'→<span style="color:#f44;">'+L31+'</span> ';
 inst.hp=0;inst.hpLow=0;inst.alive=false;
 }else{
-details+=inst.name+': <span style="color:#f44;">✗禁止(對非金屬無效)</span> ';
+details+=inst.name+': <span style="color:#f44;">'+L32+'</span> ';
 }
 continue;
 }
-let dMin,dMax;
+let dMin,dMax,dPerHitMax;
 if(isMetalTgt){
 const elemental=!!(sk.el&&sk.el>0);
 const me=(typeof getMetalEffect==='function')&&getMetalEffect(sk.metal||0,(typeof getWeaponMetalFlag==='function'?getWeaponMetalFlag(action.equip):0));
-if(!elemental&&me){dMin=1*hits;dMax=2*hits;}else{dMin=0;dMax=0;}
+if(!elemental&&me){dMin=1*hits;dMax=2*hits;dPerHitMax=2;}else{dMin=0;dMax=0;dPerHitMax=0;}
 }else{
-const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,getWeaponTypeMultiplier(action.equip,inst.hex));
+const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,getWeaponTypeMultiplier(action.equip,inst.hex),actionMetalEff(sk,action.equip));
 dMin=r?Math.floor(r.min*hits*mul):0;
 dMax=r?Math.floor(r.max*hits*mul):0;
+dPerHitMax=r?Math.floor(r.max*mul):0;
 }
-const hpAfterMax=inst.hp-dMin;
-const hpAfterMin=inst.hpLow-dMax;
-const dead=hpAfterMax<=0?'💀確殺':hpAfterMin<=0?'⚠可能殺':'';
-details+=inst.name+': '+_hpRange(inst)+'→<span style="color:'+(hpAfterMax<=0?'#f44':hpAfterMin<=0?'#f80':'#8f8')+';">'+hpAfterMin+'~'+hpAfterMax+'</span>'+dead+' ';
-inst.hp-=dMin;
-inst.hpLow-=dMax;
-if(inst.hp<=0){inst.alive=false;if(inst.groupIdx===0)_traceMainKilled=true;}
+const step=SolverActionGate.step(inst,hits,dPerHitMax,dMin,dMax);
+const dead=step.dead?L33:step.hpLow<=0?L34:'';
+details+=inst.name+': '+_hpRange(inst)+'→<span style="color:'+(step.dead?'#f44':step.hpLow<=0?'#f80':'#8f8')+';">'+step.hpLow+'~'+step.hp+'</span>'+dead+' ';
+SolverActionGate.commit(inst,step);
+if(step.dead&&inst.groupIdx===0)_traceMainKilled=true;
 }
 const left=instances.filter(i=>i.alive);
-html+='<div>第'+(ci+1)+'招 '+whoTag+'<span style="color:#ccc;">'+action.jp+'</span>'+mulStr+' ['+tgt+'] '+details;
-html+='→ 剩: '+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):'✓清場')+'</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ccc;">'+action.jp+'</span>'+mulStr+' ['+tgt+'] '+details;
+html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
 if(repInst){
 const repIsMetal=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(repInst.hex));
-if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSolverHintText(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,getWeaponTypeMultiplier(action.equip,repInst.hex))+'</div>';
+if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSolverHintText(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,getWeaponTypeMultiplier(action.equip,repInst.hex),actionMetalEff(sk,action.equip))+'</div>';
 }
 }
 if(defend&&defend.length){
-html+='<div style="color:#789;margin-top:1px;">防禦: '+defend.map(i=>_charLabel(chars[i])).join(', ')+'</div>';
+html+='<div style="color:#789;margin-top:1px;">'+L35+defend.map(i=>_charLabel(chars[i])).join(', ')+'</div>';
 }
 html+='</div>';
 return html;
@@ -2163,6 +1652,36 @@ return{type:'kill_all',effMon:T,postAlive:0};
 if(dG0SC>0)return{type:'mercy_first',effMon:main.count+d0SC,postAlive:main.count+d0SC};
 return{type:'kill_all',effMon:T,postAlive:0};
 }
+const _solverOpt=snapshotSolverOptions();
+const _solverMercyLv=(_solverOpt.chars&&_solverOpt.chars.length)
+?Math.max(..._solverOpt.chars.map(c=>c.lv||99)):99;
+const _isMetalMercyOnlyShape=(mg)=>{
+const main=mg.find(g=>g.isMain)||mg[0];
+if(!main||typeof _METAL_MONSTERS==='undefined'
+||!_METAL_MONSTERS.has(toMonsterHexId(main.hex)))return false;
+const nonMetalFollowers=mg.filter(g=>g!==main&&(g.count||0)>0
+&&!_METAL_MONSTERS.has(toMonsterHexId(g.hex)));
+if(!nonMetalFollowers.length)return false;
+return nonMetalFollowers.every(g=>{
+const hx=toMonsterHexId(g.hex);
+const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hx]:null;
+return g.death>0&&!!(m&&m.s)&&(m.s[13]+7)<=_solverMercyLv;
+});
+};
+const _fleeProbes=[];
+const _atForT=(t)=>(t===1)?d1:(t<=3?d2:d4);
+const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,canRound2});
+const _fleeState=(mg,t)=>{
+if(!mg.some(g=>!g.isMain&&g.death===0))return'ok';
+const task=_fleeTask(mg,t);
+const v=peekFleeVerdict(task,_solverOpt);
+if(v===false)return'flee';
+if(v===true)return'ok';
+_fleeProbes.push(task);
+return'pending';
+};
+const _pendTag=(st)=>st==='pending'
+?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':'';
 function _addResult(T,effMon,desc,monGroups){
 if(!resultsByT.has(T))resultsByT.set(T,{mixes:[],flee:[]});
 const bucket=resultsByT.get(T);
@@ -2177,8 +1696,8 @@ seenMainOnly.add(M);
 const mgA=[{hex:hexId,count:M,death:mainDeath,isMain:true}];
 const planA=_derivePlan(mgA);
 if(planA.type==='kill_mercy_clear'){
-_addResult(M,planA.effMon,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span><span style="color:#0f0"> ①殺1主②m放其餘→×${planA.effMon}</span>${_pFmt(_kA(M))}`,mgA);
-_addResult(M,M,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span><span style="color:#fa6"> 全殺→×${M}</span>${_pFmt(_kA(M))}`,mgA.map(g=>({...g,death:0})));
+_addResult(M,planA.effMon,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span><span style="color:#0f0"> ${L36}→×${planA.effMon}</span>${_pFmt(_kA(M))}`,mgA);
+_addResult(M,M,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span><span style="color:#fa6"> ${L37}→×${M}</span>${_pFmt(_kA(M))}`,mgA.map(g=>({...g,death:0})));
 }else{
 _addResult(M,M,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span>${_pFmt(_kA(M))}`,mgA);
 }
@@ -2201,26 +1720,25 @@ if(seen.has(key))continue;
 seen.add(key);
 const T=M+S;
 const sLbl=S>1?supName+'×'+S:supName;
-const sameTag=sameAsMain?'<span style="color:#0f0"> 同種</span>':'';
+const sameTag=sameAsMain?'<span style="color:#0f0"> '+L38+'</span>':'';
 const mg=[{hex:hexId,count:M,death:mainDeath,isMain:true},
 {hex:supHex,count:S,death:supDeath,isMain:false}];
 const plan=_derivePlan(mg);
-if(plan.type==='kill_all'){
-if(supHP>500){
+const _fs=_fleeState(mg,T);
+if(_fs==='flee'){
 _addResult(T,-1,`<span style="color:#a8f">+${sLbl}</span>${sameTag} <span style="color:#f44">HP${supHP}</span>${_pFmt(_kB(supHex, M, S))}`);
-}else{
-_addResult(T,T,`<span style="color:#a8f">+${sLbl} HP${supHP}</span>${sameTag}${_pFmt(_kB(supHex, M, S))}`,mg);
-}
+}else if(plan.type==='kill_all'){
+_addResult(T,T,`<span style="color:#a8f">+${sLbl} HP${supHP}</span>${sameTag}${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg);
 }else if(plan.type==='mercy_first'){
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${sLbl}</span>${sameTag}<span style="color:#0f0">①m②殺主→×${plan.effMon}</span>${_pFmt(_kB(supHex, M, S))}`,mg);
+`<span style="color:#a8f">+${sLbl}</span>${sameTag}<span style="color:#0f0">${L39}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg);
 }else{
-const lbl=plan.postAlive>0?'①殺主②m③清場':'①殺主②m';
+const lbl=plan.postAlive>0?L40:L41;
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${sLbl}</span>${sameTag}<span style="color:#0f0">${lbl}→×${plan.effMon}</span>${_pFmt(_kB(supHex, M, S))}`,mg);
+`<span style="color:#a8f">+${sLbl}</span>${sameTag}<span style="color:#0f0">${lbl}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg);
 }
-if(plan.type!=='kill_all'&&!(supHP>500)){
-_addResult(T,T,`<span style="color:#a8f">+${sLbl} HP${supHP}</span>${sameTag}<span style="color:#fa6"> 全殺→×${T}</span>${_pFmt(_kB(supHex, M, S))}`,mg.map(g=>({...g,death:0})));
+if(plan.type!=='kill_all'&&_fs!=='flee'&&!_isMetalMercyOnlyShape(mg)){
+_addResult(T,T,`<span style="color:#a8f">+${sLbl} HP${supHP}</span>${sameTag}<span style="color:#fa6"> ${L37}→×${T}</span>${_pFmt(_kB(supHex, M, S))}`,mg.map(g=>({...g,death:0})));
 }
 }
 }
@@ -2253,23 +1771,23 @@ const mg=[{hex:hexId,count:M,death:mainDeath,isMain:true},
 {hex:sA[0],count:SA,death:dA,isMain:false},
 {hex:sB[0],count:SB,death:dB,isMain:false}];
 const plan=_derivePlan(mg);
-const sameTag=(sameA||sameB||twoSameSup)?'<span style="color:#0f0"> 同種</span>':'';
-const fleeHP=mg.some(g=>!g.isMain&&g.death===0&&
-((g.hex===sA[0]&&hA>500)||(g.hex===sB[0]&&hB>500)));
-if(fleeHP&&(plan.type==='kill_all'||plan.postAlive>0)){
+const sameTag=(sameA||sameB||twoSameSup)?'<span style="color:#0f0"> '+L38+'</span>':'';
+const _fsC=_fleeState(mg,T);
+const fleeHP=_fsC==='flee';
+if(fleeHP){
 _addResult(T,-1,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`);
 }else if(plan.type==='kill_all'){
-_addResult(T,plan.effMon,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
+_addResult(T,plan.effMon,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
 }else if(plan.type==='mercy_first'){
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#0f0">①m②殺主→×${plan.effMon}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
+`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#0f0">${L39}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
 }else{
-const lbl=plan.postAlive>0?'①殺主②m③清場':'①殺主②m';
+const lbl=plan.postAlive>0?L40:L41;
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#0f0">${lbl}→×${plan.effMon}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
+`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#0f0">${lbl}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
 }
-if(plan.type!=='kill_all'&&!(hA>500||hB>500)){
-_addResult(T,T,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#fa6"> 全殺→×${T}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg.map(g=>({...g,death:0})));
+if(plan.type!=='kill_all'&&!fleeHP&&!_isMetalMercyOnlyShape(mg)){
+_addResult(T,T,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#fa6"> ${L37}→×${T}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg.map(g=>({...g,death:0})));
 }
 }
 }
@@ -2278,9 +1796,13 @@ _addResult(T,T,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span styl
 }
 }
 window._siBuckets={d1,d2,d4,monId,mapDeft,canRound2,hexId,mainDeath,resultsByT,useJP};
-const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="敵怪 ${lbl} 推薦組合" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
+if(_fleeProbes.length){
+Promise.all(_fleeProbes.map(t=>requestFleeVerdict(t,_solverOpt)))
+.then(()=>updateSeedInspector());
+}
+const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L42}${lbl}${L43}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
 battleStr=`<div style="margin:2px 0;">${BATTLE_LABEL} ${_batBtn(d1, 'd1', '×1')} / ${_batBtn(d2, 'd2', '×2-3')} / ${_batBtn(d4, 'd4', '×4-5')}</div>`
-+`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">▸ 點 AT 值查看該怪數的推薦組合</div>`;
++`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L44}</div>`;
 }else if(d1===0){
 battleStr+=`<div style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">0</span> <span style="color:#888;font-size:10px;">×1</span></div>`
 +renderSolverResult(0,[{hex:hexId,count:1,death:mainDeath,isMain:true}],monId,mapDeft);
@@ -2322,8 +1844,8 @@ const targetBox=document.getElementById('si_target_results');
 targetBox.innerHTML=`
   <div>AT <span style="color:#fff;">${targetTotalStep}</span>: <span class="si-highlight" style="color:#f44;font-size:15px;">${atTarget_val}</span></div>
   <div style="font-size:11px;margin-top:5px;color:#ccc;">
-  `+C25+` (≤${DropThreshold}): ${atTarget_val <= DropThreshold ? '✅ YES' : '❌ NO'}<br>
-  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${atTarget_val <= ThiefThreshold ? '✅ YES' : '❌ NO'}
+  `+C25+` (≤${DropThreshold}): ${atTarget_val <= DropThreshold ? '✅ ' + L48 : '❌ ' + L49}<br>
+  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${atTarget_val <= ThiefThreshold ? '✅ ' + L48 : '❌ ' + L49}
   </div>`;
 }
 function openSeedInspector(){
@@ -2423,6 +1945,39 @@ chars:readCharStatsFromDom(),
 useStats:!!document.getElementById('si_useStats')?.checked,
 multiPlayer:!!document.getElementById('si_multiPlayer')?.checked
 });
+const _fleeVerdict=new Map();
+const _fleePending=new Map();
+const FLEE_ID_BASE=900000,FLEE_BK_BASE=9000;
+let _fleeProbeSeq=0;
+const _fleeCharsSig=(chars)=>(chars||[]).map(c=>{
+const s=c.stats||{};
+return[c.lv,c.job,c.agi,s.atk,s.might,s.str,s.mending,s.deft].join(',');
+}).join(';');
+const fleeVerdictKey=(task,opt)=>
+task.monId+'@'+task.bat+'|'+(task.canRound2?1:0)+'|'+
+task.monGroups.map(g=>g.hex+':'+g.count+':'+g.death+(g.isMain?'*':'')).join(',')+
+'|'+(opt.useStats?1:0)+'|'+(opt.multiPlayer?1:0)+
+'|'+_fleeCharsSig(opt.chars);
+function peekFleeVerdict(task,opt){
+const k=fleeVerdictKey(task,opt);
+return _fleeVerdict.has(k)?_fleeVerdict.get(k):null;
+}
+function requestFleeVerdict(task,opt){
+const k=fleeVerdictKey(task,opt);
+if(_fleeVerdict.has(k))return Promise.resolve(_fleeVerdict.get(k));
+if(_fleePending.has(k))return _fleePending.get(k);
+const n=++_fleeProbeSeq;
+const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n).then((m)=>{
+const solvable=!!(m&&m.html&&m.html.indexOf('expandCombo(')>=0);
+_fleeVerdict.set(k,solvable);_fleePending.delete(k);
+return solvable;
+}).catch(()=>{
+_fleeVerdict.set(k,true);_fleePending.delete(k);
+return true;
+});
+_fleePending.set(k,p);
+return p;
+}
 const makeD1SolveTask=(b)=>({
 bat:b.d1,
 monGroups:[{hex:b.hexId,count:1,death:b.mainDeath,isMain:true}],
@@ -2448,6 +2003,35 @@ cancelAllSolveTasks('Solver view closed');
 const ov=document.getElementById('si_submodal');
 if(ov){ov.style.display='none';const b=document.getElementById('si_submodal_body');if(b)b.innerHTML='';}
 }
+function solverTaskOutputSignature(htmlStr,useStats){
+const rawHtml=htmlStr||'<div style="color:#666;font-size:10px;margin-left:16px;">—</div>';
+const comboIds=[...rawHtml.matchAll(/expandCombo\((\d+)\)/g)].map(m=>m[1]);
+const htmlSig=rawHtml
+.replace(/expandCombo\(\d+\)/g,'expandCombo(#)')
+.replace(/combo_detail_\d+/g,'combo_detail_#')
+.replace(/sb\d+/g,'sb#');
+const stable=(v)=>{
+if(Array.isArray(v))return v.map(stable);
+if(v&&typeof v==='object'){
+const out={};
+for(const k of Object.keys(v).sort())out[k]=stable(v[k]);
+return out;
+}
+return v;
+};
+const detailSig=comboIds.map(id=>{
+const e=window._solverComboMap&&window._solverComboMap[id];
+if(!e)return'missing:'+id;
+const actionSig=(e.combo||[]).map(v=>[
+v.jp,v.at||0,v.equip||'',v.note||'',SolverActionGate.hits(v),v.earlyKill?1:0,
+v.aoeK!==undefined?v.aoeK:'',v.soloGroup?1:0,v.needle?1:0,v.needDeath0?1:0
+].join('\x1f')).join('\x1e');
+const traceSig=useStats?(e.outcomeSig||''):'';
+return[actionSig,JSON.stringify(stable(e.eggAssign||null)),JSON.stringify(stable(e.assign||null)),
+JSON.stringify(stable(e.defend||null)),traceSig].join('\x1d');
+}).join('\x1c');
+return htmlSig+'\x1b'+detailSig;
+}
 function showSolverBucket(bucket){
 const b=window._siBuckets;
 if(!b)return;
@@ -2456,22 +2040,22 @@ const viewGen=_siSolveGen;
 ensureSolverSubmodal();
 window._solverComboMap={};window._solverComboId=0;window._solverBucketId=0;window._solverBuckets={};
 let html=(typeof buildSolverLegendHtml==='function'?buildSolverLegendHtml():''),title='';
-const tasks=[],taskElementIds=[];
+const tasks=[],taskElementIds=[],taskMeta=[];
 const _hdr=(bat,tLbl)=>`<div style="margin:6px 0 2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">${siFormatAT(bat)}</span> <span style="color:#888;font-size:10px;">${tLbl}</span></div>`;
-const _queueTask=(task)=>{
+const _queueTask=(task,meta)=>{
 const id='si_solver_task_'+viewGen+'_'+tasks.length;
-tasks.push(task);taskElementIds.push(id);
-html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px;">Solver 計算中…</div></div>`;
+tasks.push(task);taskElementIds.push(id);taskMeta.push(meta||null);
+html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px;">${L45}</div></div>`;
 };
 if(bucket==='d1'){
-title=`${BATTLE_LABEL} ${siFormatAT(b.d1)}｜敵怪 ×1`;
+title=`${BATTLE_LABEL} ${siFormatAT(b.d1)}｜${L42}×1`;
 html+=_hdr(b.d1,'×1');
 _queueTask(makeD1SolveTask(b));
 }else{
 const Ts=bucket==='d2'?[2,3]:[4,5];
 const headBat=bucket==='d2'?b.d2:b.d4;
 const headLbl=bucket==='d2'?'×2-3':'×4-5';
-title=`${BATTLE_LABEL} ${siFormatAT(headBat)}｜敵怪 ${headLbl}`;
+title=`${BATTLE_LABEL} ${siFormatAT(headBat)}｜${L42}${headLbl}`;
 let any=false;
 for(const T of Ts){
 const entry=b.resultsByT&&b.resultsByT.get(T);
@@ -2480,12 +2064,17 @@ any=true;
 const tBat=T<=3?b.d2:b.d4;
 html+=_hdr(tBat,'×'+T);
 for(const m of entry.mixes){
-html+=`<div style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">${m.desc}</div>`;
-_queueTask({bat:tBat,monGroups:m.monGroups||[{hex:b.hexId,count:m.effMon,death:b.mainDeath,isMain:true}],monId:b.monId,mapDeft:b.mapDeft,canRound2:b.canRound2});
+const taskNo=tasks.length;
+const rowId='si_solver_pattern_'+viewGen+'_'+taskNo;
+const descId=rowId+'_desc';
+html+=`<div id="${rowId}"><div id="${descId}" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">${m.desc}</div>`;
+_queueTask({bat:tBat,monGroups:m.monGroups||[{hex:b.hexId,count:m.effMon,death:b.mainDeath,isMain:true}],monId:b.monId,mapDeft:b.mapDeft,canRound2:b.canRound2},
+{pattern:true,section:'T'+T,rowId,descId,desc:m.desc});
+html+='</div>';
 }
-if(entry.flee.length>0)html+=`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">逃跑:</span> ${entry.flee.join(' · ')}</div>`;
+if(entry.flee.length>0)html+=`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L46}</span> ${entry.flee.join(' · ')}</div>`;
 }
-if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">（此情形無對應形態）</div>';
+if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L47+'</div>';
 }
 document.getElementById('si_submodal_title').innerHTML=title;
 document.getElementById('si_submodal_body').innerHTML=html;
@@ -2501,12 +2090,39 @@ const _mergeState=(m)=>{
 if(m.comboMap)Object.assign(window._solverComboMap,m.comboMap);
 if(m.buckets)Object.assign(window._solverBuckets,m.buckets);
 };
+const taskResults=new Array(tasks.length);
+let completedTasks=0;
+const _mergeEquivalentPatterns=()=>{
+const seen=new Map();
+for(let i=0;i<tasks.length;i++){
+const meta=taskMeta[i],result=taskResults[i];
+if(!meta||!meta.pattern||!result)continue;
+const sig=meta.section+'\x1a'+solverTaskOutputSignature(result.html,options.useStats);
+if(!seen.has(sig)){seen.set(sig,i);continue;}
+const keepMeta=taskMeta[seen.get(sig)];
+if(!keepMeta.mergedDescs)keepMeta.mergedDescs=[keepMeta.desc];
+keepMeta.mergedDescs.push(meta.desc);
+const descEl=document.getElementById(keepMeta.descId);
+if(descEl)descEl.innerHTML=keepMeta.mergedDescs.join('<br>');
+const duplicateRow=document.getElementById(meta.rowId);
+if(duplicateRow)duplicateRow.remove();
+}
+};
+const _completeTask=(i,result,stateAlreadyMerged)=>{
+if(viewGen!==_siSolveGen)return;
+if(!stateAlreadyMerged)_mergeState(result);
+taskResults[i]={html:result&&result.html!==undefined?result.html:''};
+_fill(i,taskResults[i].html);
+completedTasks++;
+if(completedTasks===tasks.length)_mergeEquivalentPatterns();
+};
 const pool=getSearchWorkerPool();
 if(!pool){
 let i=0;
 const step=()=>{
 if(viewGen!==_siSolveGen||i>=tasks.length)return;
-_fill(i,runSolveTaskOnMain(tasks[i],i*ID_SPAN,i*BK_SPAN));
+const result={html:runSolveTaskOnMain(tasks[i],i*ID_SPAN,i*BK_SPAN)};
+_completeTask(i,result,true);
 i++;setTimeout(step,0);
 };
 setTimeout(step,0);
@@ -2515,14 +2131,13 @@ return;
 tasks.forEach((task,i)=>{
 queueSolveTask(task,options,i*ID_SPAN,i*BK_SPAN).then((m)=>{
 if(viewGen!==_siSolveGen)return;
-_mergeState(m);
-_fill(i,m.html);
+_completeTask(i,m,false);
 }).catch((e)=>{
 if(viewGen!==_siSolveGen)return;
 console.warn('[Solver] Worker solve 失敗,該任務退回主執行緒:',e&&e.message);
 setTimeout(()=>{
 if(viewGen!==_siSolveGen)return;
-_fill(i,runSolveTaskOnMain(task,i*ID_SPAN,i*BK_SPAN));
+_completeTask(i,{html:runSolveTaskOnMain(task,i*ID_SPAN,i*BK_SPAN)},true);
 },0);
 });
 });

@@ -15,9 +15,9 @@ const RANKS={
 const BQ_MIN=2,BQ_MAX=248;
 const BQ_D_MIN=245;
 const LOCATION_FQ_BANDS=[
-{fqMin:BQ_MIN,fqMax:50,locationMax:47},
+{fqMin:2,fqMax:50,locationMax:47},
 {fqMin:51,fqMax:80,locationMax:131},
-{fqMin:81,fqMax:BQ_MAX,locationMax:150}
+{fqMin:81,fqMax:248,locationMax:150}
 ];
 const QUEST015="Quest 015";
 const QUEST015_EXC={seed:0x0032,fq:0x02,loc:5,bqFill:2};
@@ -54,12 +54,9 @@ if(finalQuality<=band.fqMax)return band.locationMax;
 }
 return LOCATION_FQ_BANDS[LOCATION_FQ_BANDS.length-1].locationMax;
 }
-function calcFinalQualityValid(baseQ,r1){
-const final=baseQ+Math.trunc(r1%BQ_MODULO[baseQ]-BQ_TENTH[baseQ]);
-return final<BQ_MIN?BQ_MIN:final>BQ_MAX?BQ_MAX:final;
-}
 function calcFinalQuality(baseQ,r1){
-return isValidBaseQuality(baseQ)?calcFinalQualityValid(baseQ,r1):NaN;
+const final=baseQ+Math.trunc(r1%BQ_MODULO[baseQ]-BQ_TENTH[baseQ]);
+return final<2?2:final>248?248:final;
 }
 function getFinalQualityBounds(rawBaseQ){
 const baseQ=parseBaseQuality(rawBaseQ);
@@ -70,9 +67,9 @@ for(let b=BQ_MIN;b<=BQ_MAX;b++){
 const m=Math.floor(b/10)*2+1;
 BQ_MODULO[b]=m;
 BQ_TENTH[b]=b/10;
-let lo=BQ_MAX,hi=BQ_MIN;
+let lo=248,hi=2;
 for(let r=0;r<m;r++){
-const f=calcFinalQualityValid(b,r);
+const f=calcFinalQuality(b,r);
 if(f<lo)lo=f;
 if(f>hi)hi=f;
 }
@@ -87,36 +84,43 @@ if(r)return r;
 let lo=BQ_MIN,hi=BQ_MAX;
 while(lo<=BQ_MAX&&BQ_FQ_HI[lo]<fqMin)lo++;
 while(hi>=BQ_MIN&&BQ_FQ_LO[hi]>fqMax)hi--;
-r=bqScanRangeCache[key]={lo,hi};
+r=bqScanRangeCache[key]=Object.freeze({lo,hi});
 return r;
 }
 let bqDCache=null;
 function getBqDFq(){
 if(bqDCache===null){
-bqDCache=BQ_MAX;
+bqDCache=248;
 for(let bq=BQ_D_MIN;bq<=BQ_MAX;bq++){
 if(BQ_FQ_LO[bq]<bqDCache)bqDCache=BQ_FQ_LO[bq];
 }
 }
 return bqDCache;
 }
+const BQ_FEAS_R1_END=0x8000;
 let bqCountFeasibility=null;
-function getBqCountFeasibility(){
-if(bqCountFeasibility)return bqCountFeasibility;
+let bqFeasWork=null;
+function advanceBqCountFeasibility(untilR1){
+if(bqCountFeasibility)return true;
+if(!bqFeasWork){
 const keys=Object.keys(RANKS);
 const acc={};
 for(const k of keys)acc[k]={minTotal:Infinity,minGroup:Infinity};
-const pre=new Int32Array(BQ_MAX+2);
+bqFeasWork={keys,acc,pre:new Int32Array(248+2),r1:0};
+}
+const w=bqFeasWork;
+const pre=w.pre;
 const cnt=(lo,hi)=>hi<lo?0:pre[hi]-pre[lo-1];
-for(let r1=0;r1<32768;r1++){
+const end=untilR1<BQ_FEAS_R1_END?untilR1:BQ_FEAS_R1_END;
+for(;w.r1<end;w.r1++){
 pre.fill(0);
-for(let bq=BQ_MIN;bq<=BQ_MAX;bq++)pre[calcFinalQualityValid(bq,r1)]++;
+for(let bq=BQ_MIN;bq<=BQ_MAX;bq++)pre[calcFinalQuality(bq,w.r1)]++;
 for(let q=1;q<pre.length;q++)pre[q]+=pre[q-1];
-for(const k of keys){
+for(const k of w.keys){
 const{fqMin,fqMax}=RANKS[k];
 const tot=cnt(fqMin,fqMax);
 if(tot===0)continue;
-const a=acc[k];
+const a=w.acc[k];
 if(tot<a.minTotal)a.minTotal=tot;
 for(const band of LOCATION_FQ_BANDS){
 const groupCount=cnt(
@@ -127,8 +131,14 @@ if(groupCount>0&&groupCount<a.minGroup)a.minGroup=groupCount;
 }
 }
 }
-bqCountFeasibility=acc;
-return acc;
+if(w.r1<BQ_FEAS_R1_END)return false;
+bqCountFeasibility=w.acc;
+bqFeasWork=null;
+return true;
+}
+function getBqCountFeasibility(){
+if(!bqCountFeasibility)advanceBqCountFeasibility(BQ_FEAS_R1_END);
+return bqCountFeasibility;
 }
 function isBqCountRankPossible(rank,mode){
 const info=RANKS[hex2(rank)];
@@ -191,7 +201,7 @@ for(const timer of timers){
 const{r1,r3}=timerToR1R3(timer);
 const locToBq={};
 for(let baseQ=scan.lo;baseQ<=scan.hi;baseQ++){
-const finalQ=calcFinalQualityValid(baseQ,r1);
+const finalQ=calcFinalQuality(baseQ,r1);
 if(finalQ<fqMin||finalQ>fqMax)continue;
 const locMax=getLocationMax(finalQ);
 const calcLoc=(r3%locMax)+1;
@@ -333,8 +343,8 @@ return dValue>0?` <span style="background:#fa0;color:#000;padding:1px 4px;border
 }
 function getElistMonsterBadge(envType,floorMR,targetCount,onlyMonNameStr){
 let result={badge:'',isCombinedHit:false};
-let spawnDb=SPAWN_DB[envType]?.[floorMR];
-if(!spawnDb)return result;
+let spawnDb=getSpawnList(envType,floorMR);
+if(!spawnDb.length)return result;
 let survivingNames=[];
 let survivingNamesEn=[];
 let isJP=(DISPLAY_LANG!=='EN');
@@ -817,6 +827,94 @@ return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px;padding:
 function buildAtPatternBoxHtml(patternName,probText,offsetsHtml){
 return`<div style="margin-top:4px;padding:4px 8px;background:#111;border:1px solid #333;border-radius:4px;">
   <span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName} (${probText})</span><br>${offsetsHtml}</div>`;
+}
+const SI_PATTERN_INDICES={
+'R2':[[1,2]],
+'R2_3':[[1,4]],
+'R3':[[1,2,3]],
+'R4':[[1,2,3,4]],
+'R5':[[1,2,3,4,5]],
+'4_in_6':[[1,2,3,6],[1,2,5,6],[1,4,5,6]],
+'3_in_7':[[1,2,5],[1,2,7],[1,4,5],[1,4,7],[1,6,7]],
+'N2':[[2,4]],
+'N3':[[2,4,6]],
+'N4':[[2,4,6,8]],
+'N5':[[2,4,6,8,10]],
+'4_in_10':[[2,4,6,10],[2,4,8,10],[2,6,8,10]],
+'3_in_10':[[2,4,8],[2,4,10],[2,6,8],[2,6,10],[2,8,10]]
+};
+function siRunBattleSim(startRng,gSize,rRarity,nRarity,tLevels,recordSeq){
+let rng=startRng>>>0;
+let seq=[];
+let rareHits=[];
+let normHits=[];
+let rngCount=0;
+let successRare=0;
+let successNorm=0;
+let threshR=rRarity>0?Math.floor(32768/rRarity):-1;
+let threshN=nRarity>0?Math.floor(32768/nRarity):-1;
+for(let m=0;m<gSize;m++){
+rng=lcg(rng);
+rngCount++;
+let vR=(rng>>>16)&0x7FFF;
+let okR=vR<=threshR;
+if(recordSeq)seq.push({val:vR,red:okR,type:`Group${m+1} Drop (R)`});
+if(okR){
+successRare++;
+rareHits.push(rngCount);
+}else{
+rng=lcg(rng);
+rngCount++;
+let vN=(rng>>>16)&0x7FFF;
+let okN=vN<=threshN;
+if(recordSeq)seq.push({val:vN,red:okN,type:`Group${m+1} Drop (N)`});
+if(okN){
+successNorm++;
+normHits.push(rngCount);
+}
+}
+}
+for(let b=0;b<4;b++){
+if(tLevels[b]<=0)continue;
+for(let m=0;m<gSize;m++){
+rng=lcg(rng);
+rngCount++;
+let vTR=(rng>>>16)&0x7FFF;
+let eRateR=Math.floor((rRarity*100)/tLevels[b]);
+let thTR=Math.floor(32767/eRateR)+1;
+let okTR=vTR<=thTR;
+if(recordSeq)seq.push({val:vTR,red:okTR,steal:true,type:`Book${b+1} Group${m+1} (R)`});
+if(okTR){
+successRare++;
+rareHits.push(rngCount);
+}else{
+rng=lcg(rng);
+rngCount++;
+let vTN=(rng>>>16)&0x7FFF;
+let eRateN=Math.floor((nRarity*100)/tLevels[b]);
+let thTN=Math.floor(32767/eRateN)+1;
+let okTN=vTN<=thTN;
+if(recordSeq)seq.push({val:vTN,red:okTN,steal:true,type:`Book${b+1} Group${m+1} (N)`});
+if(okTN){
+successNorm++;
+normHits.push(rngCount);
+}
+}
+}
+}
+return{successRare,successNorm,seq,rareHits,normHits};
+}
+function siMatchesPattern(hits,patterns){
+if(!patterns||patterns.length===0)return false;
+for(let p of patterns){
+if(hits.length<p.length)continue;
+let match=true;
+for(let i=0;i<p.length;i++){
+if(hits[i]!==p[i]){match=false;break;}
+}
+if(match)return true;
+}
+return false;
 }
 function initItemI18n(){
 if(typeof TableR!=='undefined'){TableR.forEach(pair=>{i18nDict['I_'+pair[0]]=T(pair[0],pair[1],pair[1]);});}
@@ -1340,12 +1438,15 @@ html+=`<div style="margin-top:3px;font-size:11px;font-family:monospace;line-heig
 }
 return{html,cost:sum};
 }
+function needsMapGeneration(conds,searchOnlyWithD){
+return!!(conds.hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="");
+}
 const SEED_PROCESSORS={
 ultimate:(searchEngine,seed,rStr,targetRankKey,job)=>{
 const conds=job.conds;
 const searchOnlyWithD=job.params.searchOnlyWithD;
 const _onlyMonExpectedStr=job._onlyMonExpectedStr;
-const needMapGeneration=conds.hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="";
+const needMapGeneration=needsMapGeneration(conds,searchOnlyWithD);
 searchEngine.calculateDetail(true);
 if(!checkUltimateCondsMatch(searchEngine,seed,targetRankKey,conds,job.searchFilterLoc))return null;
 if(conds.onlyMon){
@@ -1703,13 +1804,15 @@ let searchEngine=new GrottoDetail();
 const setup=SEED_SETUP[job.processor];
 if(setup)setup(searchEngine,job);
 const proc=SEED_PROCESSORS[job.processor];
+const yieldStride=(job.processor==='ultimate'
+&&!needsMapGeneration(conds,job.params&&job.params.searchOnlyWithD))?1000:250;
 for(let rank of job.ranks){
 if(io.cancelled())break;
 let rStr=hex2(rank);
 let targetRankKey=resolveRankKey(rStr,rank);
 for(let seed=job.startSeed;seed<=job.endSeed;seed++){
 if(io.cancelled())break;
-if(seed%250===0){
+if(seed%yieldStride===0){
 io.progress({processed,total:totalCombos,hits:hitCount,rStr,seedHex:hex4(seed)});
 if(batch.length>0){io.batch(batch);batch=[];}
 await io.yield();
@@ -1765,7 +1868,8 @@ toDelete.push(seed);
 }
 for(const seed of toDelete)atMchSeeds.delete(seed);
 }
-const needMapGeneration=hasBoxCond||conds.elist||conds.onlyMon||searchOnlyWithD||conds.anomaly!=="";
+const needMapGeneration=needsMapGeneration(conds,searchOnlyWithD);
+const yieldStride=needMapGeneration?250:1000;
 let _onlyMonExpectedStr=buildOnlyMonExpectedStr(conds);
 let searchEngine=new GrottoDetail();
 searchEngine.trackOverflow=(conds.anomaly==='all_invalid'||conds.anomaly==='ghost');
@@ -1775,7 +1879,7 @@ let hitCount=0;
 let batch=[];
 for(const[seed,atinfo]of atMchSeeds){
 if(io.cancelled())break;
-if(processed%200===0){
+if(processed%yieldStride===0){
 io.progress({processed,total:totalCombos,hits:hitCount});
 if(batch.length>0){io.batch(batch);batch=[];}
 await io.yield();
@@ -2138,7 +2242,6 @@ const wm=WEAPON_META[equip];
 const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[monId]:null;
 return(wm&&mon&&_WTYPE_T[wm.cat]===mon.t)?1.1:1;
 }
-const _FOURCE_BONUS=1.1;
 function getRankOrderValue(r){return r==='gold'?2:r==='orange'?1:0;}
 function binarySearchMinTrue(lo,hi,pred){
 while(lo<hi){const m=(lo+hi)>>1;if(pred(m))hi=m;else lo=m+1;}
@@ -2148,42 +2251,6 @@ function binarySearchMaxTrue(lo,hi,pred){
 let cap=lo-1;
 while(lo<=hi){const m=(lo+hi)>>1;if(pred(m)){cap=m;lo=m+1;}else hi=m-1;}
 return cap;
-}
-function calcPhysicalDamageRange(x,y,mul){
-const ratio=x>0?y/x:999;
-if(ratio>=2)return{min:0,max:1};
-if(ratio>=1.75)return{min:0,max:Math.floor(x/16)};
-const zBase=Math.floor(x/2)-Math.floor(y/4);
-const z=Math.floor(Math.max(zBase,0)*(mul||1));
-const eps=Math.floor(z/16)+1;
-return{min:Math.max(0,z-eps),max:z+eps};
-}
-function applyElementMod(baseDmg,el,monId){
-if(!el)return baseDmg;
-const mon=MONSTER_DB[monId];
-if(!mon)return baseDmg;
-return Math.floor(baseDmg*mon.s[el]/100);
-}
-function applyElementAndFource(baseDmg,skill,monId,fourceEls){
-if(skill.el){
-return applyElementMod(baseDmg,skill.el,monId);
-}
-if(!fourceEls||fourceEls.length===0)return baseDmg;
-const mon=MONSTER_DB[monId];
-if(!mon)return baseDmg;
-let best=baseDmg;
-for(const el of fourceEls){
-const mod=Math.floor(applyElementMod(baseDmg,el,monId)*_FOURCE_BONUS);
-if(mod>best)best=mod;
-}
-return best;
-}
-function applyTypeMul(baseDmg,skill,monId){
-if(!skill.tmul)return baseDmg;
-const mon=MONSTER_DB[monId];
-if(!mon)return baseDmg;
-const factor=skill.tmul[mon.t]||1.0;
-return Math.floor(baseDmg*factor);
 }
 const SKILL_IDX={};
 const _SOLVER_SKILL_DATA={};
@@ -2224,6 +2291,113 @@ const base=skill.hit||fixedRange||(dh?dh/2:1);
 let hits=(hasDoubling&&!fixedRange)?(dh||base*2):base;
 return hits;
 }
+function getEquipHitCount(sk,eq){
+if(sk.fh)return(eq==='はやぶさの剣')?sk.fh:(sk.hit||Math.floor(sk.fh/2));
+return sk.hit||1;
+}
+function buildSolverExactHitVariants(base,firstAT,diffAT,maxHits){
+const H=Math.max(1,Math.floor(maxHits||1));
+const full=Object.assign({},base,{at:firstAT+diffAT*(H-1),hits:H});
+const out=[full];
+for(let h=1;h<H;h++){
+out.push(Object.assign({},base,{
+at:firstAT+diffAT*(h-1),hits:h,earlyKill:true,
+note:(base.note||'')+`⚡${h}hit`
+}));
+}
+return out;
+}
+const _SOLVER_ENTRIES=[
+{jp:'攻撃'},
+{jp:'攻撃 (全体)',en:'Attack(All)'},
+{jp:'攻撃(毒針)',needle:true},
+{jp:'しっぷうづき'},
+{jp:'はやぶさ斬り'},
+{jp:'メタル斬り'},
+{jp:'とうこん討ち'},
+{jp:'とうこん討ち(毒針)',needle:true},
+{jp:'火ふき芸'},
+{jp:'ビッグバン'},
+{jp:'ドルマドン'},
+{jp:'メラガイアー'},
+{jp:'メラゾーマ'},
+{jp:'メラ'},
+{jp:'森羅万象斬'},
+{jp:'さばきの杖'},
+{jp:'なぎはらい'},
+{jp:'みのがす'},
+{jp:'ザラキーマ'},
+{jp:'おうえん'},
+{jp:'波紋演舞'},
+{jp:'バギムーチョ'},
+{jp:'ギガスロー'},
+{jp:'双竜打ち',alias:'双竜打ち (単体)',soloGroup:true},
+{jp:'マヒャド'},
+{jp:'ランドインパクト'},
+{jp:'マグマの杖'},
+{jp:'ギガブレイク'},
+{jp:'らせん打ち'},
+{jp:'ジゴスパーク'},
+{jp:'マヒャデドス'},
+{jp:'愛のムチ'},
+{jp:'オノむそう'},
+{jp:'グランドネビュラ'},
+{jp:'ヒャダルコ'},
+{jp:'パワフルスロー'},
+{jp:'バックダンサー呼び'},
+{jp:'シャイニングボウ'},
+{jp:'地這い大蛇'},
+{jp:'ゴッドスマッシュ'},
+{jp:'無心こうげき'},
+];
+const _SOLVER_SK={};
+for(const e of _SOLVER_ENTRIES){
+_SOLVER_SK[e.jp]=SKILL_IDX[e.alias||e.jp]||null;
+}
+function lookupSkill(jp){return _SOLVER_SK[jp]||SKILL_IDX[jp];}
+function lookupSkillData(jp){const rsk=_SOLVER_SK[jp];return rsk?_SOLVER_SKILL_DATA[rsk.jp]:_SOLVER_SKILL_DATA[jp];}
+function toMonsterHexId(monId){
+if(!monId)return null;
+if(typeof monId==='string')return monId.toUpperCase();
+return monId.toString(16).toUpperCase().padStart(3,'0');
+}
+const _FOURCE_BONUS=1.1;
+function calcPhysicalDamageRange(x,y,mul){
+const ratio=x>0?y/x:999;
+if(ratio>=2)return{min:0,max:1};
+if(ratio>=1.75)return{min:0,max:Math.floor(x/16)};
+const zBase=Math.floor(x/2)-Math.floor(y/4);
+const z=Math.floor(Math.max(zBase,0)*(mul||1));
+const eps=Math.floor(z/16)+1;
+return{min:Math.max(0,z-eps),max:z+eps};
+}
+function applyElementMod(baseDmg,el,monId){
+if(!el)return baseDmg;
+const mon=MONSTER_DB[monId];
+if(!mon)return baseDmg;
+return Math.floor(baseDmg*mon.s[el]/100);
+}
+function applyElementAndFource(baseDmg,skill,monId,fourceEls){
+if(skill.el){
+return applyElementMod(baseDmg,skill.el,monId);
+}
+if(!fourceEls||fourceEls.length===0)return baseDmg;
+const mon=MONSTER_DB[monId];
+if(!mon)return baseDmg;
+let best=baseDmg;
+for(const el of fourceEls){
+const mod=Math.floor(applyElementMod(baseDmg,el,monId)*_FOURCE_BONUS);
+if(mod>best)best=mod;
+}
+return best;
+}
+function applyTypeMul(baseDmg,skill,monId){
+if(!skill.tmul)return baseDmg;
+const mon=MONSTER_DB[monId];
+if(!mon)return baseDmg;
+const factor=skill.tmul[mon.t]||1.0;
+return Math.floor(baseDmg*factor);
+}
 function getDamageStat(statKey,stats){
 switch(statKey){
 case'might':return stats.might||0;
@@ -2245,7 +2419,7 @@ const clamped=Math.max(d.lo,Math.min(sv,d.hi));
 const calcBase=d.b+Math.floor((clamped-d.lo)*(d.m-d.b)/(d.hi-d.lo));
 return{min:calcBase-d.s,max:calcBase+d.s};
 }
-function calcSkillDamage(skill,stats,monId,fourceEls,wmul){
+function calcSkillDamage(skill,stats,monId,fourceEls,wmul,metalEff){
 const mon=MONSTER_DB[monId];
 if(!mon)return null;
 let base=calcBaseDmg(skill,stats);
@@ -2257,6 +2431,7 @@ let dMax=applyTypeMul(base.max,skill,monId);
 if(wmul&&wmul!==1){dMin=Math.floor(dMin*wmul);dMax=Math.floor(dMax*wmul);}
 dMin=applyElementAndFource(dMin,skill,monId,fourceEls);
 dMax=applyElementAndFource(dMax,skill,monId,fourceEls);
+if(metalEff){dMin+=1;dMax+=1;}
 const hpMax=mon.s[0];
 const hpMin=Math.floor(hpMax*0.8);
 const kill=dMin>=hpMax?'gold':dMax>=hpMin?'orange':null;
@@ -2266,6 +2441,61 @@ hpMin,hpMax,kill,
 evade:skill.ev?mon.s[3]:0,
 block:skill.blk?mon.s[4]:0,
 };
+}
+function calcMaxSkillDamage(jp,hexId,wmul,metalEff){
+const sd=SKILL_IDX[jp];
+const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
+if(!sd||!mon)return 9999;
+const tFactor=(sd.tmul&&sd.tmul[mon.t])||1;
+const base=calcBaseDmg(sd,{atk:999,str:999,might:999,mending:999,deft:999});
+if(!base){
+const phyMax=calcPhysicalDamageRange(999,mon.s[2],sd.mul).max;
+return Math.max(0,Math.floor(applyElementMod(phyMax,sd.el,hexId)*tFactor*(wmul||1))+(metalEff?1:0));
+}
+return Math.max(0,Math.floor(applyElementMod(base.max,sd.el,hexId)*tFactor*(wmul||1))+(metalEff?1:0));
+}
+const JOB_STATS=[
+{jp:'戦士',en:'Warrior',s:[744,300,504,278,300,421]},
+{jp:'僧侶',en:'Priest',s:[309,300,301,512,700,416]},
+{jp:'魔法使い',en:'Mage',s:[282,700,196,601,300,514]},
+{jp:'武闘家',en:'Martial Artist',s:[739,300,499,700,300,465]},
+{jp:'盗賊',en:'Thief',s:[639,300,399,610,381,612]},
+{jp:'旅芸人',en:'Minstrel',s:[586,461,346,559,495,514]},
+{jp:'ﾊﾞﾄﾙﾏｽﾀｰ',en:'Gladiator',s:[840,300,600,224,300,466]},
+{jp:'ﾊﾟﾗﾃﾞｨﾝ',en:'Paladin',s:[694,300,454,173,464,219]},
+{jp:'魔法戦士',en:'Armamentalist',s:[691,582,451,273,300,320]},
+{jp:'ﾚﾝｼﾞｬｰ',en:'Ranger',s:[645,300,405,364,500,710]},
+{jp:'賢者',en:'Sage',s:[309,537,302,318,508,267]},
+{jp:'ｽｰﾊﾟｰｽﾀｰ',en:'Luminary',s:[334,377,248,561,618,469]},
+{jp:'種ﾄﾞｰﾋﾟﾝｸﾞ',en:'Boosted',s:[999,999,999,999,999,999]},
+];
+function readCharStatsFromDom(){
+const chars=[];
+for(let i=1;i<=4;i++){
+const v=(id)=>parseInt(document.getElementById(id)?.value)||0;
+const jobRaw=document.getElementById('si_job'+i)?.value;
+chars.push({
+stats:{
+atk:v('si_atk'+i),might:v('si_might'+i),
+str:v('si_str'+i),mending:v('si_mend'+i),deft:v('si_deft'+i),
+},
+agi:v('si_agi'+i),
+lv:parseInt(document.getElementById('si_t'+i)?.value)||99,
+job:(jobRaw===undefined||jobRaw==='')?null:parseInt(jobRaw),
+slot:i,
+});
+}
+chars.sort((a,b)=>b.agi-a.agi);
+return chars;
+}
+function getCharsSafe(){return(typeof chars!=='undefined')?chars:readCharStatsFromDom();}
+const _EXT_STATS={atk:999,might:999,str:999,mending:999,deft:999};
+function passesExtremeRating(combo,hexId,mon,killTargets,statsOverride){
+const orig=readCharStatsFromDom;
+const _st=statsOverride||_EXT_STATS;
+readCharStatsFromDom=()=>orig().map(c=>({...c,stats:{..._st}}));
+try{const b=findBestAssignment(combo,hexId,mon,killTargets,1,null);return{rating:b.rating,finIdx:b.finIdx};}
+finally{readCharStatsFromDom=orig;}
 }
 const _TENSION=[
 {eggs:1,lv:5,mul:1.5},
@@ -2319,9 +2549,6 @@ const _METAL_PADDING=[
 ['メラガイアー','Kafrizzle',41,'miss','💨'],
 ['おうえん','Egg On',0,'',''],
 ];
-function isMetalTargetingAction(action){
-return action.jp==='一閃づき'||action.jp==='魔神斬り'||action.equip==='miss'||(action.skRef&&action.skRef.metal)||action.metal;
-}
 function canExecuteMetal(actionJp,hexId){
 if(actionJp!=='一閃づき'&&actionJp!=='魔神斬り')return null;
 const isValid=typeof _METAL_MONSTERS!=='undefined'&&typeof toMonsterHexId==='function'&&_METAL_MONSTERS.has(toMonsterHexId(hexId));
@@ -2334,10 +2561,7 @@ if(eq in _WEAPON_METAL_SHORT)return _WEAPON_METAL_SHORT[eq];
 return(typeof WEAPON_META!=='undefined'&&WEAPON_META[eq]&&WEAPON_META[eq].metal)?1:0;
 }
 function getMetalEffect(skillMetal,weaponMetal){return(skillMetal||weaponMetal)?1:0;}
-function getEquipHitCount(sk,eq){
-if(sk.fh)return(eq==='はやぶさの剣')?sk.fh:(sk.hit||Math.floor(sk.fh/2));
-return sk.hit||1;
-}
+function actionMetalEff(sk,eq){return getMetalEffect((sk&&sk.metal)?1:0,getWeaponMetalFlag(eq));}
 function getMetalChipMaxDamage(jp,eq){
 const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[jp]:null;
 if(!sk)return 0;
@@ -2358,7 +2582,7 @@ const maxBin=Math.max(...minHPs.map(h=>h-1));
 if(maxChip>maxBin)return false;
 return true;
 }
-function solveMetalCombo(bat,monCount,maxSlots,metalCount,metalHPs,excludedPads,hexId){
+function solveMetalCombo(bat,monCount,maxSlots,metalCount,metalHPs,excludedPads,hexId,supPads,relaxPads){
 if(hexId&&(typeof _METAL_MONSTERS!=='undefined')&&!_METAL_MONSTERS.has(hexId)){
 return[];
 }
@@ -2371,87 +2595,66 @@ const remaining=bat-totalIssenAT;
 const issen={jp:'一閃づき',en:'Thunder Thrust',at:14,equip:'',note:'',hits:1};
 const issenTail=Array(metalCount).fill(issen);
 if(remaining===0)return[issenTail.slice()];
-const pads=_METAL_PADDING
-.map(([jp,en,at,eq,note])=>({jp,en,at,equip:eq,note,hits:1,mdmg:(eq==='miss'?0:getMetalChipMaxDamage(jp,eq))}))
+const mkPads=(excl)=>_METAL_PADDING
+.map(([jp,en,at,eq,note])=>{
+const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[jp]:null;
+return{jp,en,at,equip:eq,note,hits:sk?getEquipHitCount(sk,eq):1,
+mdmg:(eq==='miss'?0:getMetalChipMaxDamage(jp,eq))};
+})
 .filter(p=>p.equip==='miss'||p.at===0||p.mdmg>0)
-.filter(p=>!excludedPads||!excludedPads.has(p.jp));
-pads.sort((a,b)=>b.at-a.at);
-const results=[];
+.filter(p=>!excl||!excl.has(p.jp))
+.sort((a,b)=>b.at-a.at);
+const pads=mkPads(excludedPads);
+const _relax=(relaxPads&&relaxPads!==excludedPads)?relaxPads:null;
+const padsRelax=_relax?mkPads(_relax):null;
+const unlocked=_relax&&excludedPads?new Set([...excludedPads].filter(jp=>!_relax.has(jp))):null;
 const MAX=3;
 const padSlots=maxSlots-metalCount;
-function dfs(startIdx,rem,combo){
-if(results.length>=MAX)return;
+function dfs(pool,startIdx,rem,combo,out,slots,head,needUnlocked){
+if(out.length>=MAX)return;
 if(rem===0){
-if(canMetalChipsKill(combo,metalHPs))results.push([...combo,...issenTail]);
+if(needUnlocked&&!combo.some(p=>unlocked.has(p.jp)))return;
+if(canMetalChipsKill([...head,...combo],metalHPs))out.push([...head,...combo,...issenTail]);
 return;
 }
-if(rem<0||combo.length>=padSlots)return;
-for(let i=startIdx;i<pads.length;i++){
-if(pads[i].at===0&&rem>0&&combo.length>=padSlots-1)continue;
-if(pads[i].at>rem)continue;
-combo.push(pads[i]);
-dfs(i,rem-pads[i].at,combo);
+if(rem<0||combo.length>=slots)return;
+for(let i=startIdx;i<pool.length;i++){
+if(pool[i].at===0&&rem>0&&combo.length>=slots-1)continue;
+if(pool[i].at>rem)continue;
+combo.push(pool[i]);
+dfs(pool,i,rem-pool[i].at,combo,out,slots,head,needUnlocked);
 combo.pop();
 }
 }
-dfs(0,remaining,[]);
+const results=[];
+dfs(pads,0,remaining,[],results,padSlots,[],false);
 results.sort((a,b)=>a.length-b.length);
-return results;
+const relaxRes=[];
+if(padsRelax){
+dfs(padsRelax,0,remaining,[],relaxRes,padSlots,[],true);
+relaxRes.sort((a,b)=>a.length-b.length);
 }
-const _SOLVER_ENTRIES=[
-{jp:'攻撃'},
-{jp:'攻撃 (全体)',en:'Attack(All)'},
-{jp:'攻撃(毒針)',needle:true},
-{jp:'しっぷうづき'},
-{jp:'はやぶさ斬り'},
-{jp:'メタル斬り'},
-{jp:'とうこん討ち'},
-{jp:'とうこん討ち(毒針)',needle:true},
-{jp:'火ふき芸'},
-{jp:'ビッグバン'},
-{jp:'ドルマドン'},
-{jp:'メラガイアー'},
-{jp:'メラゾーマ'},
-{jp:'メラ'},
-{jp:'森羅万象斬'},
-{jp:'さばきの杖'},
-{jp:'なぎはらい'},
-{jp:'みのがす'},
-{jp:'ザラキーマ'},
-{jp:'おうえん'},
-{jp:'波紋演舞'},
-{jp:'バギムーチョ'},
-{jp:'ギガスロー'},
-{jp:'双竜打ち',alias:'双竜打ち (単体)',soloGroup:true},
-{jp:'マヒャド'},
-{jp:'ランドインパクト'},
-{jp:'マグマの杖'},
-{jp:'ギガブレイク'},
-{jp:'らせん打ち'},
-{jp:'ジゴスパーク'},
-{jp:'マヒャデドス'},
-{jp:'愛のムチ'},
-{jp:'オノむそう'},
-{jp:'グランドネビュラ'},
-{jp:'ヒャダルコ'},
-{jp:'パワフルスロー'},
-{jp:'バックダンサー呼び'},
-{jp:'シャイニングボウ'},
-{jp:'地這い大蛇'},
-{jp:'ゴッドスマッシュ'},
-{jp:'無心こうげき'},
-];
-const _SOLVER_SK={};
-for(const e of _SOLVER_ENTRIES){
-_SOLVER_SK[e.jp]=SKILL_IDX[e.alias||e.jp]||null;
+const supRes=[];
+if(supPads&&supPads.length&&padSlots>=1){
+for(const sp of supPads){
+if(sp.at>remaining)continue;
+dfs(padsRelax||pads,0,remaining-sp.at,[],supRes,padSlots-1,[sp],false);
+if(supRes.length>=MAX)break;
 }
-function lookupSkill(jp){return _SOLVER_SK[jp]||SKILL_IDX[jp];}
-function lookupSkillData(jp){const rsk=_SOLVER_SK[jp];return rsk?_SOLVER_SKILL_DATA[rsk.jp]:_SOLVER_SKILL_DATA[jp];}
+supRes.sort((a,b)=>a.length-b.length);
+}
+return results.concat(relaxRes,supRes);
+}
 let _solverGroupCounts=null;
 let _solverFieldTotal=null;
 let _solverIssenNeed=0;
+let _solverEnforcePriority=false;
 let _solverUseStats=true;
-function expandSolverCombos(monCount,protectedSups,hexId){
+function expandSolverCombos(monCount,protectedSups,hexId,fieldShape){
+const groupCounts=fieldShape&&Object.prototype.hasOwnProperty.call(fieldShape,'groupCounts')
+?fieldShape.groupCounts:_solverGroupCounts;
+const fieldTotal=fieldShape&&Object.prototype.hasOwnProperty.call(fieldShape,'fieldTotal')
+?fieldShape.fieldTotal:_solverFieldTotal;
 const variants=[];
 for(const e of _SOLVER_ENTRIES){
 const sk=SKILL_IDX[e.alias||e.jp];
@@ -2485,21 +2688,22 @@ const hitBased=!isMulti&&isHitBased(sk);
 const baseHits=hitBased?getHits(sk,false):0;
 if(isMulti){
 if(diff===0){
-if(sk.target==='G'&&_solverGroupCounts){
-for(let gi=0;gi<_solverGroupCounts.length;gi++){
+if(sk.target==='G'&&groupCounts){
+for(let gi=0;gi<groupCounts.length;gi++){
+if(!(groupCounts[gi]>0))continue;
 variants.push({jp:e.jp,en,at:first,equip:'',note:'',hits:0,tgtGroup:gi});
 }
 }else{
 variants.push({jp:e.jp,en,at:first,equip:'',note:'',hits:0});
 }
-}else if(sk.target==='G'&&_solverGroupCounts){
-for(let gi=0;gi<_solverGroupCounts.length;gi++){
-for(let k=1;k<=_solverGroupCounts[gi];k++){
+}else if(sk.target==='G'&&groupCounts){
+for(let gi=0;gi<groupCounts.length;gi++){
+for(let k=1;k<=groupCounts[gi];k++){
 variants.push({jp:e.jp,en,at:first+diff*(k-1),equip:'',note:'',hits:0,aoeK:k,tgtGroup:gi});
 }
 }
 }else{
-const kMaxA=(typeof _solverFieldTotal==='number'&&_solverFieldTotal>0)?_solverFieldTotal:monCount;
+const kMaxA=(typeof fieldTotal==='number'&&fieldTotal>0)?fieldTotal:monCount;
 for(let k=1;k<=kMaxA;k++){
 if(e.jp==='攻撃 (全体)'&&k<=1)continue;
 variants.push({jp:e.jp,en,at:first+diff*(k-1),equip:'',note:'',hits:0,aoeK:k});
@@ -2507,43 +2711,39 @@ variants.push({jp:e.jp,en,at:first+diff*(k-1),equip:'',note:'',hits:0,aoeK:k});
 }
 }else{
 const n=hitBased?baseHits:(sk.hit||1);
-const nAT=first+diff*Math.max(0,n-1);
-variants.push({jp:e.jp,en,at:nAT,equip:e.needle?'どくばり':'',note:e.needle?'🪡':'',hits:hitBased?baseHits:0,soloGroup:e.soloGroup,needle:e.needle,needDeath0:e.needle});
-if(hitBased&&sk.hitRange&&sk.hitRange.normalMin===sk.hitRange.max&&baseHits>=2){
-for(let h=1;h<baseHits;h++){
-variants.push({jp:e.jp,en,at:first+diff*Math.max(0,h-1),equip:'',note:`⚡${h}hit`,hits:h,earlyKill:true,soloGroup:e.soloGroup});
-}
-}
+const baseVariant={jp:e.jp,en,equip:e.needle?'どくばり':'',note:e.needle?'🪡':'',
+soloGroup:e.soloGroup,needle:e.needle,needDeath0:e.needle};
+if(hitBased)variants.push(...buildSolverExactHitVariants(baseVariant,first,diff,n));
+else variants.push(Object.assign({},baseVariant,{at:first+diff*Math.max(0,n-1),hits:0}));
 if(hexId&&sk&&!sk.dmg&&!sk.fixedDmg&&!e.needle&&typeof _WTYPE_GENERIC_BY_T!=='undefined'){
 const _tm=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
 const _g=_tm?_WTYPE_GENERIC_BY_T[_tm.t]:null;
 if(_g&&_WEAPON_SKILLS[_g.cat]&&_WEAPON_SKILLS[_g.cat].has(e.alias||e.jp)){
-variants.push({jp:e.jp,en,at:nAT,equip:_g.jp,note:'🎯',hits:hitBased?baseHits:0,soloGroup:e.soloGroup});
+const generic={jp:e.jp,en,equip:_g.jp,note:'🎯',soloGroup:e.soloGroup};
+if(hitBased)variants.push(...buildSolverExactHitVariants(generic,first,diff,baseHits));
+else variants.push(Object.assign({},generic,{at:first+diff*Math.max(0,n-1),hits:0}));
 }
 }
 if(hitBased){
 if(sk.fh){
 const fHits=getHits(sk,true);
 if(fHits>baseHits){
-const fAT=first+diff*Math.max(0,fHits-1);
-if(fAT!==nAT)variants.push({jp:e.jp,en,at:fAT,equip:'はやぶさの剣',note:'⚔',hits:fHits});
+variants.push(...buildSolverExactHitVariants({jp:e.jp,en,equip:'はやぶさの剣',note:'⚔'},first,diff,fHits));
 }
 }else if(sk.kph){
 const kHits=getHits(sk,true);
 if(kHits>baseHits){
-const kAT=first+diff*Math.max(0,kHits-1);
-if(kAT!==nAT)variants.push({jp:e.jp,en,at:kAT,equip:'キラーピアス',note:'💍',hits:kHits,needDeath0:true});
+variants.push(...buildSolverExactHitVariants({jp:e.jp,en,equip:'キラーピアス',note:'💍',needDeath0:true},first,diff,kHits));
 }
 }
-}
-}
+}}
 }
 if(_solverIssenNeed>0)variants.unshift({jp:'一閃づき',en:'Thunder Thrust',at:14,equip:'',note:'',hits:1});
 return variants;
 }
-function solveBattleCombo(bat,monCount,maxSlots,protectedSups,hexId){
+function solveBattleCombo(bat,monCount,maxSlots,protectedSups,hexId,fieldShape){
 if(bat<=0)return[];
-const variants=expandSolverCombos(monCount,protectedSups,hexId);
+const variants=expandSolverCombos(monCount,protectedSups,hexId,fieldShape);
 const results=[];
 let depthCap=0;
 const _mon=(hexId&&typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
@@ -2610,76 +2810,12 @@ for(let k=0;k<sink.length&&k<depthCap;k++)results.push(sink[k].c);
 }
 return results;
 }
-const JOB_STATS=[
-{jp:'戦士',en:'Warrior',s:[744,300,504,278,300,421]},
-{jp:'僧侶',en:'Priest',s:[309,300,301,512,700,416]},
-{jp:'魔法使い',en:'Mage',s:[282,700,196,601,300,514]},
-{jp:'武闘家',en:'Martial Artist',s:[739,300,499,700,300,465]},
-{jp:'盗賊',en:'Thief',s:[639,300,399,610,381,612]},
-{jp:'旅芸人',en:'Minstrel',s:[586,461,346,559,495,514]},
-{jp:'ﾊﾞﾄﾙﾏｽﾀｰ',en:'Gladiator',s:[840,300,600,224,300,466]},
-{jp:'ﾊﾟﾗﾃﾞｨﾝ',en:'Paladin',s:[694,300,454,173,464,219]},
-{jp:'魔法戦士',en:'Armamentalist',s:[691,582,451,273,300,320]},
-{jp:'ﾚﾝｼﾞｬｰ',en:'Ranger',s:[645,300,405,364,500,710]},
-{jp:'賢者',en:'Sage',s:[309,537,302,318,508,267]},
-{jp:'ｽｰﾊﾟｰｽﾀｰ',en:'Luminary',s:[334,377,248,561,618,469]},
-{jp:'種ﾄﾞｰﾋﾟﾝｸﾞ',en:'Boosted',s:[999,999,999,999,999,999]},
-];
-function readCharStatsFromDom(){
-const chars=[];
-for(let i=1;i<=4;i++){
-const v=(id)=>parseInt(document.getElementById(id)?.value)||0;
-const jobRaw=document.getElementById('si_job'+i)?.value;
-chars.push({
-stats:{
-atk:v('si_atk'+i),might:v('si_might'+i),
-str:v('si_str'+i),mending:v('si_mend'+i),deft:v('si_deft'+i),
-},
-agi:v('si_agi'+i),
-lv:parseInt(document.getElementById('si_t'+i)?.value)||99,
-job:(jobRaw===undefined||jobRaw==='')?null:parseInt(jobRaw),
-slot:i,
-});
-}
-chars.sort((a,b)=>b.agi-a.agi);
-return chars;
-}
-function getCharsSafe(){return(typeof chars!=='undefined')?chars:readCharStatsFromDom();}
-const _EXT_STATS={atk:999,might:999,str:999,mending:999,deft:999};
-function passesExtremeRating(combo,hexId,mon,killTargets,statsOverride){
-const orig=readCharStatsFromDom;
-const _st=statsOverride||_EXT_STATS;
-readCharStatsFromDom=()=>orig().map(c=>({...c,stats:{..._st}}));
-try{const b=findBestAssignment(combo,hexId,mon,killTargets,1,null);return{rating:b.rating,finIdx:b.finIdx};}
-finally{readCharStatsFromDom=orig;}
-}
-function calcMaxSkillDamage(jp,hexId,wmul){
-const sd=SKILL_IDX[jp];
-const mon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
-if(!sd||!mon)return 9999;
-const tFactor=(sd.tmul&&sd.tmul[mon.t])||1;
-const base=calcBaseDmg(sd,{atk:999,str:999,might:999,mending:999,deft:999});
-if(!base){
-const phyMax=calcPhysicalDamageRange(999,mon.s[2],sd.mul).max;
-return Math.max(0,Math.floor(applyElementMod(phyMax,sd.el,hexId)*tFactor*(wmul||1)));
-}
-return Math.max(0,Math.floor(applyElementMod(base.max,sd.el,hexId)*tFactor*(wmul||1)));
-}
-function toMonsterHexId(monId){
-if(!monId)return null;
-if(typeof monId==='string')return monId.toUpperCase();
-return monId.toString(16).toUpperCase().padStart(3,'0');
-}
-function getMonsterDisplayName(hx){
-const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hx]:null;
-return m?(DISPLAY_LANG==='EN'?m.en:m.jp):hx;
-}
 let _solverDmgCache=new WeakMap();
 function resetSolverDamageCache(){_solverDmgCache=new WeakMap();}
-function calcSolverSkillDamage(sk,st,hexId,fEls,wmul){
+function calcSolverSkillDamage(sk,st,hexId,fEls,wmul,metalEff){
 let byContext=_solverDmgCache.get(sk);
 if(!byContext){byContext=new Map();_solverDmgCache.set(sk,byContext);}
-const contextKey=hexId+'|'+(fEls?fEls.join(','):'')+'|'+(wmul||1);
+const contextKey=hexId+'|'+(fEls?fEls.join(','):'')+'|'+(wmul||1)+'|'+(metalEff||0);
 let byStats=byContext.get(contextKey);
 if(!byStats){byStats=new Map();byContext.set(contextKey,byStats);}
 const statsKey=(st.atk||0)
@@ -2688,7 +2824,7 @@ const statsKey=(st.atk||0)
 +(st.mending||0)*1073741824
 +(st.deft||0)*1099511627776;
 if(byStats.has(statsKey))return byStats.get(statsKey);
-const result=calcSkillDamage(sk,st,hexId,fEls,wmul);
+const result=calcSkillDamage(sk,st,hexId,fEls,wmul,metalEff);
 byStats.set(statsKey,result);
 return result;
 }
@@ -2704,9 +2840,9 @@ let paper=0;
 const skArr=[],hitsArr=[],wmArr=[];
 for(const v of combo){
 skArr.push(_SOLVER_SK[v.jp]||(typeof SKILL_IDX!=='undefined'?SKILL_IDX[v.jp]:null));
-hitsArr.push(v.hits||1);
+hitsArr.push(SolverActionGate.hits(v));
 wmArr.push(getWeaponTypeMultiplier(v.equip,hexId));
-paper+=calcMaxSkillDamage(v.jp,hexId,wmArr[wmArr.length-1])*(v.hits||1);
+paper+=calcMaxSkillDamage(v.jp,hexId,wmArr[wmArr.length-1],actionMetalEff(skArr[skArr.length-1],v.equip))*SolverActionGate.hits(v);
 }
 if(paper<hp80m)return null;
 const dmgMemo=skArr.map(()=>new Map());
@@ -2717,7 +2853,7 @@ const keyCode=key==='atk'?0:key==='might'?1:key==='str'?2:key==='mending'?3:key=
 const memoKey=keyCode*1024+s,memo=dmgMemo[i];
 if(memo.has(memoKey))return memo.get(memoKey);
 const st={..._EXT_STATS};if(key)st[key]=s;
-const r=calcSolverSkillDamage(skArr[i],st,hexId,fEls,wmArr[i]);
+const r=calcSolverSkillDamage(skArr[i],st,hexId,fEls,wmArr[i],actionMetalEff(skArr[i],combo[i].equip));
 const out=r?{min:r.min*hitsArr[i],max:r.max*hitsArr[i],perHitMax:r.max}:{min:0,max:0,perHitMax:0};
 memo.set(memoKey,out);return out;
 };
@@ -2738,7 +2874,7 @@ const goldOK=(s)=>{const e=evalAt(s);return(e.cMax+e.f.max)>=hp80m&&e.cMin+Math.
 const capOK=(s)=>{
 const e=evalAt(s);
 if(e.cMax>=hp80m)return false;
-if(finHits>1&&(finHits-1)*Math.floor(e.f.perHitMax*tensionMul)>=hp80m-e.cMax)return false;
+if(!SolverActionGate.survivesBeforeHit(finHits,e.f.perHitMax*tensionMul,hp80m-e.cMax))return false;
 return true;
 };
 if(!goldOK(999))continue;
@@ -2772,7 +2908,7 @@ const finHitsP=hitsArr[fFi];
 let sFinCap=999;
 if(finHitsP>1){
 const headA=hp80m-chipMaxCap;
-sFinCap=binarySearchMaxTrue(0,999,(m)=>(finHitsP-1)*Math.floor(posD(fFi,m).phm*tensionMul)<headA);
+sFinCap=binarySearchMaxTrue(0,999,(m)=>SolverActionGate.survivesBeforeHit(finHitsP,posD(fFi,m).phm*tensionMul,headA));
 if(sFinCap<0)return null;
 }
 const finNeed=hp100-chipMinCap;
@@ -2791,7 +2927,7 @@ for(const j of perPos.varPos){
 const cp=perPos.posCap[j];
 if(cp<999){parts.push(_nm(j)+_kL(j)+'≤'+cp);capParts.push(_nm(j)+cp);}
 }
-let finSeg='收尾'+_nm(perPos.finFi)+_kL(perPos.finFi);
+let finSeg=L08+_nm(perPos.finFi)+_kL(perPos.finFi);
 finSeg+=(perPos.sFinCap<999?' '+perPos.sFin+'~'+perPos.sFinCap:'≥'+perPos.sFin);
 if(capParts.length>0)finSeg+='(@'+capParts.join(',')+')';
 parts.push(finSeg);
@@ -2801,7 +2937,7 @@ const jpTag='@'+combo[best.fi].jp+(combo[best.fi].note||'');
 if(best.capS>=999)return{stat:best.key,min:best.minS,finIdx:best.fi,perPos,posLabel,label:getStatLabel(best.key)+'≥'+best.minS+jpTag};
 return{stat:best.key,min:best.minS,max:best.capS,finIdx:best.fi,perPos,posLabel,label:getStatLabel(best.key)+' '+best.minS+'~'+best.capS+jpTag};
 }
-const v=combo[0],hits=v.hits||1;
+const v=combo[0],hits=SolverActionGate.hits(v);
 if(canExecuteMetal(v.jp,hexId))return null;
 const rsk=_SOLVER_SK[v.jp];const sd=lookupSkillData(v.jp);
 let elMul;
@@ -2823,8 +2959,8 @@ if(!sk2)return-1;
 const fEls2=fource?((typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[fource.jp])||null):null;
 const capOK=(s)=>{
 const st={atk:0,might:0,str:0,mending:0,deft:0};st[statKey]=s;
-const r=calcSolverSkillDamage(sk2,st,hexId,fEls2,_wmulV);
-return r?((hits-1)*Math.floor(r.max*tensionMul)<hp80):false;
+const r=calcSolverSkillDamage(sk2,st,hexId,fEls2,_wmulV,actionMetalEff(sk2,v.equip));
+return r?SolverActionGate.survivesBeforeHit(hits,r.max*tensionMul,hp80):false;
 };
 if(!capOK(minStat))return-1;
 return binarySearchMaxTrue(minStat,999,capOK);
@@ -2840,7 +2976,7 @@ if(sd&&sd.dmg){
 const d=sd.dmg;
 if(!d.m||d.b===d.m){
 if((d.b-d.s)*hits*mul<hp)return null;
-if(hits>1&&(hits-1)*Math.floor((d.b+d.s)*mul)>=hp80)return null;
+if(!SolverActionGate.survivesBeforeHit(hits,(d.b+d.s)*mul,hp80))return null;
 return{stat:null,min:0,label:''};
 }
 const needBase=Math.ceil(hp/(mul*hits))+d.s;
@@ -2854,7 +2990,7 @@ const sk=rsk||(typeof SKILL_IDX!=='undefined'?SKILL_IDX[v.jp]:null);
 if(!sk)return null;
 const fEls=fource?((typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[fource.jp])||null):null;
 const killAt=(a)=>{
-const r=calcSolverSkillDamage(sk,{atk:a,might:0,str:0,mending:0,deft:0},hexId,fEls,_wmulV);
+const r=calcSolverSkillDamage(sk,{atk:a,might:0,str:0,mending:0,deft:0},hexId,fEls,_wmulV,actionMetalEff(sk,v.equip));
 return r?(Math.floor(r.min*tensionMul)*hits>=hp):false;
 };
 if(!killAt(999))return null;
@@ -2862,16 +2998,6 @@ const lo=binarySearchMinTrue(0,999,killAt);
 return _rangeWrap('atk',lo,'ATK≥'+lo);
 }
 return null;
-}
-function getStatLabel(st){
-switch(st){
-case'might':return'M';
-case'str':return'STR';
-case'str+might':return'STR+M';
-case'str+deft':return'STR+D';
-case'mending':return'Mend';
-default:return'ATK';
-}
 }
 function findLargestGroup(list,gik){
 const groups={};
@@ -2881,7 +3007,261 @@ for(const g in groups){if(groups[g].length>bestLen){bestLen=groups[g].length;bes
 return best||[];
 }
 function isMetalActionSkill(action,sk){
+if(action.supTarget)return false;
 return action.jp==='一閃づき'||action.jp==='魔神斬り'||action.equip==='miss'||!!(sk&&sk.metal);
+}
+function isMetalExecutionAction(action){
+return!!action&&(action.jp==='一閃づき'||action.jp==='魔神斬り');
+}
+function findLastMetalExecutionIndex(combo){
+for(let i=combo.length-1;i>=0;i--)if(isMetalExecutionAction(combo[i]))return i;
+return-1;
+}
+function respectsPriorityAgi(pri,pick,nextChar){
+const k=pick.length;
+return!(k>0&&pri[k]===pri[k-1]&&nextChar<pick[k-1]);
+}
+const _actionPri=(v)=>((typeof _PRIORITY!=='undefined'&&_PRIORITY[v.jp])||0)||(v.equip==='風林火山'?1:0);
+function sortComboByPriority(combo){
+if(!combo.some(v=>_actionPri(v)!==0))return combo;
+return combo.map((v,i)=>({v,i}))
+.sort((a,b)=>(_actionPri(b.v)-_actionPri(a.v))||(a.i-b.i))
+.map(x=>x.v);
+}
+function normalizeSolverActionOrder(combo){
+return _solverEnforcePriority?sortComboByPriority(combo):combo;
+}
+function solveMetalComboOrders(bat,monCount,maxSlots,metalCount,metalHPs,excludedPads,hexId,supPads,relaxPads,phaseBGroupCounts){
+const last=solveMetalCombo(bat,monCount,maxSlots,metalCount,metalHPs,excludedPads,hexId,supPads,relaxPads);
+if(!hexId||typeof _METAL_MONSTERS==='undefined'||!_METAL_MONSTERS.has(hexId))return last;
+const mc=metalCount||monCount;
+const nonMetalCount=monCount-mc;
+if(!(nonMetalCount>0))return last;
+const rem=bat-14*mc,slots=maxSlots-mc;
+if(!(rem>0)||slots<1||typeof solveBattleCombo!=='function')return last;
+const issen={jp:'一閃づき',en:'Thunder Thrust',at:14,equip:'',note:'',hits:1,metalFirst:true,orderVariant:true};
+const head=Array(mc).fill(issen);
+const phaseCounts=Array.isArray(phaseBGroupCounts)
+?phaseBGroupCounts
+:(_solverGroupCounts?_solverGroupCounts.map((n,gi)=>gi===0?0:n):null);
+const phaseShape={groupCounts:phaseCounts,fieldTotal:nonMetalCount};
+const first=[];
+for(const c of solveBattleCombo(rem,nonMetalCount,slots,[],null,phaseShape)){
+if(c.some(v=>_actionPri(v)>0))continue;
+if(c.some(isMetalExecutionAction))continue;
+first.push([...head,...c]);
+}
+return last.concat(first);
+}
+const SolverActionGate=Object.freeze({
+hits(action){return action&&action.hits>0?Math.floor(action.hits):1;},
+targets(alive,action,sk,groupKey,preferMetal){
+groupKey=groupKey||'groupIdx';
+const tgt=(sk.target==='A'||sk.target==='RA')?'A'
+:(sk.target==='G'||sk.target==='RG')?'G':'S';
+if(tgt==='A')return{targets:alive.slice(),reason:alive.length?null:'tgtdead'};
+if(tgt==='G'){
+const targets=action.tgtGroup!==undefined
+?alive.filter(x=>x[groupKey]===action.tgtGroup)
+:findLargestGroup(alive,groupKey);
+return{targets,reason:targets.length?null:'tgtdead'};
+}
+const ordered=alive.slice().sort((a,b)=>b.hp-a.hp);
+let target=ordered[0];
+const metalFirst=preferMetal===undefined?isMetalActionSkill(action,sk):preferMetal;
+const mt=metalFirst?findMetalInstance(ordered):undefined;
+if(mt){
+target=mt;
+}else if(action.soloGroup){
+const gc={};
+for(const x of ordered)gc[x[groupKey]]=(gc[x[groupKey]]||0)+1;
+target=ordered.find(x=>gc[x[groupKey]]===1);
+if(!target)return{targets:[],reason:'soloGroup'};
+}else if(action.tgtGroup!==undefined){
+target=ordered.find(x=>x[groupKey]===action.tgtGroup);
+if(!target)return{targets:[],reason:'tgtdead'};
+}
+return{targets:target?[target]:[],reason:target?null:'tgtdead'};
+},
+survivesBeforeHit(hits,perHitMax,hpLow){
+hits=Math.max(1,Math.floor(hits||1));
+return hits<=1||(hits-1)*Math.floor(perHitMax||0)<hpLow;
+},
+step(target,hits,perHitMax,dMin,dMax){
+hits=Math.max(1,Math.floor(hits||1));
+const hp=target.hp-Math.floor(dMin||0);
+const hpLow=target.hpLow-Math.floor(dMax||0);
+return{
+hp,hpLow,
+fullHits:this.survivesBeforeHit(hits,perHitMax,target.hpLow),
+uncertain:hpLow<=0&&hp>0,
+dead:hp<=0
+};
+},
+exactHitReason(action,step){
+if(!step.fullHits)return'at_hit_count';
+if(action&&action.earlyKill&&!step.dead)return'at_hit_count';
+return null;
+},
+commit(target,step){
+target.hp=step.hp;target.hpLow=step.hpLow;
+if(step.dead)target.alive=false;
+}
+});
+function findMetalClearAssign(combo,killTargets,chars,hexId){
+const field=[];
+for(let gi=0;gi<killTargets.length;gi++){
+const hx=toMonsterHexId(killTargets[gi].hex);
+const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hx]:null;
+if(!m)continue;
+field.push({gi,hx,m,count:killTargets[gi].count||0,death:killTargets[gi].death,
+metal:(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(hx)});
+}
+if(!field.some(g=>!g.metal&&g.count>0))return null;
+const N=chars.length,n=combo.length;
+const dmg=[];
+for(let ci=0;ci<n;ci++){
+const v=combo[ci];
+const sk=(v.jp==='みのがす'||!(v.at>0))?null:lookupSkill(v.jp);
+const hits=SolverActionGate.hits(v);
+const row=[];
+for(let ai=0;ai<N;ai++){
+const cell=[];
+for(let gi=0;gi<killTargets.length;gi++){
+const g=field.find(x=>x.gi===gi);
+if(!sk||!g){cell.push(null);continue;}
+if(g.metal){
+const elem=!!(sk.el&&sk.el>0);
+const me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(v.equip));
+cell.push((!elem&&me)
+?{min:hits,max:2*hits,hits,perHitMax:2}
+:{min:0,max:0,hits,perHitMax:0});
+continue;
+}
+const r=calcSkillDamage(sk,chars[ai].stats,g.hx,null,
+getWeaponTypeMultiplier(v.equip,g.hx),actionMetalEff(sk,v.equip));
+cell.push(r?{min:r.min*hits,max:r.max*hits,hits,perHitMax:r.max}
+:{min:0,max:0,hits,perHitMax:0});
+}
+row.push(cell);
+}
+dmg.push(row);
+}
+const walkOK=(assign)=>{
+const sim=[];
+for(const g of field){
+for(let k=0;k<g.count;k++){
+sim.push({hex:g.hx,groupIdx:g.gi,death:g.death||0,metal:g.metal,
+hp:g.m.s[0],hpLow:Math.floor(g.m.s[0]*0.8),alive:true});
+}
+}
+for(let ci=0;ci<n;ci++){
+const v=combo[ci];
+if(v.jp==='みのがす'){
+for(const inst of sim)if(inst.alive&&inst.death>0)inst.alive=false;
+continue;
+}
+if(!(v.at>0))continue;
+const sk=lookupSkill(v.jp);
+if(!sk)continue;
+const alive=sim.filter(x=>x.alive);
+if(!alive.length)return false;
+const ai=assign?assign[ci]:Math.min(ci,N-1);
+if(ai===undefined||!dmg[ci][ai])return false;
+const picked=SolverActionGate.targets(alive,v,sk,'groupIdx');
+if(picked.reason)return false;
+const targets=picked.targets;
+for(const target of targets){
+const exec=canExecuteMetal(v.jp,target.hex);
+if(exec){
+if(!exec.isValid)return false;
+target.hp=0;target.hpLow=0;target.alive=false;
+continue;
+}
+const d=dmg[ci][ai][target.groupIdx];
+if(!d)continue;
+const step=SolverActionGate.step(target,d.hits,d.perHitMax,d.min,d.max);
+if(SolverActionGate.exactHitReason(v,step))return false;
+if(step.uncertain)return false;
+SolverActionGate.commit(target,step);
+}
+}
+return sim.every(x=>x.metal||!x.alive);
+};
+if(n>N)return walkOK(null)?null:undefined;
+const locks=combo.map(getSkillClassLock);
+const pri=combo.map(_actionPri);
+const pick=[],used=new Uint8Array(N);
+let found;
+const dfs=()=>{
+if(found!==undefined)return;
+if(pick.length===n){
+for(let i=0;i<n;i++){if(locks[i]){const j=chars[pick[i]].job;if(j===null||!locks[i].includes(j))return;}}
+if(walkOK(pick))found=pick.slice();
+return;
+}
+const k=pick.length;
+for(let i=0;i<N;i++){
+if(used[i])continue;
+if(!respectsPriorityAgi(pri,pick,i))continue;
+pick.push(i);used[i]=1;
+dfs();
+pick.pop();used[i]=0;
+if(found!==undefined)return;
+}
+};
+dfs();
+return found;
+}
+function expandMetalRetarget(combos,killTargets,hexId){
+if(!combos.length||!killTargets||killTargets.length<2)return combos;
+const cand=[];
+for(let gi=1;gi<killTargets.length;gi++){
+const hx=toMonsterHexId(killTargets[gi].hex);
+if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(hx))continue;
+const m=MONSTER_DB[hx];
+if(m)cand.push({gi,evade:m.s[3],block:m.s[4],death:killTargets[gi].death});
+}
+if(!cand.length)return combos;
+const out=[];
+for(const combo of combos){
+const mercyAt=combo.findIndex(v=>v.jp==='みのがす');
+const lastExec=findLastMetalExecutionIndex(combo);
+const slots=[],sks=[],phaseB=[];
+for(let i=0;i<combo.length;i++){
+const v=combo[i];
+if(!(v.at>0)||v.supTarget||v.tgtGroup!==undefined)continue;
+if(canExecuteMetal(v.jp,hexId))continue;
+const sk=lookupSkill(v.jp);
+if(!sk||sk.target!=='S')continue;
+const pb=i>lastExec;
+if(!pb&&sk.miss!==undefined)continue;
+slots.push(i);sks.push(sk);phaseB.push(pb);
+}
+if(!slots.length||slots.length>4)continue;
+const opts=slots.map((si,k)=>{
+const ok=cand.filter(c=>(!sks[k].ev||c.evade===0)&&(!sks[k].blk||c.block===0)
+&&!(c.death>0&&mercyAt>=0&&si>mercyAt));
+return phaseB[k]?ok:[null].concat(ok);
+});
+const total=opts.reduce((a,o)=>a*o.length,1);
+const skip0=!phaseB.some(Boolean);
+for(let n=skip0?1:0;n<total;n++){
+let x=n;const nc=combo.slice();
+for(let k=0;k<slots.length;k++){
+const o=opts[k],pick=o[x%o.length];x=Math.floor(x/o.length);
+if(!pick)continue;
+const v=combo[slots[k]];
+nc[slots[k]]=phaseB[k]
+?Object.assign({},v,{tgtGroup:pick.gi})
+:Object.assign({},v,{tgtGroup:pick.gi,supTarget:true,retarget:true,
+note:(v.note||'')+'👉',
+mdmg:0});
+}
+out.push(nc);
+}
+}
+return combos.concat(out);
 }
 function findMetalInstance(alive){
 return(typeof _METAL_MONSTERS!=='undefined')?alive.find(i=>_METAL_MONSTERS.has(toMonsterHexId(i.hex))):undefined;
@@ -2889,7 +3269,7 @@ return(typeof _METAL_MONSTERS!=='undefined')?alive.find(i=>_METAL_MONSTERS.has(t
 function buildCharDamageSpan(sk,hx,eq,hits,charsArr){
 let minDmg=Infinity,maxDmg=0;
 for(const c of charsArr){
-const r=calcSkillDamage(sk,c.stats,hx,null,getWeaponTypeMultiplier(eq,hx));
+const r=calcSkillDamage(sk,c.stats,hx,null,getWeaponTypeMultiplier(eq,hx),actionMetalEff(sk,eq));
 if(r){
 if(r.min*hits<minDmg)minDmg=r.min*hits;
 if(r.max*hits>maxDmg)maxDmg=r.max*hits;
@@ -2911,6 +3291,7 @@ const rating=checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,
 return{rating,assign:null,defend:[],eggAssign:out.eggAssign||null,finIdx:out.finIdx,positional:true};
 }
 const locks=combo.map(getSkillClassLock);
+const pri=_solverEnforcePriority?combo.map(_actionPri):null;
 const idxs=[];for(let i=0;i<N;i++)idxs.push(i);
 let best=null;
 const pick=[];
@@ -2929,6 +3310,7 @@ return;
 }
 for(let i=0;i<N;i++){
 if(used[i])continue;
+if(pri&&!respectsPriorityAgi(pri,pick,i))continue;
 pick.push(i);used[i]=1;
 dfs();
 pick.pop();used[i]=0;
@@ -2950,12 +3332,12 @@ const sk=lookupSkill(v.jp);
 if(!sk)continue;
 const cIdx=assign[ci];
 if(cIdx===undefined||!chars[cIdx])continue;
-const result=calcSkillDamage(sk,chars[cIdx].stats,hexId,fourceEls,getWeaponTypeMultiplier(v.equip,hexId));
+const result=calcSkillDamage(sk,chars[cIdx].stats,hexId,fourceEls,getWeaponTypeMultiplier(v.equip,hexId),actionMetalEff(sk,v.equip));
 if(!result||result.min<=0)return true;
 }
 return false;
 }
-function checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,outInfo,assign){
+function checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,outInfo,assign,forcedEggAssign){
 const chars=readCharStatsFromDom();
 if(!mon)return null;
 tensionMul=tensionMul||1;
@@ -2965,13 +3347,13 @@ for(let ci=0;ci<combo.length&&ci<chars.length;ci++){
 const sk=lookupSkill(combo[ci].jp);
 if(!sk){perSkill.push({min:0,max:0,perHitMax:0,hits:1});continue;}
 if(combo[ci].at===0){perSkill.push({min:0,max:0,perHitMax:0,hits:1});continue;}
-const hits=combo[ci].hits||1;
+const hits=SolverActionGate.hits(combo[ci]);
 const exec=canExecuteMetal(combo[ci].jp,hexId);
 if(exec){
 perSkill.push(exec.isValid?{min:9999,max:9999,perHitMax:9999,hits:1}:{min:0,max:0,perHitMax:0,hits:1});
 continue;
 }
-const result=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hexId,fourceEls,getWeaponTypeMultiplier(combo[ci].equip,hexId));
+const result=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hexId,fourceEls,getWeaponTypeMultiplier(combo[ci].equip,hexId),actionMetalEff(sk,combo[ci].equip));
 perSkill.push(result
 ?{min:result.min*hits,max:result.max*hits,perHitMax:result.max,hits}
 :{min:0,max:0,perHitMax:0,hits:1});
@@ -2986,18 +3368,16 @@ for(let fi=0;fi<perSkill.length;fi++){
 const fin=perSkill[fi];
 if(fin.max<=0)continue;
 if(combo.some((v,i)=>i!==fi&&v.earlyKill))continue;
-if(fin.hits>1){
-const chipMaxForStab=totalMax-fin.max;
-const remainHP=hp80-chipMaxForStab;
-if((fin.hits-1)*Math.floor(fin.perHitMax*tensionMul)>=remainHP)continue;
-}
 const finMin=Math.floor(fin.min*tensionMul);
 const finMax=Math.floor(fin.max*tensionMul);
 const chipMin=totalMin-fin.min;
 const chipMax=totalMax-fin.max;
 if(chipMax>=hp80)continue;
+const beforeFin={hp:hp100-chipMin,hpLow:hp80-chipMax};
+const finStep=SolverActionGate.step(beforeFin,fin.hits,Math.floor(fin.perHitMax*tensionMul),finMin,finMax);
+if(SolverActionGate.exactHitReason(combo[fi],finStep))continue;
 if(chipMin+finMin>=hp100){if(outInfo){outInfo.finIdx=fi;if(tensionMul>1)outInfo.eggAssign={[fi]:tensionMul};}return'gold';}
-if(chipMax+finMax>=hp80){if(!_orangeInfo)_orangeInfo={finIdx:fi};continue;}
+if(!combo[fi].earlyKill&&chipMax+finMax>=hp80){if(!_orangeInfo)_orangeInfo={finIdx:fi};continue;}
 _cleanFi=true;
 }
 if(_orangeInfo){if(outInfo){outInfo.finIdx=_orangeInfo.finIdx;if(tensionMul>1)outInfo.eggAssign={[_orangeInfo.finIdx]:tensionMul};}return'orange';}
@@ -3024,7 +3404,7 @@ const hasFource=effectiveFEls&&effectiveFEls.length>0;
 const skillDmg=[];
 for(let ci=0;ci<combo.length&&ci<chars.length;ci++){
 const sk=lookupSkill(combo[ci].jp);
-const hits=combo[ci].hits||1;
+const hits=SolverActionGate.hits(combo[ci]);
 const tgt=!sk?null:(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
 const dmg={},dmgF={};
 for(const hex of uniqueHexes){
@@ -3038,10 +3418,10 @@ const _md=(!_elem&&_me)?{min:1*hits,max:2*hits,phMax:2}:{min:0,max:0,phMax:0};
 dmg[hex]=_md;dmgF[hex]=_md;
 continue;
 }
-const r=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,null,getWeaponTypeMultiplier(combo[ci].equip,hex));
+const r=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,null,getWeaponTypeMultiplier(combo[ci].equip,hex),actionMetalEff(sk,combo[ci].equip));
 dmg[hex]=r?{min:r.min*hits,max:r.max*hits,phMax:r.max}:{min:0,max:0,phMax:0};
 if(hasFource){
-const rF=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,effectiveFEls,getWeaponTypeMultiplier(combo[ci].equip,hex));
+const rF=calcSkillDamage(sk,chars[assign?assign[ci]:ci].stats,hex,effectiveFEls,getWeaponTypeMultiplier(combo[ci].equip,hex),actionMetalEff(sk,combo[ci].equip));
 dmgF[hex]=rF?{min:rF.min*hits,max:rF.max*hits,phMax:rF.max}:dmg[hex];
 }else{
 dmgF[hex]=dmg[hex];
@@ -3089,25 +3469,30 @@ hp:mode==='min'?inst.hp:Math.floor(inst.hp*0.8),
 hpLow:Math.floor(inst.hp*0.8),
 alive:true
 }));
+const path=[];
+const _targetKey=(inst)=>[(inst.groupIdx===0?'M':'S'),inst.hex,inst.death,inst.hp,inst.hpLow].join(':');
+const _done=(allDead,rejectAt,reason)=>({allDead,rejectAt,reason,pathSig:path.join(';')});
 let fourceOn=!inlineFource&&hasFource;
 let mainKilled=false;
 for(let ci=0;ci<skillDmg.length;ci++){
 const sd=skillDmg[ci];
 if(combo[ci].jp==='みのがす'){
+const removed=[];
 for(const inst of sim){
 if(!inst.alive||inst.death<=0)continue;
-if(inst.groupIdx===0&&!mainKilled)return{allDead:false,rejectAt:ci,reason:'mercymain'};
-inst.alive=false;
+if(inst.groupIdx===0&&!mainKilled){path.push(ci+':m!');return _done(false,ci,'mercymain');}
+removed.push(_targetKey(inst));inst.alive=false;
 }
+path.push(ci+':m:'+removed.sort().join(','));
 continue;
 }
-if(combo[ci].jp==='おうえん')continue;
-if(inlineFource&&combo[ci].jp===inlineFource.jp&&!fourceOn){fourceOn=true;continue;}
-if(!sd.tgt)continue;
+if(combo[ci].jp==='おうえん'){path.push(ci+':e');continue;}
+if(inlineFource&&combo[ci].jp===inlineFource.jp&&!fourceOn){fourceOn=true;path.push(ci+':f');continue;}
+if(!sd.tgt){path.push(ci+':n');continue;}
 const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
 const dTable=fourceOn?sd.dmgF:sd.dmg;
 const alive=sim.filter(i=>i.alive);
-if(alive.length===0)return{allDead:false,rejectAt:ci,reason:'earlyclear'};
+if(alive.length===0){path.push(ci+':!earlyclear');return _done(false,ci,'earlyclear');}
 if(combo[ci].aoeK!==undefined){
 let hitN;
 if(sd.tgt==='A')hitN=alive.length;
@@ -3116,51 +3501,16 @@ if(combo[ci].tgtGroup!==undefined)hitN=alive.filter(i=>i.groupIdx===combo[ci].tg
 else{const gsz={};for(const inst of alive)gsz[inst.groupIdx]=(gsz[inst.groupIdx]||0)+1;hitN=Math.max.apply(null,Object.values(gsz));}
 }
 else hitN=1;
-if(combo[ci].aoeK!==hitN)return{allDead:false,rejectAt:ci,reason:'aoeK'};
+if(combo[ci].aoeK!==hitN){path.push(ci+':!aoeK');return _done(false,ci,'aoeK');}
 }
 const useDmg=mode==='min'?'min':'max';
-if(sd.tgt==='A'){
-for(const inst of alive){
-const d=(dTable[inst.hex]||{})[useDmg]||0;
-const dMax=(dTable[inst.hex]||{}).max||0;
-inst.hp-=Math.floor(d*mul);
-inst.hpLow-=Math.floor(dMax*mul);
-if(inst.hpLow<=0&&inst.hp>0)return{allDead:false,rejectAt:ci,reason:'uncertain'};
-if(inst.hp<=0){inst.alive=false;if(inst.groupIdx===0)mainKilled=true;}
-}
-}else if(sd.tgt==='G'){
-let grpInsts;
-if(combo[ci].tgtGroup!==undefined){
-grpInsts=alive.filter(inst=>inst.groupIdx===combo[ci].tgtGroup);
-}else{
-grpInsts=findLargestGroup(alive,'groupIdx');
-}
-for(const inst of grpInsts){
-const d=(dTable[inst.hex]||{})[useDmg]||0;
-const dMax=(dTable[inst.hex]||{}).max||0;
-inst.hp-=Math.floor(d*mul);
-inst.hpLow-=Math.floor(dMax*mul);
-if(inst.hpLow<=0&&inst.hp>0)return{allDead:false,rejectAt:ci,reason:'uncertain'};
-if(inst.hp<=0){inst.alive=false;if(inst.groupIdx===0)mainKilled=true;}
-}
-}else{
-alive.sort((a,b)=>b.hp-a.hp);
-let target=alive[0];
-const _mt=sd.mAct?findMetalInstance(alive):undefined;
-if(_mt){
-target=_mt;
-}else if(combo[ci].soloGroup){
-const gc={};
-for(const x of alive)gc[x.groupIdx]=(gc[x.groupIdx]||0)+1;
-target=alive.find(x=>gc[x.groupIdx]===1);
-if(!target)return{allDead:false,rejectAt:ci,reason:'soloGroup'};
-}else if(combo[ci].tgtGroup!==undefined){
-target=alive.find(x=>x.groupIdx===combo[ci].tgtGroup);
-if(!target)return{allDead:false,rejectAt:ci,reason:'tgtdead'};
-}
+const picked=SolverActionGate.targets(alive,combo[ci],lookupSkill(combo[ci].jp),'groupIdx',sd.mAct);
+if(picked.reason){path.push(ci+':!'+picked.reason);return _done(false,ci,picked.reason);}
+path.push(ci+':d:'+picked.targets.map(_targetKey).sort().join(','));
+for(const target of picked.targets){
 const exec=canExecuteMetal(combo[ci].jp,target.hex);
 if(exec){
-if(!exec.isValid)return{allDead:false,rejectAt:ci,reason:'non_metal_issen'};
+if(!exec.isValid)return _done(false,ci,'non_metal_issen');
 target.hp=0;target.hpLow=0;target.alive=false;
 if(target.groupIdx===0)mainKilled=true;
 continue;
@@ -3168,36 +3518,37 @@ continue;
 const d=(dTable[target.hex]||{})[useDmg]||0;
 const dMax=(dTable[target.hex]||{}).max||0;
 const phMax=(dTable[target.hex]||{}).phMax||0;
-if(sd.hits>1&&(sd.hits-1)*Math.floor(phMax*mul)>=target.hpLow)return{allDead:false,rejectAt:ci,reason:'ruleA'};
-target.hp-=Math.floor(d*mul);
-target.hpLow-=Math.floor(dMax*mul);
-if(target.hpLow<=0&&target.hp>0)return{allDead:false,rejectAt:ci,reason:'uncertain'};
-if(target.hp<=0){target.alive=false;if(target.groupIdx===0)mainKilled=true;}
+const step=SolverActionGate.step(target,sd.hits,phMax*mul,d*mul,dMax*mul);
+if(SolverActionGate.exactHitReason(combo[ci],step))return _done(false,ci,'at_hit_count');
+if(step.uncertain)return _done(false,ci,'uncertain');
+SolverActionGate.commit(target,step);
+if(step.dead&&target.groupIdx===0)mainKilled=true;
 }
 }
-return{allDead:sim.every(i=>!i.alive),rejectAt:-1,reason:null};
+return _done(sim.every(i=>!i.alive),-1,null);
 }
-const assigns=eggCIs.length>0?_genEggAssigns():[externalAssign];
+const assigns=forcedEggAssign!==undefined?[forcedEggAssign]:(eggCIs.length>0?_genEggAssigns():[externalAssign]);
 const _lastCI=skillDmg.length-1;
 const _mercyFinal=_lastCI>=0&&combo[_lastCI]&&combo[_lastCI].jp==='みのがす';
 const _finalActionCI=_mercyFinal?-1:_lastCI;
-let bestRating=null,bestAssign=null;
+let bestRating=null,bestAssign=null,bestPathSig=null,cleanPathSig=null,fallbackPathSig=null;
 let _cleanIncomplete=false;
 for(const assign of assigns){
 const r=_simRun('min',assign);
-if(r.allDead&&r.rejectAt<0){bestRating='gold';bestAssign=assign;break;}
-if(!r.allDead&&r.rejectAt<0)_cleanIncomplete=true;
+if(fallbackPathSig===null)fallbackPathSig=r.pathSig;
+if(r.allDead&&r.rejectAt<0){bestRating='gold';bestAssign=assign;bestPathSig=r.pathSig;break;}
+if(!r.allDead&&r.rejectAt<0){_cleanIncomplete=true;if(cleanPathSig===null)cleanPathSig=r.pathSig;}
 }
 if(!bestRating&&!_mercyFinal){
 for(const assign of assigns){
 const rMin=_simRun('min',assign);
 if(rMin.reason==='uncertain'&&rMin.rejectAt===_finalActionCI){
 const rMax=_simRun('max',assign);
-if(rMax.allDead){bestRating='orange';bestAssign=assign;break;}
+if(rMax.allDead){bestRating='orange';bestAssign=assign;bestPathSig=rMin.pathSig+'>'+rMax.pathSig;break;}
 }
 }
 }
-if(outInfo){if(bestAssign)outInfo.eggAssign=bestAssign;outInfo.cleanIncomplete=_cleanIncomplete;}
+if(outInfo){if(bestAssign)outInfo.eggAssign=bestAssign;outInfo.cleanIncomplete=_cleanIncomplete;outInfo.pathSig=bestPathSig!==null?bestPathSig:(cleanPathSig!==null?cleanPathSig:(fallbackPathSig||''));}
 return bestRating;
 }
 function canComboAntiBlock(combo){
@@ -3223,7 +3574,7 @@ const aIdx=[];
 for(let i=0;i<combo.length;i++){const sk=lookupSkill(combo[i].jp);if(sk&&sk.target==='A')aIdx.push(i);}
 if(aIdx.length!==1)return null;
 const fin=combo[aIdx[0]];
-if((fin.hits||1)>1)return null;
+if(SolverActionGate.hits(fin)>1)return null;
 const chips=combo.filter((v,i)=>i!==aIdx[0]);
 const freeCI=[];
 for(let ci=0;ci<chips.length;ci++){
@@ -3236,10 +3587,10 @@ return null;
 const chars=readCharStatsFromDom();
 const nG=killTargets.length;
 const dmgOf=(v)=>{
-const sk=lookupSkill(v.jp);const hits=v.hits||1;const out={};
+const sk=lookupSkill(v.jp);const hits=SolverActionGate.hits(v);const out={};
 for(const t of killTargets){
 let mn=0,mx=0;
-for(const c of chars){const r=calcSkillDamage(sk,c.stats,t.hex,null);if(r){if(r.min>mn)mn=r.min;if(r.max>mx)mx=r.max;}}
+for(const c of chars){const r=calcSkillDamage(sk,c.stats,t.hex,null,1,actionMetalEff(sk,v.equip));if(r){if(r.min>mn)mn=r.min;if(r.max>mx)mx=r.max;}}
 out[t.hex]={min:mn*hits,max:mx*hits};
 }
 return out;
@@ -3312,11 +3663,11 @@ return(s==='might'||s==='str'||s==='mending')?s:null;
 }
 return null;
 }
-function calcSkillStatBound(sk,monId,hits,hp,dir,fEls,tensionMul,wmul){
+function calcSkillStatBound(sk,monId,hits,hp,dir,fEls,tensionMul,wmul,metalEff){
 tensionMul=tensionMul||1;
 const key=getSkillDriveStat(sk);
 if(!key)return null;
-const dmgAt=(v)=>{const st={atk:0,might:0,str:0,mending:0,deft:0};st[key]=v;const r=calcSkillDamage(sk,st,monId,fEls,wmul);return r||{min:0,max:0};};
+const dmgAt=(v)=>{const st={atk:0,might:0,str:0,mending:0,deft:0};st[key]=v;const r=calcSkillDamage(sk,st,monId,fEls,wmul,metalEff);return r||{min:0,max:0};};
 const minT=(v)=>Math.floor(dmgAt(v).min*tensionMul);
 const maxT=(v)=>Math.floor(dmgAt(v).max*tensionMul);
 const MAXV=999;
@@ -3330,111 +3681,73 @@ return{key,val:Math.max(0,binarySearchMaxTrue(0,MAXV,(m)=>maxT(m)*hits<hp))};
 }
 if(dir==='detcap'){
 if(hits<=1)return{key,val:Infinity};
-if((hits-1)*maxT(MAXV)<hp)return{key,val:Infinity};
-return{key,val:Math.max(0,binarySearchMaxTrue(0,MAXV,(m)=>(hits-1)*maxT(m)<hp))};
+if(SolverActionGate.survivesBeforeHit(hits,maxT(MAXV),hp))return{key,val:Infinity};
+return{key,val:Math.max(0,binarySearchMaxTrue(0,MAXV,(m)=>SolverActionGate.survivesBeforeHit(hits,maxT(m),hp)))};
 }
 return null;
 }
-function buildSolverHintText(sk,monId,hits,hpHigh,hpLow,fEls,tensionMul,wmul){
-const key=getSkillDriveStat(sk);
-if(!key)return'<span style="color:#667;">固定傷害 · 無屬性門檻</span>';
-const label={atk:'攻擊力',might:'攻魔',str:'力',mending:'回魔'}[key]||key;
-const chip=calcSkillStatBound(sk,monId,hits,Math.max(1,hpLow),'chip',fEls,tensionMul,wmul);
-const kill=calcSkillStatBound(sk,monId,hits,Math.max(1,hpHigh),'kill',fEls,tensionMul,wmul);
-const parts=[];
-parts.push('削血≤'+(chip?(chip.val===Infinity?'任意':chip.val):'?'));
-parts.push('收尾'+(kill?(kill.val===Infinity?'(殺不死)':'≥'+kill.val):'?'));
-if(hits>1){const det=calcSkillStatBound(sk,monId,hits,Math.max(1,hpLow),'detcap',fEls,tensionMul,wmul);if(det&&det.val!==Infinity)parts.push('滿hit≤'+det.val);}
-if(hpLow<=0)parts.unshift('<span style="color:#f80;">前置招恐已殺</span>');
-return'<span style="color:#789;">['+label+'] '+parts.join(' · ')+'</span>';
+function evalRound1Removal(combo,targets,eggAssign,assign,chars){
+if(!targets||targets.length===0)return'none';
+const inst=[];
+for(let ti=0;ti<targets.length;ti++){
+const t=targets[ti];
+const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[t.hex]:null;
+const hp=m?m.s[0]:9999;
+for(let c=0;c<t.count;c++)
+inst.push({hex:t.hex,hp,hpLow:Math.floor(hp*0.8),death:t.death!==undefined?t.death:100,
+alive:true,groupIdx:ti});
 }
-const SI_PATTERN_INDICES={
-'R2':[[1,2]],
-'R2_3':[[1,4]],
-'R3':[[1,2,3]],
-'R4':[[1,2,3,4]],
-'R5':[[1,2,3,4,5]],
-'4_in_6':[[1,2,3,6],[1,2,5,6],[1,4,5,6]],
-'3_in_7':[[1,2,5],[1,2,7],[1,4,5],[1,4,7],[1,6,7]],
-'N2':[[2,4]],
-'N3':[[2,4,6]],
-'N4':[[2,4,6,8]],
-'N5':[[2,4,6,8,10]],
-'4_in_10':[[2,4,6,10],[2,4,8,10],[2,6,8,10]],
-'3_in_10':[[2,4,8],[2,4,10],[2,6,8],[2,6,10],[2,8,10]]
-};
-function siRunBattleSim(startRng,gSize,rRarity,nRarity,tLevels,recordSeq){
-let rng=startRng>>>0;
-let seq=[];
-let rareHits=[];
-let normHits=[];
-let rngCount=0;
-let successRare=0;
-let successNorm=0;
-let threshR=rRarity>0?Math.floor(32768/rRarity):-1;
-let threshN=nRarity>0?Math.floor(32768/nRarity):-1;
-for(let m=0;m<gSize;m++){
-rng=lcg(rng);
-rngCount++;
-let vR=(rng>>>16)&0x7FFF;
-let okR=vR<=threshR;
-if(recordSeq)seq.push({val:vR,red:okR,type:`Group${m+1} Drop (R)`});
-if(okR){
-successRare++;
-rareHits.push(rngCount);
+const inlineFource=combo.find(v=>v.at===0&&typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[v.jp]);
+const fEls=inlineFource?(_FOURCE_EL[inlineFource.jp]||[]):null;
+let fourceOn=false,mainKilled=false,definite=false,uncertain=false;
+for(let ci=0;ci<combo.length&&ci<4;ci++){
+const action=combo[ci];
+const alive=inst.filter(i=>i.alive);
+if(alive.length===0)break;
+if(action.jp==='みのがす'){
+const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||mainKilled));
+for(const i of removed)i.alive=false;
+if(removed.length)definite=true;
+continue;
+}
+if(action.jp==='おうえん')continue;
+if(inlineFource&&action.jp===inlineFource.jp&&!fourceOn){fourceOn=true;continue;}
+const sk=lookupSkill(action.jp);
+if(!sk)continue;
+const picked=SolverActionGate.targets(alive,action,sk,'groupIdx');
+if(picked.reason)return'invalid';
+const hitTargets=picked.targets;
+const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
+const hits=SolverActionGate.hits(action);
+for(const i of hitTargets){
+if(!i)continue;
+const exec=canExecuteMetal(action.jp,i.hex);
+if(exec){
+if(exec.isValid){i.hp=0;i.hpLow=0;i.alive=false;definite=true;if(i.groupIdx===0)mainKilled=true;}
+continue;
+}
+if(!chars)continue;
+let dMin,dMax,perHitMax;
+if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(i.hex))){
+const elemental=!!(sk.el&&sk.el>0);
+const me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(action.equip));
+if(!elemental&&me){dMin=1*hits;dMax=2*hits;perHitMax=2;}else{dMin=0;dMax=0;perHitMax=0;}
 }else{
-rng=lcg(rng);
-rngCount++;
-let vN=(rng>>>16)&0x7FFF;
-let okN=vN<=threshN;
-if(recordSeq)seq.push({val:vN,red:okN,type:`Group${m+1} Drop (N)`});
-if(okN){
-successNorm++;
-normHits.push(rngCount);
+const c=chars[assign?assign[ci]:ci]||chars[0]||{stats:{}};
+const r=calcSkillDamage(sk,c.stats,i.hex,fourceOn?fEls:null,getWeaponTypeMultiplier(action.equip,i.hex),actionMetalEff(sk,action.equip));
+dMin=r?Math.floor(r.min*hits*mul):0;
+dMax=r?Math.floor(r.max*hits*mul):0;
+perHitMax=r?Math.floor(r.max*mul):0;
+}
+const step=SolverActionGate.step(i,hits,perHitMax,dMin,dMax);
+if(SolverActionGate.exactHitReason(action,step))return'invalid';
+if(step.dead)definite=true;
+else if(step.uncertain)uncertain=true;
+SolverActionGate.commit(i,step);
+if(step.dead&&i.groupIdx===0)mainKilled=true;
 }
 }
-}
-for(let b=0;b<4;b++){
-if(tLevels[b]<=0)continue;
-for(let m=0;m<gSize;m++){
-rng=lcg(rng);
-rngCount++;
-let vTR=(rng>>>16)&0x7FFF;
-let eRateR=Math.floor((rRarity*100)/tLevels[b]);
-let thTR=Math.floor(32767/eRateR)+1;
-let okTR=vTR<=thTR;
-if(recordSeq)seq.push({val:vTR,red:okTR,steal:true,type:`Book${b+1} Group${m+1} (R)`});
-if(okTR){
-successRare++;
-rareHits.push(rngCount);
-}else{
-rng=lcg(rng);
-rngCount++;
-let vTN=(rng>>>16)&0x7FFF;
-let eRateN=Math.floor((nRarity*100)/tLevels[b]);
-let thTN=Math.floor(32767/eRateN)+1;
-let okTN=vTN<=thTN;
-if(recordSeq)seq.push({val:vTN,red:okTN,steal:true,type:`Book${b+1} Group${m+1} (N)`});
-if(okTN){
-successNorm++;
-normHits.push(rngCount);
-}
-}
-}
-}
-return{successRare,successNorm,seq,rareHits,normHits};
-}
-function siMatchesPattern(hits,patterns){
-if(!patterns||patterns.length===0)return false;
-for(let p of patterns){
-if(hits.length<p.length)continue;
-let match=true;
-for(let i=0;i<p.length;i++){
-if(hits[i]!==p[i]){match=false;break;}
-}
-if(match)return true;
-}
-return false;
+return uncertain?'uncertain':definite?'definite':'none';
 }
 function forEachPoolEntry(rawPool,fn){
 for(const e of rawPool){
@@ -3442,6 +3755,33 @@ if(!Array.isArray(e))continue;
 if(typeof e[0]==='string')fn(e);
 for(const x of e){if(Array.isArray(x)&&typeof x[0]==='string')fn(x);}
 }
+}
+function getMonsterDisplayName(hx){
+const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hx]:null;
+return m?(DISPLAY_LANG==='EN'?m.en:m.jp):hx;
+}
+function getStatLabel(st){
+switch(st){
+case'might':return'M';
+case'str':return'STR';
+case'str+might':return'STR+M';
+case'str+deft':return'STR+D';
+case'mending':return'Mend';
+default:return'ATK';
+}
+}
+function buildSolverHintText(sk,monId,hits,hpHigh,hpLow,fEls,tensionMul,wmul,metalEff){
+const key=getSkillDriveStat(sk);
+if(!key)return'<span style="color:#667;">'+L01+'</span>';
+const label={atk:L02,might:L03,str:L04,mending:L05}[key]||key;
+const chip=calcSkillStatBound(sk,monId,hits,Math.max(1,hpLow),'chip',fEls,tensionMul,wmul,metalEff);
+const kill=calcSkillStatBound(sk,monId,hits,Math.max(1,hpHigh),'kill',fEls,tensionMul,wmul,metalEff);
+const parts=[];
+parts.push(L06+(chip?(chip.val===Infinity?L07:chip.val):'?'));
+parts.push(L08+(kill?(kill.val===Infinity?L09:'≥'+kill.val):'?'));
+if(hits>1){const det=calcSkillStatBound(sk,monId,hits,Math.max(1,hpLow),'detcap',fEls,tensionMul,wmul,metalEff);if(det&&det.val!==Infinity)parts.push(L10+det.val);}
+if(hpLow<=0)parts.unshift('<span style="color:#f80;">'+L11+'</span>');
+return'<span style="color:#789;">['+label+'] '+parts.join(' · ')+'</span>';
 }
 function renderKathwackPlan(monId,monGroups){
 const hexId=toMonsterHexId(monId);
@@ -3480,84 +3820,15 @@ html+=` <span style="color:#f80;font-size:9px;">${nm}×d=${res} → ${fmtAcc(eff
 }
 }
 if(multi){
-html+=` <span style="color:#ff0;font-size:9px;">${useJP ? '全滅' : 'wipe'}≈${(wipe * 100) % 1 === 0 ? (wipe * 100) + '%' : (wipe * 100).toFixed(1) + '%'}</span>`;
+html+=` <span style="color:#ff0;font-size:9px;">${L12}≈${(wipe * 100) % 1 === 0 ? (wipe * 100) + '%' : (wipe * 100).toFixed(1) + '%'}</span>`;
 }
 if(baseAcc<100){
 html+=!anyRes
 ?' <span style="color:#888;font-size:9px;">(100%: M≥799)</span>'
-:' <span style="color:#888;font-size:9px;">(max: M≥799)</span>';
+:' <span style="color:#888;font-size:9px;">('+L18+': M≥799)</span>';
 }
 html+='</div>';
 return html;
-}
-function evalRound1Removal(combo,targets,eggAssign,assign,chars){
-if(!targets||targets.length===0)return'none';
-const inst=[];
-for(let ti=0;ti<targets.length;ti++){
-const t=targets[ti];
-const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[t.hex]:null;
-const hp=m?m.s[0]:9999;
-for(let c=0;c<t.count;c++)
-inst.push({hex:t.hex,hp,hpLow:Math.floor(hp*0.8),death:t.death!==undefined?t.death:100,
-alive:true,groupIdx:ti});
-}
-const inlineFource=combo.find(v=>v.at===0&&typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[v.jp]);
-const fEls=inlineFource?(_FOURCE_EL[inlineFource.jp]||[]):null;
-let fourceOn=false,mainKilled=false,definite=false,uncertain=false;
-for(let ci=0;ci<combo.length&&ci<4;ci++){
-const action=combo[ci];
-const alive=inst.filter(i=>i.alive);
-if(alive.length===0)break;
-if(action.jp==='みのがす'){
-const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||mainKilled));
-for(const i of removed)i.alive=false;
-if(removed.length)definite=true;
-continue;
-}
-if(action.jp==='おうえん')continue;
-if(inlineFource&&action.jp===inlineFource.jp&&!fourceOn){fourceOn=true;continue;}
-const sk=lookupSkill(action.jp);
-if(!sk)continue;
-const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
-const hitTargets=tgt==='A'?alive.slice():
-tgt==='G'?(action.tgtGroup!==undefined?alive.filter(i=>i.groupIdx===action.tgtGroup)
-:findLargestGroup(alive,'groupIdx')):
-(()=>{
-if(isMetalActionSkill(action,sk)){const mt=findMetalInstance(alive);if(mt)return[mt];}
-if(action.tgtGroup!==undefined&&!action.soloGroup){
-const t=alive.filter(i=>i.groupIdx===action.tgtGroup).sort((a,b)=>b.hp-a.hp)[0];
-if(t)return[t];
-}
-return[alive.slice().sort((a,b)=>b.hp-a.hp)[0]];
-})();
-const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
-const hits=action.hits||1;
-for(const i of hitTargets){
-if(!i)continue;
-const exec=canExecuteMetal(action.jp,i.hex);
-if(exec){
-if(exec.isValid){i.hp=0;i.hpLow=0;i.alive=false;definite=true;if(i.groupIdx===0)mainKilled=true;}
-continue;
-}
-if(!chars)continue;
-let dMin,dMax;
-if((typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(i.hex))){
-const elemental=!!(sk.el&&sk.el>0);
-const me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(action.equip));
-if(!elemental&&me){dMin=1*hits;dMax=2*hits;}else{dMin=0;dMax=0;}
-}else{
-const c=chars[assign?assign[ci]:ci]||chars[0]||{stats:{}};
-const r=calcSkillDamage(sk,c.stats,i.hex,fourceOn?fEls:null,getWeaponTypeMultiplier(action.equip,i.hex));
-dMin=r?Math.floor(r.min*hits*mul):0;
-dMax=r?Math.floor(r.max*hits*mul):0;
-}
-if(i.hp-dMin<=0)definite=true;
-else if(i.hpLow-dMax<=0)uncertain=true;
-i.hp-=dMin;i.hpLow-=dMax;
-if(i.hp<=0){i.alive=false;if(i.groupIdx===0)mainKilled=true;}
-}
-}
-return uncertain?'uncertain':definite?'definite':'none';
 }
 function renderSolverResult(bat,monGroups,monId,mapDeft,canRound2){
 if(canRound2===undefined)canRound2=mapDeft<1000;
@@ -3582,28 +3853,6 @@ const hasSups=sups.length>0&&sups.some(g=>g.count>0);
 const _nonMetalSups=sups.filter(g=>(g.count>0)&&g.hex&&!_METAL_MONSTERS.has(toMonsterHexId(g.hex)));
 const _metalSupCount=(!isMetal&&typeof _METAL_MONSTERS!=='undefined')
 ?sups.reduce((s,g)=>s+((g.count>0&&g.hex&&_METAL_MONSTERS.has(toMonsterHexId(g.hex)))?g.count:0),0):0;
-let excludedPads=null;
-if(isMetal&&_nonMetalSups.length>0&&typeof calcSkillDamage==='function'){
-excludedPads=new Set();
-const _seen=new Set();
-const _currentChars=getCharsSafe();
-for(const row of _METAL_PADDING){
-const jp=row[0];
-if(_seen.has(jp))continue;_seen.add(jp);
-const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[jp]:null;
-if(!sk)continue;
-if(sk.target==='S'||sk.target==='G')continue;
-for(const g of _nonMetalSups){
-const m=MONSTER_DB[g.hex];
-if(!m)continue;
-const hp100=m.s[0];
-const hp80=Math.floor(hp100*0.8);
-const eq=row[3];
-const span=buildCharDamageSpan(sk,toMonsterHexId(g.hex),eq,getEquipHitCount(sk,eq),_currentChars);
-if(span.max>=hp80&&span.min<hp100){excludedPads.add(jp);break;}
-}
-}
-}
 const _mercyLv=(typeof readCharStatsFromDom==='function')?Math.max(...(readCharStatsFromDom().map(c=>c.lv||99))):99;
 const _effDeath=(g)=>{
 if(!(g.death>0))return 0;
@@ -3626,12 +3875,84 @@ planType='kill_mercy_clear';postAlive=d0SC;
 }
 let killTargets=null;
 if(T>1)killTargets=monGroups.map(g=>({hex:g.hex,count:g.count,death:_effDeath(g)}));
+let excludedPads=null,excludedPadsAfterMercy=null,supPads=null;
+if(isMetal&&_nonMetalSups.length>0&&typeof calcSkillDamage==='function'){
+const _currentChars=getCharsSafe();
+const _mkExcluded=(supList)=>{
+const set=new Set();
+const seen=new Set();
+for(const row of _METAL_PADDING){
+const jp=row[0];
+if(seen.has(jp))continue;seen.add(jp);
+const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[jp]:null;
+if(!sk)continue;
+if(sk.target==='S'||sk.target==='G')continue;
+for(const g of supList){
+const m=MONSTER_DB[g.hex];
+if(!m)continue;
+const hp100=m.s[0];
+const hp80=Math.floor(hp100*0.8);
+const eq=row[3];
+const span=buildCharDamageSpan(sk,toMonsterHexId(g.hex),eq,getEquipHitCount(sk,eq),_currentChars);
+if(span.max>=hp80&&span.min<hp100){set.add(jp);break;}
+}
+}
+return set;
+};
+excludedPads=_mkExcluded(_nonMetalSups);
+const _stayAfterMercy=_nonMetalSups.filter(g=>_effDeath(g)===0);
+excludedPadsAfterMercy=_stayAfterMercy.length===_nonMetalSups.length
+?excludedPads:_mkExcluded(_stayAfterMercy);
+supPads=[];
+for(const row of _METAL_PADDING){
+if(row[3]!=='miss')continue;
+const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[row[0]]:null;
+if(!sk||sk.target!=='S'||sk.ev!==0||!(sk.el>0))continue;
+const hitAT=sk.at[0];
+if(!(hitAT>0)||hitAT===sk.miss)continue;
+for(let gi=0;gi<monGroups.length;gi++){
+const g=monGroups[gi];
+if(!(g.count>0)||!g.hex||_METAL_MONSTERS.has(toMonsterHexId(g.hex)))continue;
+const m=MONSTER_DB[g.hex];
+if(!m||!(m.s[sk.el]>0))continue;
+const hp100=m.s[0];
+const hp80=Math.floor(hp100*0.8);
+const span=buildCharDamageSpan(sk,toMonsterHexId(g.hex),'',getEquipHitCount(sk,''),_currentChars);
+if(span.max>=hp80&&span.min<hp100)continue;
+supPads.push({jp:row[0],en:row[1],at:hitAT,equip:'',note:'👉',hits:1,mdmg:0,
+tgtGroup:gi,supTarget:true});
+}
+}
+for(const row of _METAL_PADDING){
+const sk=(typeof SKILL_IDX!=='undefined')?SKILL_IDX[row[0]]:null;
+if(!sk||sk.target!=='S'||row[3]==='miss')continue;
+const H=getEquipHitCount(sk,row[3]);
+if(H<=1)continue;
+for(let gi=0;gi<monGroups.length;gi++){
+const g=monGroups[gi];
+if(!(g.count>0)||!g.hex||_METAL_MONSTERS.has(toMonsterHexId(g.hex)))continue;
+const m=MONSTER_DB[g.hex];
+if(!m||(sk.ev&&m.s[3]!==0)||(sk.blk&&m.s[4]!==0))continue;
+for(let h=1;h<H;h++){
+supPads.push({jp:row[0],en:row[1],at:sk.at[0]+sk.at[1]*(h-1),equip:row[3],
+note:(row[4]||'')+'👉'+`⚡${h}hit`,hits:h,earlyKill:true,mdmg:0,
+tgtGroup:gi,supTarget:true,retarget:true});
+}
+}
+}
+supPads.sort((a,b)=>b.at-a.at);
+}
 _solverGroupCounts=killTargets?killTargets.map(t=>t.count):null;
 _solverFieldTotal=killTargets?killTargets.reduce((s,t)=>s+t.count,0):null;
+const _phaseBCountsAll=killTargets?killTargets.map(t=>
+_METAL_MONSTERS.has(toMonsterHexId(t.hex))?0:(t.count||0)):null;
+const _phaseBCountsAfterMercy=killTargets?killTargets.map(t=>
+(_METAL_MONSTERS.has(toMonsterHexId(t.hex))||t.death>0)?0:(t.count||0)):null;
 const _metalSupNeed=(killTargets&&T>1)?_metalSupCount:0;
 _solverIssenNeed=_metalSupNeed;
+_solverEnforcePriority=_metalSupNeed>0;
 const _metalSupFilter=(cs)=>_metalSupNeed===0?cs
-:cs.filter(c=>c.reduce((s,v)=>s+((v.jp==='一閃づき'||v.jp==='魔神斬り')?1:0),0)===_metalSupNeed);
+:cs.filter(c=>c.reduce((n,v)=>n+(isMetalExecutionAction(v)?1:0),0)===_metalSupNeed);
 const _walkOK=(rawCombo)=>{
 if(isMetal||!killTargets||T<=1)return true;
 const _isExecW=(v)=>v.jp==='一閃づき'||v.jp==='魔神斬り';
@@ -3720,28 +4041,36 @@ for(let i=0;i<(g.count||1);i++){_metalHPs.push(h);_metalCount++;}
 }
 if(isMetal&&_metalCount===0)_metalCount=T;
 if(planType==='kill_all'){
-combos=_metalSupFilter(isMetal?solveMetalCombo(bat,T,4,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,T,4,[],hexId)).filter(_walkOK);
+combos=_metalSupFilter(isMetal?solveMetalComboOrders(bat,T,4,_metalCount,_metalHPs,excludedPads,hexId,supPads,undefined,_phaseBCountsAll):solveBattleCombo(bat,T,4,[],hexId)).filter(_walkOK);
 if(combos.length===0&&canRound2){
-const r2a=isMetal?solveMetalCombo(bat,T,8,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,T,8,[],hexId);
+const r2a=isMetal?solveMetalComboOrders(bat,T,8,_metalCount,_metalHPs,excludedPads,hexId,supPads,undefined,_phaseBCountsAll):solveBattleCombo(bat,T,8,[],hexId);
 const r2b=tc2>0
-?(isMetal?solveMetalCombo(bat-tc2,T,8,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat-tc2,T,8,[],hexId))
+?(isMetal?solveMetalComboOrders(bat-tc2,T,8,_metalCount,_metalHPs,excludedPads,hexId,supPads,undefined,_phaseBCountsAll):solveBattleCombo(bat-tc2,T,8,[],hexId))
 :[];
 combos=_metalSupFilter([...r2a,...r2b]).filter(c=>c.length>=5).filter(_walkOK);
 isRound2=combos.length>0;
 }
 }else if(planType==='mercy_first'){
-const r1Dmg=_metalSupFilter(isMetal?solveMetalCombo(bat,postAlive,3,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,postAlive,3,[]));
-combos=r1Dmg.map(c=>[mercyAction,...c]).filter(_walkOK);
+const _placeMercy=(c)=>{
+if(c.some(v=>v.metalFirst)){
+let k=0;
+while(k<c.length&&isMetalExecutionAction(c[k]))k++;
+return[...c.slice(0,k),mercyAction,...c.slice(k)];
+}
+return(c[0]&&c[0].supTarget)?[c[0],mercyAction,...c.slice(1)]:[mercyAction,...c];
+};
+const r1Dmg=_metalSupFilter(isMetal?solveMetalComboOrders(bat,postAlive,3,_metalCount,_metalHPs,excludedPads,hexId,supPads,excludedPadsAfterMercy,_phaseBCountsAfterMercy):solveBattleCombo(bat,postAlive,3,[]));
+combos=r1Dmg.map(_placeMercy).filter(_walkOK);
 if(combos.length===0&&canRound2){
 if(tc2>0){
-const s0=_metalSupFilter(isMetal?solveMetalCombo(bat-tc2,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat-tc2,postAlive,7,[]))
+const s0=_metalSupFilter(isMetal?solveMetalComboOrders(bat-tc2,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId,supPads,excludedPadsAfterMercy,_phaseBCountsAfterMercy):solveBattleCombo(bat-tc2,postAlive,7,[]))
 .filter(c=>c.length>=4)
-.map(c=>[mercyAction,...c]).filter(_walkOK);
+.map(_placeMercy).filter(_walkOK);
 combos=combos.concat(s0);
 }
-const s4=_metalSupFilter(isMetal?solveMetalCombo(bat,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId):solveBattleCombo(bat,postAlive,7,[]))
+const s4=_metalSupFilter(isMetal?solveMetalComboOrders(bat,postAlive,7,_metalCount,_metalHPs,excludedPads,hexId,supPads,undefined,_phaseBCountsAfterMercy):solveBattleCombo(bat,postAlive,7,[]))
 .filter(c=>c.length>=5)
-.map(c=>[...c.slice(0,4),mercyAction,...c.slice(4)]).filter(_walkOK);
+.map(c=>c.some(v=>v.metalFirst)?_placeMercy(c):[...c.slice(0,4),mercyAction,...c.slice(4)]).filter(_walkOK);
 combos=combos.concat(s4);
 isRound2=combos.length>0;
 }
@@ -3814,6 +4143,8 @@ if(!_seenN.has(key)){_seenN.add(key);_normN.push(nc);}
 }
 combos=_normN;
 }
+if(isMetal||_metalSupNeed>0)combos=combos.map(sortComboByPriority);
+if(isMetal)combos=expandMetalRetarget(combos,killTargets,hexId);
 if(combos.length===0)return'<div style="color:#666;font-size:10px;margin-left:16px;">—</div>';
 const useJP=(DISPLAY_LANG!=='EN');
 const mon=hexId&&typeof MONSTER_DB!=='undefined'?MONSTER_DB[hexId]:null;
@@ -3853,6 +4184,7 @@ if(prevIdx>=0)filtered.splice(prevIdx,1);
 seen1.set(key,{jp:v.jp,ev:vEv,blk:vBlk,reqMin:curMin});
 }
 }
+let _metalClearAssign=null;
 if(canFilter){
 const baseBest=findBestAssignment(combo,hexId,mon,killTargets,1,null);
 const kill=baseBest.rating;
@@ -3876,7 +4208,7 @@ if(planType!=='kill_mercy_clear'&&dmgParts.length<4&&_baseRk<2){
 for(const t of _TENSION){
 if(combo.length+t.eggs>4)break;
 const prefix=makeEggOnPrefix(t.eggs);
-const eggCombo=[...prefix,...combo];
+const eggCombo=normalizeSolverActionOrder([...prefix,...combo]);
 const eggBest=findBestAssignment(eggCombo,hexId,mon,killTargets,t.mul,null);
 if(eggBest.rating&&(getRankOrderValue(eggBest.rating)>_baseRk||(eggBest.rating==='orange'&&_baseRk===1))){
 if(!hasChipMiss(eggCombo,hexId,eggBest.assign,eggBest.finIdx,null)){
@@ -3889,7 +4221,7 @@ break;
 }
 if(fource&&combo.length<4&&_baseRk<2&&combo.some(v=>{const s=lookupSkill(v.jp);return s&&!s.el;})){
 const fEls=_FOURCE_EL[fource.jp]||[];
-const fCombo=[makeFourceAction(fource),...combo];
+const fCombo=normalizeSolverActionOrder([makeFourceAction(fource),...combo]);
 const fBest=findBestAssignment(fCombo,hexId,mon,killTargets,1,fEls);
 if(fBest.rating&&(getRankOrderValue(fBest.rating)>_baseRk||(fBest.rating==='orange'&&_baseRk===1))){
 if(!hasChipMiss(fCombo,hexId,fBest.assign,fBest.finIdx,fEls)){
@@ -3904,7 +4236,7 @@ for(const t of _TENSION){
 if(combo.length+t.eggs+1>4)break;
 const eggPrefix=makeEggOnPrefix(t.eggs);
 const fourceEntry=makeFourceAction(fource);
-const efCombo=[...eggPrefix,fourceEntry,...combo];
+const efCombo=normalizeSolverActionOrder([...eggPrefix,fourceEntry,...combo]);
 const efBest=findBestAssignment(efCombo,hexId,mon,killTargets,t.mul,fEls);
 if(efBest.rating&&(getRankOrderValue(efBest.rating)>_baseRk||(efBest.rating==='orange'&&_baseRk===1))){
 if(!hasChipMiss(efCombo,hexId,efBest.assign,efBest.finIdx,fEls)){
@@ -3917,7 +4249,8 @@ break;
 }
 }else if(mon&&T===1&&!isMetal){
 const req=calcSolverMinStat(combo,hexId);
-if(!req||req.min<=999){
+if(req?req.min<=999
+:passesExtremeRating(combo,hexId,mon,killTargets).rating!==null){
 filtered.push({combo,kill:null,req,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo)});
 }
 if(planType!=='kill_mercy_clear'&&combo.length<4){
@@ -3926,7 +4259,7 @@ if(combo.length+t.eggs>4)break;
 const eggReq=calcSolverMinStat(combo,hexId,t.mul);
 if(eggReq&&eggReq.min<=999&&(!req||eggReq.min<req.min)){
 const prefix=makeEggOnPrefix(t.eggs);
-filtered.push({combo:[...prefix,...combo],kill:null,req:eggReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2});
+filtered.push({combo:normalizeSolverActionOrder([...prefix,...combo]),kill:null,req:eggReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2});
 break;
 }
 }
@@ -3934,7 +4267,7 @@ break;
 if(fource&&combo.length<4&&combo.some(v=>!_SOLVER_SKILL_DATA[v.jp]?.el)){
 const fReq=calcSolverMinStat(combo,hexId,1,fource);
 if(fReq&&fReq.min<=999&&(!req||fReq.min<req.min)){
-const fCombo=[makeFourceAction(fource),...combo];
+const fCombo=normalizeSolverActionOrder([makeFourceAction(fource),...combo]);
 filtered.push({combo:fCombo,kill:null,req:fReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo)});
 }
 }
@@ -3945,51 +4278,25 @@ const efReq=calcSolverMinStat(combo,hexId,t.mul,fource);
 if(efReq&&efReq.min<=999&&(!req||efReq.min<req.min)){
 const eggPrefix=makeEggOnPrefix(t.eggs);
 const fourceEntry=makeFourceAction(fource);
-filtered.push({combo:[...eggPrefix,fourceEntry,...combo],kill:null,req:efReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2});
+filtered.push({combo:normalizeSolverActionOrder([...eggPrefix,fourceEntry,...combo]),kill:null,req:efReq,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),multiOnly:t.eggs>=2});
 break;
 }
 }
 }
 }else{
 if(isMetal&&killTargets&&killTargets.length&&T>1){
-let validCombo=true;
-const _currentChars=getCharsSafe();
-for(const g of killTargets){
-const isGrpMetal=typeof _METAL_MONSTERS!=='undefined'&&_METAL_MONSTERS.has(toMonsterHexId(g.hex));
-if(isGrpMetal)continue;
-const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[g.hex]:null;
-if(!m)continue;
-const hp100=m.s[0];
-const hp80=Math.floor(hp100*0.8);
-let hpMaxWorld=hp100;
-let hpMinWorld=hp80;
-for(const v of combo){
-if(v.jp==='みのがす'){
-if(g.death>0){hpMaxWorld=0;hpMinWorld=0;}
-continue;
+_metalClearAssign=findMetalClearAssign(combo,killTargets,getCharsSafe(),hexId);
+if(_metalClearAssign===undefined)continue;
 }
-if(v.at===0)continue;
-const sk=lookupSkill(v.jp);
-if(!sk||sk.target==='S'||sk.target==='G')continue;
-const span=buildCharDamageSpan(sk,toMonsterHexId(g.hex),v.equip,v.hits||1,_currentChars);
-hpMaxWorld-=span.min;
-hpMinWorld-=span.max;
-if(hpMinWorld<=0&&hpMaxWorld>0){
-validCombo=false;break;
-}
-}
-if(!validCombo)break;
-if(hpMaxWorld>0&&g.death===0){
-validCombo=false;break;
-}
-}
-if(!validCombo)continue;
-}
-filtered.push({combo,kill:isMetal?'metal':null,req:null,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo)});
+filtered.push({combo,kill:isMetal?'metal':null,req:null,dmgSkills:dmgParts.length,canAntiBlk:canComboAntiBlock(combo),
+assign:_metalClearAssign||undefined});
 }
 }
 for(const entry of filtered){
 if(!entry.multiOnly)entry.multiOnly=isMultiTargetOnly(entry.combo);
+entry.retarget=entry.combo.some(v=>v.retarget);
+entry.orderVariant=entry.combo.some(v=>v.orderVariant);
+entry.addedVariant=entry.retarget||entry.orderVariant;
 }
 if(!document.getElementById('si_multiPlayer')?.checked){
 for(let i=filtered.length-1;i>=0;i--){
@@ -4008,7 +4315,7 @@ if(entry.finIdx!==undefined&&entry.combo[entry.finIdx]&&entry.combo[entry.finIdx
 finIt=items[entry.finIdx];
 damage=damage.filter(x=>x!==finIt);
 }
-const _pri=(x)=>_PRIORITY[x.v.jp]||(x.v.equip==='風林火山'?1:0);
+const _pri=(x)=>_actionPri(x.v);
 if(entry.assign){
 const _cmp=(a,b)=>{
 const dp=_pri(b)-_pri(a);
@@ -4069,11 +4376,12 @@ if(!perms.length)continue;
 }
 let bestCombo=entry.combo,bestRating=entry.kill,bestEgg=entry.eggAssign,bestCharAssign=entry.assign,bestDefend=entry.defend;
 const evalCombo=(perm,tgs)=>{
-const testCombo=entry.combo.slice();
+let testCombo=entry.combo.slice();
 for(let j=0;j<perm.length;j++){
 const tg=tgs?tgs[j]:undefined;
 testCombo[dmgIdx[j]]=tg===undefined?perm[j]:Object.assign({},perm[j],{tgtGroup:tg});
 }
+testCombo=normalizeSolverActionOrder(testCombo);
 const pBest=findBestAssignment(testCombo,hexId,mon,killTargets,1,null);
 if(getRankOrderValue(pBest.rating)>getRankOrderValue(bestRating)){
 bestCombo=testCombo;bestRating=pBest.rating;bestEgg=pBest.eggAssign;bestCharAssign=pBest.assign;bestDefend=pBest.defend;
@@ -4110,7 +4418,7 @@ if(bestRating!=='gold'&&_metalSupNeed===0){
 const plan=planAFinisher(entry.combo,hexId,mon,killTargets,entry.combo.length<=4?4:8);
 if(plan){bestCombo=plan.combo;bestRating='gold';bestEgg=plan.eggAssign;bestCharAssign=plan.assign;bestDefend=plan.defend;if(plan.multiOnly)entry.multiOnly=true;}
 }
-if(bestRating!=='gold'&&bestCombo.length<=4){
+if(bestRating!=='gold'&&bestCombo.length<=4&&_metalSupNeed===0){
 const _mercyIdx35=bestCombo.findIndex(v=>v.jp==='みのがす');
 if(_mercyIdx35>=0&&killTargets&&killTargets.length>=2){
 const _dmgOnly35=bestCombo.filter(v=>v.at>0);
@@ -4152,7 +4460,7 @@ for(let i=filtered.length-1;i>=0;i--){
 const e=filtered[i];
 if(e.combo.length<5)continue;
 const st=evalRound1Removal(e.combo,_r1Targets,e.eggAssign,e.assign,_r1Chars);
-if(st==='uncertain'){filtered.splice(i,1);continue;}
+if(st==='uncertain'||st==='invalid'){filtered.splice(i,1);continue;}
 e.r1Removal=(st==='definite');
 const atSum=e.combo.reduce((s,v)=>s+(v.at||0),0);
 if(atSum!==(e.r1Removal?bat-tc2:bat))filtered.splice(i,1);
@@ -4174,7 +4482,7 @@ const sim=[];
 for(const t of killTargets){
 const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[t.hex]:null;
 for(let k=0;k<t.count;k++)
-sim.push({hex:t.hex,hp:m?m.s[0]:9999,alive:true,death:t.death||0,gi:killTargets.indexOf(t)});
+sim.push({hex:t.hex,hp:m?m.s[0]:9999,hpLow:m?Math.floor(m.s[0]*0.8):9999,alive:true,death:t.death||0,gi:killTargets.indexOf(t)});
 }
 let overkill=false;
 let r1mk=false;
@@ -4184,21 +4492,11 @@ if(c[ci].jp==='みのがす'){for(const i of sim)if(i.alive&&i.death>0&&(i.gi>0|
 if(c[ci].at===0)continue;
 const sk=lookupSkill(c[ci].jp);
 if(!sk)continue;
-const hits=c[ci].hits||1;
+const hits=SolverActionGate.hits(c[ci]);
 const alive=sim.filter(i=>i.alive);
 if(alive.length===0)break;
-const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
-const hitList=tgt==='A'?alive:tgt==='S'?(()=>{
-if(isMetalActionSkill(c[ci],sk)){
-const mt=findMetalInstance(alive);
-if(mt)return[mt];
-}
-const t=(c[ci].tgtGroup!==undefined&&!c[ci].soloGroup)
-?alive.filter(i=>i.gi===c[ci].tgtGroup).sort((a,b)=>b.hp-a.hp)[0]
-:alive.sort((a,b)=>b.hp-a.hp)[0];
-return t?[t]:[];})():
-(()=>{if(c[ci].tgtGroup!==undefined)return alive.filter(i=>i.gi===c[ci].tgtGroup);
-return findLargestGroup(alive,'gi');})();
+const picked=SolverActionGate.targets(alive,c[ci],sk,'gi');
+const hitList=picked.targets;
 for(const inst of hitList){
 const exec=canExecuteMetal(c[ci].jp,inst.hex);
 if(exec){
@@ -4211,12 +4509,13 @@ const _elem=!!(sk.el&&sk.el>0);
 const _me=getMetalEffect(sk.metal||0,getWeaponMetalFlag(c[ci].equip));
 rMin=(!_elem&&_me)?1:0;rMax=(!_elem&&_me)?2:0;
 }else{
-const r=calcSkillDamage(sk,_EXT_STATS,inst.hex,null);
+const r=calcSkillDamage(sk,_EXT_STATS,inst.hex,null,1,actionMetalEff(sk,c[ci].equip));
 rMin=r?r.min:0;rMax=r?r.max:0;
 }
-if(Math.floor(rMax*hits)>=inst.hp){overkill=true;break;}
-inst.hp-=Math.floor(rMin*hits);
-if(inst.hp<=0){inst.alive=false;if(inst.gi===0)r1mk=true;}
+const step=SolverActionGate.step(inst,hits,rMax,rMin*hits,rMax*hits);
+if(SolverActionGate.exactHitReason(c[ci],step)||step.hpLow<=0){overkill=true;break;}
+SolverActionGate.commit(inst,step);
+if(step.dead&&inst.gi===0)r1mk=true;
 }
 if(overkill)break;
 }
@@ -4273,16 +4572,47 @@ const mb=b.multiOnly?1:0;
 if(ma!==mb)return ma-mb;
 return(a.req?.min||0)-(b.req?.min||0);
 });
+{
+const statsOn=!!document.getElementById('si_useStats')?.checked;
+const simTargets=killTargets?killTargets
+:((T===1&&monGroups)?monGroups.map(g=>({hex:g.hex,count:g.count,death:_effDeath(g)})):null);
+const seen=new Set();
+for(let i=0;i<filtered.length;i++){
+const e=filtered[i];
+const actionSig=e.combo.map(v=>[
+v.jp,v.at||0,v.equip||'',v.note||'',SolverActionGate.hits(v),v.earlyKill?1:0,
+v.aoeK!==undefined?v.aoeK:'',v.soloGroup?1:0,v.needle?1:0,v.needDeath0?1:0
+].join('\x1f')).join('\x1e');
+let outcomeSig='';
+if(statsOn&&simTargets){
+const outcome={};
+checkSolverDamage(e.combo,hexId,mon,simTargets,1,null,outcome,e.assign,e.eggAssign||null);
+outcomeSig=outcome.pathSig||'';
+}
+e.outcomeSig=outcomeSig;
+const reqSig=e.req?(e.req.posLabel||e.req.label||''):'';
+const sig=[e.kill||'',reqSig,e.r1Removal===undefined?'':+!!e.r1Removal,
+JSON.stringify(e.eggAssign||null),JSON.stringify(e.assign||null),JSON.stringify(e.defend||null),
+actionSig,outcomeSig].join('\x1d');
+if(seen.has(sig)){filtered.splice(i,1);i--;}
+else seen.add(sig);
+}
+}
 if(filtered.length===0)return'<div style="color:#666;font-size:10px;margin-left:16px;">—</div>';
 const SHOW_INIT=5,SHOW_MAX=30;
-const shownList=filtered.slice(0,SHOW_MAX);
+let shownList=filtered.slice(0,SHOW_MAX);
+if(filtered.length>SHOW_MAX&&filtered.some(e=>e.addedVariant)){
+const room=Math.max(0,SHOW_MAX-filtered.filter(e=>!e.addedVariant).length);
+let quota=room;
+shownList=filtered.filter(e=>!e.addedVariant||quota-->0).slice(0,SHOW_MAX);
+}
 const bucketId='sb'+(window._solverBucketId++);
 window._solverBuckets=window._solverBuckets||{};
 const renderOne=(e,hidden)=>{
 const{combo,kill,req,eggAssign,assign,defend}=e;
 const cid=window._solverComboId++;
 const _simTargets=killTargets?killTargets:((T===1&&monGroups)?monGroups.map(g=>({hex:g.hex,count:g.count,death:_effDeath(g)})):null);
-window._solverComboMap[cid]={combo,killTargets:_simTargets,eggAssign,assign,defend};
+window._solverComboMap[cid]={combo,killTargets:_simTargets,eggAssign,assign,defend,outcomeSig:e.outcomeSig||''};
 const parts=combo.map((v,ci)=>{
 const name=useJP?v.jp:v.en;
 let s='<span style="color:#ccc;">'+name+'</span>';
@@ -4314,24 +4644,24 @@ tag+=' <span style="color:'+reqColor+';font-size:9px;">'+(req.posLabel||req.labe
 let comboHtml;
 if(isRound2&&parts.length>4){
 const tc=e.r1Removal?tc2:0;
-const transSkill=' <span style="color:#f80;font-weight:bold;font-size:9px;">⮕2回目(+'+tc+')</span> ';
+const transSkill=' <span style="color:#f80;font-weight:bold;font-size:9px;">⮕'+L13+'(+'+tc+')</span> ';
 comboHtml=parts.slice(0,4).join(' + ')+transSkill+parts.slice(4).join(' + ');
 }else{
 comboHtml=parts.join(' + ');
 }
 const disp=hidden?'display:none;':'';
 return'<div class="'+bucketId+'_row" style="'+disp+'font-size:10px;margin-left:16px;color:#aaa;cursor:pointer;" onclick="expandCombo('+cid+')">'
-+comboHtml+tag+' <span style="color:#555;font-size:8px;">▶詳</span></div>'
++comboHtml+tag+' <span style="color:#555;font-size:8px;">▶'+L14+'</span></div>'
 +'<div id="combo_detail_'+cid+'" style="display:none;"></div>';
 };
 const lines=shownList.map((e,i)=>renderOne(e,i>=SHOW_INIT));
 window._solverBuckets[bucketId]={shown:Math.min(SHOW_INIT,shownList.length),total:shownList.length};
 if(shownList.length>SHOW_INIT){
 const remain=shownList.length-SHOW_INIT;
-lines.push('<div id="'+bucketId+'_more" style="font-size:9px;margin-left:16px;color:#39C5BB;cursor:pointer;text-decoration:underline;" onclick="showMoreCombos(\''+bucketId+'\')">+'+remain+' more ▾</div>');
+lines.push('<div id="'+bucketId+'_more" style="font-size:9px;margin-left:16px;color:#39C5BB;cursor:pointer;text-decoration:underline;" onclick="showMoreCombos(\''+bucketId+'\')">+'+remain+L16+'</div>');
 }
 const shownRound2=shownList.slice(0,SHOW_INIT).some(e=>e.combo.length>4);
-if(shownRound2)lines.unshift('<div style="font-size:9px;margin-left:16px;color:#f80;">⚠ 2T (5~8 moves)｜⮕2回目 標各組合 AT 追加(+n/2 或 +0)</div>');
+if(shownRound2)lines.unshift('<div style="font-size:9px;margin-left:16px;color:#f80;">'+L15+'</div>');
 return lines.join('');
-}catch(e){console.error('[Solver]',e);return'<div style="color:#f44;font-size:9px;">⚠ solver error</div>';}
+}catch(e){console.error('[Solver]',e);return'<div style="color:#f44;font-size:9px;">⚠ '+L17+'</div>';}
 }

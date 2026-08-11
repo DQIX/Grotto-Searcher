@@ -194,7 +194,7 @@ let dHtml=elistInfo.dValue>0?` <span style="background:#fa0;color:#000;padding:1
 infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
 const envType=mapData._details[3];
 let floorMR=floorMRAt(mapData._details[2],f);
-const spawnList=(SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR])||[];
+const spawnList=getSpawnList(envType,floorMR);
 const normals=spawnList.filter(e=>e.length===3);
 const isJP=(DISPLAY_LANG!=='EN');
 const stCls=classifyElistState(elistInfo.state||'');
@@ -393,6 +393,469 @@ body.innerHTML=`<div class="modal-tabs">
 modal.style.display='flex';
 switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
 }
+const MRT_PREVIEW_ROWS=30;
+const MRT_S_WEAPONS=ITEMS_S_WEAPONS;
+const MRT_MILLIONAIRE=ITEMS_MILLIONAIRE;
+const MRT_HL={};
+MRT_HL['Sainted soma']={bg:'#FFC90E',fg:'#000',bd:'#da0'};
+MRT_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff',bd:'#2a4'});
+MRT_HL['Ethereal stone']={bg:'#c018a0',fg:'#fff',bd:'#e4c'};
+['Metal slime shield','Metal slime armour','Metal slime helm','Metal slime gauntlets','Metal slime sollerets'].forEach(i=>MRT_HL[i]={bg:'#383850',fg:'#d0d8f0',bd:'#88a'});
+MRT_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff',bd:'#4af'});
+MRT_HL['Lucida shard']={bg:'#B5E61D',fg:'#000',bd:'#8c0'};
+['Dangerous bustier','Fuddle bow'].forEach(i=>MRT_HL[i]={bg:'#FFAEC9',fg:'#000',bd:'#f8a'});
+const MRT_RK_COLORS={10:'#f4f',9:'#fa0',8:'#4cf',7:'#8f8',6:'#ff8',5:'#aaa',4:'#888',3:'#666',2:'#555',1:'#444'};
+const MRT_RK_NAMES=CHEST_RANK;
+const MRT_PRESETS={
+'DD,263C':{custom:{3:[0],4:[0],7:[0],8:[1],9:[0],10:[0],11:[0],12:[0],13:[0],14:[0],15:[0],16:[0]}},
+'B5,3CA2':{custom:{4:[0],5:[0],6:[0],7:[0],8:[0,2],9:[0],10:[1],13:[0],14:[0]}},
+'DD,2E7A':{custom:{3:[0],4:[0],6:[0],7:[1],9:[0],10:[0],11:[0,2],12:[1]}},
+'C9,7FE0':{custom:{3:[0],4:[0,2],5:[0],8:[0],9:[1],10:[0],11:[0],12:[0],13:[0]}},
+'C9,2AC6':{custom:{3:[0,1]}},
+'DD,32BB':{custom:{3:[0,1,2],4:[0,1]}},
+'DD,235E':{custom:{3:[0,1]}},
+'C9,158D':{custom:{3:[0,1]}},
+'DD,5C43':{custom:{3:[0,1],4:[0],5:[1],6:[0],9:[0],10:[0],11:[0],13:[0,1],14:[1]}},
+'DD,47D0':{custom:{3:[0,1],4:[1],5:[0],6:[0],7:[0,1,2],8:[0]}},
+};
+let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null,mrtHiddenChests=new Set(),mrtRankWidths={};
+function mrtMeasureRankWidths(){
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const isMobile=window.innerWidth<=600;
+const isEN=mrtLang!=='jp';
+ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'"Hiragino Sans","PingFang TC",sans-serif');
+mrtRankWidths={};
+const ranks=new Set(mrtChests.map(cd=>cd.rank));
+for(const rank of ranks){
+let maxW=0,acc=0;
+for(let i3=TableO[rank-1];i3<TableO[rank];i3++){
+if(acc>99)break;
+acc+=TableP[i3];
+const r=TableR[TableQ[i3]];
+const name=isEN?(r[0]||'\u2014'):(r[1]||r[0]||'\u2014');
+const w=ctx.measureText(name).width;
+if(w>maxW)maxW=w;
+}
+mrtRankWidths[rank]=Math.ceil(maxW)+12;
+}
+}
+let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=0,mrtElapsedMs=0;
+function mrtInternalSec(){return mrtRealSec-5;}
+function mrtGetItem(f,b,s){return s>=0?mrtEngine.getBoxItem(f,b,s):[null,null];}
+function mrtGetStartSec(){
+const el=document.getElementById('mrt_timerStart');
+const v=el?parseFloat(el.value):NaN;
+return isNaN(v)?0:v;
+}
+function mrtOpen(){
+mrtCacheEls();
+mrtLang=DISPLAY_LANG==='EN'?'en':'jp';
+const bl=document.getElementById('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();
+mrtPopulateCustomHL();
+const modal=document.getElementById('marathonModal');
+modal.classList.add('open');
+const rSel=document.getElementById('rank');
+const sSel=document.getElementById('seed');
+if(rSel){const v=rSel.value.replace('0x','');document.getElementById('mrt_inRank').value=v;}
+if(sSel&&sSel.value)document.getElementById('mrt_inSeed').value=sSel.value;
+mrtInputChange();
+mrtResizeMain();
+}
+function mrtClose(){mrtResetTimer();document.getElementById('marathonModal').classList.remove('open');}
+function mrtResizeMain(){
+const tb=document.querySelector('#marathonModal .mrt-topbar');
+const ma=document.getElementById('mrt_mainArea');
+if(tb&&ma)ma.style.height=(window.innerHeight-tb.offsetHeight)+'px';
+}
+function mrtCompute(){
+const seed=parseInt(document.getElementById('mrt_inSeed').value.trim(),16);
+if(isNaN(seed)||seed<0||seed>0x7FFF){document.getElementById('mrt_mainArea').innerHTML='<p style="color:#f44;padding:20px">Invalid Seed</p>';return;}
+mrtEngine=new GrottoDetail();
+mrtEngine.MapSeed=seed;
+mrtEngine.MapRank=parseInt(document.getElementById('mrt_inRank').value,16);
+mrtEngine.calculateDetail();
+mrtChests=[];
+for(let f=0;f<mrtEngine.floorCount;f++){
+const d=mrtEngine.di[f];
+for(let b=0;b<d[8];b++){
+const info=mrtEngine.getBoxInfo(f,b);
+mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:MRT_RK_NAMES[info.rank]||'?'});
+}
+}
+mrtMeasureRankWidths();
+mrtBuildTable();
+mrtRenderRows();
+}
+function mrtIsVis(cd){
+if(mrtFilter==='CUSTOM'&&mrtCustom){const a=mrtCustom[cd.floorNum];return a?a.includes(cd.box):false;}
+if(mrtFilter==='SA')return cd.rank>=9;
+if(mrtFilter==='AB')return cd.rank===9||cd.rank===8;
+return true;
+}
+function mrtBuildTable(keepScroll){
+const area=document.getElementById('mrt_mainArea');
+const savedScroll=keepScroll?area.scrollLeft:0;
+area.scrollLeft=0;area.scrollTop=0;
+mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd)&&!mrtHiddenChests.has(cd.floor+':'+cd.box));
+if(!mrtVisChests.length){area.innerHTML='<p style="color:#555;padding:20px;text-align:center">No chests</p>';return;}
+const gridCols='42px '+mrtVisChests.map(cd=>(mrtRankWidths[cd.rank]||100)+'px').join(' ');
+let hdr='<div class="mrt-vhdr-time">sec</div>';
+for(let ci=0;ci<mrtVisChests.length;ci++){
+const cd=mrtVisChests[ci];
+const clr=MRT_RK_COLORS[cd.rank]||'#888';
+hdr+='<div class="mrt-vhdr" data-ck="'+cd.floor+':'+cd.box+'" style="cursor:pointer"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
+}
+area.innerHTML='<div class="mrt-vgrid" style="grid-template-columns:'+gridCols+'">'+hdr+'<div id="mrt_vbody" style="display:contents"></div></div>';
+area.querySelector('.mrt-vgrid').addEventListener('click',function(e){
+const cell=e.target.closest('[data-ck]');
+if(!cell)return;
+mrtHiddenChests.add(cell.dataset.ck);
+document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));
+mrtBuildTable(true);mrtRenderRows();
+});
+if(savedScroll)area.scrollLeft=savedScroll;
+}
+function mrtRenderRows(){
+const vb=document.getElementById('mrt_vbody');
+if(!vb||!mrtVisChests.length)return;
+const is=mrtInternalSec();
+const st=Math.max(0,is),ed=Math.max(st+MRT_PREVIEW_ROWS,is+MRT_PREVIEW_ROWS);
+const isEN=mrtLang!=='jp';
+const cellCls=isEN?'mrt-vcell mrt-vcell-en':'mrt-vcell';
+const parts=[];
+for(let s=st;s<=ed;s++){
+const cur=(s===is),rCls=cur?' mrt-vrow-cur':'';
+parts.push('<div class="mrt-vtime',rCls,'">',String(s+5).padStart(3,'0'),'</div>');
+for(let ci=0;ci<mrtVisChests.length;ci++){
+const cd=mrtVisChests[ci];
+const[en,jp]=(s>=0)?mrtGetItem(cd.floor,cd.box,s):[null,null];
+const hl=en?MRT_HL[en]:null;
+const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+';cursor:pointer"':' style="cursor:pointer"';
+const label=mrtLang==='jp'?(jp||en||'\u2014'):(en||'\u2014');
+parts.push('<div class="',cellCls,rCls,'" data-ck="',cd.floor,':',cd.box,'"',style,'>',label,'</div>');
+}
+}
+vb.innerHTML=parts.join('');
+}
+function mrtTimerLoop(){
+if(!mrtRunning)return;
+mrtElapsedMs=Date.now()-mrtOrigin;
+const ns=Math.floor(mrtElapsedMs/1000);
+mrtUpdateStopwatch(mrtElapsedMs);
+if(ns!==mrtRealSec){mrtRealSec=ns;mrtRenderRows();}
+mrtRAF=requestAnimationFrame(mrtTimerLoop);
+}
+let _mrtTimerText=null,_mrtTimerDisp=null,_mrtBtnStart=null;
+function mrtCacheEls(){
+_mrtTimerText=document.getElementById('mrt_timerText');
+_mrtTimerDisp=document.getElementById('mrt_timerDisp');
+_mrtBtnStart=document.getElementById('mrt_btnStart');
+}
+function mrtUpdateStopwatch(ms){
+const isPrep=ms<0;
+const absMs=Math.abs(ms);
+const s=Math.floor(absMs/1000);
+const cs=Math.floor((absMs%1000)/10);
+_mrtTimerText.textContent=isPrep?'-'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0')
+:String(s).padStart(3,'0')+'.'+String(cs).padStart(2,'0');
+_mrtTimerDisp.style.color=isPrep?'#f88':'#0f0';
+}
+function mrtToggleTimer(){
+if(mrtRunning){
+mrtRunning=false;
+if(mrtRAF){cancelAnimationFrame(mrtRAF);mrtRAF=null;}
+_mrtBtnStart.textContent='\u25B6';
+_mrtBtnStart.classList.remove('running');
+}else{
+mrtOrigin=Date.now()-mrtElapsedMs;
+mrtRunning=true;
+_mrtBtnStart.textContent='\u23F8';
+_mrtBtnStart.classList.add('running');
+mrtTimerLoop();
+}
+}
+function mrtResetTimer(){
+if(mrtRunning){cancelAnimationFrame(mrtRAF);mrtRAF=null;mrtRunning=false;}
+const s=mrtGetStartSec();
+mrtRealSec=s;mrtElapsedMs=s*1000;
+if(_mrtBtnStart){_mrtBtnStart.textContent='\u25B6';_mrtBtnStart.classList.remove('running');}
+mrtUpdateStopwatch(mrtElapsedMs);
+mrtRenderRows();
+}
+function mrtSetFilter(f){
+mrtFilter=f;mrtCustom=null;mrtHiddenChests.clear();
+document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+mrtBuildTable();mrtRenderRows();
+}
+function mrtToggleLang(){
+mrtLang=mrtLang==='en'?'jp':'en';
+document.getElementById('mrt_btnLang').textContent=mrtLang.toUpperCase();
+mrtPopulateCustomHL();
+mrtMeasureRankWidths();
+mrtBuildTable();mrtRenderRows();
+}
+function mrtApplyPreset(){
+const sel=document.getElementById('mrt_presets');
+if(!sel.value)return;
+const[rank,seed]=sel.value.split(',');
+document.getElementById('mrt_inRank').value=rank;
+document.getElementById('mrt_inSeed').value=seed;
+const pd=MRT_PRESETS[sel.value];
+if(pd&&pd.custom){mrtFilter='CUSTOM';mrtCustom=pd.custom;document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));}
+mrtHiddenChests.clear();
+mrtResetTimer();mrtCompute();
+}
+function mrtInputChange(){
+const seedVal=document.getElementById('mrt_inSeed').value.trim();
+if(seedVal.length<1||/[^0-9A-Fa-f]/.test(seedVal))return;
+mrtCustom=null;mrtFilter='ALL';mrtHiddenChests.clear();
+document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f==='ALL'));
+mrtResetTimer();mrtCompute();
+}
+const debouncedMrtInput=debounce(mrtInputChange,200);
+const MRT_CUSTOM_HL1={bg:'#801',fg:'#fff',bd:'#c24'};
+const MRT_CUSTOM_HL2={bg:'#3f48cc',fg:'#fff',bd:'#66f'};
+let mrtCustomHL1Item='',mrtCustomHL2Item='';
+const MRT_BUILTIN_HL={};
+for(const k in MRT_HL)MRT_BUILTIN_HL[k]=MRT_HL[k];
+function mrtPopulateCustomHL(){
+if(typeof TableR==='undefined')return;
+const seen={},items=[];
+TableR.forEach(r=>{if(!seen[r[0]]){seen[r[0]]=true;items.push({en:r[0],jp:r[1]});}});
+const isJP=mrtLang==='jp';
+items.sort((a,b)=>isJP?a.jp.localeCompare(b.jp,'ja'):a.en.localeCompare(b.en));
+['mrt_customHL1','mrt_customHL2'].forEach(id=>{
+const sel=document.getElementById(id);
+if(!sel)return;
+const prev=sel.value;
+const label=id.endsWith('1')?'\u2014 HL1 \u2014':'\u2014 HL2 \u2014';
+let html='<option value="">'+label+'</option>';
+items.forEach(it=>{html+='<option value="'+it.en+'">'+(isJP?it.jp:it.en)+'</option>';});
+sel.innerHTML=html;
+sel.value=prev;
+});
+}
+function mrtApplyCustomHL(){
+[mrtCustomHL1Item,mrtCustomHL2Item].forEach(name=>{
+if(!name)return;
+if(MRT_BUILTIN_HL[name])MRT_HL[name]=MRT_BUILTIN_HL[name];
+else delete MRT_HL[name];
+});
+mrtCustomHL1Item=document.getElementById('mrt_customHL1').value;
+mrtCustomHL2Item=document.getElementById('mrt_customHL2').value;
+if(mrtCustomHL1Item)MRT_HL[mrtCustomHL1Item]=MRT_CUSTOM_HL1;
+if(mrtCustomHL2Item)MRT_HL[mrtCustomHL2Item]=MRT_CUSTOM_HL2;
+mrtRenderRows();
+}
+window.addEventListener('resize',()=>{if(document.getElementById('marathonModal').classList.contains('open'))mrtResizeMain();});
+const DW_PATS=[
+['R2','連續 2 個稀有','2 Rare','レア×2'],
+['R2_3','連續 2 個稀有 (N/N+3)','2 Rare (N/N+3)','レア×2 (チカラめし)'],
+['R3','連續 3 個稀有','3 Rare','レア×3'],
+['R4','連續 4 個稀有','4 Rare','レア×4'],
+['R5','連續 5 個稀有','5 Rare','レア×5'],
+['4_in_6','6 個中 4 個稀有','4 in 6 Rare','レア×4 (6連続)'],
+['3_in_7','7 個中 3 個稀有','3 in 7 Rare','レア×3 (7連続)'],
+['N2','連續 2 個通常','2 Normal','通常×2'],
+['N3','連續 3 個通常','3 Normal','通常×3'],
+['N4','連續 4 個通常','4 Normal','通常×4'],
+['N5','連續 5 個通常','5 Normal','通常×5'],
+['4_in_10','10 個中 4 個通常','4 in 10 Normal','通常×4 (10連続)'],
+['3_in_10','10 個中 3 個通常','3 in 10 Normal','通常×3 (10連続)']
+];
+const DW_L={
+TW:{
+name:md=>md.jp,mainFmt:md=>`${md.jp} (${md.en})`,
+drop:l=>'掉'+l,book:(b,l)=>'書'+b+l,
+tag:['主怪','跟班1','跟班2'],single:'單組',
+corr:n=>`→ 對照上表「${n === 1 ? '敵1組' : n + '組同時'}」表頭列`,
+jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表 5 欄',no:'上表未列',
+anchor:'Pattern 錨點（＝判定 1 的 AT 步數）：',
+more:m=>`（共 ${m} 個，僅列前 12）`,
+nf:'AT 38～2037 步內找不到符合的 Pattern 錨點',
+bad:'Seed 需為 1～4 位十六進位',
+hits:'命中：',leg:'R＝稀有命中　xN＝通常命中　xx＝落空',sep:'、',
+nomon:'此 地形×FloorMR 組合無可選主怪。'
+},
+EN:{
+name:md=>md.en,mainFmt:md=>md.en,
+drop:l=>l?'D-'+l:'D',book:(b,l)=>'B'+b+l,
+tag:['Main','Sup1','Sup2'],single:'Single',
+corr:n=>`→ matches the "(${n === 1 ? '1 group' : n + ' groups'})" header row above`,
+jr:(a,b)=>`Judg. ${a}–${b}`,eq5:'= 5 cols above',no:'not in table',
+anchor:'Pattern anchors (AT step of judgment 1): ',
+more:m=>` (${m} total, first 12 shown)`,
+nf:'No matching pattern anchor within AT steps 38–2037',
+bad:'Seed must be 1–4 hex digits',
+hits:'Hits: ',leg:'R = rare hit / xN = normal hit / xx = miss',sep:', ',
+nomon:'No selectable main monster for this terrain × FloorMR.'
+},
+JP:{
+name:md=>md.jp,mainFmt:md=>md.jp,
+drop:l=>'落'+l,book:(b,l)=>'盗'+b+l,
+tag:['メイン','取り巻き1','取り巻き2'],single:'単組',
+corr:n=>`→ 上表「${n === 1 ? '敵1組' : n + '組同時'}」の見出し行に対応`,
+jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表の5欄',no:'上表対象外',
+anchor:'パターン錨点（＝判定1のATステップ）：',
+more:m=>`（全 ${m} 件、先頭12件のみ表示）`,
+nf:'AT 38～2037 の範囲に一致する錨点なし',
+bad:'Seed は16進数 1～4 桁で入力',
+hits:'命中：',leg:'R＝レア成立　xN＝通常成立　xx＝不成立',sep:'、',
+nomon:'この地形×FloorMRでは選択可能なメインがいません。'
+}
+};
+const DW_CLSC={cr:'#f88',ct:'#39C5BB',cy:'#ffd700',cp:'#c8c',ck:'#cc8'};
+const _dwSel={TW:0,EN:0,JP:0};
+const _dwTmr={};
+function dwSupPool(envType,floorMR){
+const raw=(typeof GROTTO_SUPPORT!=='undefined'&&GROTTO_SUPPORT[envType])?(GROTTO_SUPPORT[envType][floorMR]||[]):[];
+const out=[],seen=new Set();
+for(const e of raw){
+if(!Array.isArray(e))continue;
+if(typeof e[0]==='string'&&!seen.has(e[0])){seen.add(e[0]);out.push(e[0]);}
+for(const x of e){
+if(Array.isArray(x)&&typeof x[0]==='string'&&!seen.has(x[0])){seen.add(x[0]);out.push(x[0]);}
+}
+}
+return out;
+}
+function dwInit(){
+['TW','EN','JP'].forEach((L,li)=>{
+const patSel=document.getElementById('dw_pat_'+L);
+if(patSel){
+patSel.innerHTML='<option value="none">----</option>';
+DW_PATS.forEach(p=>{
+const o=document.createElement('option');
+o.value=p[0];
+o.textContent=p[1+li];
+patSel.appendChild(o);
+});
+}
+dwUpd(L);
+});
+}
+function dwUpd(L){
+const $=id=>document.getElementById(id+'_'+L);
+const envEl=$('dw_env');
+if(!envEl)return;
+_dwSel[L]=0;
+const envType=parseInt(envEl.value);
+const floorMR=parseInt($('dw_mr').value);
+const X=DW_L[L];
+const monSel=$('dw_mon');
+monSel.innerHTML='';
+const spawnList=getSpawnList(envType,floorMR);
+if(spawnList.length)appendSpawnMonsterOptions(monSel,spawnList,X.mainFmt);
+const pool=dwSupPool(envType,floorMR);
+['dw_sup1','dw_sup2'].forEach(id=>{
+const sel=$(id);
+if(!sel)return;
+sel.innerHTML='<option value="">—</option>';
+for(const hx of pool){
+const md=MONSTER_DB[hx];
+const opt=document.createElement('option');
+opt.value=hx;
+opt.textContent=md?X.name(md):hx;
+sel.appendChild(opt);
+}
+});
+dwRender(L);
+}
+function dwChanged(L){_dwSel[L]=0;dwRender(L);}
+function dwRenderDeb(L){_dwSel[L]=0;clearTimeout(_dwTmr[L]);_dwTmr[L]=setTimeout(()=>dwRender(L),200);}
+function dwSelStep(L,i){_dwSel[L]=i;dwRender(L);}
+function dwRender(L){
+const $=id=>document.getElementById(id+'_'+L);
+const out=$('dw_out');
+if(!out)return;
+const X=DW_L[L];
+const monHex=$('dw_mon').value;
+if(!monHex){out.innerHTML=`<span style="color:#888;font-size:11px">${X.nomon}</span>`;return;}
+const nameOf=hx=>{const md=MONSTER_DB[hx];return md?X.name(md):hx;};
+const groups=[{name:nameOf(monHex),color:'#fff',tag:X.tag[0]}];
+const s1=$('dw_sup1').value;
+const s2=$('dw_sup2').value;
+if(s1)groups.push({name:nameOf(s1),color:'#a8f',tag:X.tag[1]});
+if(s2)groups.push({name:nameOf(s2),color:'#8cf',tag:X.tag[2]});
+const n=groups.length;
+const LET=['A','B','C'];
+const BOOK_CLS=['','ct','cy','cp','ck'];
+const slots=[];
+for(let g=0;g<n;g++)slots.push({lbl:X.drop(n>1?LET[g]:''),cls:'cr',g});
+for(let b=1;b<=4;b++)
+for(let g=0;g<n;g++)slots.push({lbl:X.book(b,n>1?LET[g]:''),cls:BOOK_CLS[b],g});
+const seedStr=($('dw_seed')?$('dw_seed').value:'').trim();
+const patKey=$('dw_pat')?$('dw_pat').value:'none';
+let scanHtml='',st=null;
+if(seedStr&&patKey&&patKey!=='none'&&typeof SI_PATTERN_INDICES!=='undefined'){
+if(!/^[0-9A-Fa-f]{1,4}$/.test(seedStr)){
+scanHtml=`<div style="color:#f66;font-size:11px;margin-bottom:4px">${X.bad}</div>`;
+}else{
+const seed=parseInt(seedStr,16)>>>0;
+const rr=parseInt($('dw_rr').value);
+const nr=parseInt($('dw_nr').value);
+const lv=Math.min(99,Math.max(1,parseInt($('dw_lv').value)||99));
+const tLvs=[lv,lv,lv,lv];
+const pats=SI_PATTERN_INDICES[patKey];
+const isN=patKey.startsWith('N')||patKey==='4_in_10'||patKey==='3_in_10';
+let rng=seed>>>0;
+for(let i=0;i<37;i++)rng=lcg(rng);
+const matches=[],rngs=[];
+for(let step=38;step<=2037;step++){
+const sim=siRunBattleSim(rng,n,rr,nr,tLvs,false);
+const hits=isN?sim.normHits:sim.rareHits;
+if(siMatchesPattern(hits,pats)){matches.push(step);rngs.push(rng);if(matches.length>=60)break;}
+rng=lcg(rng);
+}
+if(!matches.length){
+scanHtml=`<div style="color:#f80;font-size:11px;margin-bottom:4px">${X.nf}</div>`;
+}else{
+const sel=Math.min(_dwSel[L],matches.length-1);
+_dwSel[L]=sel;
+const seq=siRunBattleSim(rngs[sel],n,rr,nr,tLvs,true).seq;
+st=[];
+let si=-1;
+for(const e of seq){
+if(e.type.indexOf('(R)')>=0){si++;st[si]=e.red?'R':'x';}
+else if(e.red&&st[si]==='x')st[si]='N';
+}
+const chips=matches.slice(0,12).map((s,i)=>
+`<span onclick="dwSelStep('${L}',${i})" style="cursor:pointer;padding:0 5px;border:1px solid ${i === sel ? '#0f0' : '#555'};border-radius:3px;color:${i === sel ? '#0f0' : '#aaa'};margin:0 3px 2px 0;display:inline-block">${s}</span>`).join('');
+const moreTxt=matches.length>12?`<span style="color:#666;font-size:10px">${X.more(matches.length)}</span>`:'';
+scanHtml=`<div style="font-size:11px;margin-bottom:4px;color:#0ca">${X.anchor}${chips}${moreTxt}</div>`;
+}
+}
+}
+let html=scanHtml+'<div style="margin-bottom:6px;font-size:12px">'+
+groups.map((gr,i)=>`<span style="color:#0ff">${n > 1 ? LET[i] : X.single}</span>＝<span style="color:${gr.color}">${gr.name}</span><span style="color:#666;font-size:10px">(${gr.tag})</span>`).join('　')+
+`　<span style="color:#888;font-size:11px">${X.corr(n)}</span></div>`;
+html+='<table class="h3t sm ctr" style="margin-bottom:4px">';
+for(let r=0;r*5<slots.length;r++){
+html+='<tr><td class="bg" style="width:18%">'+X.jr(r*5+1,r*5+5)+
+(r===0?`<br><span style="color:#0ca;font-size:10px">${X.eq5}</span>`:`<br><span style="color:#666;font-size:10px">${X.no}</span>`)+'</td>';
+for(let c=0;c<5;c++){
+const s=slots[r*5+c];
+let stat='',bg='';
+if(st){
+const v=st[r*5+c];
+if(v==='R'){stat='<br><span class="cr b">R</span>';bg=';background:#2a0a0a';}
+else if(v==='N'){stat='<br><span class="cc b">xN</span>';bg=';background:#0a2020';}
+else stat='<br><span class="cx">xx</span>';
+}
+html+=`<td style="padding:4px${bg}"><span class="${s.cls} b">${s.lbl}</span><br><span style="color:${groups[s.g].color};font-size:11px">${groups[s.g].name}</span>${stat}</td>`;
+}
+html+='</tr>';
+}
+html+='</table>';
+if(st){
+const hitR=[],hitN=[];
+st.forEach((v,i)=>{if(v==='R')hitR.push(i);else if(v==='N')hitN.push(i);});
+const fmt=i=>`<span style="color:${DW_CLSC[slots[i].cls]};font-weight:bold">${slots[i].lbl}</span>·<span style="color:${groups[slots[i].g].color}">${groups[slots[i].g].name}</span>`;
+html+=`<div style="font-size:11px;margin-bottom:2px"><span style="color:#0ca">${X.hits}</span><span style="color:#f88;font-weight:bold">R </span>${hitR.length ? hitR.map(fmt).join(X.sep) : '—'}　<span style="color:#ccc;font-weight:bold">N </span>${hitN.length ? hitN.map(fmt).join(X.sep) : '—'}<span style="color:#555;font-size:10px">　${X.leg}</span></div>`;
+}
+out.innerHTML=html;
+}
 const MODAL_TAB_KEYS=['TW','EN','JP','SP'];
 const MODAL_THEMES={
 gold:['#ffd700','#4a4a8a','#224','#888','#333'],
@@ -451,6 +914,55 @@ function switchH2Tab(lang){switchConfiguredModalTab('h2',lang);}
 function openh3Modal(){openConfiguredModal('h3');}
 function closeh3Modal(){closeConfiguredModal('h3');}
 function switchH3Tab(lang){switchConfiguredModalTab('h3',lang);}
+function initCPUBenchmark(){
+const h4=document.querySelector('#unified_search_panel h4');
+if(!h4)return;
+const cpuBtn=document.createElement('button');
+cpuBtn.id='cpuBenchBtn';
+cpuBtn.textContent='💻';
+cpuBtn.title='CPU Benchmark';
+cpuBtn.style.cssText='margin-left:6px;background:#224;color:#0ff;border:1px solid #088;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;';
+cpuBtn.onmouseover=function(){this.style.background='#0ff';this.style.color='#000';};
+cpuBtn.onmouseout=function(){this.style.background='#224';this.style.color='#0ff';};
+cpuBtn.onclick=startCPUBenchmark;
+h4.appendChild(cpuBtn);
+}
+function startCPUBenchmark(){
+if(isSearching){requestSearchCancel();return;}
+const t0=performance.now();
+executeSharedSearch({
+btnId:'cpuBenchBtn',
+btnText:'💻',
+btnBg:'#224',
+btnColor:'#0ff',
+stopText:'🛑',
+emptyRankMsg:B07,
+searchFilterLoc:true,
+validateConds:()=>true,
+renderCap:0,
+filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
+processor:'fastest',
+params:{searchOnlyWithD:false,benchmarkMode:true},
+onDoneExtra:(d)=>{
+const elapsed=((performance.now()-t0)/1000).toFixed(2);
+const sp=document.getElementById('searchProgress');
+if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
+},
+});
+}
+window.addEventListener('DOMContentLoaded',()=>{
+if(typeof advanceBqCountFeasibility!=='function')return;
+const schedule=window.requestIdleCallback
+?(fn)=>window.requestIdleCallback(fn,{timeout:200})
+:(fn)=>setTimeout(fn,1);
+let next=2048;
+const step=()=>{
+if(advanceBqCountFeasibility(next))return;
+next+=2048;
+schedule(step);
+};
+schedule(step);
+});
 window.addEventListener('DOMContentLoaded',()=>{
 function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
 let selectElement=document.getElementById(selectId);
