@@ -521,11 +521,18 @@ mark('chamber',f);
 }
 if(anom.hasInaccessibleChest&&anom.hasChamber)combo=true;
 }
-const rule=_ANOM_RULE[conds.anomaly];
-if(rule){
+const anomalyKey=conds.anomaly;
+if(Object.prototype.hasOwnProperty.call(_ANOM_RULE, anomalyKey)){
+const rule=_ANOM_RULE[anomalyKey];
+if(typeof rule==='function'){
 const[ok,jump]=rule({first,chamberFloors,combo});
 if(ok)result.jumpToFloor=jump;
 else result.match=false;
+}else{
+result.match=false;
+}
+}else{
+result.match=false;
 }
 return result;
 }
