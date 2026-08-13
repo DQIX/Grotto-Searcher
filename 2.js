@@ -474,6 +474,7 @@ multi_region:s=>[s.first.multiRegion!==-1,s.first.multiRegion],
 multi_chamber:s=>[s.chamberFloors>=2,s.first.chamber],
 chest_chamber:s=>[s.combo,s.first.chest!==-1?s.first.chest:s.first.chamber]
 };
+const _ANOM_RULE_MAP = new Map(Object.entries(_ANOM_RULE));
 function checkAnomalies(searchEngine,conds){
 let result={match:true,anomalyDetails:[],jumpToFloor:-1};
 if(conds.anomaly==="")return result;
@@ -522,8 +523,8 @@ mark('chamber',f);
 if(anom.hasInaccessibleChest&&anom.hasChamber)combo=true;
 }
 const anomalyKey=conds.anomaly;
-if(Object.prototype.hasOwnProperty.call(_ANOM_RULE, anomalyKey)){
-const rule=_ANOM_RULE[anomalyKey];
+if(_ANOM_RULE_MAP.has(anomalyKey)){
+const rule=_ANOM_RULE_MAP.get(anomalyKey);
 if(typeof rule==='function'){
 const[ok,jump]=rule({first,chamberFloors,combo});
 if(ok)result.jumpToFloor=jump;
