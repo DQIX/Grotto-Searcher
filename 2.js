@@ -1801,9 +1801,11 @@ let processed=0;
 let hitCount=0;
 let batch=[];
 let searchEngine=new GrottoDetail();
-const setup=SEED_SETUP[job.processor];
+const setup=(Object.prototype.hasOwnProperty.call(SEED_SETUP,job.processor)
+&&typeof SEED_SETUP[job.processor]==='function')?SEED_SETUP[job.processor]:null;
 if(setup)setup(searchEngine,job);
-const proc=SEED_PROCESSORS[job.processor];
+const proc=(Object.prototype.hasOwnProperty.call(SEED_PROCESSORS,job.processor)
+&&typeof SEED_PROCESSORS[job.processor]==='function')?SEED_PROCESSORS[job.processor]:null;
 const yieldStride=(job.processor==='ultimate'
 &&!needsMapGeneration(conds,job.params&&job.params.searchOnlyWithD))?1000:250;
 for(let rank of job.ranks){
