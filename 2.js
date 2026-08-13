@@ -1801,12 +1801,16 @@ let processed=0;
 let hitCount=0;
 let batch=[];
 let searchEngine=new GrottoDetail();
-const setup=(Object.prototype.hasOwnProperty.call(SEED_SETUP,job.processor)
-&&typeof SEED_SETUP[job.processor]==='function')?SEED_SETUP[job.processor]:null;
+const allowedScanProcessors=new Set(['default','ultimate']);
+const processorKey=allowedScanProcessors.has(job.processor)?job.processor:null;
+const setup=(processorKey!==null
+&&Object.prototype.hasOwnProperty.call(SEED_SETUP,processorKey)
+&&typeof SEED_SETUP[processorKey]==='function')?SEED_SETUP[processorKey]:null;
 if(setup)setup(searchEngine,job);
-const proc=(Object.prototype.hasOwnProperty.call(SEED_PROCESSORS,job.processor)
-&&typeof SEED_PROCESSORS[job.processor]==='function')?SEED_PROCESSORS[job.processor]:null;
-const yieldStride=(job.processor==='ultimate'
+const proc=(processorKey!==null
+&&Object.prototype.hasOwnProperty.call(SEED_PROCESSORS,processorKey)
+&&typeof SEED_PROCESSORS[processorKey]==='function')?SEED_PROCESSORS[processorKey]:null;
+const yieldStride=(processorKey==='ultimate'
 &&!needsMapGeneration(conds,job.params&&job.params.searchOnlyWithD))?1000:250;
 for(let rank of job.ranks){
 if(io.cancelled())break;
