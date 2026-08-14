@@ -474,7 +474,6 @@ multi_region:s=>[s.first.multiRegion!==-1,s.first.multiRegion],
 multi_chamber:s=>[s.chamberFloors>=2,s.first.chamber],
 chest_chamber:s=>[s.combo,s.first.chest!==-1?s.first.chest:s.first.chamber]
 };
-const _ANOM_RULE_MAP = new Map(Object.entries(_ANOM_RULE));
 function checkAnomalies(searchEngine,conds){
 let result={match:true,anomalyDetails:[],jumpToFloor:-1};
 if(conds.anomaly==="")return result;
@@ -522,18 +521,11 @@ mark('chamber',f);
 }
 if(anom.hasInaccessibleChest&&anom.hasChamber)combo=true;
 }
-const anomalyKey=conds.anomaly;
-if(_ANOM_RULE_MAP.has(anomalyKey)){
-const rule=_ANOM_RULE_MAP.get(anomalyKey);
+const rule=Object.prototype.hasOwnProperty.call(_ANOM_RULE,conds.anomaly)?_ANOM_RULE[conds.anomaly]:null;
 if(typeof rule==='function'){
 const[ok,jump]=rule({first,chamberFloors,combo});
 if(ok)result.jumpToFloor=jump;
 else result.match=false;
-}else{
-result.match=false;
-}
-}else{
-result.match=false;
 }
 return result;
 }
@@ -1809,16 +1801,11 @@ let processed=0;
 let hitCount=0;
 let batch=[];
 let searchEngine=new GrottoDetail();
-const allowedScanProcessors=new Set(['default','ultimate']);
-const processorKey=allowedScanProcessors.has(job.processor)?job.processor:null;
-const setup=(processorKey!==null
-&&Object.prototype.hasOwnProperty.call(SEED_SETUP,processorKey)
-&&typeof SEED_SETUP[processorKey]==='function')?SEED_SETUP[processorKey]:null;
-if(setup)setup(searchEngine,job);
-const proc=(processorKey!==null
-&&Object.prototype.hasOwnProperty.call(SEED_PROCESSORS,processorKey)
-&&typeof SEED_PROCESSORS[processorKey]==='function')?SEED_PROCESSORS[processorKey]:null;
-const yieldStride=(processorKey==='ultimate'
+const setup=Object.prototype.hasOwnProperty.call(SEED_SETUP,job.processor)?SEED_SETUP[job.processor]:undefined;
+if(typeof setup==='function')setup(searchEngine,job);
+const proc=Object.prototype.hasOwnProperty.call(SEED_PROCESSORS,job.processor)?SEED_PROCESSORS[job.processor]:undefined;
+if(typeof proc!=='function')throw new Error('unknown processor: '+job.processor);
+const yieldStride=(job.processor==='ultimate'
 &&!needsMapGeneration(conds,job.params&&job.params.searchOnlyWithD))?1000:250;
 for(let rank of job.ranks){
 if(io.cancelled())break;

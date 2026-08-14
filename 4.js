@@ -770,10 +770,9 @@ const $=id=>document.getElementById(id+'_'+L);
 const out=$('dw_out');
 if(!out)return;
 const X=DW_L[L];
-const escHtml=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const monHex=$('dw_mon').value;
 if(!monHex){out.innerHTML=`<span style="color:#888;font-size:11px">${X.nomon}</span>`;return;}
-const nameOf=hx=>{const md=MONSTER_DB[hx];return escHtml(md?X.name(md):hx);};
+const nameOf=hx=>{const md=MONSTER_DB[hx];return md?X.name(md):'?';};
 const groups=[{name:nameOf(monHex),color:'#fff',tag:X.tag[0]}];
 const s1=$('dw_sup1').value;
 const s2=$('dw_sup2').value;
