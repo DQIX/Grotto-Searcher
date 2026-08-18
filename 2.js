@@ -474,6 +474,20 @@ multi_region:s=>[s.first.multiRegion!==-1,s.first.multiRegion],
 multi_chamber:s=>[s.chamberFloors>=2,s.first.chamber],
 chest_chamber:s=>[s.combo,s.first.chest!==-1?s.first.chest:s.first.chamber]
 };
+function anomRule(key){
+switch(key){
+case 'chest':return _ANOM_RULE.chest;
+case 'nochest':return _ANOM_RULE.nochest;
+case 'chamber':return _ANOM_RULE.chamber;
+case 'stair':return _ANOM_RULE.stair;
+case 'ghost':return _ANOM_RULE.ghost;
+case 'all_invalid':return _ANOM_RULE.all_invalid;
+case 'multi_region':return _ANOM_RULE.multi_region;
+case 'multi_chamber':return _ANOM_RULE.multi_chamber;
+case 'chest_chamber':return _ANOM_RULE.chest_chamber;
+}
+return null;
+}
 function checkAnomalies(searchEngine,conds){
 let result={match:true,anomalyDetails:[],jumpToFloor:-1};
 if(conds.anomaly==="")return result;
@@ -521,8 +535,8 @@ mark('chamber',f);
 }
 if(anom.hasInaccessibleChest&&anom.hasChamber)combo=true;
 }
-const rule=Object.prototype.hasOwnProperty.call(_ANOM_RULE,conds.anomaly)?_ANOM_RULE[conds.anomaly]:null;
-if(typeof rule==='function'){
+const rule=anomRule(conds.anomaly);
+if(rule){
 const[ok,jump]=rule({first,chamberFloors,combo});
 if(ok)result.jumpToFloor=jump;
 else result.match=false;
@@ -1794,6 +1808,15 @@ const html=`
 return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor,sortCost:fastestRes.cost,fc:searchEngine.floorCount};
 }
 };
+function getProcessorEntry(name){
+switch(name){
+case 'ultimate':return{setup:SEED_SETUP.ultimate,proc:SEED_PROCESSORS.ultimate};
+case 'multibug':return{setup:SEED_SETUP.multibug,proc:SEED_PROCESSORS.multibug};
+case 'fastest':return{setup:SEED_SETUP.fastest,proc:SEED_PROCESSORS.fastest};
+case 'item':return{setup:SEED_SETUP.item,proc:SEED_PROCESSORS.item};
+}
+return null;
+}
 async function coreRunScanJob(job,io){
 const conds=job.conds;
 const totalCombos=job.ranks.length*(job.endSeed-job.startSeed+1);
@@ -1801,10 +1824,10 @@ let processed=0;
 let hitCount=0;
 let batch=[];
 let searchEngine=new GrottoDetail();
-const setup=Object.prototype.hasOwnProperty.call(SEED_SETUP,job.processor)?SEED_SETUP[job.processor]:undefined;
-if(typeof setup==='function')setup(searchEngine,job);
-const proc=Object.prototype.hasOwnProperty.call(SEED_PROCESSORS,job.processor)?SEED_PROCESSORS[job.processor]:undefined;
-if(typeof proc!=='function')throw new Error('unknown processor: '+job.processor);
+const entry=getProcessorEntry(job.processor);
+if(!entry)throw new Error('unknown processor: '+job.processor);
+const setup=entry.setup,proc=entry.proc;
+if(setup)setup(searchEngine,job);
 const yieldStride=(job.processor==='ultimate'
 &&!needsMapGeneration(conds,job.params&&job.params.searchOnlyWithD))?1000:250;
 for(let rank of job.ranks){
