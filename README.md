@@ -1,5 +1,5 @@
-# DQ9 Grotto Searcher 
-# ドラクエ9 宝の地図検索ツール セレシア版
+# DQ9 Grotto Searcher
+
 A powerful Grotto search tool created by using Claude and Gemini.
 
 Based on reverse-engineered database, dq9tmap101.exe's ElistOfs logic, and some edge cases fixed by TKG and Claude.
@@ -70,3 +70,5 @@ CPU Benchmark (2026.06.30 renewal)
 - i5-5200U: 37.15s
 - i9-12900KF: 3.34s
 - R9-9950X3D: 1.98s
+
+# ドラクエ9 宝の地図検索ツール セレシア版
