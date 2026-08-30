@@ -18,7 +18,7 @@
 </div>
 <div id="controls_container" style="display:flex;justify-content:center;padding-bottom:20px;border-bottom:2px solid #4a4a8a;">
 <div id="single_map_controls" style="display:flex;align-items:center;background:#0a0a15;padding:6px 12px;border-radius:6px;border:1px solid #335;">
-<label style="color:#aaa;font-size:13px;font-weight:bold;">Rank</label>
+<label for="rank" style="color:#aaa;font-size:13px;font-weight:bold;">Rank</label>
 <select id="rank" style="background:#000;color:#0f0;border:1px solid #555;padding:4px;font-size:14px;width:65px;">
 <option value="0x02">02</option>
 <option value="0x38">38</option>
@@ -33,7 +33,7 @@
 <option value="0xC9">C9</option>
 <option value="0xDD" selected>DD</option>
 </select>
-<label style="color:#aaa;font-size:13px;font-weight:bold;margin-left:4px;">Seed</label>
+<label for="seed" style="color:#aaa;font-size:13px;font-weight:bold;margin-left:4px;">Seed</label>
 <input type="text" id="seed" value="263C" maxlength="4" placeholder="Hex" style="text-transform:uppercase;font-family:monospace;font-size:14px;width:60px;text-align:center;background:#000;color:#0f0;border:1px solid #555;padding:4px;">
 <button class="go" onclick="calculate()" style="background:linear-gradient(135deg,#0ff,#08a);color:#000;border:none;padding:6px 16px;font-size:13px;font-weight:bold;border-radius:4px;cursor:pointer;margin-left:8px;">Go</button>
 </div>
@@ -55,14 +55,14 @@
 <div class="mrt-topbar">
 <div class="mrt-tbg mrt-row1">
 <button class="mrt-close" onclick="mrtClose()">✕</button>
-<label>Rank</label>
+<label for="mrt_inRank">Rank</label>
 <select id="mrt_inRank" onchange="mrtInputChange()">
 <option value="02">02</option><option value="38">38</option><option value="3D">3D</option>
 <option value="4C">4C</option><option value="51">51</option><option value="65">65</option>
 <option value="79">79</option><option value="8D">8D</option><option value="A1">A1</option>
 <option value="B5">B5</option><option value="C9">C9</option><option value="DD" selected>DD</option>
 </select>
-<label>Seed</label>
+<label for="mrt_inSeed">Seed</label>
 <input id="mrt_inSeed" value="263C" maxlength="4" inputmode="text" oninput="debouncedMrtInput()">
 <select id="mrt_presets" class="mrt-presets" onchange="mrtApplyPreset()">
 <option value="">— Presets —</option>
@@ -87,12 +87,12 @@
 <select id="mrt_customHL2" class="mrt-hlsel mrt-hl2" onchange="mrtApplyCustomHL()"><option value="">— HL2 —</option></select>
 </div>
 <div class="mrt-tbg mrt-row3">
-<label>Start</label>
+<label for="mrt_timerStart">Start</label>
 <select id="mrt_timerStart" class="mrt-start" onchange="if(!mrtRunning)mrtResetTimer()">
 <option value="0" selected>0</option>
 <option value="4.6">4.6</option>
 <option value="4.7">4.7</option>
-/select>
+</select>
 <div class="mrt-timer-display" id="mrt_timerDisp"><span id="mrt_timerText">000.00</span></div>
 <button class="mrt-ctrl start" id="mrt_btnStart" onclick="mrtToggleTimer()">▶</button>
 <button class="mrt-ctrl reset" id="mrt_btnReset" onclick="mrtResetTimer()">⟲</button>
@@ -109,19 +109,19 @@
 <div class="modal-body" style="padding:12px;overflow-y:auto;max-height:85vh;">
 <div class="si-section">
 <div class="si-grid">
-<div class="si-field"><label>Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px;text-transform:uppercase;" oninput="debouncedUpdateSeedInspector()"></div>
-<div class="si-field"><label data-i18n="G07"></label><select id="si_env" style="width:65px;" onchange="debouncedUpdateSeedInspector()"><option value="1">洞窟</option><option value="2" selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
-<div class="si-field"><label data-i18n="G09"></label><select id="si_mr" onchange="debouncedUpdateSeedInspector()"></select></div>
-<div class="si-field"><label data-i18n="G18"></label><input type="number" id="si_deft" value=910 min=1 max=999 style="width:60px;" oninput="debouncedUpdateSeedInspector()"></div>
-<div class="si-field"><label data-i18n="G19"></label><input type="number" id="si_n" value=0 min=0 oninput="debouncedUpdateSeedInspector()"></div>
-<div class="si-field"><label data-i18n="G20"></label><select id="si_pattern" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
-<div class="si-field"><label data-i18n="G21"></label><input type="number" id="si_scan_max" value=2000 min=0 style="width:60px;" oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label for="si_seed">Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px;text-transform:uppercase;" oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label for="si_env" data-i18n="G07"></label><select id="si_env" style="width:65px;" onchange="debouncedUpdateSeedInspector()"><option value="1">洞窟</option><option value="2" selected>遺跡</option><option value="3">氷</option><option value="4">水</option><option value="5">火山</option></select></div>
+<div class="si-field"><label for="si_mr" data-i18n="G09"></label><select id="si_mr" onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label for="si_deft" data-i18n="G18"></label><input type="number" id="si_deft" value=910 min=1 max=999 style="width:60px;" oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label for="si_n" data-i18n="G19"></label><input type="number" id="si_n" value=0 min=0 oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label for="si_pattern" data-i18n="G20"></label><select id="si_pattern" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label for="si_scan_max" data-i18n="G21"></label><input type="number" id="si_scan_max" value=2000 min=0 style="width:60px;" oninput="debouncedUpdateSeedInspector()"></div>
 </div>
 </div>
 <div class="si-section"><div class="si-result-box" id="si_at_results"></div></div>
 <div class="si-section" style="border:1px solid #335;border-radius:4px;padding:8px;background:#1a1a3a;">
 <div style="display:flex;justify-content:space-between;align-items:center;">
-<label style="color:#0ff;font-size:11px;font-weight:bold;">⚔ Solver</label>
+<span style="color:#0ff;font-size:11px;font-weight:bold;">⚔ Solver</span>
 <div style="display:flex;gap:6px;align-items:center;">
 <label style="font-size:9px;color:#888;cursor:pointer;"><input type="checkbox" id="si_useStats" onchange="debouncedUpdateSeedInspector()" style="width:13px;height:13px;vertical-align:middle;cursor:pointer;"> Stats</label>
 <label style="font-size:9px;color:#f80;cursor:pointer;"><input type="checkbox" id="si_multiPlayer" onchange="debouncedUpdateSeedInspector()" style="width:13px;height:13px;vertical-align:middle;cursor:pointer;"> Multi</label>
@@ -129,10 +129,9 @@
 </div>
 </div>
 <div id="solverPanel" style="display:none;margin-top:6px;">
-<div style="font-size:9px;color:#666;margin-bottom:4px;">ATK=max999 | Lv → 秘傳書Lv</div>
-<div style="display:flex;gap:2px;color:#888;font-size:8px;margin-bottom:1px;padding-left:16px;"><span style="width:52px;">Job</span><span style="width:42px;">ATK</span><span style="width:42px;">M.Mgt</span><span style="width:42px;">STR</span><span style="width:42px;">AGI</span><span style="width:42px;">Mend</span><span style="width:42px;">Deft</span>
-</div>
-<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job1" onchange="applyJobStats(1)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<!-- ATK=max999 | Lv → 秘傳書Lv -->
+<div class="sv-hdr"><span style="width:52px;" data-i18n="L50"></span><span style="width:42px;" data-i18n="L51"></span><span style="width:42px;" data-i18n="L52"></span><span style="width:42px;" data-i18n="L53"></span><span style="width:42px;" data-i18n="L54"></span><span style="width:42px;" data-i18n="L55"></span><span style="width:42px;" data-i18n="G18"></span></div>
+<div class="sv-row"><select id="si_job1" onchange="applyJobStats(1)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
 <input type="number" id="si_atk1" value="282" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_might1" value="700" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_str1" value="196" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
@@ -140,7 +139,7 @@
 <input type="number" id="si_mend1" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_deft1" value="514" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 </div>
-<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job2" onchange="applyJobStats(2)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<div class="sv-row"><select id="si_job2" onchange="applyJobStats(2)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
 <input type="number" id="si_atk2" value="282" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_might2" value="700" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_str2" value="196" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
@@ -148,7 +147,7 @@
 <input type="number" id="si_mend2" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_deft2" value="514" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 </div>
-<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job3" onchange="applyJobStats(3)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10" selected>賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<div class="sv-row"><select id="si_job3" onchange="applyJobStats(3)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10" selected>賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
 <input type="number" id="si_atk3" value="309" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_might3" value="537" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_str3" value="302" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
@@ -156,7 +155,7 @@
 <input type="number" id="si_mend3" value="508" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_deft3" value="267" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 </div>
-<div style="display:flex;gap:2px;align-items:center;margin:2px 0;"><select id="si_job4" onchange="applyJobStats(4)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6" selected>ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<div class="sv-row"><select id="si_job4" onchange="applyJobStats(4)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6" selected>ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
 <input type="number" id="si_atk4" value="840" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_might4" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
 <input type="number" id="si_str4" value="600" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
@@ -168,10 +167,10 @@
 </div>
 <div class="si-section">
 <div class="si-grid" style="gap:6px;">
-<div class="si-field"><label data-i18n="G23"></label><select id="si_group_size" onchange="debouncedUpdateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label data-i18n="G24"></label><select id="si_rare_rate" style="width:60px;" onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256" selected>1/256</option></select></div>
-<div class="si-field"><label data-i18n="G25"></label><select id="si_norm_rate" style="width:60px;" onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128" selected>1/128</option></select></div>
-<div class="si-field"><label data-i18n="G26"></label>
+<div class="si-field"><label for="si_group_size" data-i18n="G23"></label><select id="si_group_size" onchange="debouncedUpdateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+<div class="si-field"><label for="si_rare_rate" data-i18n="G24"></label><select id="si_rare_rate" style="width:60px;" onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256" selected>1/256</option></select></div>
+<div class="si-field"><label for="si_norm_rate" data-i18n="G25"></label><select id="si_norm_rate" style="width:60px;" onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128" selected>1/128</option></select></div>
+<div class="si-field"><label for="si_t1" data-i18n="G26"></label>
 <div style="display:flex;gap:4px;">
 <select id="si_t1" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
 <select id="si_t2" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
@@ -183,7 +182,7 @@
 </div>
 <div class="si-section">
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
-<label style="color:#aaa;font-size:12px;">AT Debug</label>
+<label for="si_target_step" style="color:#aaa;font-size:12px;">AT Debug</label>
 <input type="number" id="si_target_step" value="35" min="1" style="width:65px;" oninput="debouncedUpdateSeedInspector()">
 </div>
 <div class="si-result-box" id="si_target_results" style="border-color:#f44;"></div>
@@ -191,129 +190,129 @@
 </div>
 </div>
 </div>
-<div id="disclaimerModal" class="modal-overlay" onclick="closeDisclaimerModal(event)" style="z-index: 1001;">
-<div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+<div id="disclaimerModal" class="modal-overlay modal-overlay-credits" onclick="closeDisclaimerModal(event)">
+<div class="modal-content modal-content-md" onclick="event.stopPropagation()">
 <div class="modal-header">
-<h3 id="disclaimerModalTitle">聲明 / Credits &amp; Disclaimer</h3>
-<button class="modal-close" onclick="closeDisclaimerModal()">×</button></div>
-<div class="modal-body" id="disclaimerModalBody" style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 70vh;">
-<div class="modal-tabs">
-<div id="discTabTW" style="padding: 6px 16px; background: #1a1a3a; color: #ffd700; border: 1px solid #4a4a8a; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;" onclick="switchDisclaimerTab('TW')">繁體中文</div>
-<div id="discTabEN" style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;" onclick="switchDisclaimerTab('EN')">English</div>
-<div id="discTabJP" style="padding: 6px 16px; background: #224; color: #888; border: 1px solid #333; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px; transition: all 0.2s;" onclick="switchDisclaimerTab('JP')">日本語</div>
+<h3 id="disclaimerModalTitle">聲明 / Credits &amp;Disclaimer</h3>
+<button class="modal-close" onclick="closeDisclaimerModal()">×</button>
 </div>
-<div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.6; color: #ccc;">
-<div id="discListTW" style="display: block;">
+<div class="modal-body modal-lang-body modal-lang-body-credits" id="disclaimerModalBody">
+<div class="modal-tabs">
+<div id="discTabTW" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#1a1a3a;color:#ffd700;border-color:#4a4a8a;border-bottom-color:currentcolor" onclick="switchDisclaimerTab('TW')">繁體中文</div>
+<div id="discTabEN" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#224;color:#888;border-color:#333;border-bottom-color:currentcolor" onclick="switchDisclaimerTab('EN')">English</div>
+<div id="discTabJP" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#224;color:#888;border-color:#333;border-bottom-color:currentcolor" onclick="switchDisclaimerTab('JP')">日本語</div>
+</div>
+<div class="modal-lang-scroll modal-lang-scroll-credits">
+<div id="discListTW" style="display: block">
 <p>本專案為非商業性質的 Dragon Quest IX 藏寶圖玩家工具，不隸屬於、不獲授權於 Square Enix。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">社群公知的 DQ9 遊戲知識</h3>
-<p>由玩家社群長期研究所累積的公共成果。除遊戲解析外、亦包括 地圖用法 與 地圖價值判斷的規則。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">TKG 的貢獻</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">社群公知的 DQ9 遊戲知識</h3>
+<p>由玩家社群長期研究所累積的公共成果。除遊戲解析外、亦包括 地圖用法 與 地圖價值判斷的規則。<br>本工具幾乎所有的概念，除 TKG 的新發現之外，均來源於此。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">TKG 的貢獻</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
 <li>對 dq9tmap101.exe 進行反編譯，發現 ElistOfs 的計算公式</li>
-<li>透過記憶體檢查修正公式，並依據 Terence (2010) 於 <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#8cc8ff;">Grotto Mechanics Guide</a> 2.3.3 小節中之記載，補足了原作者遺漏的機制：超大特殊樓層的右下角，存在因記憶體溢出而導致鄰接邊數被強制當作零來處理的白方格</li>
-<li>整理並列出完整邏輯供後續實作</li>
+<li>透過記憶體檢查修正公式，並依據 Terence (2010) 於 <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff">Grotto Mechanics Guide</a> 2.3.3 小節中之記載，補足了原作者遺漏的機制：超大特殊樓層的右下角，存在因記憶體溢出而導致鄰接邊數被強制當作零來處理的白方格</li>
+<li>除此之外，還發現了 寶圖怪物掉寶用地圖法秘技、及中斷技的進化形態 PPAP 技，大幅拓展了 DQ9 地圖的用法</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">dq9tmap101.exe 的 ElistOfs 邏輯（僅抽取邏輯，非代碼移植）</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">dq9tmap101.exe 的 ElistOfs 邏輯（僅抽取邏輯，非代碼移植）</h3>
 <p>原作者為匿名人士 (2ch ID: 43)，曾明確表示無權阻止他人重新上傳本工具。概念名稱 ElistOfs 予以沿用，以便曾使用過 dq9tmap101.exe 的用戶理解其含義與來源。如有版權疑問，歡迎聯絡本專案。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">一個反編譯資料庫</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">依原作者條款使用：
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">一個反編譯資料庫</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">依原作者條款使用：
 <li>已轉換為 JavaScript</li>
 <li>不主張對來源的原創性</li>
 <li>非商業用途</li>
 <li>已賦予非獨佔性使用許可證</li>
 <li>作者不要求署名</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">「危険？ハマる地図」對應樓層 (5BC7, DF70) 的樓梯與寶箱位置修正</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">「危険？ハマる地図」對應樓層 (5BC7, DF70) 的樓梯與寶箱位置修正</h3>
 <p>原反編譯資料庫對此二樓層的資料有誤。本專案作者委託 Claude 解謎，完成修正。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">實作分工</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
-<li>反編譯資料庫的轉譯：由 Claude 執行，本專案作者負責 debug</li>
-<li>ElistOfs 相關邏輯：本專案作者轉述 TKG 整理的邏輯，由 Gemini 實作</li>
-<li>其餘所有功能及代碼：主要由 Gemini 實作，本專案作者負責提供想法和 debug</li>
-<li>說明書：本專案作者製作繁體中文版，由 Claude 校正及翻譯為其他語言</li>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">實作分工</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<li>Claude: 反編譯資料庫的轉譯 (Opus 4.6)、馬拉松工具 / AT Detail / TKG 發現的新功能 加裝 (Opus 4.6~4.8)、Web Worker 建構 (Fable 5)、Bug 修復 (Fable 5)</li>
+<li>Gemini: 傳統搜尋功能實作 (3.1 Pro)</li>
+<li>ChatGPT: Bug 修復 (5.6 Sol)</li>
+<li>作者本人: 指揮 AI、提供想法、幫助測試、寫說明書 (部分 英文/日文 為 AI 翻譯)</li>
 </ul>
-<p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本專案不主張對以上任何來源的原創性。本專案採 <strong><a href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant target=_blank style="color:#8cc8ff;">CC BY-NC-SA 4.0 (創用 CC 姓名標示-非商業性-相同方式分享)</a></strong> 授權，代碼嚴禁任何形式之商業使用。</small></p>
+<p style="color:#888;border-top:1px dashed #333;padding-top:8px"><small>本專案不主張對以上任何來源的原創性。本專案採 <strong><a href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant target=_blank style="color:#8cc8ff">CC BY-NC-SA 4.0 (創用 CC 姓名標示-非商業性-相同方式分享)</a></strong> 授權，代碼嚴禁任何形式之商業使用。</small></p>
 </div>
-<div id="discListEN" style="display: none;">
+<div id="discListEN" style="display: none">
 <p>This is a non-commercial fan-made tool for Dragon Quest IX grottoes. It is not made by, or endorsed by, Square Enix.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">DQ9 game knowledge from the community</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">DQ9 game knowledge from the community</h3>
 <p>This is what the DQ9 player community has figured out over many years. It covers not only the game mechanism, but also grotto usages &amp; valuations.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Contributions by TKG</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">Contributions by TKG</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
 <li>Reverse-engineered dq9tmap101.exe and found how ElistOfs is calculated.</li>
-<li>Fixed the formula through the memory inspection. Also found a missing piece that the dq9tmap101.exe's original author missed — based on Section 2.3.3 of Terence's <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target="_blank" style="color:#8cc8ff;">Grotto Mechanics Guide</a> (2010): on extra-large special floors, some tiles in the bottom-right area have their neighbor count forced to zero because of a memory overflow.</li>
-<li>Wrote down the full logic so it could be turned into code.</li>
+<li>Fixed the formula through the memory inspection. Also found a missing piece that the dq9tmap101.exe's original author missed — based on Section 2.3.3 of Terence's <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff">Grotto Mechanics Guide</a> (2010): on extra-large special floors, some tiles in the bottom-right area have their neighbor count forced to zero because of a memory overflow.</li>
+<li>Discovered Map Method Grotto Monster Item Farming &amp; PPAP (Pals Past &amp; Present) Method, which brought us much more new grotto usages.</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">ElistOfs logic from dq9tmap101.exe (logic only — not a code transport)</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">ElistOfs logic from dq9tmap101.exe (logic only — not a code transport)</h3>
 <p>The original author posted it anonymously on 2ch (ID: 43) and said that he/she had no right to stop anyone from re-uploading the tool. We keep the name "ElistOfs" so that people who used dq9tmap101.exe before can understand what it means. If you have any copyright concerns, please contact us.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">A reverse-engineered database</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">Used under the original author's terms:
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">A reverse-engineered database</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">Used under the original author's terms:
 <li>Converted to JavaScript</li>
 <li>We do not claim it as our own work</li>
 <li>Non-commercial use only</li>
 <li>Granted a non-exclusive license</li>
 <li>The author does not ask for credit</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Fix for Softlock floors (5BC7, DF70)</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">Fix for Softlock floors (5BC7, DF70)</h3>
 <p>The reverse-engineered database had wrong data for these two floors. The project author asked Claude to figure out the problem, and the fix was made.</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">Contributions</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">Contributions</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
 <li>Database conversion: Claude did the work, project author debugged it</li>
 <li>ElistOfs logic: project author explained TKG's logic in his own words, Gemini wrote the code</li>
 <li>Everything else: mostly built by Gemini, project author came up with the ideas and did the debugging</li>
 <li>User guide: project author wrote the Traditional Chinese version, Claude translated it to other languages</li>
 </ul>
-<p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>We do not claim originality over any of the above sources. This project is licensed under <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong>. Commercial use of the code is strictly prohibited.</small></p>
+<p style="color:#888;border-top:1px dashed #333;padding-top:8px"><small>We do not claim originality over any of the above sources. This project is licensed under <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target=_blank style="color:#8cc8ff">CC BY-NC-SA 4.0</a></strong>. Commercial use of the code is strictly prohibited.</small></p>
 </div>
-<div id="discListJP" style="display: none;">
+<div id="discListJP" style="display: none">
 <p>このツールは、『ドラゴンクエストIX 星空の守り人』の宝の地図関連の無料のファンツールです。株式会社スクウェア・エニックスとは無関係であり、公式に認定・許諾されたものでもありません。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">コミュニティが積み上げてきたDQ9の知識</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">コミュニティが積み上げてきたDQ9の知識</h3>
 <p>長年に渡って蓄積されたDQ9のプレイヤーコミュニティの知識です。ゲームのメカニズムだけでなく、地図の使い方や、地図の価値の判定基準も含まれています。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">TKG 氏の貢献</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">TKG 氏の貢献</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
 <li>dq9tmap101.exe をリバースエンジニアリングし、ElistOfs の計算式を発見した</li>
-<li>メモリチェックにより計算式を修正し、Terence 氏の <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff;">Grotto Mechanics Guide</a>（2010）の 2.3.3 節をもとに、原作者の見落とした現象を補足：超大型特殊フロアの右下に、隣り合うマスの数がゼロでないにもかかわらず、メモリオーバーフローによりゼロとして処理されてしまった「白マス」が存在すること</li>
+<li>メモリチェックにより計算式を修正し、Terence 氏の <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff">Grotto Mechanics Guide</a>（2010）の 2.3.3 節をもとに、原作者の見落とした現象を補足：超大型特殊フロアの右下に、隣り合うマスの数がゼロでないにもかかわらず、メモリオーバーフローによりゼロとして処理されてしまった「白マス」が存在すること</li>
 <li>全てのロジックを整理して文書化</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">dq9tmap101.exe の ElistOfs ロジック（ロジックだけを抽出したもので、コードのコピーではありません）</h3>
-<p>原作者は 2ch に匿名で投稿した者（ID: 43）で、<a href=https://kako.5ch.io/test/read.cgi/gameurawaza/1249835333/414 target=_blank style="color:#8cc8ff;">「ツールを再アップロードする者を止める権利は自分にはない」</a>と明言しました。かつての dq9tmap101.exe ユーザーがすぐ分かるようにするため、本ツールは「ElistOfs」という名称は継続して使用しています。著作権に関する懸念がある場合、本プロジェクトの作者までご連絡ください。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">リバースエンジニアリングされたデータベース</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">原作者の定めた条件に従って使用：
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">dq9tmap101.exe の ElistOfs ロジック（ロジックだけを抽出したもので、コードのコピーではありません）</h3>
+<p>原作者は 2ch に匿名で投稿した者（ID: 43）で、<a href=https://kako.5ch.io/test/read.cgi/gameurawaza/1249835333/414 target=_blank style="color:#8cc8ff">「ツールを再アップロードする者を止める権利は自分にはない」</a>と明言しました。かつての dq9tmap101.exe ユーザーがすぐ分かるようにするため、本ツールは「ElistOfs」という名称は継続して使用しています。著作権に関する懸念がある場合、本プロジェクトの作者までご連絡ください。</p>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">リバースエンジニアリングされたデータベース</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">原作者の定めた条件に従って使用：
 <li>JavaScript に変換して使用</li>
 <li>独自の成果として主張しない</li>
 <li>商業利用しない</li>
 <li>独占的ライセンスを付与しない</li>
 <li>原作者のサイトへの言及は不要</li>
 </ul>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">「危険？ハマる地図」関連フロア（5BC7, DF70）の階段・宝箱の位置を修正</h3>
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">「危険？ハマる地図」関連フロア（5BC7, DF70）の階段・宝箱の位置を修正</h3>
 <p>リバースエンジニアリングされたデータベースには、この2つのフロアのデータに間違いがありました。本プロジェクトの作者が Claude に調査を頼み、修正しました。</p>
-<h3 style="color:#0ff; font-size:14px; margin:12px 0 6px;">役割分担</h3>
-<ul style="padding-left:20px; margin-bottom:12px; color:#fff;">
+<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">役割分担</h3>
+<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
 <li>データベースの変換：Claude が実行し、本プロジェクトの作者がデバッグ</li>
 <li>ElistOfs のロジック：本プロジェクトの作者が TKG 氏のロジックを自身の言葉で伝え、Gemini がコードを書く</li>
 <li>それ以外の全機能・コード：主に Gemini の担当作業。本プロジェクトの作者がアイデアを提供し、デバッグ</li>
 <li>説明書：本プロジェクトの作者が中国語 (繁体字) を作成し、Claude が英語・日本語に翻訳</li>
 </ul>
-<p style="color:#888; border-top:1px dashed #333; padding-top:8px;"><small>本プロジェクトは、上記のいかなる情報源に対してもオリジナリティを主張しません。本プロジェクトは <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja" target="_blank" style="color:#8cc8ff;">CC BY-NC-SA 4.0</a></strong> ライセンスのもとで公開されており、商業目的での使用は禁じられています。</small></p>
+<p style="color:#888;border-top:1px dashed #333;padding-top:8px"><small>本プロジェクトは、上記のいかなる情報源に対してもオリジナリティを主張しません。本プロジェクトは <strong><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja" target=_blank style="color:#8cc8ff">CC BY-NC-SA 4.0</a></strong> ライセンスのもとで公開されており、商業目的での使用は禁じられています。</small></p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div id="h1Modal" class="modal-overlay" onclick="closeh1Modal(event)" style="z-index: 1002;">
-<div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+<div id="h1Modal" class="modal-overlay modal-overlay-help" onclick="closeh1Modal(event)">
+<div class="modal-content modal-content-md" onclick="event.stopPropagation()">
 <div class="modal-header">
-<h3 style="color:#0ff;" data-i18n="K01"></h3>
+<h3 style="color:#0ff" data-i18n="K01"></h3>
 <button class="modal-close" onclick="closeh1Modal()">×</button>
 </div>
-<div class="modal-body" style="padding: 0; display: flex; flex-direction: column; overflow-y: hidden; max-height: 75vh;">
+<div class="modal-body modal-lang-body modal-lang-body-help">
 <div class="modal-tabs">
-<div id="h1TabTW" style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;" onclick="switchH1Tab('TW')">繁體中文</div>
-<div id="h1TabEN" style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;" onclick="switchH1Tab('EN')">English</div>
-<div id="h1TabJP" style="padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: -2px;" onclick="switchH1Tab('JP')">日本語</div>
+<div id="h1TabTW" class="modal-lang-tab" onclick="switchH1Tab('TW')">繁體中文</div>
+<div id="h1TabEN" class="modal-lang-tab" onclick="switchH1Tab('EN')">English</div>
+<div id="h1TabJP" class="modal-lang-tab" onclick="switchH1Tab('JP')">日本語</div>
 </div>
-<div style="padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.7; color: #ccc;">
-
+<div class="modal-lang-scroll modal-lang-scroll-help">
 <div id="h1ListTW" style="display: block;">
 <h3 class="h1sec" id="sec-mapname" style="margin-top:0;">地圖名稱</h3>
 <table class=h1t>
@@ -4936,7 +4935,6 @@
 </table>
 <p style="font-size:11px; color:#f88; margin-bottom:16px;">※ ヒント：何ステップ目の AT がドロップパターンに合致するかは各 Seed 固有の属性であり、<strong style="color:#f44;">いかなる手段でも変更することはできない</strong>。</p>
 </div></div></div></div></div>
-
 <div id="unified_search_panel" style="background:#111128;padding:20px;border-bottom:2px solid #4a4a8a;">
 <div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a;padding-bottom: 12px;margin-bottom: 16px;">
 <h3 style="color:#ffd700;margin: 0;font-size:16px;" data-i18n="G01"></h3>
@@ -4951,16 +4949,16 @@
 <h4 style="color:#0ff;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
 <button onclick="openh1Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button></h4>
 <div class="us-grid">
-<div><label data-i18n="G03"></label><select id="cond_prefix"><option value="" data-i18n="G02"></option></select></div>
-<div><label data-i18n="G04"></label><select id="cond_suffix"><option value="" data-i18n="G02"></option></select></div>
-<div><label data-i18n="G05"></label><select id="cond_locale"><option value="" data-i18n="G02"></option></select></div>
-<div style="display:flex;gap:6px;"><div style="flex:1;"><label>Lv</label><input type="number" id="cond_lv" min="1" max="99" placeholder="99" style="width:100%;"></div><div style="flex:1;"><label data-i18n="G06"></label><input type="text" id="cond_location" maxlength="2" placeholder="96" onchange="validateHex('cond_location',0x01,0x96,0,A09)" style="width:100%;text-transform:uppercase;"></div></div>
-<div><label data-i18n="GBQ"></label><select id="cond_bq_count" style="width:40px;flex-shrink:0;padding:0 1px;display:inline-block;vertical-align:top;margin-right:3px;" onchange="var b=document.getElementById('cond_bq');if(this.value){b.value='';b.disabled=true;b.style.opacity='0.4';}else{b.disabled=false;b.style.opacity='1';}"><option value="">---</option><option value="1">1</option><option value="1p">1'</option><option value="D">D</option><option value="Dp">D'</option></select><input type="number" id="cond_bq" min="2" max="248" placeholder="248" style="display:inline-block;vertical-align:top;width:calc(100% - 46px);"></div>
-<div><label data-i18n="G07"></label><select id="cond_env"><option value="" data-i18n="G02"></option></select></div>
-<div style="display:flex;gap:6px;"><div style="flex:1;"><label data-i18n="G08"></label><input type="number" id="cond_monster" min="1" max="9" placeholder="9" style="width:100%;"></div><div style="flex:1;"><label data-i18n="G10"></label><input type="number" id="cond_depth" min="2" max="16" placeholder="16" style="width:100%;"></div></div>
-<div><label>BOSS</label><select id="cond_boss"><option value="" data-i18n="G02"></option></select></div>
-<div><label data-i18n="G14"></label><div style="display:flex;align-items:center;gap:2px;"><input type="text" id="cond_seed_min" maxlength="4" placeholder="0000" onchange="validateHex('cond_seed_min',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"><span style="color:#aaa;font-size:10px;flex-shrink:0;">-</span><input type="text" id="cond_seed_max" maxlength="4" placeholder="7FFF" onchange="validateHex('cond_seed_max',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"></div></div>
-<div><label style="color:#fc4;" data-i18n="G11"></label>
+<div><label for="cond_prefix" data-i18n="G03"></label><select id="cond_prefix"><option value="" data-i18n="G02"></option></select></div>
+<div><label for="cond_suffix" data-i18n="G04"></label><select id="cond_suffix"><option value="" data-i18n="G02"></option></select></div>
+<div><label for="cond_locale" data-i18n="G05"></label><select id="cond_locale"><option value="" data-i18n="G02"></option></select></div>
+<div style="display:flex;gap:6px;"><div style="flex:1;"><label for="cond_lv">Lv</label><input type="number" id="cond_lv" min="1" max="99" placeholder="99" style="width:100%;"></div><div style="flex:1;"><label for="cond_location" data-i18n="G06"></label><input type="text" id="cond_location" maxlength="2" placeholder="96" onchange="validateHex('cond_location',0x01,0x96,0,A09)" style="width:100%;text-transform:uppercase;"></div></div>
+<div><label for="cond_bq_count" data-i18n="GBQ"></label><select id="cond_bq_count" style="width:40px;flex-shrink:0;padding:0 1px;display:inline-block;vertical-align:top;margin-right:3px;" onchange="var b=document.getElementById('cond_bq');if(this.value){b.value='';b.disabled=true;b.style.opacity='0.4';}else{b.disabled=false;b.style.opacity='1';}"><option value="">---</option><option value="1">1</option><option value="1p">1'</option><option value="D">D</option><option value="Dp">D'</option></select><input type="number" id="cond_bq" min="2" max="248" placeholder="248" style="display:inline-block;vertical-align:top;width:calc(100% - 46px);"></div>
+<div><label for="cond_env" data-i18n="G07"></label><select id="cond_env"><option value="" data-i18n="G02"></option></select></div>
+<div style="display:flex;gap:6px;"><div style="flex:1;"><label for="cond_monster" data-i18n="G08"></label><input type="number" id="cond_monster" min="1" max="9" placeholder="9" style="width:100%;"></div><div style="flex:1;"><label for="cond_depth" data-i18n="G10"></label><input type="number" id="cond_depth" min="2" max="16" placeholder="16" style="width:100%;"></div></div>
+<div><label for="cond_boss">BOSS</label><select id="cond_boss"><option value="" data-i18n="G02"></option></select></div>
+<div><label for="cond_seed_min" data-i18n="G14"></label><div style="display:flex;align-items:center;gap:2px;"><input type="text" id="cond_seed_min" maxlength="4" placeholder="0000" onchange="validateHex('cond_seed_min',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"><span style="color:#aaa;font-size:10px;flex-shrink:0;">-</span><input type="text" id="cond_seed_max" maxlength="4" placeholder="7FFF" onchange="validateHex('cond_seed_max',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"></div></div>
+<div><label for="cond_anomaly" style="color:#fc4;" data-i18n="G11"></label>
 <select id="cond_anomaly" style="color:#ffcc44;border-color:#ccaa44;">
 <option value="" data-i18n="G02"></option>
 <option value="chest" data-i18n="TKB1_1"></option>
@@ -4985,7 +4983,7 @@
 <option value="usp_maxiso" data-i18n="TKB4_10"></option>
 <option value="usp_maxghost" data-i18n="TKB4_11"></option>
 </select></div>
-<div><label style="color:#f88;" data-i18n="G12"></label>
+<div><label for="cond_elist" style="color:#f88;" data-i18n="G12"></label>
 <select id="cond_elist" style="color:#fcf;border-color:#c44;">
 <option value="" data-i18n="G02"></option>
 <option value="MULTI_SPECIAL" data-i18n="EL_M"></option>
@@ -4997,12 +4995,12 @@
 <option value="ONLY" data-i18n="EL_1"></option>
 <option value="NONE" data-i18n="EL_0"></option>
 </select></div>
-<div><label style="color:#f8d;" data-i18n="G13"></label>
+<div><label for="cond_only_mon" style="color:#f8d;" data-i18n="G13"></label>
 <select id="cond_only_mon" style="color:#fcf;border-color:#c4a;">
 <option value="" data-i18n="G02"></option>
 </select></div>
 <div style="grid-column:span 2;display:flex;flex-direction:column;justify-content:flex-end;background:#1a0a1a;border:1px solid #525;border-radius:4px;padding:2px 8px 4px;">
-<label style="color:#f8f;font-size:11px;margin-bottom:2px;" data-i18n="G15"></label>
+<span style="color:#f8f;font-size:11px;margin-bottom:2px;" data-i18n="G15"></span>
 <div style="display:flex;align-items:center;gap: 6px;">
 <button class="go" onclick="MultibugSearch()" id="searchBtnBug" style="background:linear-gradient(135deg,#c0c,#606);color:#fff;padding:0 6px;font-size:10px;height:20px;border:none;border-radius:3px;font-weight:bold;cursor:pointer;" data-i18n="H05"></button>
 <label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
@@ -5035,11 +5033,11 @@
 <div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;margin:0;flex:1;display:flex;flex-direction:column;">
 <h4 style="color:#88b;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
 <button onclick="openh2Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button>
-<button onclick="mrtOpen()" style="margin-left:6px;background:linear-gradient(135deg, #c60, #840);color:#fff;border:none;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;font-family:inherit;" data-i18n="H07"></button>
+<button onclick="mrtOpen()" style="margin-left:6px;background:linear-gradient(135deg,#c60,#840);color:#fff;border:none;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;font-family:inherit;" data-i18n="H07"></button>
 </h4>
 <div style="display: flex;flex-direction: column;gap:8px;flex:1;">
 <div class="search-group" style="background:#111;border-color:#333;margin:0;">
-<label data-i18n="G16"></label>
+<span data-i18n="G16"></span>
 <div class="search-input-row" style="display:flex;flex-wrap:nowrap;gap:4px;align-items:center;">
 <select id="ql_mode" style="flex:0 0 auto;width:36px;height:26px;font-size:11px;padding:0;">
 <option value="">--</option>
@@ -5105,7 +5103,7 @@
 </div>
 </div>
 <div class="search-group" style="background:#05111a;border-color:#134;margin: 0;flex:1;">
-<label style="color:#0ff;" data-i18n="G17"></label>
+<span style="color:#0ff;" data-i18n="G17"></span>
 <div style="display: flex;gap: 6px;margin-top: 4px;align-items: stretch;">
 <div id="fs_container" style="display:flex;flex-direction:column;gap:4px;flex: 1 1 auto;min-width: 0;"></div>
 <button class="go" onclick="FreeSearch()" id="btnFreeSearch" style="background:linear-gradient(135deg,#08c,#048);color:#fff;padding:0 12px;font-size:12px;border:none;border-radius:4px;font-weight:bold;cursor:pointer;flex: 0 0 auto;min-width: 45px;" >Free</button>
