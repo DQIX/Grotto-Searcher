@@ -55,12 +55,9 @@ frac:p.total>0?p.processed/p.total:1,rStr:p.rStr,seedHex:p.seedHex}),
 batch:(b)=>{for(const x of b)items.push(x);},
 yield:()=>new Promise(r=>setTimeout(r,0)),
 };
-let chunkJob;
-if(job.kind==='scan'){
-chunkJob=Object.assign({},job,{ranks:[c.rank],startSeed:c.startSeed,endSeed:c.endSeed});
-}else{
-chunkJob=Object.assign({},job,{startSeed:c.startSeed,endSeed:c.endSeed});
-}
+const extra={startSeed:c.startSeed,endSeed:c.endSeed};
+if(job.kind==='scan')extra.ranks=[c.rank];
+const chunkJob=Object.assign({},job,extra);
 let hits=0;
 if(job.kind==='scan')hits=await coreRunScanJob(chunkJob,io);
 else if(job.kind==='atMonster')hits=await coreRunATMonsterJob(chunkJob,io);

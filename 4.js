@@ -79,9 +79,7 @@ let currentSeed=mapData.MapSeed;
 const atValues=[];
 for(let i=1;i<=37;i++){
 currentSeed=lcg(currentSeed);
-if(i>=35&&i<=37){
-atValues.push((currentSeed>>>16)&0x7FFF);
-}
+if(i>=35&&i<=37)atValues.push((currentSeed>>>16)&0x7FFF);
 }
 const atHtmlString=`[35] ${atValues[0]}<br>[36] ${atValues[1]}<br>[37] ${atValues[2]}`;
 const rn=calcR2N2(mapData.MapSeed);
@@ -138,9 +136,7 @@ let html=`<div class="info-bar">
 setTimeout(()=>{
 const target=document.getElementById('controls_target_area');
 const controls=document.getElementById('single_map_controls');
-if(target&&controls){
-target.appendChild(controls);
-}
+if(target&&controls)target.appendChild(controls);
 },0);
 html+='<div class="floor-tabs">';
 const ELIST_TAB_COLORS={none:'#c0c0c0',only:'#FFC90E',reduced:'#B5E61D',partial:'#00A2E8'};
@@ -209,11 +205,7 @@ const md=MONSTER_DB[entry[0]];
 if(!md)return'';
 const name=isJP?md.jp:md.en;
 let isGray;
-if(isOnlyMode){
-isGray=(entry[0]!==onlyMonId);
-}else{
-isGray=(i>=grayFrom);
-}
+isGray=isOnlyMode?(entry[0]!==onlyMonId):(i>=grayFrom);
 const bg=isGray?'#1a1a2e':'#2a2a4a';
 const fg=isGray?'#555':'#ddd';
 return`<span class="mon-pill" style="color:${fg};background:${bg};">${name}</span>`;
@@ -312,14 +304,10 @@ ctx.strokeRect(px+0.5,py+0.5,TILE_SIZE-1,TILE_SIZE-1);
 }
 ctx.textAlign='center';
 ctx.textBaseline='middle';
-if(isUpStair){
+if(isUpStair||isDownStair){
 ctx.fillStyle='#000';
 ctx.font='bold 12px sans-serif';
-ctx.fillText('▲',px+TILE_SIZE/2,py+TILE_SIZE/2);
-}else if(isDownStair){
-ctx.fillStyle='#000';
-ctx.font='bold 12px sans-serif';
-ctx.fillText('▼',px+TILE_SIZE/2,py+TILE_SIZE/2);
+ctx.fillText(isUpStair?'▲':'▼',px+TILE_SIZE/2,py+TILE_SIZE/2);
 }else if(isBox){
 const chestLabel=(CHEST_RANK[boxObj.rank]||'?')+boxObj.num;
 ctx.save();
@@ -874,20 +862,18 @@ MODAL_TAB_KEYS.forEach(key=>{
 let tab=document.getElementById(prefix+'Tab'+key);
 let list=document.getElementById(prefix+'List'+key);
 if(!tab||!list)return;
-if(key===lang){
-tab.style.background='#1a1a3a';tab.style.color=activeColor;tab.style.borderColor=activeBorder;list.style.display='block';
-}else{
-tab.style.background=inactiveBg;tab.style.color=inactiveColor;tab.style.borderColor=inactiveBorder;list.style.display='none';
-}
+const active=key===lang;
+tab.style.background=active?'#1a1a3a':inactiveBg;
+tab.style.color=active?activeColor:inactiveColor;
+tab.style.borderColor=active?activeBorder:inactiveBorder;
+list.style.display=active?'block':'none';
 });
 }
 function openModal(modalId,tabPrefix,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
 const modal=document.getElementById(modalId);
-if(modal){
+if(!modal)return;
 modal.style.display='flex';
-const targetLang=['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW';
-switchTab(tabPrefix,targetLang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder);
-}
+switchTab(tabPrefix,['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW',activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder);
 }
 function switchConfiguredModalTab(configKey,lang){
 const config=MODAL_CONFIGS[configKey];
@@ -1096,9 +1082,7 @@ if(r===0||r===10){
 itemOpts+=`<option value="S_wpn">${T('S Weapon','S武器','S武器')}</option>`;
 hasSpecial=true;
 }
-if(hasSpecial){
-itemOpts+=`<option disabled>──────</option>`;
-}
+if(hasSpecial)itemOpts+=`<option disabled>──────</option>`;
 let validItems=[];
 if(typeof TableR!=='undefined'&&typeof TableO!=='undefined'&&typeof TableQ!=='undefined'){
 if(r===0){
@@ -1114,11 +1098,7 @@ if(!seen.has(itemName)){seen.add(itemName);validItems.push(itemName);}
 validItems.forEach(en=>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
 }
 itemSelect.innerHTML=itemOpts;
-if(itemSelect.querySelector(`option[value="${currentVal}"]`)){
-itemSelect.value=currentVal;
-}else{
-itemSelect.value="ANY";
-}
+itemSelect.value=itemSelect.querySelector(`option[value="${currentVal}"]`)?currentVal:"ANY";
 };
 for(let i=1;i<=3;i++){
 container.innerHTML+=`

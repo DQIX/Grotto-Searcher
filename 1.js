@@ -837,9 +837,7 @@ num2++;
 return 1;
 }
 calculateDetail(skipMapGen=false){
-for(let i=0;i<16;i++){
-this.di[i].fill(0);
-}
+for(let i=0;i<16;i++)this.di[i].fill(0);
 this._details.fill(0);
 this._details2.fill(0);
 if(this.trackOverflow)this.isStairOverflow.fill(false);
@@ -857,9 +855,7 @@ this._details[i+1+7]=this.seek3(TableF[i*4+1],TableF[i*4+2]);
 this._details[5]=this.seek2(TableH,this._details[2],5);
 this._details[6]=this.seek2(TableI,this._details[0],4);
 this._details[7]=this.seek2(TableG,this._details[1],8);
-let num1=(this._details[0]+this._details[1]+this._details[2]-4)*3+(this.gRNGDiv(11)-5);
-if(num1<1)num1=1;
-if(num1>99)num1=99;
+const num1=Math.max(1,Math.min(99,(this._details[0]+this._details[1]+this._details[2]-4)*3+(this.gRNGDiv(11)-5)));
 this._details[4]=num1;
 this.MapLocale=LOCALE_INDEX[(this._details[7]-1)*5+this._details[3]-1];
 for(let i=1;i<this._details[1]+1;i++){

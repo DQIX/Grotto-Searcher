@@ -187,9 +187,7 @@ try{
 const q=new URLSearchParams(window.location.search).get('workers');
 if(q){const n=parseInt(q);if(n>=1)return Math.min(n,256);}
 }catch(e){}
-if(typeof window.DQ9_WORKER_COUNT==='number'&&window.DQ9_WORKER_COUNT>=1){
-return Math.min(Math.floor(window.DQ9_WORKER_COUNT),256);
-}
+if(typeof window.DQ9_WORKER_COUNT==='number'&&window.DQ9_WORKER_COUNT>=1)return Math.min(Math.floor(window.DQ9_WORKER_COUNT),256);
 return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
 }
 function getWorkerBlobURL(){return '5.js';}
@@ -276,9 +274,7 @@ if(m.type==='solveDone'||m.type==='solveError'){
 if(typeof handleSolveMessage==='function')handleSolveMessage(workerIdx,m);
 return;
 }
-if(m.type==='chunkDone'||m.type==='error'){
-if(p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
-}
+if((m.type==='chunkDone'||m.type==='error')&&p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
 const a=_dq9Active;
 if(!a||m.gen!==a.gen||a.finished){dispatchPoolJobs();return;}
 if(a._watchdog){clearTimeout(a._watchdog);a._watchdog=null;}
@@ -795,10 +791,7 @@ filterRanks:(ranks,conds)=>{
 let validRanks=ranks;
 for(let g of groups){
 if(g.allowedRanks.size>0){
-let offset=0;
-if(g.floor>=13)offset=3;
-else if(g.floor>=9)offset=2;
-else if(g.floor>=5)offset=1;
+const offset=g.floor>=13?3:g.floor>=9?2:g.floor>=5?1:0;
 validRanks=filterMapRanksBySMRAndChest(validRanks,conds,[Array.from(g.allowedRanks)],offset);
 }
 }
@@ -825,14 +818,8 @@ function QuickloadSearch(){
 const target=getQuickloadSearchTarget();
 if(!target)return;
 const{targetItem,isB9F,checkItems}=target;
-let reqCount,targetFloors;
-if(isB9F){
-reqCount=2;
-targetFloors=[8];
-}else{
-reqCount=b3fThreeItems.includes(targetItem)?3:2;
-targetFloors=b3fThreeItems.includes(targetItem)?[2]:[2,3];
-}
+const reqCount=isB9F?2:b3fThreeItems.includes(targetItem)?3:2;
+const targetFloors=isB9F?[8]:b3fThreeItems.includes(targetItem)?[2]:[2,3];
 const chestRanks=getChestRanksForItems(checkItems);
 const wantAstar=qlModeAstar();
 executeItemSearch({
@@ -944,11 +931,7 @@ if(!supportedForBox3.includes(targetValue)){
 alert(typeof A05!=='undefined'?A05:'A05');
 return;
 }
-if(targetValue==='Sainted soma'){
-ThirdChestSearch(true);
-}else{
-ThirdChestSearch(false);
-}
+ThirdChestSearch(targetValue==='Sainted soma');
 }
 function JFireSearch(qlSec){
 const wantAstar=qlModeAstar();
@@ -1064,9 +1047,7 @@ return"?";
 }
 function getMonsterIdByAT(atVal,envType,floorMR){
 const spawnList=getSpawnList(envType,floorMR);
-for(const entry of spawnList){
-if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2])return entry[0];
-}
+for(const entry of spawnList)if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2])return entry[0];
 return null;
 }
 function updateATOnlyMonsters(){
@@ -1074,9 +1055,7 @@ const envType=parseInt(document.getElementById('at_env').value);
 const floorMR=parseInt(document.getElementById('at_mr').value);
 document.querySelectorAll('.at-dynamic-mon').forEach(el=>{
 const atVal=parseInt(el.getAttribute('data-at'));
-if(!isNaN(atVal)){
-el.textContent=getMonsterNameByAT(atVal,envType,floorMR);
-}
+if(!isNaN(atVal))el.textContent=getMonsterNameByAT(atVal,envType,floorMR);
 });
 }
 function updateBattleAT(){
@@ -1114,12 +1093,8 @@ deftSpan.textContent=`${G18} ${deftLabel}`;
 card.querySelectorAll('.at-dynamic-battle').forEach(el=>{
 const target=parseInt(el.getAttribute('data-target'));
 const pop=cN;
-let d1,d2,d4;
-if(userDeft<deft){
-d1=target-(pop+4);d2=target-(pop+5);d4=target-(pop+6);
-}else{
-d1=target-(pop+3);d2=target-(pop+4);d4=target-(pop+5);
-}
+const base=userDeft<deft?4:3;
+const d1=target-(pop+base),d2=target-(pop+base+1),d4=target-(pop+base+2);
 el.textContent=`${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}`;
 });
 });
@@ -1139,12 +1114,8 @@ const nVal=parseInt(document.getElementById('at_n_input').value);
 if(isNaN(nVal)||nVal<0){isSearching=false;restoreBtn();return;}
 const N=35+29*nVal;
 const spawnList=SPAWN_DB[monEnvType]&&SPAWN_DB[monEnvType][monFloorMR];
-let atmin=-1,atmax=-1;
-for(const entry of spawnList){
-if(entry[0]===monId&&entry.length>=3){
-atmin=entry[1];atmax=entry[2];break;
-}
-}
+const atEntry=spawnList.find(e=>e[0]===monId&&e.length>=3);
+const atmin=atEntry?atEntry[1]:-1,atmax=atEntry?atEntry[2]:-1;
 if(atmin<0){isSearching=false;restoreBtn();return;}
 const md=MONSTER_DB[monId];
 const conds=getUltimateConds();
@@ -1245,7 +1216,7 @@ const rStr=hex2(parseInt(baseRankStr));
 const targetRankKey=resolveRankKey(rStr);
 const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);isSearching=false;restoreBtn();return;}
-const startSeed=rangeData.startSeed;
+const{startSeed}=rangeData;
 const endSeed=searchFilterLoc?Math.min(rangeData.endSeed,0x7FFF):rangeData.endSeed;
 if(startSeed>endSeed){alert(A08);isSearching=false;restoreBtn();return;}
 const patSel=document.getElementById('at_pattern');
@@ -1347,7 +1318,7 @@ if(!killTargets||killTargets.length===0)return'<div style="color:#666;font-size:
 const instances=[];
 for(let ti=0;ti<killTargets.length;ti++){
 const t=killTargets[ti];
-const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[t.hex]:null;
+const m=getMonDB(t.hex);
 const baseName=getMonsterDisplayName(t.hex);
 for(let c=0;c<t.count;c++){
 instances.push({name:t.count>1?baseName+(c+1):baseName,
@@ -1355,11 +1326,9 @@ hex:t.hex,hp:m?m.s[0]:9999,hpLow:m?Math.floor(m.s[0]*0.8):9999,death:t.death!==u
 alive:true,groupIdx:ti,mon:m});
 }
 }
-if(!document.getElementById('si_useStats')?.checked){
-return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
-}
+if(!document.getElementById('si_useStats')?.checked)return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
 const chars=readCharStatsFromDom();
-const inlineFource=combo.find(v=>v.at===0&&typeof _FOURCE_EL!=='undefined'&&_FOURCE_EL[v.jp]);
+const inlineFource=combo.find(v=>v.at===0&&getFourceEls(v.jp));
 const _charLabel=(c)=>{
 if(!c)return'?';
 if(c.job!==null&&c.job!==undefined&&typeof JOB_STATS!=='undefined'&&JOB_STATS[c.job]){
@@ -1406,18 +1375,21 @@ html+='<div>'+L22+(ci+1)+L23+whoTag+action.jp+'</div>';
 continue;
 }
 const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
+const tLv=mul>1?actorLv(chars,assign,ci):99;
+const tFlat=tensionFlat(mul,tLv);
 const curFEls=fourceOn?fEls:null;
 const hits=SolverActionGate.hits(action);
 const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
-const mulStr=mul>1?'<span style="color:#ff0;">×'+mul+'</span>':'';
 let details='';
 const picked=SolverActionGate.targets(alive,action,sk,'groupIdx');
 const hitTargets=picked.targets;
+const mulStr=mul>1?'<span style="color:#ff0;">×'+mul
++((hitTargets.length&&hitTargets.every(t=>isMetalHex(t.hex)))?'':'＋'+tFlat)+'</span>':'';
 const repInst=hitTargets.reduce((a,b)=>(b&&(!a||b.hp>a.hp))?b:a,null);
 const repHpHigh=repInst?repInst.hp:0;
 const repHpLow=repInst?repInst.hpLow:0;
 for(const inst of hitTargets){
-const isMetalTgt=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(inst.hex));
+const isMetalTgt=isMetalHex(inst.hex);
 const exec=canExecuteMetal(action.jp,inst.hex);
 if(exec){
 if(exec.isValid){
@@ -1432,14 +1404,14 @@ let dMin,dMax,dPerHitMax;
 if(isMetalTgt){
 const elemental=!!(sk.el&&sk.el>0);
 const me=(typeof getMetalEffect==='function')&&getMetalEffect(sk.metal||0,(typeof getWeaponMetalFlag==='function'?getWeaponMetalFlag(action.equip):0));
-if(!elemental&&me){dMin=1*hits;dMax=2*hits;dPerHitMax=2;}else{dMin=0;dMax=0;dPerHitMax=0;}
+if(!elemental&&me){dMin=applyTension(1*hits,mul,tLv,true);dMax=applyTension(2*hits,mul,tLv,true);dPerHitMax=Math.floor(2*mul);}else{dMin=0;dMax=0;dPerHitMax=0;}
 }else{
 const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,getWeaponTypeMultiplier(action.equip,inst.hex),actionMetalEff(sk,action.equip));
-dMin=r?Math.floor(r.min*hits*mul):0;
-dMax=r?Math.floor(r.max*hits*mul):0;
+dMin=r?applyTension(r.min*hits,mul,tLv):0;
+dMax=r?applyTension(r.max*hits,mul,tLv):0;
 dPerHitMax=r?Math.floor(r.max*mul):0;
 }
-const step=SolverActionGate.step(inst,hits,dPerHitMax,dMin,dMax);
+const step=SolverActionGate.step(inst,hits,dPerHitMax,dMin,dMax,isMetalTgt?0:tFlat);
 const dead=step.dead?L33:step.hpLow<=0?L34:'';
 details+=inst.name+': '+_hpRange(inst)+'→<span style="color:'+(step.dead?'#f44':step.hpLow<=0?'#f80':'#8f8')+';">'+step.hpLow+'~'+step.hp+'</span>'+dead+' ';
 SolverActionGate.commit(inst,step);
@@ -1449,8 +1421,8 @@ const left=instances.filter(i=>i.alive);
 html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ccc;">'+action.jp+'</span>'+mulStr+' ['+tgt+'] '+details;
 html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
 if(repInst){
-const repIsMetal=(typeof _METAL_MONSTERS!=='undefined')&&_METAL_MONSTERS.has(toMonsterHexId(repInst.hex));
-if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSolverHintText(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,getWeaponTypeMultiplier(action.equip,repInst.hex),actionMetalEff(sk,action.equip))+'</div>';
+const repIsMetal=isMetalHex(repInst.hex);
+if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSolverHintText(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,getWeaponTypeMultiplier(action.equip,repInst.hex),actionMetalEff(sk,action.equip),tLv)+'</div>';
 }
 }
 if(defend&&defend.length){
@@ -1472,9 +1444,7 @@ function initSeedInspectorUI(){
 const mrSel=document.getElementById('si_mr');
 if(mrSel){
 mrSel.options.length=0;
-for(let i=1;i<=12;i++){
-mrSel.options.add(new Option(i,i));
-}
+for(let i=1;i<=12;i++)mrSel.options.add(new Option(i,i));
 mrSel.value=2;
 }
 for(let b=1;b<=4;b++){
@@ -1482,9 +1452,7 @@ const tSel=document.getElementById(`si_t${b}`);
 if(tSel){
 tSel.options.length=0;
 tSel.options.add(new Option('--',0));
-for(let i=1;i<=99;i++){
-tSel.options.add(new Option(i,i));
-}
+for(let i=1;i<=99;i++)tSel.options.add(new Option(i,i));
 tSel.value=(b===1)?99:99;
 }
 }
@@ -1564,7 +1532,7 @@ let d4=target-(N+totalStartCost+2);
 seqHtml=siBuildSeqHtml(foundSequence);
 const showCombos=d1>0&&d1<=970;
 const hexId=toMonsterHexId(monId);
-const mainMon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hexId]:null;
+const mainMon=getMonDB(hexId);
 const mainDeath=mainMon?mainMon.s[12]:100;
 const mainDeath0=mainDeath===0;
 const gbInfo=(typeof GROTTO_BATTLE!=='undefined'&&GROTTO_BATTLE[envType])?GROTTO_BATTLE[envType][floorMR]:null;
@@ -1657,14 +1625,13 @@ const _solverMercyLv=(_solverOpt.chars&&_solverOpt.chars.length)
 ?Math.max(..._solverOpt.chars.map(c=>c.lv||99)):99;
 const _isMetalMercyOnlyShape=(mg)=>{
 const main=mg.find(g=>g.isMain)||mg[0];
-if(!main||typeof _METAL_MONSTERS==='undefined'
-||!_METAL_MONSTERS.has(toMonsterHexId(main.hex)))return false;
+if(!main||!isMetalHex(main.hex))return false;
 const nonMetalFollowers=mg.filter(g=>g!==main&&(g.count||0)>0
-&&!_METAL_MONSTERS.has(toMonsterHexId(g.hex)));
+&&!isMetalHex(g.hex));
 if(!nonMetalFollowers.length)return false;
 return nonMetalFollowers.every(g=>{
 const hx=toMonsterHexId(g.hex);
-const m=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[hx]:null;
+const m=getMonDB(hx);
 return g.death>0&&!!(m&&m.s)&&(m.s[13]+7)<=_solverMercyLv;
 });
 };
@@ -1706,7 +1673,7 @@ if(canSup1){
 for(const sup of supportPool){
 const supHex=sup[0],supMin=sup[1],supMax=sup[2];
 const supName=monNameFn(supHex);
-const supMon=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[supHex]:null;
+const supMon=getMonDB(supHex);
 const supHP=supMon?supMon.s[0]:0;
 const supDeath=supMon?supMon.s[12]:100;
 const sameAsMain=supHex===hexId;
@@ -1749,8 +1716,8 @@ for(let i=0;i<supportPool.length;i++){
 for(let j=i;j<supportPool.length;j++){
 const sA=supportPool[i],sB=supportPool[j];
 const nA=monNameFn(sA[0]),nB=monNameFn(sB[0]);
-const mA=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[sA[0]]:null;
-const mB=(typeof MONSTER_DB!=='undefined')?MONSTER_DB[sB[0]]:null;
+const mA=getMonDB(sA[0]);
+const mB=getMonDB(sB[0]);
 const sameA=sA[0]===hexId,sameB=sB[0]===hexId;
 const twoSameSup=sA[0]===sB[0];
 const hA=mA?mA.s[0]:0,hB=mB?mB.s[0]:0;
@@ -1853,9 +1820,7 @@ document.getElementById('seedInspectorModal').style.display='flex';
 updateSeedInspector();
 }
 function closeSeedInspector(e){
-if(!e||e.target.className==='modal-close'){
-document.getElementById('seedInspectorModal').style.display='none';
-}
+if(!e||e.target.className==='modal-close')document.getElementById('seedInspectorModal').style.display='none';
 }
 let _siSolveGen=0;
 let _siSolveSeq=0;
