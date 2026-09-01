@@ -22,6 +22,7 @@ sel.value=cv;
 const sel=document.getElementById(sid);
 if(sel)sel.querySelectorAll('option').forEach((o,i)=>{if(ENV_OPTS[i])o.textContent=ENV_OPTS[i];});
 });
+for(let b=1;b<=4;b++){const sel=document.getElementById('si_job'+b);if(sel)sel.querySelectorAll('option').forEach(o=>{const v=parseInt(o.value);if(!isNaN(v)&&JOB_STATS[v])o.textContent=DISPLAY_LANG==='EN'?JOB_STATS[v].en:JOB_STATS[v].jp;});}
 }
 function switchUILang(lang){
 if(!['TW','EN','JP'].includes(lang))return;
@@ -1101,6 +1102,7 @@ el.textContent=`${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}`;
 }
 const debouncedUpdateBattleAT=debounce(updateBattleAT,100);
 const debouncedUpdateSeedInspector=debounce(updateSeedInspector,100);
+document.addEventListener('input',e=>{if(e.target.classList.contains('sv-stat'))debouncedUpdateSeedInspector();});
 function atSearch(){
 if(isSearching){requestSearchCancel();return;}
 isSearching=true;searchCancel=false;

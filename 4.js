@@ -93,12 +93,17 @@ const totalBoxes=boxData.total;
 let boxCountHtmlArr=[];
 for(let r=10;r>=1;r--){
 if(boxCounts[r]>0){
-let color="#aaa";
-if(r===10)color="#ffd700";
-else if(r>=8)color="#f44";
-else if(r>=4)color="#4c4";
-else if(r===3)color="#62a1ff";
-boxCountHtmlArr.push(`<span style="margin-right:6px;display:inline-block;background:#000;padding:2px 6px;border-radius:4px;border:1px solid #333;"><strong style="color:${color};font-size:14px;text-shadow: 1px 1px 1px #000;">${CHEST_RANK[r]}</strong> <span style="color:#fff;font-weight:bold;">${boxCounts[r]}</span></span>`);
+let bg="#6b7490";
+if(r===10)bg="#caa64a";
+else if(r===9)bg="#c018a0";
+else if(r===8)bg="#4a8fd4";
+else if(r===7)bg="#B5E61D";
+else if(r===6)bg="#4a9e9e";
+else if(r===5)bg="#6aaa7a";
+else if(r===4)bg="#8a8a6a";
+else if(r===3)bg="#d48a3d";
+else if(r===1)bg="#8a7490";
+boxCountHtmlArr.push(`<span style="margin-right:5px;display:inline-flex;align-items:center;gap:3px;font-size:12px;"><span style="background:${bg};color:#000;font-size:9px;font-weight:700;width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;border-radius:2px;">${CHEST_RANK[r]}</span><span style="color:#fff;font-weight:500;">${boxCounts[r]}</span></span>`);
 }
 }
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
@@ -235,15 +240,7 @@ infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
 infoHtml+=`<tr><td>${C15}</td><td>${C16}</td></tr>`;
 }
 infoHtml+='</table>';
-infoHtml+='<div class="legend" style="margin-top:20px">';
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#f5f0e0"></div>${D01}</div>`;
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#000"></div>${D02}</div>`;
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#e8e0c8"></div>${D03}</div>`;
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#ccd8c0"></div>${D04}</div>`;
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#4c4"></div>${D05}</div>`;
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#f44"></div>${D06}</div>`;
-infoHtml+=`<div class="legend-item"><div class="legend-swatch" style="background:#ffd700"></div>${D07}</div>`;
-infoHtml+='</div></div>';
+infoHtml+='</div>';
 container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${canvasW}" height="${canvasH}" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div>${infoHtml}`;
 document.querySelector('.map-container').style.position='relative';
 const mapCanvas=document.getElementById('mapCanvas');
@@ -299,7 +296,7 @@ ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
 }else{
 ctx.fillStyle=COLORS[displayTile]||COLORS[0];
 ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
-ctx.strokeStyle='rgba(0,0,0,0.08)';
+ctx.strokeStyle='rgba(0,0,0,0.25)';
 ctx.strokeRect(px+0.5,py+0.5,TILE_SIZE-1,TILE_SIZE-1);
 }
 ctx.textAlign='center';
@@ -1104,11 +1101,11 @@ for(let i=1;i<=3;i++){
 container.innerHTML+=`
       <div style="display:flex;gap:2px;align-items:center;">
       <span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
-      <select id="fs_f_${i}" style="width:45px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${floorOpts}</select>
-      <select id="fs_b_${i}" style="width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${boxOpts}</select>
-      <select id="fs_r_${i}" onchange="updateFSItems(${i})" style="width:40px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;">${rankOpts}</select>
-      <select id="fs_i_${i}" style="flex:1;width:50px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-overflow:ellipsis;"></select>
-      <input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" style="width:35px;padding:0;font-size:11px;height:24px;background:#000;color:#0f0;border:1px solid #555;text-align:center;">
+      <select id="fs_f_${i}" class="fs-ctl" style="width:45px;">${floorOpts}</select>
+      <select id="fs_b_${i}" class="fs-ctl" style="width:50px;">${boxOpts}</select>
+      <select id="fs_r_${i}" onchange="updateFSItems(${i})" class="fs-ctl" style="width:40px;">${rankOpts}</select>
+      <select id="fs_i_${i}" class="fs-ctl" style="flex:1;width:50px;text-overflow:ellipsis;"></select>
+      <input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" class="fs-ctl" style="width:35px;text-align:center;">
       </div>`;
 }
 for(let i=1;i<=3;i++){

@@ -151,6 +151,12 @@ const L46=T('Flee:','逃跑：','逃走：');
 const L47=T('(No corresponding formation for this case)','（此情形無對應形態）','（この条件に対応する編成なし）');
 const L48=T('YES','是','はい');
 const L49=T('NO','否','いいえ');
+const L50=T('Vocation','職業','職業');
+const L51=T('Attack','攻擊力','攻撃力');
+const L52=T('M.Might','攻擊魔力','攻撃魔力');
+const L53=T('Strength','力量','ちから');
+const L54=T('Agility','速度','すばやさ');
+const L55=T('M.Mending','回復魔力','回復魔力');
 const STR_SOLO=T('Solo','一人旅','一人旅');
 const STR_PARTY=T('Party','即開','即開');
 const STR_BOTH=T('Solo+Party','即+一人旅','即+一人旅');
@@ -196,6 +202,7 @@ const i18nDict={
 'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
 'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,'TKB4_1':TKB4_1,'TKB4_2':TKB4_2,'TKB4_3':TKB4_3,'TKB4_4':TKB4_4,'TKB4_5':TKB4_5,'TKB4_6':TKB4_6,'TKB4_7':TKB4_7,'TKB4_8':TKB4_8,'TKB4_9':TKB4_9,'TKB4_10':TKB4_10,'TKB4_11':TKB4_11,
 'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
+'L50':L50,'L51':L51,'L52':L52,'L53':L53,'L54':L54,'L55':L55,
 };
 const _OG={og1:T('Materials','素材/消耗品','素材/消耗品'),ogS:T('B9F Items','B9F物品','B9Fアイテム'),og2:T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'),og3:T('Cursed Equipment','詛咒裝備','呪い装備'),og4:T('Other Equipment','其他裝備','その他の装備'),og5:T('Chest Monsters','寶箱怪','宝箱モンスター')};
 const _STEPS_LBL=T('Steps','步數','歩');

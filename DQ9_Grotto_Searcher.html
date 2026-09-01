@@ -90,6 +90,7 @@
 <label for="mrt_timerStart">Start</label>
 <select id="mrt_timerStart" class="mrt-start" onchange="if(!mrtRunning)mrtResetTimer()">
 <option value="0" selected>0</option>
+<option value="4.5">4.5</option>
 <option value="4.6">4.6</option>
 <option value="4.7">4.7</option>
 </select>
@@ -130,38 +131,38 @@
 </div>
 <div id="solverPanel" style="display:none;margin-top:6px;">
 <!-- ATK=max999 | Lv → 秘傳書Lv -->
-<div class="sv-hdr"><span style="width:52px;" data-i18n="L50"></span><span style="width:42px;" data-i18n="L51"></span><span style="width:42px;" data-i18n="L52"></span><span style="width:42px;" data-i18n="L53"></span><span style="width:42px;" data-i18n="L54"></span><span style="width:42px;" data-i18n="L55"></span><span style="width:42px;" data-i18n="G18"></span></div>
-<div class="sv-row"><select id="si_job1" onchange="applyJobStats(1)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
-<input type="number" id="si_atk1" value="282" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_might1" value="700" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_str1" value="196" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_agi1" value="601" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_mend1" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_deft1" value="514" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
+<div class="sv-hdr"><span class="sv-job" data-i18n="L50"></span><span class="sv-stat" data-i18n="L51"></span><span class="sv-stat" data-i18n="L52"></span><span class="sv-stat" data-i18n="L53"></span><span class="sv-stat" data-i18n="L54"></span><span class="sv-stat" data-i18n="L55"></span><span class="sv-stat" data-i18n="G18"></span></div>
+<div class="sv-row"><select id="si_job1" onchange="applyJobStats(1)" class="sv-job"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number" id="si_atk1" value="282" min="1" max="999" class="sv-stat">
+<input type="number" id="si_might1" value="700" min="0" max="999" class="sv-stat">
+<input type="number" id="si_str1" value="196" min="0" max="999" class="sv-stat">
+<input type="number" id="si_agi1" value="601" min="0" max="999" class="sv-stat">
+<input type="number" id="si_mend1" value="300" min="0" max="999" class="sv-stat">
+<input type="number" id="si_deft1" value="514" min="0" max="999" class="sv-stat">
 </div>
-<div class="sv-row"><select id="si_job2" onchange="applyJobStats(2)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
-<input type="number" id="si_atk2" value="282" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_might2" value="700" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_str2" value="196" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_agi2" value="601" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_mend2" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_deft2" value="514" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
+<div class="sv-row"><select id="si_job2" onchange="applyJobStats(2)" class="sv-job"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number" id="si_atk2" value="282" min="1" max="999" class="sv-stat">
+<input type="number" id="si_might2" value="700" min="0" max="999" class="sv-stat">
+<input type="number" id="si_str2" value="196" min="0" max="999" class="sv-stat">
+<input type="number" id="si_agi2" value="601" min="0" max="999" class="sv-stat">
+<input type="number" id="si_mend2" value="300" min="0" max="999" class="sv-stat">
+<input type="number" id="si_deft2" value="514" min="0" max="999" class="sv-stat">
 </div>
-<div class="sv-row"><select id="si_job3" onchange="applyJobStats(3)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10" selected>賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
-<input type="number" id="si_atk3" value="309" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_might3" value="537" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_str3" value="302" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_agi3" value="318" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_mend3" value="508" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_deft3" value="267" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
+<div class="sv-row"><select id="si_job3" onchange="applyJobStats(3)" class="sv-job"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10" selected>賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number" id="si_atk3" value="309" min="1" max="999" class="sv-stat">
+<input type="number" id="si_might3" value="537" min="0" max="999" class="sv-stat">
+<input type="number" id="si_str3" value="302" min="0" max="999" class="sv-stat">
+<input type="number" id="si_agi3" value="318" min="0" max="999" class="sv-stat">
+<input type="number" id="si_mend3" value="508" min="0" max="999" class="sv-stat">
+<input type="number" id="si_deft3" value="267" min="0" max="999" class="sv-stat">
 </div>
-<div class="sv-row"><select id="si_job4" onchange="applyJobStats(4)" style="width:52px;font-size:9px;padding:0;"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6" selected>ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
-<input type="number" id="si_atk4" value="840" min="1" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_might4" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_str4" value="600" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_agi4" value="224" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_mend4" value="300" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
-<input type="number" id="si_deft4" value="466" min="0" max="999" style="width:42px;font-size:10px;" oninput="debouncedUpdateSeedInspector()">
+<div class="sv-row"><select id="si_job4" onchange="applyJobStats(4)" class="sv-job"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2">魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6" selected>ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
+<input type="number" id="si_atk4" value="840" min="1" max="999" class="sv-stat">
+<input type="number" id="si_might4" value="300" min="0" max="999" class="sv-stat">
+<input type="number" id="si_str4" value="600" min="0" max="999" class="sv-stat">
+<input type="number" id="si_agi4" value="224" min="0" max="999" class="sv-stat">
+<input type="number" id="si_mend4" value="300" min="0" max="999" class="sv-stat">
+<input type="number" id="si_deft4" value="466" min="0" max="999" class="sv-stat">
 </div>
 </div>
 </div>
@@ -205,28 +206,28 @@
 <div class="modal-lang-scroll modal-lang-scroll-credits">
 <div id="discListTW" style="display: block">
 <p>本專案為非商業性質的 Dragon Quest IX 藏寶圖玩家工具，不隸屬於、不獲授權於 Square Enix。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">社群公知的 DQ9 遊戲知識</h3>
+<h3 class="disc-h3">社群公知的 DQ9 遊戲知識</h3>
 <p>由玩家社群長期研究所累積的公共成果。除遊戲解析外、亦包括 地圖用法 與 地圖價值判斷的規則。<br>本工具幾乎所有的概念，除 TKG 的新發現之外，均來源於此。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">TKG 的貢獻</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<h3 class="disc-h3">TKG 的貢獻</h3>
+<ul class="disc-ul">
 <li>對 dq9tmap101.exe 進行反編譯，發現 ElistOfs 的計算公式</li>
 <li>透過記憶體檢查修正公式，並依據 Terence (2010) 於 <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff">Grotto Mechanics Guide</a> 2.3.3 小節中之記載，補足了原作者遺漏的機制：超大特殊樓層的右下角，存在因記憶體溢出而導致鄰接邊數被強制當作零來處理的白方格</li>
 <li>除此之外，還發現了 寶圖怪物掉寶用地圖法秘技、及中斷技的進化形態 PPAP 技，大幅拓展了 DQ9 地圖的用法</li>
 </ul>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">dq9tmap101.exe 的 ElistOfs 邏輯（僅抽取邏輯，非代碼移植）</h3>
+<h3 class="disc-h3">dq9tmap101.exe 的 ElistOfs 邏輯（僅抽取邏輯，非代碼移植）</h3>
 <p>原作者為匿名人士 (2ch ID: 43)，曾明確表示無權阻止他人重新上傳本工具。概念名稱 ElistOfs 予以沿用，以便曾使用過 dq9tmap101.exe 的用戶理解其含義與來源。如有版權疑問，歡迎聯絡本專案。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">一個反編譯資料庫</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">依原作者條款使用：
+<h3 class="disc-h3">一個反編譯資料庫</h3>
+<ul class="disc-ul">依原作者條款使用：
 <li>已轉換為 JavaScript</li>
 <li>不主張對來源的原創性</li>
 <li>非商業用途</li>
 <li>已賦予非獨佔性使用許可證</li>
 <li>作者不要求署名</li>
 </ul>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">「危険？ハマる地図」對應樓層 (5BC7, DF70) 的樓梯與寶箱位置修正</h3>
+<h3 class="disc-h3">「危険？ハマる地図」對應樓層 (5BC7, DF70) 的樓梯與寶箱位置修正</h3>
 <p>原反編譯資料庫對此二樓層的資料有誤。本專案作者委託 Claude 解謎，完成修正。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">實作分工</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<h3 class="disc-h3">實作分工</h3>
+<ul class="disc-ul">
 <li>Claude: 反編譯資料庫的轉譯 (Opus 4.6)、馬拉松工具 / AT Detail / TKG 發現的新功能 加裝 (Opus 4.6~4.8)、Web Worker 建構 (Fable 5)、Bug 修復 (Fable 5)</li>
 <li>Gemini: 傳統搜尋功能實作 (3.1 Pro)</li>
 <li>ChatGPT: Bug 修復 (5.6 Sol)</li>
@@ -236,28 +237,28 @@
 </div>
 <div id="discListEN" style="display: none">
 <p>This is a non-commercial fan-made tool for Dragon Quest IX grottoes. It is not made by, or endorsed by, Square Enix.</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">DQ9 game knowledge from the community</h3>
+<h3 class="disc-h3">DQ9 game knowledge from the community</h3>
 <p>This is what the DQ9 player community has figured out over many years. It covers not only the game mechanism, but also grotto usages &amp; valuations.</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">Contributions by TKG</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<h3 class="disc-h3">Contributions by TKG</h3>
+<ul class="disc-ul">
 <li>Reverse-engineered dq9tmap101.exe and found how ElistOfs is calculated.</li>
 <li>Fixed the formula through the memory inspection. Also found a missing piece that the dq9tmap101.exe's original author missed — based on Section 2.3.3 of Terence's <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff">Grotto Mechanics Guide</a> (2010): on extra-large special floors, some tiles in the bottom-right area have their neighbor count forced to zero because of a memory overflow.</li>
 <li>Discovered Map Method Grotto Monster Item Farming &amp; PPAP (Pals Past &amp; Present) Method, which brought us much more new grotto usages.</li>
 </ul>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">ElistOfs logic from dq9tmap101.exe (logic only — not a code transport)</h3>
+<h3 class="disc-h3">ElistOfs logic from dq9tmap101.exe (logic only — not a code transport)</h3>
 <p>The original author posted it anonymously on 2ch (ID: 43) and said that he/she had no right to stop anyone from re-uploading the tool. We keep the name "ElistOfs" so that people who used dq9tmap101.exe before can understand what it means. If you have any copyright concerns, please contact us.</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">A reverse-engineered database</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">Used under the original author's terms:
+<h3 class="disc-h3">A reverse-engineered database</h3>
+<ul class="disc-ul">Used under the original author's terms:
 <li>Converted to JavaScript</li>
 <li>We do not claim it as our own work</li>
 <li>Non-commercial use only</li>
 <li>Granted a non-exclusive license</li>
 <li>The author does not ask for credit</li>
 </ul>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">Fix for Softlock floors (5BC7, DF70)</h3>
+<h3 class="disc-h3">Fix for Softlock floors (5BC7, DF70)</h3>
 <p>The reverse-engineered database had wrong data for these two floors. The project author asked Claude to figure out the problem, and the fix was made.</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">Contributions</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<h3 class="disc-h3">Contributions</h3>
+<ul class="disc-ul">
 <li>Database conversion: Claude did the work, project author debugged it</li>
 <li>ElistOfs logic: project author explained TKG's logic in his own words, Gemini wrote the code</li>
 <li>Everything else: mostly built by Gemini, project author came up with the ideas and did the debugging</li>
@@ -267,28 +268,28 @@
 </div>
 <div id="discListJP" style="display: none">
 <p>このツールは、『ドラゴンクエストIX 星空の守り人』の宝の地図関連の無料のファンツールです。株式会社スクウェア・エニックスとは無関係であり、公式に認定・許諾されたものでもありません。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">コミュニティが積み上げてきたDQ9の知識</h3>
+<h3 class="disc-h3">コミュニティが積み上げてきたDQ9の知識</h3>
 <p>長年に渡って蓄積されたDQ9のプレイヤーコミュニティの知識です。ゲームのメカニズムだけでなく、地図の使い方や、地図の価値の判定基準も含まれています。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">TKG 氏の貢献</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<h3 class="disc-h3">TKG 氏の貢献</h3>
+<ul class="disc-ul">
 <li>dq9tmap101.exe をリバースエンジニアリングし、ElistOfs の計算式を発見した</li>
 <li>メモリチェックにより計算式を修正し、Terence 氏の <a href=https://gamefaqs.gamespot.com/ds/937281-dragon-quest-ix-sentinels-of-the-starry-skies/faqs/61151 target=_blank style="color:#8cc8ff">Grotto Mechanics Guide</a>（2010）の 2.3.3 節をもとに、原作者の見落とした現象を補足：超大型特殊フロアの右下に、隣り合うマスの数がゼロでないにもかかわらず、メモリオーバーフローによりゼロとして処理されてしまった「白マス」が存在すること</li>
 <li>全てのロジックを整理して文書化</li>
 </ul>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">dq9tmap101.exe の ElistOfs ロジック（ロジックだけを抽出したもので、コードのコピーではありません）</h3>
+<h3 class="disc-h3">dq9tmap101.exe の ElistOfs ロジック（ロジックだけを抽出したもので、コードのコピーではありません）</h3>
 <p>原作者は 2ch に匿名で投稿した者（ID: 43）で、<a href=https://kako.5ch.io/test/read.cgi/gameurawaza/1249835333/414 target=_blank style="color:#8cc8ff">「ツールを再アップロードする者を止める権利は自分にはない」</a>と明言しました。かつての dq9tmap101.exe ユーザーがすぐ分かるようにするため、本ツールは「ElistOfs」という名称は継続して使用しています。著作権に関する懸念がある場合、本プロジェクトの作者までご連絡ください。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">リバースエンジニアリングされたデータベース</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">原作者の定めた条件に従って使用：
+<h3 class="disc-h3">リバースエンジニアリングされたデータベース</h3>
+<ul class="disc-ul">原作者の定めた条件に従って使用：
 <li>JavaScript に変換して使用</li>
 <li>独自の成果として主張しない</li>
 <li>商業利用しない</li>
 <li>独占的ライセンスを付与しない</li>
 <li>原作者のサイトへの言及は不要</li>
 </ul>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">「危険？ハマる地図」関連フロア（5BC7, DF70）の階段・宝箱の位置を修正</h3>
+<h3 class="disc-h3">「危険？ハマる地図」関連フロア（5BC7, DF70）の階段・宝箱の位置を修正</h3>
 <p>リバースエンジニアリングされたデータベースには、この2つのフロアのデータに間違いがありました。本プロジェクトの作者が Claude に調査を頼み、修正しました。</p>
-<h3 style="color:#0ff;font-size:14px;margin:12px 0 6px">役割分担</h3>
-<ul style="padding-left:20px;margin-bottom:12px;color:#fff">
+<h3 class="disc-h3">役割分担</h3>
+<ul class="disc-ul">
 <li>データベースの変換：Claude が実行し、本プロジェクトの作者がデバッグ</li>
 <li>ElistOfs のロジック：本プロジェクトの作者が TKG 氏のロジックを自身の言葉で伝え、Gemini がコードを書く</li>
 <li>それ以外の全機能・コード：主に Gemini の担当作業。本プロジェクトの作者がアイデアを提供し、デバッグ</li>
@@ -300,6 +301,7 @@
 </div>
 </div>
 </div>
+
 <div id="h1Modal" class="modal-overlay modal-overlay-help" onclick="closeh1Modal(event)">
 <div class="modal-content modal-content-md" onclick="event.stopPropagation()">
 <div class="modal-header">
@@ -4935,6 +4937,7 @@
 </table>
 <p style="font-size:11px; color:#f88; margin-bottom:16px;">※ ヒント：何ステップ目の AT がドロップパターンに合致するかは各 Seed 固有の属性であり、<strong style="color:#f44;">いかなる手段でも変更することはできない</strong>。</p>
 </div></div></div></div></div>
+
 <div id="unified_search_panel" style="background:#111128;padding:20px;border-bottom:2px solid #4a4a8a;">
 <div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a;padding-bottom: 12px;margin-bottom: 16px;">
 <h3 style="color:#ffd700;margin: 0;font-size:16px;" data-i18n="G01"></h3>
@@ -4945,9 +4948,9 @@
 </div>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;align-items:stretch;">
-<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;flex:1 1 calc(60% - 16px);min-width:340px;margin:0;display:flex;flex-direction:column;">
-<h4 style="color:#0ff;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
-<button onclick="openh1Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button></h4>
+<div class="sch-card" style="flex:1 1 calc(60% - 16px);min-width:340px;margin:0;">
+<h4 class="sch-h4" style="color:#0ff;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
+<button onclick="openh1Modal()" class="help-btn" title="Help">?</button></h4>
 <div class="us-grid">
 <div><label for="cond_prefix" data-i18n="G03"></label><select id="cond_prefix"><option value="" data-i18n="G02"></option></select></div>
 <div><label for="cond_suffix" data-i18n="G04"></label><select id="cond_suffix"><option value="" data-i18n="G02"></option></select></div>
@@ -5012,16 +5015,16 @@
 </div>
 <div style="background:#111;padding:6px;border-radius:4px;border:1px solid #4c4;margin-bottom:8px;">
 <div class="chest-count-row" style="display:flex;flex-wrap:wrap;font-size:12px;color:#fff;">
-<label>S <input type="number" id="cond_box_S" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>A <input type="number" id="cond_box_A" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>B <input type="number" id="cond_box_B" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>C <input type="number" id="cond_box_C" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>D <input type="number" id="cond_box_D" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>E <input type="number" id="cond_box_E" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>F <input type="number" id="cond_box_F" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>G <input type="number" id="cond_box_G" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>H <input type="number" id="cond_box_H" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
-<label>I <input type="number" id="cond_box_I" min="0" max="40" style="width:36px;height:22px;padding:0 2px;background:#000;color:#fff;border:1px solid #666;font-size:11px;"></label>
+<label>S <input type="number" id="cond_box_S" min="0" max="40" class="cbox-in"></label>
+<label>A <input type="number" id="cond_box_A" min="0" max="40" class="cbox-in"></label>
+<label>B <input type="number" id="cond_box_B" min="0" max="40" class="cbox-in"></label>
+<label>C <input type="number" id="cond_box_C" min="0" max="40" class="cbox-in"></label>
+<label>D <input type="number" id="cond_box_D" min="0" max="40" class="cbox-in"></label>
+<label>E <input type="number" id="cond_box_E" min="0" max="40" class="cbox-in"></label>
+<label>F <input type="number" id="cond_box_F" min="0" max="40" class="cbox-in"></label>
+<label>G <input type="number" id="cond_box_G" min="0" max="40" class="cbox-in"></label>
+<label>H <input type="number" id="cond_box_H" min="0" max="40" class="cbox-in"></label>
+<label>I <input type="number" id="cond_box_I" min="0" max="40" class="cbox-in"></label>
 </div>
 </div>
 <div style="display:flex;width:100%;">
@@ -5030,9 +5033,9 @@
 </div>
 </div>
 <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 calc(40% - 16px);min-width:320px;margin:0;">
-<div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #4a4a8a;margin:0;flex:1;display:flex;flex-direction:column;">
-<h4 style="color:#88b;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
-<button onclick="openh2Modal()" style="margin-left:6px;background:#224;color:#0ff;border:1px solid #4a4a8a;border-radius:50%;width:20px;height:20px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;" onmouseover="this.style.background='#0ff';this.style.color='#000';" onmouseout="this.style.background='#224';this.style.color='#0ff';" title="Help">?</button>
+<div class="sch-card" style="margin:0;flex:1;">
+<h4 class="sch-h4" style="color:#88b;">2️⃣ <span style="margin-left:8px" data-i18n="H00"> </span>
+<button onclick="openh2Modal()" class="help-btn" title="Help">?</button>
 <button onclick="mrtOpen()" style="margin-left:6px;background:linear-gradient(135deg,#c60,#840);color:#fff;border:none;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;font-family:inherit;" data-i18n="H07"></button>
 </h4>
 <div style="display: flex;flex-direction: column;gap:8px;flex:1;">

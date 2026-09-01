@@ -3191,7 +3191,7 @@ let found;
 const dfs=()=>{
 if(found!==undefined)return;
 if(pick.length===n){
-for(let i=0;i<n;i++){if(locks[i]){const j=chars[pick[i]].job;if(j===null||!locks[i].includes(j))return;}}
+for(let i=0;i<n;i++){if(locks[i]){const j=chars[pick[i]].job;if(j===null||(j!==12&&!locks[i].includes(j)))return;}}
 if(walkOK(pick))found=pick.slice();
 return;
 }
@@ -3294,7 +3294,7 @@ const used=new Uint8Array(N);
 const dfs=()=>{
 if(best&&getRankOrderValue(best.rating)===2)return;
 if(pick.length===n){
-for(let i=0;i<n;i++){if(locks[i]){const j=chars[pick[i]].job;if(j===null||!locks[i].includes(j))return;}}
+for(let i=0;i<n;i++){if(locks[i]){const j=chars[pick[i]].job;if(j===null||(j!==12&&!locks[i].includes(j)))return;}}
 const assign=pick.slice();
 const out={};
 const rating=checkSolverDamage(combo,hexId,mon,killTargets,tensionMul,fourceEls,out,assign);
