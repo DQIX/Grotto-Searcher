@@ -33,6 +33,7 @@ jobs:
           cp 5.js site/5.js
           cp DQ9_ChestTimer.html site/ChestTimer.html
           cp Celestian.html site/Celestian.html
+          cp robots.txt site/robots.txt
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
