@@ -3492,7 +3492,7 @@ return!(minDmg>0)&&maxDmg>0;
 function hasChipMiss(combo,hexId,assign,finIdx,fourceEls){
 if(!assign)return false;
 const chars=readCharStatsFromDom();
-for(let ci=0;ci<combo.length&&ci<chars.length;ci++){
+for(let ci=0;ci<combo.length;ci++){
 if(ci===finIdx)continue;
 const v=combo[ci];
 if(v.at===0||v.fixedDmg)continue;
@@ -3537,9 +3537,8 @@ continue;
 const _ac=_actor(ci);
 if(!_ac){perSkill.push({min:0,max:0,perHitMax:0,hits:1});continue;}
 const result=calcSkillDamage(sk,_ac.stats,hexId,fourceEls,getWeaponTypeMultiplier(combo[ci].equip,hexId),actionMetalEff(sk,combo[ci].equip));
-perSkill.push(result
-?{min:result.min*hits,max:result.max*hits,perHitMax:result.max,hits}
-:{min:0,max:0,perHitMax:0,hits:1});
+const _d=result?{min:result.min*hits,max:result.max*hits,perHitMax:result.max,hits}:{min:0,max:0,perHitMax:0,hits:1};
+if(actionAtUnstable(combo[ci],_d.min,_d.max))return null;perSkill.push(_d);
 }
 const hp100=mon.s[0],hp80=Math.floor(hp100*0.8);
 const totalMin=perSkill.reduce((s,d)=>s+d.min,0);
@@ -3703,6 +3702,7 @@ continue;
 }
 const d=(dTable[target.hex]||{})[useDmg]||0;
 const dMax=(dTable[target.hex]||{}).max||0;
+if(actionAtUnstable(combo[ci],(dTable[target.hex]||{}).min||0,dMax)){path.push(ci+':!at_unstable');return _done(false,ci,'at_unstable');}
 const phMax=(dTable[target.hex]||{}).phMax||0;
 const _met=isMetalHex(target.hex);
 const step=SolverActionGate.step(target,sd.hits,phMax*mul,applyTension(d,mul,tLv,_met),applyTension(dMax,mul,tLv,_met),_met?0:tFlat);
