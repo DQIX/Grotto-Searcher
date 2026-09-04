@@ -31,10 +31,10 @@ self.window=self;
 self.document={getElementById:(id)=>(m.dom&&(id in m.dom))?{checked:!!m.dom[id]}:null};
 readCharStatsFromDom=()=>m.chars;
 window._solverComboMap={};window._solverComboId=m.idBase||0;
-window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
+window._solverBucketId=m.bucketBase||0;window._solverBuckets={};window._solverFallback=false;window._solverSolvable=null;
 const html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,m.render.mapDeft,m.render.canRound2);
 self.postMessage({type:'solveDone',solveId:m.solveId,html,
-comboMap:window._solverComboMap,buckets:window._solverBuckets});
+comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable});
 }catch(err){
 self.postMessage({type:'solveError',solveId:m.solveId,message:''+(err&&err.stack||err)});
 }

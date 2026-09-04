@@ -379,18 +379,15 @@ modal.style.display='flex';
 switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
 }
 const MRT_PREVIEW_ROWS=30;
-const MRT_S_WEAPONS=ITEMS_S_WEAPONS;
-const MRT_MILLIONAIRE=ITEMS_MILLIONAIRE;
 const MRT_HL={};
 MRT_HL['Sainted soma']={bg:'#FFC90E',fg:'#000',bd:'#da0'};
-MRT_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff',bd:'#2a4'});
+ITEMS_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff',bd:'#2a4'});
 MRT_HL['Ethereal stone']={bg:'#c018a0',fg:'#fff',bd:'#e4c'};
 ['Metal slime shield','Metal slime armour','Metal slime helm','Metal slime gauntlets','Metal slime sollerets'].forEach(i=>MRT_HL[i]={bg:'#383850',fg:'#d0d8f0',bd:'#88a'});
-MRT_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff',bd:'#4af'});
+ITEMS_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff',bd:'#4af'});
 MRT_HL['Lucida shard']={bg:'#B5E61D',fg:'#000',bd:'#8c0'};
 ['Dangerous bustier','Fuddle bow'].forEach(i=>MRT_HL[i]={bg:'#FFAEC9',fg:'#000',bd:'#f8a'});
 const MRT_RK_COLORS={10:'#f4f',9:'#fa0',8:'#4cf',7:'#8f8',6:'#ff8',5:'#aaa',4:'#888',3:'#666',2:'#555',1:'#444'};
-const MRT_RK_NAMES=CHEST_RANK;
 const MRT_PRESETS={
 'DD,263C':{custom:{3:[0],4:[0],7:[0],8:[1],9:[0],10:[0],11:[0],12:[0],13:[0],14:[0],15:[0],16:[0]}},
 'B5,3CA2':{custom:{4:[0],5:[0],6:[0],7:[0],8:[0,2],9:[0],10:[1],13:[0],14:[0]}},
@@ -465,7 +462,7 @@ for(let f=0;f<mrtEngine.floorCount;f++){
 const d=mrtEngine.di[f];
 for(let b=0;b<d[8];b++){
 const info=mrtEngine.getBoxInfo(f,b);
-mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:MRT_RK_NAMES[info.rank]||'?'});
+mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:CHEST_RANK[info.rank]||'?'});
 }
 }
 mrtMeasureRankWidths();
@@ -538,6 +535,8 @@ _mrtTimerDisp=document.getElementById('mrt_timerDisp');
 _mrtBtnStart=document.getElementById('mrt_btnStart');
 }
 function mrtUpdateStopwatch(ms){
+if(!_mrtTimerText)mrtCacheEls();
+if(!_mrtTimerText)return;
 const isPrep=ms<0;
 const absMs=Math.abs(ms);
 const s=Math.floor(absMs/1000);
@@ -637,6 +636,8 @@ window.addEventListener('resize',()=>{if(document.getElementById('marathonModal'
 const DW_PATS=[
 ['R2','連續 2 個稀有','2 Rare','レア×2'],
 ['R2_3','連續 2 個稀有 (N/N+3)','2 Rare (N/N+3)','レア×2 (チカラめし)'],
+['R2_5','連續 2 個稀有 (N/N+5)','2 Rare (N/N+5)','レア×2 (N/N+5)'],
+['R2_7','連續 2 個稀有 (N/N+7)','2 Rare (N/N+7)','レア×2 (N/N+7)'],
 ['R3','連續 3 個稀有','3 Rare','レア×3'],
 ['R4','連續 4 個稀有','4 Rare','レア×4'],
 ['R5','連續 5 個稀有','5 Rare','レア×5'],

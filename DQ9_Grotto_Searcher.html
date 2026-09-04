@@ -90,7 +90,6 @@
 <label for="mrt_timerStart">Start</label>
 <select id="mrt_timerStart" class="mrt-start" onchange="if(!mrtRunning)mrtResetTimer()">
 <option value="0" selected>0</option>
-<option value="4.5">4.5</option>
 <option value="4.6">4.6</option>
 <option value="4.7">4.7</option>
 </select>
@@ -131,7 +130,7 @@
 </div>
 <div id="solverPanel" style="display:none;margin-top:6px;">
 <!-- ATK=max999 | Lv → 秘傳書Lv -->
-<div class="sv-hdr"><span class="sv-job" data-i18n="L50"></span><span class="sv-stat" data-i18n="L51"></span><span class="sv-stat" data-i18n="L52"></span><span class="sv-stat" data-i18n="L53"></span><span class="sv-stat" data-i18n="L54"></span><span class="sv-stat" data-i18n="L55"></span><span class="sv-stat" data-i18n="G18"></span></div>
+<div class="sv-hdr"><span class="sv-job" data-i18n="L48"></span><span class="sv-stat" data-i18n="L02"></span><span class="sv-stat" data-i18n="L49"></span><span class="sv-stat" data-i18n="L04"></span><span class="sv-stat" data-i18n="L50"></span><span class="sv-stat" data-i18n="L51"></span><span class="sv-stat" data-i18n="G18"></span></div>
 <div class="sv-row"><select id="si_job1" onchange="applyJobStats(1)" class="sv-job"><option value="">--</option><option value="0">戦士</option><option value="1">僧侶</option><option value="2" selected>魔法使い</option><option value="3">武闘家</option><option value="4">盗賊</option><option value="5">旅芸人</option><option value="6">ﾊﾞﾄﾙﾏｽﾀｰ</option><option value="7">ﾊﾟﾗﾃﾞｨﾝ</option><option value="8">魔法戦士</option><option value="9">ﾚﾝｼﾞｬｰ</option><option value="10">賢者</option><option value="11">ｽｰﾊﾟｰｽﾀｰ</option><option value="12">種ﾄﾞｰﾋﾟﾝｸﾞ</option></select>
 <input type="number" id="si_atk1" value="282" min="1" max="999" class="sv-stat">
 <input type="number" id="si_might1" value="700" min="0" max="999" class="sv-stat">
@@ -168,10 +167,10 @@
 </div>
 <div class="si-section">
 <div class="si-grid" style="gap:6px;">
-<div class="si-field"><label for="si_group_size" data-i18n="G23"></label><select id="si_group_size" onchange="debouncedUpdateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label for="si_rare_rate" data-i18n="G24"></label><select id="si_rare_rate" style="width:60px;" onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128">1/128</option><option value="256" selected>1/256</option></select></div>
-<div class="si-field"><label for="si_norm_rate" data-i18n="G25"></label><select id="si_norm_rate" style="width:60px;" onchange="debouncedUpdateSeedInspector()"><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option><option value="64">1/64</option><option value="128" selected>1/128</option></select></div>
-<div class="si-field"><label for="si_t1" data-i18n="G26"></label>
+<div class="si-field"><label for="si_group_size" data-i18n="G22"></label><select id="si_group_size" onchange="debouncedUpdateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+<div class="si-field"><label for="si_sup1" data-i18n="G23"></label><select id="si_sup1" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label for="si_sup2" data-i18n="G24"></label><select id="si_sup2" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label for="si_t1" data-i18n="G25"></label>
 <div style="display:flex;gap:4px;">
 <select id="si_t1" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
 <select id="si_t2" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
@@ -301,7 +300,6 @@
 </div>
 </div>
 </div>
-
 <div id="h1Modal" class="modal-overlay modal-overlay-help" onclick="closeh1Modal(event)">
 <div class="modal-content modal-content-md" onclick="event.stopPropagation()">
 <div class="modal-header">
@@ -4937,7 +4935,6 @@
 </table>
 <p style="font-size:11px; color:#f88; margin-bottom:16px;">※ ヒント：何ステップ目の AT がドロップパターンに合致するかは各 Seed 固有の属性であり、<strong style="color:#f44;">いかなる手段でも変更することはできない</strong>。</p>
 </div></div></div></div></div>
-
 <div id="unified_search_panel" style="background:#111128;padding:20px;border-bottom:2px solid #4a4a8a;">
 <div class="search-panel-header" style="border-bottom: 1px dashed #4a4a8a;padding-bottom: 12px;margin-bottom: 16px;">
 <h3 style="color:#ffd700;margin: 0;font-size:16px;" data-i18n="G01"></h3>
@@ -4952,18 +4949,18 @@
 <h4 class="sch-h4" style="color:#0ff;">1️⃣ <span style="margin-left:8px">Ultimate Search</span>
 <button onclick="openh1Modal()" class="help-btn" title="Help">?</button></h4>
 <div class="us-grid">
-<div><label for="cond_prefix" data-i18n="G03"></label><select id="cond_prefix"><option value="" data-i18n="G02"></option></select></div>
-<div><label for="cond_suffix" data-i18n="G04"></label><select id="cond_suffix"><option value="" data-i18n="G02"></option></select></div>
-<div><label for="cond_locale" data-i18n="G05"></label><select id="cond_locale"><option value="" data-i18n="G02"></option></select></div>
+<div><label for="cond_prefix" data-i18n="G03"></label><select id="cond_prefix"><option value="">------</option></select></div>
+<div><label for="cond_suffix" data-i18n="G04"></label><select id="cond_suffix"><option value="">------</option></select></div>
+<div><label for="cond_locale" data-i18n="G05"></label><select id="cond_locale"><option value="">------</option></select></div>
 <div style="display:flex;gap:6px;"><div style="flex:1;"><label for="cond_lv">Lv</label><input type="number" id="cond_lv" min="1" max="99" placeholder="99" style="width:100%;"></div><div style="flex:1;"><label for="cond_location" data-i18n="G06"></label><input type="text" id="cond_location" maxlength="2" placeholder="96" onchange="validateHex('cond_location',0x01,0x96,0,A09)" style="width:100%;text-transform:uppercase;"></div></div>
 <div><label for="cond_bq_count" data-i18n="GBQ"></label><select id="cond_bq_count" style="width:40px;flex-shrink:0;padding:0 1px;display:inline-block;vertical-align:top;margin-right:3px;" onchange="var b=document.getElementById('cond_bq');if(this.value){b.value='';b.disabled=true;b.style.opacity='0.4';}else{b.disabled=false;b.style.opacity='1';}"><option value="">---</option><option value="1">1</option><option value="1p">1'</option><option value="D">D</option><option value="Dp">D'</option></select><input type="number" id="cond_bq" min="2" max="248" placeholder="248" style="display:inline-block;vertical-align:top;width:calc(100% - 46px);"></div>
-<div><label for="cond_env" data-i18n="G07"></label><select id="cond_env"><option value="" data-i18n="G02"></option></select></div>
+<div><label for="cond_env" data-i18n="G07"></label><select id="cond_env"><option value="">------</option></select></div>
 <div style="display:flex;gap:6px;"><div style="flex:1;"><label for="cond_monster" data-i18n="G08"></label><input type="number" id="cond_monster" min="1" max="9" placeholder="9" style="width:100%;"></div><div style="flex:1;"><label for="cond_depth" data-i18n="G10"></label><input type="number" id="cond_depth" min="2" max="16" placeholder="16" style="width:100%;"></div></div>
-<div><label for="cond_boss">BOSS</label><select id="cond_boss"><option value="" data-i18n="G02"></option></select></div>
+<div><label for="cond_boss">BOSS</label><select id="cond_boss"><option value="">------</option></select></div>
 <div><label for="cond_seed_min" data-i18n="G14"></label><div style="display:flex;align-items:center;gap:2px;"><input type="text" id="cond_seed_min" maxlength="4" placeholder="0000" onchange="validateHex('cond_seed_min',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"><span style="color:#aaa;font-size:10px;flex-shrink:0;">-</span><input type="text" id="cond_seed_max" maxlength="4" placeholder="7FFF" onchange="validateHex('cond_seed_max',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"></div></div>
 <div><label for="cond_anomaly" style="color:#fc4;" data-i18n="G11"></label>
 <select id="cond_anomaly" style="color:#ffcc44;border-color:#ccaa44;">
-<option value="" data-i18n="G02"></option>
+<option value="">------</option>
 <option value="chest" data-i18n="TKB1_1"></option>
 <option value="chamber" data-i18n="TKB2_1"></option>
 <option value="multi_chamber" data-i18n="TKB2_2"></option>
@@ -4988,7 +4985,7 @@
 </select></div>
 <div><label for="cond_elist" style="color:#f88;" data-i18n="G12"></label>
 <select id="cond_elist" style="color:#fcf;border-color:#c44;">
-<option value="" data-i18n="G02"></option>
+<option value="">------</option>
 <option value="MULTI_SPECIAL" data-i18n="EL_M"></option>
 <option value="SIZE_15">15×15</option>
 <option value="PARTIAL_NONE" data-i18n="EL_P"></option>
@@ -5000,7 +4997,7 @@
 </select></div>
 <div><label for="cond_only_mon" style="color:#f8d;" data-i18n="G13"></label>
 <select id="cond_only_mon" style="color:#fcf;border-color:#c4a;">
-<option value="" data-i18n="G02"></option>
+<option value="">------</option>
 </select></div>
 <div style="grid-column:span 2;display:flex;flex-direction:column;justify-content:flex-end;background:#1a0a1a;border:1px solid #525;border-radius:4px;padding:2px 8px 4px;">
 <span style="color:#f8f;font-size:11px;margin-bottom:2px;" data-i18n="G15"></span>

@@ -22,7 +22,7 @@ sel.value=cv;
 const sel=document.getElementById(sid);
 if(sel)sel.querySelectorAll('option').forEach((o,i)=>{if(ENV_OPTS[i])o.textContent=ENV_OPTS[i];});
 });
-for(let b=1;b<=4;b++){const sel=document.getElementById('si_job'+b);if(sel)sel.querySelectorAll('option').forEach(o=>{const v=parseInt(o.value);if(!isNaN(v)&&JOB_STATS[v])o.textContent=DISPLAY_LANG==='EN'?JOB_STATS[v].en:JOB_STATS[v].jp;});}
+for(let b=1;b<=4;b++){const sel=document.getElementById('si_job'+b);if(sel)sel.querySelectorAll('option').forEach(o=>{const v=parseInt(o.value);if(!isNaN(v)&&VOC_STATS[v])o.textContent=DISPLAY_LANG==='EN'?VOC_STATS[v].en:VOC_STATS[v].jp;});}
 }
 function switchUILang(lang){
 if(!['TW','EN','JP'].includes(lang))return;
@@ -1279,7 +1279,7 @@ return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;"
 function applyJobStats(charNum){
 const sel=document.getElementById('si_job'+charNum);
 if(!sel||sel.value==='')return;
-const job=JOB_STATS[parseInt(sel.value)];
+const job=VOC_STATS[parseInt(sel.value)];
 if(!job)return;
 const ids=['atk','might','str','agi','mend','deft'];
 for(let i=0;i<6;i++){
@@ -1317,28 +1317,27 @@ el.style.display='block';
 function renderSolverSimTrace(data){
 const{combo,killTargets,eggAssign,assign,defend}=data;
 if(!killTargets||killTargets.length===0)return'<div style="color:#666;font-size:9px;margin-left:24px;">—</div>';
-const instances=[];
-for(let ti=0;ti<killTargets.length;ti++){
-const t=killTargets[ti];
-const m=getMonDB(t.hex);
-const baseName=getMonsterDisplayName(t.hex);
-for(let c=0;c<t.count;c++){
-instances.push({name:t.count>1?baseName+(c+1):baseName,
-hex:t.hex,hp:m?m.s[0]:9999,hpLow:m?Math.floor(m.s[0]*0.8):9999,death:t.death!==undefined?t.death:100,
-alive:true,groupIdx:ti,mon:m});
-}
+const _sn=(v)=>DISPLAY_LANG==='EN'?(v.en||v.jp):v.jp;
+const instances=buildSimInstances(killTargets);
+const _gc={};
+for(const inst of instances){
+inst.mon=getMonDB(inst.hex);
+const t=killTargets[inst.groupIdx];
+const baseName=getMonsterDisplayName(inst.hex);
+const ci=_gc[inst.groupIdx]=(_gc[inst.groupIdx]||0)+1;
+inst.name=(t.count||1)>1?baseName+ci:baseName;
 }
 if(!document.getElementById('si_useStats')?.checked)return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
 const chars=readCharStatsFromDom();
-const inlineFource=combo.find(v=>v.at===0&&getFourceEls(v.jp));
+const inlineFource=findInlineFource(combo);
 const _charLabel=(c)=>{
 if(!c)return'?';
-if(c.job!==null&&c.job!==undefined&&typeof JOB_STATS!=='undefined'&&JOB_STATS[c.job]){
-return DISPLAY_LANG==='EN'?JOB_STATS[c.job].en:JOB_STATS[c.job].jp;
+if(c.job!==null&&c.job!==undefined&&typeof VOC_STATS!=='undefined'&&VOC_STATS[c.job]){
+return DISPLAY_LANG==='EN'?VOC_STATS[c.job].en:VOC_STATS[c.job].jp;
 }
 return L20+(c.slot||'?');
 };
-const fEls=inlineFource?(_FOURCE_EL[inlineFource.jp]||[]):null;
+const fEls=inlineFource?(getFourceEls(inlineFource.jp)||[]):null;
 let fourceOn=false;
 let _traceMainKilled=false;
 let html='<div style="font-size:9px;color:#aaa;margin-left:24px;border-left:1px solid #555;padding-left:4px;margin-top:1px;">';
@@ -1346,34 +1345,35 @@ const _hpRange=(i)=>'HP'+Math.max(0,i.hpLow)+'~'+i.hp;
 html+='<div style="color:#888;">'+L21+instances.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / ')+'</div>';
 for(let ci=0;ci<combo.length;ci++){
 const action=combo[ci];
-const char=chars[assign?assign[ci]:ci]||chars[0]||{stats:{}};
+const char=chars[assign?assign[ci]:(chars.length?ci%chars.length:ci)]||chars[0]||{stats:{}};
 const whoTag='<span style="color:#6cf;font-size:8px;">'+_charLabel(char)+'</span> ';
 const sk=lookupSkill(action.jp);
 const alive=instances.filter(i=>i.alive);
-if(action.jp==='みのがす'){
+if(action.id===SK_MERCY){
 const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||_traceMainKilled));
 for(const i of removed)i.alive=false;
 const mainStuck=alive.some(i=>i.death>0&&i.groupIdx===0&&!_traceMainKilled);
 const left=instances.filter(i=>i.alive);
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#0ff;">みのがす</span> → ';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#0ff;">'+_sn(action)+'</span> → ';
 html+=removed.length>0?removed.map(i=>i.name).join(',')+L24:L25;
 if(mainStuck)html+=' <span style="color:#f80;">'+L26+'</span>';
 html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
 continue;
 }
-if(action.jp==='おうえん'){
+if(action.id===SK_EGG){
 const tgtCI=eggAssign?Object.keys(eggAssign).find(k=>+k>ci):null;
-const tgtName=tgtCI?(combo[+tgtCI]?.jp||'?'):'?';
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ff0;">おうえん</span> → '+L29+tgtName+'</div>';
+const tgtAction=tgtCI?combo[+tgtCI]:null;
+const tgtName=tgtAction?_sn(tgtAction):'?';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ff0;">'+_sn(action)+'</span> → '+L29+tgtName+'</div>';
 continue;
 }
 if(inlineFource&&action.jp===inlineFource.jp&&!fourceOn){
 fourceOn=true;
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#f80;">'+action.jp+'</span> '+L30+'</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#f80;">'+_sn(action)+'</span> '+L30+'</div>';
 continue;
 }
 if(!sk||alive.length===0){
-html+='<div>'+L22+(ci+1)+L23+whoTag+action.jp+'</div>';
+html+='<div>'+L22+(ci+1)+L23+whoTag+_sn(action)+'</div>';
 continue;
 }
 const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
@@ -1392,21 +1392,18 @@ const repHpHigh=repInst?repInst.hp:0;
 const repHpLow=repInst?repInst.hpLow:0;
 for(const inst of hitTargets){
 const isMetalTgt=isMetalHex(inst.hex);
-const exec=canExecuteMetal(action.jp,inst.hex);
+const exec=canExecuteMetal(action.id,inst.hex);
 if(exec){
 if(exec.isValid){
 details+=inst.name+': HP'+inst.hp+'→<span style="color:#f44;">'+L31+'</span> ';
-inst.hp=0;inst.hpLow=0;inst.alive=false;
-}else{
-details+=inst.name+': <span style="color:#f44;">'+L32+'</span> ';
+metalExecuteInst(inst);
 }
 continue;
 }
 let dMin,dMax,dPerHitMax;
 if(isMetalTgt){
-const elemental=!!(sk.el&&sk.el>0);
-const me=(typeof getMetalEffect==='function')&&getMetalEffect(sk.metal||0,(typeof getWeaponMetalFlag==='function'?getWeaponMetalFlag(action.equip):0));
-if(!elemental&&me){dMin=applyTension(1*hits,mul,tLv,true);dMax=applyTension(2*hits,mul,tLv,true);dPerHitMax=Math.floor(2*mul);}else{dMin=0;dMax=0;dPerHitMax=0;}
+const mc=metalChipPerHit(sk,action.equip);
+dMin=applyTension(mc.min*hits,mul,tLv,true);dMax=applyTension(mc.max*hits,mul,tLv,true);dPerHitMax=Math.floor(mc.max*mul);
 }else{
 const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,getWeaponTypeMultiplier(action.equip,inst.hex),actionMetalEff(sk,action.equip));
 dMin=r?applyTension(r.min*hits,mul,tLv):0;
@@ -1414,13 +1411,13 @@ dMax=r?applyTension(r.max*hits,mul,tLv):0;
 dPerHitMax=r?Math.floor(r.max*mul):0;
 }
 const step=SolverActionGate.step(inst,hits,dPerHitMax,dMin,dMax,isMetalTgt?0:tFlat);
-const dead=step.dead?L33:step.hpLow<=0?L34:'';
+const dead=step.dead?L32:step.hpLow<=0?L33:'';
 details+=inst.name+': '+_hpRange(inst)+'→<span style="color:'+(step.dead?'#f44':step.hpLow<=0?'#f80':'#8f8')+';">'+step.hpLow+'~'+step.hp+'</span>'+dead+' ';
 SolverActionGate.commit(inst,step);
 if(step.dead&&inst.groupIdx===0)_traceMainKilled=true;
 }
 const left=instances.filter(i=>i.alive);
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ccc;">'+action.jp+'</span>'+mulStr+' ['+tgt+'] '+details;
+html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ccc;">'+_sn(action)+'</span>'+mulStr+' ['+tgt+'] '+details;
 html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
 if(repInst){
 const repIsMetal=isMetalHex(repInst.hex);
@@ -1428,17 +1425,27 @@ if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSo
 }
 }
 if(defend&&defend.length){
-html+='<div style="color:#789;margin-top:1px;">'+L35+defend.map(i=>_charLabel(chars[i])).join(', ')+'</div>';
+html+='<div style="color:#789;margin-top:1px;">'+L34+defend.map(i=>_charLabel(chars[i])).join(', ')+'</div>';
 }
 html+='</div>';
 return html;
 }
 function siBuildSeqHtml(seqArray){
+const _GC=[
+[['#f44','#ccc'],['#c018a0','#ccc']],
+[['#4c4','#ccc'],['#fa0','#ccc']],
+[['#00A2E8','#ccc'],['#88f','#ccc']]
+];
+const _BK=['','rgba(255,136,255,0.25)','rgba(34,177,76,0.25)','rgba(0,162,232,0.25)','rgba(255,170,0,0.25)'];
 let items=seqArray.map(item=>{
-let color=item.red?'#f44':'#fff';
+let gi=item.gIdx!==undefined?item.gIdx:0;
+let ri=item.isR!==undefined?(item.isR?0:1):0;
+let cp=_GC[gi]?(_GC[gi][ri]||_GC[0][0]):_GC[0][0];
+let color=item.red?cp[0]:cp[1];
 let fw=item.red?'bold':'normal';
-let bg=item.steal?'background:rgba(255,150,0,0.4);padding:0 2px;border-radius:3px;':'';
-return`<span style="color:${color};font-weight:${fw};${bg}" title="${item.type}">${item.val}</span>`;
+let bg=_BK[item.bk]||'';
+let bgStyle=bg?`background:${bg};padding:0 2px;border-radius:2px;`:'';
+return`<span style="color:${color};font-weight:${fw};${bgStyle}" title="${item.type}">${item.val}</span>`;
 });
 return`<div style="margin-top:6px;font-size:11px;color:#aaa;line-height:1.6;">`+C24+`: [ ${items.join(', ')} ]</div>`;
 }
@@ -1476,9 +1483,18 @@ const envType=parseInt(document.getElementById('si_env').value);
 const floorMR=parseInt(document.getElementById('si_mr').value);
 const userDeft=parseInt(document.getElementById('si_deft').value)||0;
 const n=parseInt(document.getElementById('si_n').value)||0;
-const groupSize=parseInt(document.getElementById('si_group_size').value)||1;
-const rareRarity=parseInt(document.getElementById('si_rare_rate').value);
-const normRarity=parseInt(document.getElementById('si_norm_rate').value);
+let groupSize=parseInt(document.getElementById('si_group_size').value)||1;
+const supSel1=document.getElementById('si_sup1');
+const supSel2=document.getElementById('si_sup2');
+const supPool=dwSupPool(envType,floorMR);
+[supSel1,supSel2].forEach(sel=>{
+const cur=sel.value;
+if(sel.options.length!==supPool.length||(supPool.length>0&&sel.options[0].value!==supPool[0])){
+sel.innerHTML='';
+for(const hx of supPool){sel.options.add(new Option(getMonsterDisplayName(hx),hx));}
+sel.value=cur;
+}
+});
 const tLvs=[
 parseInt(document.getElementById('si_t1').value)||0,
 parseInt(document.getElementById('si_t2').value)||0,
@@ -1496,10 +1512,33 @@ const N=35+(29*n);
 const{atN:atN_val,atN1:atN1_val}=getATPair(seed,N);
 const monName=(typeof getMonsterNameByAT==='function')?getMonsterNameByAT(atN_val,envType,floorMR):'?';
 const monId=(typeof getMonsterIdByAT==='function')?getMonsterIdByAT(atN_val,envType,floorMR):null;
+const _md=monId?MONSTER_DB[monId]:null;
+const _gbInfo=(typeof GROTTO_BATTLE!=='undefined'&&GROTTO_BATTLE[envType])?GROTTO_BATTLE[envType][floorMR]:null;
+const _gbEntry=(_gbInfo&&monId)?_gbInfo.m.find(e=>e[0]===monId):null;
+const _isAlone=_gbEntry&&_gbEntry[3]===1;
+if(_isAlone)groupSize=1;
+const grpSel=document.getElementById('si_group_size');
+grpSel.disabled=_isAlone;
+if(_isAlone)grpSel.value='1';
+if(_isAlone){
+[supSel1,supSel2].forEach(s=>{s.innerHTML='<option disabled selected>Alone</option>';s.disabled=true;});
+}else{
+if((supSel1.disabled=groupSize<=1))supSel1.value='';
+else if(!supSel1.value&&supPool.length)supSel1.value=supPool[0];
+if((supSel2.disabled=groupSize<=2))supSel2.value='';
+else if(!supSel2.value&&supPool.length)supSel2.value=supPool[0];
+}
+const _supId1=supSel1.value||null;
+const _supId2=supSel2.value||null;
+const _mdR=(md)=>md?md.d[3]:256;
+const _mdN=(md)=>md?md.d[1]:128;
+const rareRarity=groupSize>=2?[_mdR(_md),_mdR(_supId1?MONSTER_DB[_supId1]:_md),_mdR(_supId2?MONSTER_DB[_supId2]:_md)]:_mdR(_md);
+const normRarity=groupSize>=2?[_mdN(_md),_mdN(_supId1?MONSTER_DB[_supId1]:_md),_mdN(_supId2?MONSTER_DB[_supId2]:_md)]:_mdN(_md);
 const mapDeft=(typeof calcDeftness==='function')?calcDeftness(atN1_val):0;
 let actualCost=(userDeft>=mapDeft)?3:4;
 const canRound2=userDeft>=mapDeft;
 let totalStartCost=actualCost;
+const abs_1=N+totalStartCost,abs_2=abs_1+1,abs_4=abs_1+2;
 let patternMsg="";
 let foundOffset=-1;
 let foundSequence=null;
@@ -1514,23 +1553,20 @@ let sim=siRunBattleSim(baseRng,groupSize,rareRarity,normRarity,tLvs,false);
 baseRng=lcg(baseRng);
 let currentHits=isNormPat?sim.normHits:sim.rareHits;
 if(siMatchesPattern(currentHits,targetPatterns)){
-if(step>=N+totalStartCost){
-foundOffset=step-(N+totalStartCost);
+if(step>=abs_1){
+foundOffset=step-abs_1;
 foundSequence=siRunBattleSim(rngSnapshot,groupSize,rareRarity,normRarity,tLvs,true).seq;
 break;
 }
 }
 }
 patternMsg=foundOffset!==-1?
-C20+` <span class="si-highlight" style="color:#0f0;">AT +${N+totalStartCost+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
+C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
 }
 let battleStr="";
 let seqHtml="";
 if(pType>0&&foundOffset!==-1){
-let target=N+totalStartCost+foundOffset;
-let d1=target-(N+totalStartCost);
-let d2=target-(N+totalStartCost+1);
-let d4=target-(N+totalStartCost+2);
+const d1=foundOffset,d2=d1-1,d4=d1-2;
 seqHtml=siBuildSeqHtml(foundSequence);
 const showCombos=d1>0&&d1<=970;
 const hexId=toMonsterHexId(monId);
@@ -1612,9 +1648,9 @@ function _derivePlan(monGroups){
 const T=monGroups.reduce((s,g)=>s+g.count,0);
 const main=monGroups[0];
 const sups=monGroups.filter(g=>!g.isMain);
-const d0SC=sups.filter(g=>g.death===0).reduce((s,g)=>s+g.count,0);
-const dG0SC=sups.filter(g=>g.death>0).reduce((s,g)=>s+g.count,0);
-if(main.death>0){
+const d0SC=sups.filter(g=>_effDeath(g)===0).reduce((s,g)=>s+g.count,0);
+const dG0SC=sups.filter(g=>_effDeath(g)>0).reduce((s,g)=>s+g.count,0);
+if(_effDeath(main)>0){
 if(main.count>=2||dG0SC>0)
 return{type:'kill_mercy_clear',effMon:1+d0SC,postAlive:d0SC};
 return{type:'kill_all',effMon:T,postAlive:0};
@@ -1625,37 +1661,31 @@ return{type:'kill_all',effMon:T,postAlive:0};
 const _solverOpt=snapshotSolverOptions();
 const _solverMercyLv=(_solverOpt.chars&&_solverOpt.chars.length)
 ?Math.max(..._solverOpt.chars.map(c=>c.lv||99)):99;
-const _isMetalMercyOnlyShape=(mg)=>{
-const main=mg.find(g=>g.isMain)||mg[0];
-if(!main||!isMetalHex(main.hex))return false;
-const nonMetalFollowers=mg.filter(g=>g!==main&&(g.count||0)>0
-&&!isMetalHex(g.hex));
-if(!nonMetalFollowers.length)return false;
-return nonMetalFollowers.every(g=>{
-const hx=toMonsterHexId(g.hex);
-const m=getMonDB(hx);
-return g.death>0&&!!(m&&m.s)&&(m.s[13]+7)<=_solverMercyLv;
-});
+const _effDeath=(g)=>{
+if(!(g.death>0))return 0;
+const m=getMonDB(g.hex);
+return(m&&m.s&&(m.s[13]+7)>_solverMercyLv)?0:g.death;
 };
 const _fleeProbes=[];
 const _atForT=(t)=>(t===1)?d1:(t<=3?d2:d4);
 const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,canRound2});
 const _fleeState=(mg,t)=>{
-if(!mg.some(g=>!g.isMain&&g.death===0))return'ok';
 const task=_fleeTask(mg,t);
 const v=peekFleeVerdict(task,_solverOpt);
 if(v===false)return'flee';
+if(v==='fallback')return'fallback';
 if(v===true)return'ok';
 _fleeProbes.push(task);
 return'pending';
 };
 const _pendTag=(st)=>st==='pending'
 ?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':'';
-function _addResult(T,effMon,desc,monGroups){
+const _fbTag=' <span style="color:#fa0;font-size:9px;" title="mercy/KMC → kill all">⚡</span>';
+function _addResult(T,effMon,desc,monGroups,killAllDesc){
 if(!resultsByT.has(T))resultsByT.set(T,{mixes:[],flee:[]});
 const bucket=resultsByT.get(T);
 if(effMon<0){bucket.flee.push(desc);return;}
-bucket.mixes.push({effMon,desc,monGroups});
+bucket.mixes.push({effMon,desc,monGroups,killAllDesc});
 }
 const seenMainOnly=new Set();
 for(let raw=mainMin;raw<=mainMax;raw++){
@@ -1664,11 +1694,16 @@ if(M<2||seenMainOnly.has(M))continue;
 seenMainOnly.add(M);
 const mgA=[{hex:hexId,count:M,death:mainDeath,isMain:true}];
 const planA=_derivePlan(mgA);
-if(planA.type==='kill_mercy_clear'){
-_addResult(M,planA.effMon,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span><span style="color:#0f0"> ${L36}→×${planA.effMon}</span>${_pFmt(_kA(M))}`,mgA);
-_addResult(M,M,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span><span style="color:#fa6"> ${L37}→×${M}</span>${_pFmt(_kA(M))}`,mgA.map(g=>({...g,death:0})));
+const _fsA=_fleeState(mgA,M);
+const _kaDescA=`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span>${_pendTag(_fsA)}${_pFmt(_kA(M))}`;
+if(_fsA==='flee'){
+_addResult(M,-1,`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span>${_pFmt(_kA(M))}`);
+}else if(_fsA==='fallback'){
+_addResult(M,M,`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span>${_fbTag}${_pFmt(_kA(M))}`,mgA);
+}else if(planA.type==='kill_mercy_clear'){
+_addResult(M,planA.effMon,`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span><span style="color:#0f0"> ${L36}→×${planA.effMon}</span>${_pendTag(_fsA)}${_pFmt(_kA(M))}`,mgA,_kaDescA);
 }else{
-_addResult(M,M,`<span style="color:#ccc">${monNameFn(hexId)}×${M}</span>${_pFmt(_kA(M))}`,mgA);
+_addResult(M,M,_kaDescA,mgA);
 }
 }
 if(canSup1){
@@ -1689,25 +1724,25 @@ if(seen.has(key))continue;
 seen.add(key);
 const T=M+S;
 const sLbl=S>1?supName+'×'+S:supName;
-const sameTag=sameAsMain?'<span style="color:#0f0"> '+L38+'</span>':'';
+const _mainTag=`<span style="color:#f9c">${monNameFn(hexId)}${M > 1 ? '×' + M : ''}</span> `;
 const mg=[{hex:hexId,count:M,death:mainDeath,isMain:true},
 {hex:supHex,count:S,death:supDeath,isMain:false}];
 const plan=_derivePlan(mg);
 const _fs=_fleeState(mg,T);
+const _kaDescB=`${_mainTag}<span style="color:#a8f">+${sLbl} HP${supHP}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`;
 if(_fs==='flee'){
-_addResult(T,-1,`<span style="color:#a8f">+${sLbl}</span>${sameTag} <span style="color:#f44">HP${supHP}</span>${_pFmt(_kB(supHex, M, S))}`);
+_addResult(T,-1,`${_mainTag}<span style="color:#a8f">+${sLbl}</span> <span style="color:#f44">HP${supHP}</span>${_pFmt(_kB(supHex, M, S))}`);
+}else if(_fs==='fallback'){
+_addResult(T,T,`${_mainTag}<span style="color:#a8f">+${sLbl} HP${supHP}</span>${_fbTag}${_pFmt(_kB(supHex, M, S))}`,mg);
 }else if(plan.type==='kill_all'){
-_addResult(T,T,`<span style="color:#a8f">+${sLbl} HP${supHP}</span>${sameTag}${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg);
+_addResult(T,T,_kaDescB,mg);
 }else if(plan.type==='mercy_first'){
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${sLbl}</span>${sameTag}<span style="color:#0f0">${L39}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg);
+`${_mainTag}<span style="color:#a8f">+${sLbl}</span><span style="color:#0f0"> ${L39}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg,_kaDescB);
 }else{
-const lbl=plan.postAlive>0?L40:L41;
+const lbl=plan.postAlive>0?L38:L37;
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${sLbl}</span>${sameTag}<span style="color:#0f0">${lbl}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg);
-}
-if(plan.type!=='kill_all'&&_fs!=='flee'&&!_isMetalMercyOnlyShape(mg)){
-_addResult(T,T,`<span style="color:#a8f">+${sLbl} HP${supHP}</span>${sameTag}<span style="color:#fa6"> ${L37}→×${T}</span>${_pFmt(_kB(supHex, M, S))}`,mg.map(g=>({...g,death:0})));
+`${_mainTag}<span style="color:#a8f">+${sLbl}</span><span style="color:#0f0"> ${lbl}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg,_kaDescB);
 }
 }
 }
@@ -1740,23 +1775,23 @@ const mg=[{hex:hexId,count:M,death:mainDeath,isMain:true},
 {hex:sA[0],count:SA,death:dA,isMain:false},
 {hex:sB[0],count:SB,death:dB,isMain:false}];
 const plan=_derivePlan(mg);
-const sameTag=(sameA||sameB||twoSameSup)?'<span style="color:#0f0"> '+L38+'</span>':'';
+const _mainTag=`<span style="color:#f9c">${monNameFn(hexId)}${M > 1 ? '×' + M : ''}</span> `;
 const _fsC=_fleeState(mg,T);
 const fleeHP=_fsC==='flee';
+const _kaDescC=`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`;
 if(fleeHP){
-_addResult(T,-1,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`);
+_addResult(T,-1,`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`);
+}else if(_fsC==='fallback'){
+_addResult(T,T,`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span>${_fbTag}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
 }else if(plan.type==='kill_all'){
-_addResult(T,plan.effMon,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
+_addResult(T,plan.effMon,_kaDescC,mg);
 }else if(plan.type==='mercy_first'){
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#0f0">${L39}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
+`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span><span style="color:#0f0"> ${L39}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg,_kaDescC);
 }else{
-const lbl=plan.postAlive>0?L40:L41;
+const lbl=plan.postAlive>0?L38:L37;
 _addResult(T,plan.effMon,
-`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#0f0">${lbl}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
-}
-if(plan.type!=='kill_all'&&!fleeHP&&!_isMetalMercyOnlyShape(mg)){
-_addResult(T,T,`<span style="color:#a8f">+${lA}+${lB}</span>${sameTag}<span style="color:#fa6"> ${L37}→×${T}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg.map(g=>({...g,death:0})));
+`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span><span style="color:#0f0"> ${lbl}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg,_kaDescC);
 }
 }
 }
@@ -1769,9 +1804,9 @@ if(_fleeProbes.length){
 Promise.all(_fleeProbes.map(t=>requestFleeVerdict(t,_solverOpt)))
 .then(()=>updateSeedInspector());
 }
-const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L42}${lbl}${L43}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
+const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L40}${lbl}${L41}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
 battleStr=`<div style="margin:2px 0;">${BATTLE_LABEL} ${_batBtn(d1, 'd1', '×1')} / ${_batBtn(d2, 'd2', '×2-3')} / ${_batBtn(d4, 'd4', '×4-5')}</div>`
-+`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L44}</div>`;
++`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
 }else if(d1===0){
 battleStr+=`<div style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">0</span> <span style="color:#888;font-size:10px;">×1</span></div>`
 +renderSolverResult(0,[{hex:hexId,count:1,death:mainDeath,isMain:true}],monId,mapDeft);
@@ -1779,9 +1814,6 @@ battleStr+=`<div style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;f
 battleStr+=`<div style="color:#888;font-size:11px;margin-top:3px;">`+C22+`</div>`
 +`<div style="margin-top:3px;">${seqHtml}</div>`;
 }else{
-let abs_1=N+totalStartCost;
-let abs_2=abs_1+1;
-let abs_4=abs_1+2;
 let currentRng=seed>>>0;
 for(let i=0;i<abs_1-1;i++)currentRng=lcg(currentRng);
 let defaultSim=siRunBattleSim(currentRng,groupSize,rareRarity,normRarity,tLvs,true);
@@ -1795,9 +1827,10 @@ battleStr=`<div id="batLine1" style="margin:2px 0;">${BATTLE_LABEL} <span style=
 let s_target=seed>>>0;
 for(let i=0;i<targetTotalStep;i++)s_target=lcg(s_target);
 const atTarget_val=(s_target>>>16)&0x7FFF;
-let DropThreshold=Math.floor(32768/rareRarity);
+const _mainRR=Array.isArray(rareRarity)?rareRarity[0]:rareRarity;
+let DropThreshold=Math.floor(32768/_mainRR);
 let firstThiefLv=tLvs[0]>0?tLvs[0]:99;
-const effectiveRate=Math.floor((rareRarity*100)/firstThiefLv);
+const effectiveRate=Math.floor((_mainRR*100)/firstThiefLv);
 const ThiefThreshold=Math.floor(32767/effectiveRate)+1;
 const resBox=document.getElementById('si_at_results');
 resBox.innerHTML=`
@@ -1805,7 +1838,7 @@ resBox.innerHTML=`
   <span>AT ${N}: <span class="si-highlight">${atN_val}</span> → ${monName}</span>
   <span style="font-size:11px;">${patternMsg}</span>
   </div>
-  <div>AT ${N+1}: <span style="color:#39C5BB;">${atN1_val}</span> ➔ `+G27+`: <span class="si-highlight">${mapDeft}</span></div>
+  <div>AT ${N+1}: <span style="color:#39C5BB;">${atN1_val}</span> ➔ `+G26+`: <span class="si-highlight">${mapDeft}</span></div>
   <div style="margin-top:5px;padding-top:5px;border-top:1px dashed #335;">
   ${battleStr}
   </div>`;
@@ -1813,8 +1846,8 @@ const targetBox=document.getElementById('si_target_results');
 targetBox.innerHTML=`
   <div>AT <span style="color:#fff;">${targetTotalStep}</span>: <span class="si-highlight" style="color:#f44;font-size:15px;">${atTarget_val}</span></div>
   <div style="font-size:11px;margin-top:5px;color:#ccc;">
-  `+C25+` (≤${DropThreshold}): ${atTarget_val <= DropThreshold ? '✅ ' + L48 : '❌ ' + L49}<br>
-  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${atTarget_val <= ThiefThreshold ? '✅ ' + L48 : '❌ ' + L49}
+  `+C25+` (≤${DropThreshold}): ${atTarget_val <= DropThreshold ? '✅ ' + L46 : '❌ ' + L47}<br>
+  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${atTarget_val <= ThiefThreshold ? '✅ ' + L46 : '❌ ' + L47}
   </div>`;
 }
 function openSeedInspector(){
@@ -1904,8 +1937,9 @@ _siSolveBusy.clear();
 }
 function runSolveTaskOnMain(render,idBase,bucketBase){
 window._solverComboId=idBase;
-window._solverBucketId=bucketBase;
-return renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
+window._solverBucketId=bucketBase;window._solverFallback=false;window._solverSolvable=null;
+const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
+return{html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable};
 }
 const snapshotSolverOptions=()=>({
 chars:readCharStatsFromDom(),
@@ -1935,7 +1969,7 @@ if(_fleeVerdict.has(k))return Promise.resolve(_fleeVerdict.get(k));
 if(_fleePending.has(k))return _fleePending.get(k);
 const n=++_fleeProbeSeq;
 const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n).then((m)=>{
-const solvable=!!(m&&m.html&&m.html.indexOf('expandCombo(')>=0);
+const solvable=m&&m.solvable===false?false:(m&&m.fallback?'fallback':true);
 _fleeVerdict.set(k,solvable);_fleePending.delete(k);
 return solvable;
 }).catch(()=>{
@@ -2012,17 +2046,17 @@ const _hdr=(bat,tLbl)=>`<div style="margin:6px 0 2px 0;">${BATTLE_LABEL} <span s
 const _queueTask=(task,meta)=>{
 const id='si_solver_task_'+viewGen+'_'+tasks.length;
 tasks.push(task);taskElementIds.push(id);taskMeta.push(meta||null);
-html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px;">${L45}</div></div>`;
+html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px;">${L43}</div></div>`;
 };
 if(bucket==='d1'){
-title=`${BATTLE_LABEL} ${siFormatAT(b.d1)}｜${L42}×1`;
+title=`${BATTLE_LABEL} ${siFormatAT(b.d1)}｜${L40}×1`;
 html+=_hdr(b.d1,'×1');
 _queueTask(makeD1SolveTask(b));
 }else{
 const Ts=bucket==='d2'?[2,3]:[4,5];
 const headBat=bucket==='d2'?b.d2:b.d4;
 const headLbl=bucket==='d2'?'×2-3':'×4-5';
-title=`${BATTLE_LABEL} ${siFormatAT(headBat)}｜${L42}${headLbl}`;
+title=`${BATTLE_LABEL} ${siFormatAT(headBat)}｜${L40}${headLbl}`;
 let any=false;
 for(const T of Ts){
 const entry=b.resultsByT&&b.resultsByT.get(T);
@@ -2036,12 +2070,12 @@ const rowId='si_solver_pattern_'+viewGen+'_'+taskNo;
 const descId=rowId+'_desc';
 html+=`<div id="${rowId}"><div id="${descId}" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">${m.desc}</div>`;
 _queueTask({bat:tBat,monGroups:m.monGroups||[{hex:b.hexId,count:m.effMon,death:b.mainDeath,isMain:true}],monId:b.monId,mapDeft:b.mapDeft,canRound2:b.canRound2},
-{pattern:true,section:'T'+T,rowId,descId,desc:m.desc});
+{pattern:true,section:'T'+T,rowId,descId,desc:m.desc,killAllDesc:m.killAllDesc});
 html+='</div>';
 }
-if(entry.flee.length>0)html+=`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L46}</span> ${entry.flee.join(' · ')}</div>`;
+if(entry.flee.length>0)html+=`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span> ${entry.flee.join(' · ')}</div>`;
 }
-if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L47+'</div>';
+if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
 }
 document.getElementById('si_submodal_title').innerHTML=title;
 document.getElementById('si_submodal_body').innerHTML=html;
@@ -2079,6 +2113,12 @@ const _completeTask=(i,result,stateAlreadyMerged)=>{
 if(viewGen!==_siSolveGen)return;
 if(!stateAlreadyMerged)_mergeState(result);
 taskResults[i]={html:result&&result.html!==undefined?result.html:''};
+if(result.fallback&&taskMeta[i]?.killAllDesc){
+const descEl=document.getElementById(taskMeta[i].descId);
+const fbDesc=taskMeta[i].killAllDesc+' <span style="color:#fa0;font-size:9px;" title="mercy/KMC → kill all">⚡</span>';
+if(descEl)descEl.innerHTML=fbDesc;
+taskMeta[i].desc=fbDesc;
+}
 _fill(i,taskResults[i].html);
 completedTasks++;
 if(completedTasks===tasks.length)_mergeEquivalentPatterns();
@@ -2088,7 +2128,7 @@ if(!pool){
 let i=0;
 const step=()=>{
 if(viewGen!==_siSolveGen||i>=tasks.length)return;
-const result={html:runSolveTaskOnMain(tasks[i],i*ID_SPAN,i*BK_SPAN)};
+const result=runSolveTaskOnMain(tasks[i],i*ID_SPAN,i*BK_SPAN);
 _completeTask(i,result,true);
 i++;setTimeout(step,0);
 };
@@ -2104,7 +2144,7 @@ if(viewGen!==_siSolveGen)return;
 console.warn('[Solver] Worker solve 失敗,該任務退回主執行緒:',e&&e.message);
 setTimeout(()=>{
 if(viewGen!==_siSolveGen)return;
-_completeTask(i,{html:runSolveTaskOnMain(task,i*ID_SPAN,i*BK_SPAN)},true);
+_completeTask(i,runSolveTaskOnMain(task,i*ID_SPAN,i*BK_SPAN),true);
 },0);
 });
 });
