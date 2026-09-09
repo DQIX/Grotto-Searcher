@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DQ9 Hoimi Table (B-Table) Searcher</title>
+  <style>
+    :root {
+      --bg: #f4f9f4;
+      --surface: #ffffff;
+      --surface2: #f0fdf4;
+      --border: #86efac;
+      --accent: #16a34a;
+      --accent2: #15803d;
+      --warn: #dc2626;
+      --text: #14532d;
+      --text-dim: #6b7280;
+      --pass: #16a34a;
+      --fail: #d1d5db;
+      --mono: 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      -webkit-text-size-adjust: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      padding: 20px;
+      max-width: 780px;
+      margin: auto;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.1em; color: var(--accent); letter-spacing: .05em; margin-bottom: 4px; }
+
+    /* 標題列 + 語言切換（風格參考 dq9map_item_multicore.html 的 .lang-sw） */
+    .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .lang-row { display: flex; gap: 4px; flex: none; }
+    .lang-sw {
+      padding: 2px 8px; height: auto;
+      border: 1px solid var(--border); border-radius: 4px;
+      background: #fff; color: var(--text-dim);
+      font-size: 11px; font-weight: bold; line-height: 1.4;
+      cursor: pointer; transition: all .15s;
+    }
+    .lang-sw:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+    .lang-sw.on { background: var(--accent); border-color: var(--accent2); color: #fff; }
+    @media (max-width: 600px) {
+      .header { flex-wrap: wrap; }
+      .lang-row { order: -1; width: 100%; justify-content: flex-end; margin-bottom: 4px; }
+    }
+    h2 { font-size: .85em; color: var(--text-dim); font-weight: normal; margin-bottom: 20px; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .panel-title {
+      font-size: .7em;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .field label { font-size: .75em; color: var(--text-dim); }
+    .seed-hint { font-size: .75em; margin-top: 3px; color: var(--text-dim); }
+    /* 同一列裡三種控制項等高，上下緣才對得齊 */
+    .row input, .row select, .row button { height: 36px; }
+    /* 寬螢幕欄位並排時，提示文字不能進入版面流 —— 否則會把輸入框整個往上頂一行。
+       改成絕對定位掛在欄位下方，並由 .has-hint 幫那一列預留空間。
+       窄螢幕欄位是上下堆疊的，沒有這個問題，維持一般流排版即可。 */
+    @media (min-width: 601px) {
+      .seed-hint { position: absolute; top: 100%; left: 0; margin-top: 2px; white-space: nowrap; }
+      .row.has-hint { margin-bottom: 28px; }
+    }
+    input, select {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 5px;
+      padding: 7px 10px;
+      font-size: .9em;
+      font-family: var(--mono);
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input[type="number"] { width: 110px; }
+    input.wide { width: 210px; }
+    input.seed-input { width: 170px; }
+    select.narrow { width: 90px; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 18px;
+      cursor: pointer;
+      font-size: .9em;
+      font-weight: 600;
+      transition: opacity .15s;
+      height: 36px;
+    }
+    button:hover { opacity: .85; }
+    button.sec { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .result-box {
+      background: var(--surface2);
+      border-color: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-top: 12px;
+      font-family: var(--mono);
+      font-size: .95em;
+      min-height: 42px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.7;
+    }
+    .ok   { color: var(--pass); font-weight: bold; }
+    .bad  { color: var(--warn); font-weight: bold; }
+    .dim  { color: var(--text-dim); }
+    .hi   { color: #15803d; font-weight: bold; }
+    .note {
+      background: #f0fdf4;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 5px 5px 0;
+      padding: 8px 12px;
+      font-size: .78em;
+      color: #166534;
+      margin-top: 10px;
+    }
+    /* Trace grid */
+    .trace-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      --tc-gap: 4px;              /* 連框的跨隙連接條寬度也吃這個值 */
+      gap: var(--tc-gap);
+      margin-top: 10px;
+    }
+    @media (max-width: 600px) {
+      .trace-grid { grid-template-columns: repeat(5, 1fr); }
+    }
+    .trace-cell {
+      background: #f0fdf4;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 41px;           /* 字放大但方格尺寸維持原樣 */
+      padding: 0 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: .85em;
+      line-height: 1.3;
+      text-align: center;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .trace-cell:hover { border-color: var(--accent); }
+    .trace-cell .tc-idx { font-size: .78em; color: var(--text-dim); margin-bottom: 1px; }
+
+    /* 消耗游標：已消耗的格子 */
+    .trace-cell.used { background: #f5f6f7; border-color: #e6e8ea; color: #b9bfc6; }
+    .trace-cell.used .tc-idx { color: #ced3d8; }
+
+    /* 連框：點方格框住 N 起算的連續格子，長度 = Boss 戰按鈕的步數 */
+    .trace-cell.tri { background: #fdeef9; border-color: #c018a0; color: #a01486; font-weight: 700; position: relative; z-index: 1; }
+    .trace-cell.tri .tc-idx { color: #c76fb8; }
+    .trace-cell.tri.tri-jn { border-right-color: transparent; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+    .trace-cell.tri.tri-jp { border-left-color: transparent;  border-top-left-radius: 0;  border-bottom-left-radius: 0; }
+    /* 跨越 grid gap 的連接條，讓三格看起來是同一個框 */
+    .trace-cell.tri.tri-jn::after {
+      content: ''; position: absolute; top: -1px; bottom: -1px; left: 100%; width: var(--tc-gap);
+      background: #fdeef9; border-top: 1px solid #c018a0; border-bottom: 1px solid #c018a0;
+    }
+    /* 連框內命中掉寶：稀有 A/C/E/G/I、普通 B/D/F/H/J */
+    .trace-cell.hit-rare   { background: #c018a0; border-color: #a01486; color: #fff; }
+    .trace-cell.hit-normal { background: #22B14C; border-color: #1b8e3d; color: #fff; }
+    .trace-cell.hit-rare .tc-idx,
+    .trace-cell.hit-normal .tc-idx { color: rgba(255,255,255,.88); }
+
+    /* 下一步游標：只加外環，不換底色，才能疊在 used / tri 上面 */
+    .trace-cell.next { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); color: var(--accent2); font-weight: 700; position: relative; z-index: 2; }
+    .trace-cell.next .tc-idx { color: var(--accent); }
+    /* 游標剛好落在命中格上：只保留外環，文字維持白色才看得清楚 */
+    .trace-cell.next.hit-rare,
+    .trace-cell.next.hit-normal { color: #fff; }
+    .trace-cell.next.hit-rare .tc-idx,
+    .trace-cell.next.hit-normal .tc-idx { color: rgba(255,255,255,.88); }
+
+    .tri-info { font-size: .9em; margin-bottom: 8px; }
+
+    /* Drop grid */
+    .drop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .drop-cell {
+      background: #f0fdf4;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 8px;
+      font-family: var(--mono);
+      font-size: 1.05em;
+      font-weight: 600;
+      text-align: center;
+    }
+    .drop-cell .slot-name { font-size: .78em; font-weight: 400; color: var(--text-dim); margin-bottom: 2px; }
+    .drop-cell.c-pass     { border-color: var(--pass); color: var(--pass); }
+    .drop-cell.c-fail     { color: #9ca3af; }
+    .drop-cell.c-neutral  { color: #9ca3af; }  /* 未通過或不限：同預設淺綠框 */
+    .drop-cell.c-x        { color: #9ca3af; font-style: italic; }
+    .drop-cell.c-overflow { border-color: var(--warn); color: var(--warn); }
+
+    /* 稀有掉寶 (A/C/E/G/I) 與 普通掉寶 (B/D/F/H/J) 底色 */
+    .drop-cell.k-rare   { background: #c018a0; border-color: #a01486; color: #fff; }
+    .drop-cell.k-normal { background: #22B14C; border-color: #1b8e3d; color: #fff; }
+    .drop-cell.k-rare .slot-name,
+    .drop-cell.k-normal .slot-name { color: rgba(255,255,255,.88); }
+    /* 未計入（未通過／不限）：同色系淡底 */
+    .drop-cell.k-rare.c-neutral   { background: #fae6f5; border-color: #eec4e4; color: #b473ac; }
+    .drop-cell.k-normal.c-neutral { background: #e4f6ea; border-color: #b9e3c7; color: #6aa584; }
+    .drop-cell.k-rare.c-neutral .slot-name   { color: #c085b6; }
+    .drop-cell.k-normal.c-neutral .slot-name { color: #8ac0a1; }
+    /* 超過 8 個上限：保留紅框警示 */
+    .drop-cell.k-rare.c-overflow,
+    .drop-cell.k-normal.c-overflow { border-color: var(--warn); box-shadow: 0 0 0 2px var(--warn); }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+
+    /* ── 全屏 modal：控制列固定在頂端，只有格子區捲動 ── */
+    .modal { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; }
+    .modal[hidden] { display: none; }
+    .modal-head {
+      flex: none;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px 6px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.05);
+    }
+    .modal-head .row:last-of-type { margin-bottom: 6px; }
+    .modal-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .modal-close {
+      background: #fff; border: 1px solid var(--border); color: var(--text-dim);
+      width: 32px; height: 32px; padding: 0; border-radius: 5px; font-size: 1em; line-height: 1;
+    }
+    .modal-close:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+    /* 控制列要對齊：input / select / button 三者等高，
+       且 seed 下方的平台提示不進入版面流（否則會把輸入框往上頂一整行）。
+       平台提示在 B-Table 面板仍然保留。 */
+    .modal-head input, .modal-head select, .modal-head button { height: 32px; }
+    .modal-head #tr_seed_hint { display: none; }
+    .modal-body { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 18px 24px; }
+    .modal-body .result-box { margin-top: 0; }
+    /* 全屏時讓格子填滿寬度，欄數隨視窗自動調整 */
+    .modal .trace-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+    @media (max-width: 600px) {
+      .modal .trace-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+      .modal-head { padding: 10px 12px 4px; }
+      .modal-body { padding: 10px 12px 20px; }
+    }
+
+    /* ══ iPhone / 窄螢幕適配 ══════════════════════════════════
+       放在樣式表最後，才不會被前面的 .modal 基礎規則蓋掉。
+       1. iOS Safari 對 font-size < 16px 的「會叫鍵盤」欄位，聚焦時會自動
+          放大整頁；select 開的是原生滾輪不會，所以只有 input 需要 16px。
+       2. 固定寬度在 375px 下會排得零碎，主面板改成一欄到底，
+          所有控制項共用同一個左邊界與寬度。
+       3. 留出瀏海與 Home 條的安全區域。 */
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+        padding-left:   max(12px, env(safe-area-inset-left));
+        padding-right:  max(12px, env(safe-area-inset-right));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+      }
+      .panel { padding: 12px; margin-bottom: 12px; }
+      .row   { gap: 8px; margin-bottom: 8px; }
+      .field { min-width: 0; }
+      .note  { font-size: .82em; }
+
+      input  { font-size: 16px; }
+      select { font-size: 14px; }
+      input, select { padding: 5px 8px; max-width: 100%; }
+      input, select, button { height: 36px; }   /* 三者等高才對得齊 */
+      button { padding: 6px 12px; }
+
+      /* 主面板：每個欄位獨佔一行，按鈕等寬排成一列 */
+      .panel .row > .field { flex: 1 1 100%; }
+      .panel .row > .field > input,
+      .panel .row > .field > select { width: 100% !important; }
+      .panel .row > button { flex: 1 1 auto; }
+
+      /* 掉寶格：3 欄固定，百分比有 7 位小數，字要縮到能一行放下 */
+      .drop-grid { gap: 4px; }
+      .drop-cell { font-size: 11px; padding: 6px 2px; white-space: nowrap; }
+      .drop-cell .slot-name { font-size: .8em; }
+
+      /* ── RNG Trace 全屏 modal ──
+         垂直空間最珍貴，控制項要比主面板再緊兩級 */
+      .modal-head {
+        padding: 6px 10px 2px;
+        padding-top: max(6px, env(safe-area-inset-top));
+        max-height: 46vh; overflow-y: auto;
+      }
+      .modal-body { padding: 6px 8px calc(12px + env(safe-area-inset-bottom)); }
+      .modal-bar  { margin-bottom: 4px; }
+      .modal-bar .panel-title { font-size: .62em; }
+      .modal-close { width: 26px; height: 26px; }
+      .modal-head .row { gap: 5px; margin-bottom: 4px; }
+      .modal-head .field { gap: 1px; }
+      .modal-head .field label { font-size: .62em; }
+      .modal-head input, .modal-head select, .modal-head button { height: 28px; }
+      .modal-head input  { font-size: 16px; padding: 2px 5px; }
+      .modal-head select { font-size: 12px; padding: 2px 3px; }
+      .modal-head button { font-size: .78em; padding: 3px 7px; }
+      .modal-head select.narrow    { width: 58px; }
+      .modal-head input.seed-input { width: 72px; }    /* 卡帶 seed 是 5 位 hex，夠用就好 */
+      .tri-info { font-size: .76em; margin-bottom: 3px; }
+      #tr_out.result-box { padding: 6px 6px; }
+
+      /* 一行 5 格 */
+      .modal .trace-grid { grid-template-columns: repeat(5, 1fr); --tc-gap: 3px; }
+      .trace-cell { height: 34px; font-size: .74em; padding: 0 1px; }
+      .trace-cell .tc-idx { font-size: .74em; margin-bottom: 0; }
+    }
+
+    /* 手機橫置（矮視窗）：寬度夠但高度很緊，控制列要壓扁。
+       這是高度條件，跟上面的寬度條件互補。 */
+    @media (max-height: 500px) {
+      .modal-head {
+        padding: 5px 12px 2px;
+        padding-top: max(5px, env(safe-area-inset-top));
+        max-height: 52vh; overflow-y: auto;
+      }
+      .modal-bar { margin-bottom: 3px; }
+      .modal-head .row { gap: 5px; margin-bottom: 3px; }
+      .modal-head .field { gap: 1px; }
+      .modal-head .field label { font-size: .64em; }
+      .modal-head input, .modal-head select, .modal-head button { height: 28px; }
+      .modal-head input  { font-size: 16px; padding: 2px 5px; }
+      .modal-head select { font-size: 12px; padding: 2px 4px; }
+      .modal-head button { font-size: .8em; padding: 3px 8px; }
+      .tri-info { font-size: .78em; margin-bottom: 2px; }
+      .modal-body { padding: 5px 10px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-i18n="app.title"></h1>
+    <h2 data-i18n="app.subtitle"></h2>
+  </div>
+  <div class="lang-row">
+    <button class="lang-sw" data-lang="zh-TW" onclick="switchUILang('zh-TW')">中文</button>
+    <button class="lang-sw" data-lang="en"    onclick="switchUILang('en')">English</button>
+    <button class="lang-sw" data-lang="ja"    onclick="switchUILang('ja')">日本語</button>
+  </div>
+</div>
+
+<!-- ─────────────── PANEL 2: B-TABLE 掉寶搜尋 ──────────────── -->
+<div class="panel">
+  <div class="panel-title" data-i18n="bt.title"></div>
+  <div class="row has-hint">
+    <div class="field">
+      <label data-i18n="common.btSeedHex"></label>
+      <input type="text" id="bt_seed" class="seed-input" placeholder="e.g. 32742" oninput="seedHint('bt_seed','bt_seed_hint')">
+      <span id="bt_seed_hint" class="seed-hint">　</span>
+    </div>
+    <div class="field">
+      <label data-i18n="bt.rareA"></label>
+      <select id="bt_a" class="narrow"></select>
+    </div>
+    <div class="field">
+      <label data-i18n="bt.normalB"></label>
+      <select id="bt_b" class="narrow"></select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label data-i18n="bt.bookRare"></label>
+      <select id="bt_m" style="width:160px"></select>
+    </div>
+    <div class="field">
+      <label data-i18n="bt.bookNormal"></label>
+      <select id="bt_n" style="width:160px"></select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label data-i18n="bt.maxHoimi"></label>
+      <input type="number" id="bt_steps" value="100000" style="width:100px">
+    </div>
+    <button onclick="doBTSearch(false)" data-i18n="bt.search"></button>
+    <button onclick="doBTSearch(true)" id="bt_next_btn" class="sec" data-i18n="bt.searchNext" disabled></button>
+    <button onclick="doSearchOverflow()" id="bt_overflow_btn" class="sec" data-i18n="bt.searchOver" disabled></button>
+  </div>
+
+  <div id="bt_out" class="result-box dim" data-i18n-init="common.ready"></div>
+</div>
+<div class="note" data-i18n-html="bt.note"></div>
+
+<!-- ─────────────── PANEL 0: RNG TRACE 啟動鈕 ──────────────── -->
+<div class="panel">
+  <div class="panel-title" data-i18n="tr.title"></div>
+  <div class="row">
+    <button onclick="openTrace()" data-i18n="tr.open"></button>
+    <span class="dim" style="font-size:.8em;align-self:center" data-i18n="tr.openHint"></span>
+  </div>
+</div>
+
+<!-- ─────────────── RNG TRACE 全屏 MODAL ──────────────── -->
+<div id="tr_modal" class="modal" hidden>
+  <div class="modal-head">
+    <div class="modal-bar">
+      <div class="panel-title" style="margin:0" data-i18n="tr.title"></div>
+      <button class="modal-close" onclick="closeTrace()" data-i18n-title="tr.close">✕</button>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label data-i18n="common.btSeedHex"></label>
+        <input type="text" id="tr_seed" class="seed-input" placeholder="e.g. 32742" oninput="seedHint('tr_seed','tr_seed_hint')">
+        <span id="tr_seed_hint" class="seed-hint">　</span>
+      </div>
+      <button onclick="doTrace(false)" style="align-self:flex-end" data-i18n="tr.expand"></button>
+      <button onclick="doTrace(true)" id="tr_more_btn" class="sec" style="align-self:flex-end" data-i18n="tr.more" disabled></button>
+      <div class="field">
+        <label data-i18n="tr.rarePct"></label>
+        <select id="tr_rare" class="narrow" autocomplete="off" onchange="repaintTrace()"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="tr.normalPct"></label>
+        <select id="tr_normal" class="narrow" autocomplete="off" onchange="repaintTrace()"></select>
+      </div>
+    </div>
+    <div class="row">
+      <!-- +1 / +4 / +8 由 TR_CASTS 產生（buildCastButtons） -->
+      <div id="tr_casts" style="display:contents"></div>
+      <div class="field">
+        <label data-i18n="tr.boss"></label>
+        <button onclick="advance(bookSteps())" id="tr_advbook" class="sec" data-i18n-title="tr.bossTitle" disabled>+3</button>
+      </div>
+      <div class="field">
+        <label data-i18n="tr.books"></label>
+        <select id="tr_books" class="narrow" autocomplete="off" onchange="bookHint()"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="tr.undo"></label>
+        <button onclick="undoAdvance()" id="tr_undo" class="sec" data-i18n-title="tr.undoTitle" disabled>⌫</button>
+      </div>
+    </div>
+    <div class="tri-info" id="tr_pos_info"></div>
+    <div class="tri-info" id="tr_tri_info"></div>
+  </div>
+  <div class="modal-body">
+    <div id="tr_out" class="result-box dim" style="white-space:normal" data-i18n-init="tr.placeholder"></div>
+  </div>
+</div>
+
+<!-- ─────────────── PANEL 1: SEED 逆推 ──────────────── -->
+<div class="panel">
+  <div class="panel-title" data-i18n="hs.title"></div>
+  <div class="row has-hint">
+    <div class="field">
+      <label data-i18n="hs.method"></label>
+      <select id="hs_spell" style="width:250px" onchange="spellHint()"></select>
+      <span id="hs_spell_hint" class="seed-hint">　</span>
+    </div>
+    <div class="field">
+      <label data-i18n="hs.seq"></label>
+      <input type="text" id="hs_seq" class="wide" value="32,30,31,31,37">
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label data-i18n="hs.range"></label>
+      <select id="hs_range" style="width:200px"></select>
+    </div>
+    <button onclick="doSeedSearch()" data-i18n="hs.reverse"></button>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <div class="field">
+      <label data-i18n="hs.verifySeed"></label>
+      <input type="text" id="hs_verify_seed" style="width:150px" placeholder="e.g. 32742">
+    </div>
+    <button onclick="doVerify()" class="sec" data-i18n="hs.expandSeq"></button>
+  </div>
+  <div id="hs_out" class="result-box dim" data-i18n-init="common.ready"></div>
+</div>
+<div class="note" data-i18n-html="hs.note"></div>
+<hr>
+<p align=center><span data-i18n="app.credit1"></span><br><span data-i18n="app.credit2"></span></p>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  i18n — 所有介面文字集中在這裡，程式碼一律透過 t(key) 取用。
+//  要加語言：複製 'zh-TW' 整個物件、改成新的語言碼、把值翻掉即可，
+//  不需要動任何邏輯。{xxx} 是代入用的佔位符，順序可依語言自由調換。
+//
+//  ── 英文官方譯名對照（加 'en' 時直接沿用）──────────────────
+//    ホイミ           Heal          ベホイミ    Midheal
+//    ベホイム         Moreheal      ベホマラー  Multiheal
+//    ベホマズン       Omniheal      やくそう    Medicinal Herb
+//    ホイミテーブル   Hoimi Table   とうぞくの秘伝書  Thief's Theory
+//  ── 用詞約定 ────────────────────────────────────────────
+//    RNG 消耗量的底層單位一律是「步」(RNG step)。
+//    B-Table 搜尋面板唯一的推進動作就是ホイミ，1 步 = 1 次，
+//    所以那裡一律講「ホイミ次數」；RNG Trace 有多種推進動作，
+//    一律講「步」。稀有 / 普通 兩個詞不再與 Rare / Normal 混用。
+// ═══════════════════════════════════════════════════════════════
+let LANG = 'zh-TW';
+
+const I18N = {
+  'zh-TW': {
+    'app.title'    : 'DQ9 ホイミテーブル (B-Table) 查詢器',
+    'app.subtitle' : '64-bit LCG：seed = (seed × 0x5D588B656C078965 + 0x269EC3) & 0xFFFFFFFFFFFFFFFF',
+    'app.credit1'  : 'Based on research by DQ9 lovers from worldwide player communities',
+    'app.credit2'  : 'Powered by Claude',
+
+    'common.btSeedHex' : 'BT Seed (Hex)',
+    'common.ready'     : '準備就緒。',
+    'common.searching' : '搜尋中…',
+    'common.seedError' : 'Seed 格式錯誤',
+    'common.unlimited' : '不限',
+
+    'plat.us'     : '🇺🇸 美版卡帶',
+    'plat.eu'     : '🇪🇺 歐版卡帶',
+    'plat.jp'     : '🇯🇵 日版卡帶',
+    'plat.emu'    : '🖥️ 模擬器 / CFW',
+    'plat.all'    : '🌐 全範圍',
+    'plat.out'    : '⚠️ 範圍外 (正常範圍: {range})',
+    'plat.format' : '格式錯誤',
+
+    'bt.title'        : '🎲 B-Table 掉寶條件搜尋',
+    'bt.rareA'        : '稀有掉寶 A (%)',
+    'bt.normalB'      : '普通掉寶 B (%)',
+    'bt.bookRare'     : '盜賊秘傳書 稀有掉寶 CEGI',
+    'bt.bookNormal'   : '盜賊秘傳書 普通掉寶 DFHJ',
+    'bt.exactRare'    : '恰好 {n} 個符合 A-1%',
+    'bt.exactNormal'  : '恰好 {n} 個符合 B-1%',
+    'bt.consec1'      : '連續1 (A+C 皆符合)',
+    'bt.consec2'      : '連續2 (A+C+E 皆符合)',
+    'bt.consec3'      : '連續3 (A+C+E+G 皆符合)',
+    'bt.maxHoimi'     : '最大ホイミ次數',
+    'bt.search'       : '搜尋',
+    'bt.searchNext'   : '搜尋下一個',
+    'bt.searchOver'   : '搜尋掉寶≥{over}',
+    'bt.searchingOver': '搜尋掉寶≥{over}…',
+    'bt.found'        : '✓ 使用 {n} 次ホイミ後達成',
+    'bt.foundOver'    : '✓ 使用 {n} 次ホイミ後',
+    'bt.notFound'     : '✗ {n} 次ホイミ內未找到符合條件的序列',
+    'bt.notFoundOver' : '✗ {n} 次ホイミ內未找到掉寶≥{over}的序列',
+    'bt.hint'         : '提示：嘗試放寬 CEGI/DFHJ 條件，或擴大最大ホイミ次數。',
+    'bt.totalDrops'   : '合計掉寶 {n} 個',
+    'bt.overLimit'    : '⚠ 超過{limit}個上限',
+    'bt.cegiAny'      : 'CEGI不限',
+    'bt.cegiCount'    : 'CEGI={n}個',
+    'bt.dfhjAny'      : 'DFHJ不限',
+    'bt.dfhjCount'    : 'DFHJ={n}個',
+    'bt.consecLabel'  : '連續{n}',
+    'bt.note'         : '📖 <strong>盜賊秘傳書的效果：</strong>第 1 個掉寶判定閾值為 A%，第 2〜5 個判定因盜賊秘傳書限制，最大閾值降為 <strong>A−1%</strong>（B系同理）。實際閾值隨秘傳書持有角色的Lv而變，Lv99時達到最大閾值。',
+
+    'tr.title'      : '🔬 RNG Trace — 從指定 Seed 展開 B-Table',
+    'tr.open'       : '開啟全屏 RNG Trace',
+    'tr.openHint'   : '全屏展開 B-Table，控制列固定在頂端。',
+    'tr.close'      : '關閉 (Esc)',
+    'tr.expand'     : '展開 200步',
+    'tr.more'       : '追加 +200',
+    'tr.rarePct'    : '稀有 (%)',
+    'tr.normalPct'  : '普通 (%)',
+    'tr.adv1'       : 'ホイミ等',
+    'tr.boss'       : 'Boss 戰',
+    'tr.bossTitle'  : 'Boss 戰一次（3 ＋ 盜賊秘傳書數目 × 3 步）；連框長度同此步數',
+    'tr.books'      : '盜賊秘傳書數目',
+    'tr.undo'       : '復原',
+    'tr.undoTitle'  : '退回上一次推進（Backspace）',
+    'tr.placeholder': '輸入 Seed 後點擊展開，可對照遊戲實測數值。展開後用上排按鈕推進消耗步數，連框會跟著走；也可點任一方格自行框選。',
+    'tr.posLine'     : '<span class="dim">已消耗</span> <span class="hi">{used}</span> <span class="dim">步</span>',
+    'tr.posBreakdown': '<span class="dim">（= {parts}）</span>',
+    'tr.castPart'    : '{name}×{n}',
+    'tr.posNext'    : '　<span class="dim">下一步</span> <span class="hi">#{next} = {pct}</span>',
+    'tr.frameLine'  : '<span class="hi">{len} 連框 #{from}–#{to}</span>{vals}　<span class="dim">稀有</span> <span class="hi">{rare}</span>　<span class="dim">普通</span> <span class="hi">{normal}</span>　<span class="dim">(再點一次取消)</span>',
+    'tr.frameHint'  : '<span class="dim">點任一方格或按上排推進鈕，可框出 {len} 連框（長度跟著 Boss 戰按鈕、推進時整段跟著走）；框內每 3 格為一組「稀有 / 普通 / 空轉」，低於門檻的會自動上色（第 2 組起套用盜賊秘傳書的 −1%）。</span>',
+
+    'spell.heal'      : 'ホイミ',
+    'spell.midheal'   : 'ベホイミ',
+    'spell.moreheal'  : 'ベホイム',
+    'spell.multiheal' : 'ベホマラー',
+    'spell.omniheal'  : 'ベホマズン',
+    'spell.herb'      : '藥草',
+
+    'hs.title'       : '💊 BT Seed 逆推（回復手段）',
+    'hs.method'      : '回復手段',
+    'hs.option'      : '{name}（基本{base} / 振れ幅{m} / {steps}步）',
+    'hs.seq'         : '觀察序列 (逗號分隔)',
+    'hs.range'       : '搜尋範圍',
+    'hs.rangeOption' : '{name} ({range})',
+    'hs.reverse'     : '逆推 Seed',
+    'hs.verifySeed'  : '驗證 Seed (Hex) — 確認公式',
+    'hs.expandSeq'   : '展開序列',
+    'hs.seqError'    : '序列格式錯誤',
+    'hs.outOfRange'  : '序列含超出範圍的值：{vals}',
+    'hs.rangeOnly'   : '此回復手段的回復量只可能是 {from}–{to}',
+    'hs.foundSeeds'  : '✓ 找到 {n} 個 Seed',
+    'hs.notFound'    : '✗ 未找到符合 Seed（搜尋範圍: 0x{from}–0x{to}，耗時 {ms} ms）',
+    'hs.hint'        : '提示：確認回復手段選擇與觀察序列是否對應，或改用更大的搜尋範圍。',
+    'hs.formula'     : '回復量 = {base} + round(rng×{m}/2³²) → {from}–{to}　每次消耗 {steps} 步',
+    'hs.verifyHead'  : 'Seed 0x{seed} 的 {name} 回復量序列（前 {n} 個）：',
+    'hs.note'        : '🧮 <strong>回復量公式：</strong>回復量 = 基本回復量 ＋ round(rng<sub>hi32</sub> × 振れ幅 ÷ 2³²)。呪文每次消耗 <strong>1 步</strong> RNG；<strong>藥草</strong>每次消耗 <strong>2 步</strong>（先空轉 1 步，第 2 步才是取值步）。公式已以實測序列 32,30,31,31,37 驗證（ホイミ 唯一解 0x32742，日版卡帶範圍內）。',
+  },
+
+  'en': {
+    'app.title'    : 'DQ9 Hoimi Table (B-Table) Searcher',
+    'app.subtitle' : '64-bit LCG: seed = (seed × 0x5D588B656C078965 + 0x269EC3) & 0xFFFFFFFFFFFFFFFF',
+    'app.credit1'  : 'Based on research by DQ9 lovers from worldwide player communities',
+    'app.credit2'  : 'Powered by Claude',
+
+    'common.btSeedHex' : 'BT Seed (Hex)',
+    'common.ready'     : 'Ready.',
+    'common.searching' : 'Searching…',
+    'common.seedError' : 'Invalid seed format',
+    'common.unlimited' : 'Any',
+
+    'plat.us'     : '🇺🇸 US cartridge',
+    'plat.eu'     : '🇪🇺 EU cartridge',
+    'plat.jp'     : '🇯🇵 JP cartridge',
+    'plat.emu'    : '🖥️ Emulator / CFW',
+    'plat.all'    : '🌐 Full range',
+    'plat.out'    : '⚠️ Out of range (valid: {range})',
+    'plat.format' : 'Invalid format',
+
+    'bt.title'        : '🎲 B-Table drop condition search',
+    'bt.rareA'        : 'Rare drop A (%)',
+    'bt.normalB'      : 'Common drop B (%)',
+    'bt.bookRare'     : "Thief's Theory — rare CEGI",
+    'bt.bookNormal'   : "Thief's Theory — common DFHJ",
+    'bt.exactRare'    : 'Exactly {n} within A−1%',
+    'bt.exactNormal'  : 'Exactly {n} within B−1%',
+    'bt.consec1'      : 'Streak 1 (A+C both hit)',
+    'bt.consec2'      : 'Streak 2 (A+C+E all hit)',
+    'bt.consec3'      : 'Streak 3 (A+C+E+G all hit)',
+    'bt.maxHoimi'     : 'Max Heal casts',
+    'bt.search'       : 'Search',
+    'bt.searchNext'   : 'Find next',
+    'bt.searchOver'   : 'Find drops ≥{over}',
+    'bt.searchingOver': 'Finding drops ≥{over}…',
+    'bt.found'        : '✓ Reached after {n} Heal cast(s)',
+    'bt.foundOver'    : '✓ After {n} Heal cast(s)',
+    'bt.notFound'     : '✗ No match within {n} Heal casts',
+    'bt.notFoundOver' : '✗ No pattern with ≥{over} drops within {n} Heal casts',
+    'bt.hint'         : 'Tip: relax the CEGI / DFHJ conditions, or raise the max Heal casts.',
+    'bt.totalDrops'   : '{n} drop(s) total',
+    'bt.overLimit'    : '⚠ over the {limit}-drop limit',
+    'bt.cegiAny'      : 'CEGI any',
+    'bt.cegiCount'    : 'CEGI={n}',
+    'bt.dfhjAny'      : 'DFHJ any',
+    'bt.dfhjCount'    : 'DFHJ={n}',
+    'bt.consecLabel'  : 'Streak {n}',
+    'bt.note'         : "📖 <strong>Thief's Theory:</strong> the 1st drop check uses A%. Checks 2–5 are capped at <strong>A−1%</strong> by Thief's Theory (the B series works the same way). The real threshold scales with the holder's level and reaches the cap at Lv99.",
+
+    'tr.title'      : '🔬 RNG Trace — expand the B-Table from a seed',
+    'tr.open'       : 'Open full-screen RNG Trace',
+    'tr.openHint'   : 'Expands the B-Table full-screen with the controls pinned to the top.',
+    'tr.close'      : 'Close (Esc)',
+    'tr.expand'     : 'Expand 200',
+    'tr.more'       : 'Append +200',
+    'tr.rarePct'    : 'Rare (%)',
+    'tr.normalPct'  : 'Common (%)',
+    'tr.adv1'       : 'Heal etc.',
+    'tr.boss'       : 'Boss fight',
+    'tr.bossTitle'  : "One boss fight (3 + Thief's Theory count × 3 steps); the frame is the same length",
+    'tr.books'      : "Thief's Theory count",
+    'tr.undo'       : 'Undo',
+    'tr.undoTitle'  : 'Undo the last advance (Backspace)',
+    'tr.placeholder': 'Enter a seed and expand to compare against in-game values. Use the buttons above to spend steps — the frame moves with them. You can also click any cell to place the frame yourself.',
+    'tr.posLine'     : '<span class="dim">Used</span> <span class="hi">{used}</span> <span class="dim">steps</span>',
+    'tr.posBreakdown': '<span class="dim">(= {parts})</span>',
+    'tr.castPart'    : '{name}×{n}',
+    'tr.posNext'    : '　<span class="dim">next</span> <span class="hi">#{next} = {pct}</span>',
+    'tr.frameLine'  : '<span class="hi">{len}-frame #{from}–#{to}</span>{vals}　<span class="dim">rare</span> <span class="hi">{rare}</span>　<span class="dim">common</span> <span class="hi">{normal}</span>　<span class="dim">(click again to clear)</span>',
+    'tr.frameHint'  : "<span class=\"dim\">Click any cell, or press an advance button, to draw a {len}-cell frame (its length follows the Boss fight button, and it moves with every advance). Each group of 3 cells is one rare / common / skipped check; anything under the threshold is coloured automatically (groups from the 2nd on apply the Thief's Theory −1%).</span>",
+
+    'spell.heal'      : 'Heal',
+    'spell.midheal'   : 'Midheal',
+    'spell.moreheal'  : 'Moreheal',
+    'spell.multiheal' : 'Multiheal',
+    'spell.omniheal'  : 'Omniheal',
+    'spell.herb'      : 'Medicinal Herb',
+
+    'hs.title'       : '💊 Reverse the BT seed (healing method)',
+    'hs.method'      : 'Healing method',
+    'hs.option'      : '{name} (base {base} / spread {m} / {steps} step)',
+    'hs.seq'         : 'Observed sequence (comma separated)',
+    'hs.range'       : 'Search range',
+    'hs.rangeOption' : '{name} ({range})',
+    'hs.reverse'     : 'Find seed',
+    'hs.verifySeed'  : 'Verify seed (Hex) — check the formula',
+    'hs.expandSeq'   : 'Expand sequence',
+    'hs.seqError'    : 'Invalid sequence format',
+    'hs.outOfRange'  : 'Sequence contains out-of-range values: {vals}',
+    'hs.rangeOnly'   : 'This healing method can only restore {from}–{to}',
+    'hs.foundSeeds'  : '✓ Found {n} seed(s)',
+    'hs.notFound'    : '✗ No matching seed (range: 0x{from}–0x{to}, {ms} ms)',
+    'hs.hint'        : 'Tip: check that the healing method matches the observed sequence, or widen the search range.',
+    'hs.formula'     : 'HP restored = {base} + round(rng×{m}/2³²) → {from}–{to}　{steps} step(s) per cast',
+    'hs.verifyHead'  : '{name} sequence for seed 0x{seed} (first {n}):',
+    'hs.note'        : '🧮 <strong>Restore formula:</strong> HP restored = base + round(rng<sub>hi32</sub> × spread ÷ 2³²). A spell consumes <strong>1 step</strong> of RNG; a <strong>Medicinal Herb</strong> consumes <strong>2 steps</strong> (one idle step, then the value step). Verified against the observed sequence 32,30,31,31,37 (Heal: unique solution 0x32742, inside the JP cartridge range).',
+  },
+
+  'ja': {
+    'app.title'    : 'DQ9 ホイミテーブル (B-Table) 検索ツール',
+    'app.subtitle' : '64-bit LCG：seed = (seed × 0x5D588B656C078965 + 0x269EC3) & 0xFFFFFFFFFFFFFFFF',
+    'app.credit1'  : 'Based on research by DQ9 lovers from worldwide player communities',
+    'app.credit2'  : 'Powered by Claude',
+
+    'common.btSeedHex' : 'BTシード (Hex)',
+    'common.ready'     : '準備完了。',
+    'common.searching' : '検索中…',
+    'common.seedError' : 'シードの形式が不正です',
+    'common.unlimited' : '指定なし',
+
+    'plat.us'     : '🇺🇸 米国版ROM',
+    'plat.eu'     : '🇪🇺 欧州版ROM',
+    'plat.jp'     : '🇯🇵 日本版ROM',
+    'plat.emu'    : '🖥️ エミュレータ / CFW',
+    'plat.all'    : '🌐 全範囲',
+    'plat.out'    : '⚠️ 範囲外（正常範囲: {range}）',
+    'plat.format' : '形式が不正です',
+
+    'bt.title'        : '🎲 B-Table ドロップ条件検索',
+    'bt.rareA'        : 'レアドロップ A (%)',
+    'bt.normalB'      : '通常ドロップ B (%)',
+    'bt.bookRare'     : 'とうぞくの秘伝書 レア CEGI',
+    'bt.bookNormal'   : 'とうぞくの秘伝書 通常 DFHJ',
+    'bt.exactRare'    : 'ちょうど {n} 個が A−1% 以内',
+    'bt.exactNormal'  : 'ちょうど {n} 個が B−1% 以内',
+    'bt.consec1'      : '連続1（A+C とも成立）',
+    'bt.consec2'      : '連続2（A+C+E すべて成立）',
+    'bt.consec3'      : '連続3（A+C+E+G すべて成立）',
+    'bt.maxHoimi'     : '最大ホイミ回数',
+    'bt.search'       : '検索',
+    'bt.searchNext'   : '次を検索',
+    'bt.searchOver'   : 'ドロップ≥{over}を検索',
+    'bt.searchingOver': 'ドロップ≥{over}を検索中…',
+    'bt.found'        : '✓ ホイミ {n} 回で成立',
+    'bt.foundOver'    : '✓ ホイミ {n} 回後',
+    'bt.notFound'     : '✗ ホイミ {n} 回以内に該当なし',
+    'bt.notFoundOver' : '✗ ホイミ {n} 回以内にドロップ≥{over}の並びなし',
+    'bt.hint'         : 'ヒント：CEGI / DFHJ の条件を緩めるか、最大ホイミ回数を増やしてください。',
+    'bt.totalDrops'   : 'ドロップ合計 {n} 個',
+    'bt.overLimit'    : '⚠ 上限 {limit} 個を超過',
+    'bt.cegiAny'      : 'CEGI指定なし',
+    'bt.cegiCount'    : 'CEGI={n}個',
+    'bt.dfhjAny'      : 'DFHJ指定なし',
+    'bt.dfhjCount'    : 'DFHJ={n}個',
+    'bt.consecLabel'  : '連続{n}',
+    'bt.note'         : '📖 <strong>とうぞくの秘伝書の効果：</strong>1 個目のドロップ判定のしきい値は A%、2〜5 個目はとうぞくの秘伝書の制限により最大 <strong>A−1%</strong> まで下がります（B 系も同様）。実際のしきい値は所持キャラの Lv によって変わり、Lv99 で最大値に達します。',
+
+    'tr.title'      : '🔬 RNG Trace — 指定シードから B-Table を展開',
+    'tr.open'       : 'RNG Trace を全画面で開く',
+    'tr.openHint'   : 'B-Table を全画面展開します。操作列は上部に固定されます。',
+    'tr.close'      : '閉じる (Esc)',
+    'tr.expand'     : '200歩展開',
+    'tr.more'       : '+200 追加',
+    'tr.rarePct'    : 'レア (%)',
+    'tr.normalPct'  : '通常 (%)',
+    'tr.adv1'       : 'ホイミ等',
+    'tr.boss'       : 'ボス戦',
+    'tr.bossTitle'  : 'ボス戦 1 回（3 ＋ とうぞくの秘伝書の数 × 3 歩）。連続枠の長さも同じ歩数',
+    'tr.books'      : 'とうぞくの秘伝書の数',
+    'tr.undo'       : '戻す',
+    'tr.undoTitle'  : '直前の消費を取り消す（Backspace）',
+    'tr.placeholder': 'シードを入力して展開すると、ゲーム内の実測値と照合できます。展開後は上の各ボタンで歩数を消費でき、連続枠も一緒に動きます。マスをクリックして自分で枠を置くこともできます。',
+    'tr.posLine'     : '<span class="dim">消費</span> <span class="hi">{used}</span> <span class="dim">歩</span>',
+    'tr.posBreakdown': '<span class="dim">（= {parts}）</span>',
+    'tr.castPart'    : '{name}×{n}',
+    'tr.posNext'    : '　<span class="dim">次</span> <span class="hi">#{next} = {pct}</span>',
+    'tr.frameLine'  : '<span class="hi">{len} 連続枠 #{from}–#{to}</span>{vals}　<span class="dim">レア</span> <span class="hi">{rare}</span>　<span class="dim">通常</span> <span class="hi">{normal}</span>　<span class="dim">（もう一度クリックで解除）</span>',
+    'tr.frameHint'  : '<span class="dim">マスをクリックするか上の消費ボタンを押すと、{len} 連続枠を表示します（長さはボス戦ボタンに連動し、消費すると枠ごと移動）。枠内は 3 マスで「レア / 通常 / 空回し」の 1 組です。しきい値未満のマスは自動で色が付きます（2 組目からはとうぞくの秘伝書の −1% を適用）。</span>',
+
+    'spell.heal'      : 'ホイミ',
+    'spell.midheal'   : 'ベホイミ',
+    'spell.moreheal'  : 'ベホイム',
+    'spell.multiheal' : 'ベホマラー',
+    'spell.omniheal'  : 'ベホマズン',
+    'spell.herb'      : 'やくそう',
+
+    'hs.title'       : '💊 BTシード逆算（回復手段）',
+    'hs.method'      : '回復手段',
+    'hs.option'      : '{name}（基本{base} / 振れ幅{m} / {steps}歩）',
+    'hs.seq'         : '観測した回復量（カンマ区切り）',
+    'hs.range'       : '検索範囲',
+    'hs.rangeOption' : '{name} ({range})',
+    'hs.reverse'     : 'シードを逆算',
+    'hs.verifySeed'  : '検証シード (Hex) — 計算式の確認',
+    'hs.expandSeq'   : '数列を展開',
+    'hs.seqError'    : '数列の形式が不正です',
+    'hs.outOfRange'  : '範囲外の値が含まれています：{vals}',
+    'hs.rangeOnly'   : 'この回復手段の回復量は {from}–{to} のみです',
+    'hs.foundSeeds'  : '✓ シードを {n} 件発見',
+    'hs.notFound'    : '✗ 該当シードなし（検索範囲: 0x{from}–0x{to}、所要 {ms} ms）',
+    'hs.hint'        : 'ヒント：回復手段の選択と観測値が対応しているか確認するか、検索範囲を広げてください。',
+    'hs.formula'     : '回復量 = {base} + round(rng×{m}/2³²) → {from}–{to}　1 回あたり {steps} 歩消費',
+    'hs.verifyHead'  : 'シード 0x{seed} の {name} 回復量の数列（先頭 {n} 件）：',
+    'hs.note'        : '🧮 <strong>回復量の計算式：</strong>回復量 = 基本回復量 ＋ round(rng<sub>hi32</sub> × 振れ幅 ÷ 2³²)。呪文は 1 回につき <strong>1 歩</strong>、<strong>やくそう</strong>は <strong>2 歩</strong> 消費します（1 歩空回しして 2 歩目が取得値）。実測列 32,30,31,31,37 で検証済み（ホイミの唯一解 0x32742、日本版ROMの範囲内）。',
+  },
+};
+
+// 取字串並代入 {佔位符}；查不到就回傳 key 本身，方便一眼看出漏掉的字
+function t(key, params) {
+  let str = I18N[LANG][key];
+  if (str === undefined) return key;
+  // 全域常數一律自動代入，譯文裡就不必寫死數字（掉寶上限改了，所有語言一起跟著改）
+  const p = Object.assign({ limit: BT_DROP_LIMIT, over: BT_DROP_LIMIT + 1 }, params || {});
+  for (const k in p) str = str.split('{' + k + '}').join(p[k]);
+  return str;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  卡帶 / 平台的 BT Seed 範圍 —— 單一真相來源
+//  平台識別、逆推的「搜尋範圍」選單、以及顯示用的範圍文字都吃這裡。
+//  順序就是選單順序；platformInfo 會先比對非 fallback 的項目，
+//  所以美版要排在歐版前面（美版範圍被歐版包住）。
+// ═══════════════════════════════════════════════════════════════
+const SEED_RANGES = [
+  { platKey:'plat.emu', nameKey:'plat.all', from:0x16000, to:0x3FFFF, color:'var(--text-dim)', fallback:true },
+  { platKey:'plat.us',  nameKey:'plat.us',  from:0x31600, to:0x319FF, color:'#60a0e8' },
+  { platKey:'plat.eu',  nameKey:'plat.eu',  from:0x31600, to:0x31FFF, color:'#60c8a0' },
+  { platKey:'plat.jp',  nameKey:'plat.jp',  from:0x32600, to:0x328FF, color:'#e87060' },
+];
+const SEED_RANGE_DEFAULT = 'plat.jp';                       // 選單預設：日版卡帶
+const hexUp        = v => v.toString(16).toUpperCase();
+const rangeText    = r => `${hexUp(r.from)}–${hexUp(r.to)}`;
+const rangeValue   = r => `${hexUp(r.from)},${hexUp(r.to)}`; // 選單 value，逆推用 split(',') 取回
+const seedRangeAll = () => SEED_RANGES.find(r => r.fallback);
+
+// ═══════════════════════════════════════════════════════════════
+//  RNG Trace 的推進手段 —— 單一真相來源
+//  每種回復手段消耗幾步 RNG。推進按鈕（+1 / +4 / +8）與「已消耗 N 步」
+//  的施法次數換算都由這裡產生，數字不會兩邊各寫一份。
+//  這裡由小到大排，就是按鈕的排列順序。
+// ═══════════════════════════════════════════════════════════════
+const TR_CASTS = [
+  { nameKey:'spell.heal',      btnKey:'tr.adv1',         steps:1 },
+  { nameKey:'spell.multiheal', btnKey:'spell.multiheal', steps:4 },
+  { nameKey:'spell.omniheal',  btnKey:'spell.omniheal',  steps:8 },
+];
+
+// 把步數換算成「幾個ベホマズン + 幾個ベホマラー + 幾個ホイミ」。
+// 由大到小貪心取用；8 = 2×4、4 = 4×1，所以貪心結果就是最少施法次數。
+function castBreakdown(steps) {
+  let left = steps;
+  const parts = [];
+  for (const c of [...TR_CASTS].sort((a, b) => b.steps - a.steps)) {
+    const n = Math.floor(left / c.steps);
+    if (n > 0) { parts.push(t('tr.castPart', { name: t(c.nameKey), n })); left -= n * c.steps; }
+  }
+  return parts;
+}
+
+// 回復手段參數表（基本回復量 / 振れ幅 / 每次消耗的 RNG 步數）
+const SPELLS = [
+  { key: 'spell.heal',     base: 30,  m: 10, steps: 1 },
+  { key: 'spell.midheal',  base: 75,  m: 20, steps: 1 },
+  { key: 'spell.moreheal', base: 165, m: 40, steps: 1 },
+  { key: 'spell.herb',     base: 30,  m: 10, steps: 2 },
+];
+
+// 下拉選單的預設值 —— 單一真相來源：建構選項與載入時寫回都吃這裡
+function selectDefaults() {
+  return {
+    bt_a: 10, bt_b: 0, bt_m: 'any', bt_n: 'any',
+    tr_rare: 2, tr_normal: 10, tr_books: 0,
+    hs_spell: 0,
+    hs_range: rangeValue(SEED_RANGES.find(r => r.platKey === SEED_RANGE_DEFAULT)),
+  };
+}
+
+// 切換 UI 語言：只換字典，畫面狀態（已展開的格子、搜尋結果、下拉選擇）全部保留
+function switchUILang(lang) {
+  if (!I18N[lang]) return;
+  LANG = lang;
+  applyI18n();
+}
+
+// 把字典套到畫面上；換語言時重跑這個函式即可
+function applyI18n() {
+  document.title = t('app.title');
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('.lang-sw').forEach(b => b.classList.toggle('on', b.dataset.lang === LANG));
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML  = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title     = t(el.dataset.i18nTitle); });
+  // 結果容器：裝著搜尋結果或整片格子時不能覆蓋，只有還是純文字的預設狀態才重填
+  document.querySelectorAll('[data-i18n-init]').forEach(el => {
+    if (el.children.length === 0) el.textContent = t(el.dataset.i18nInit);
+  });
+  buildOptions();
+  spellHint();      // 公式提示
+  bookHint();       // Boss 戰按鈕文字（內含 repaintTrace，資訊列跟著換語言）
+  if (!document.getElementById('tr_grid')) {
+    document.getElementById('tr_tri_info').innerHTML = triHint();
+  }
+}
+
+// 需要帶入數字或翻譯的下拉選項統一在這裡產生
+function buildOptions() {
+  const DEF = selectDefaults();
+  const fill = (id, items) => {
+    const sel  = document.getElementById(id);
+    const prev = sel.value;                 // 換語言重建選項時，保留使用者目前的選擇
+    sel.innerHTML = items.map(([v, label]) =>
+      `<option value="${v}"${String(v) === String(DEF[id]) ? ' selected' : ''}>${label}</option>`).join('');
+    if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+  };
+  const nums = arr => arr.map(n => [n, String(n)]);
+  const any  = [['0', t('common.unlimited')]];
+
+  // 秘傳書本數 / 「恰好 N 個」都是 0 ～ 判定次數−1，同樣由 BT_ROUNDS 導出
+  const rounds = Array.from({ length: BT_ROUNDS }, (_, i) => i);
+
+  fill('bt_a', any.concat(nums(BT_RARE_RATES)));
+  fill('bt_b', any.concat(nums(BT_NORMAL_RATES)));
+
+  const exact = key => rounds.map(n => [String(n), t(key, { n })]);
+  fill('bt_m', [['any', t('common.unlimited')]].concat(exact('bt.exactRare'),
+        [['consec1', t('bt.consec1')], ['consec2', t('bt.consec2')], ['consec3', t('bt.consec3')]]));
+  fill('bt_n', [['any', t('common.unlimited')]].concat(exact('bt.exactNormal')));
+
+  fill('tr_rare',   nums(BT_RARE_RATES));
+  fill('tr_normal', nums(BT_NORMAL_RATES));
+  fill('tr_books',  nums(rounds));
+
+  fill('hs_spell', SPELLS.map((sp, i) => [i, t('hs.option',
+        { name: t(sp.key), base: sp.base, m: sp.m, steps: sp.steps })]));
+  fill('hs_range', SEED_RANGES.map(r => [rangeValue(r),
+        t('hs.rangeOption', { name: t(r.nameKey), range: rangeText(r) })]));
+
+  buildCastButtons();
+}
+
+// 推進按鈕（+1 / +4 / +8）由 TR_CASTS 產生
+function buildCastButtons() {
+  const ready = !document.getElementById('tr_more_btn').disabled;   // 已經展開過就保持可按
+  document.getElementById('tr_casts').innerHTML = TR_CASTS.map(c =>
+    `<div class="field"><label>${t(c.btnKey)}</label>` +
+    `<button onclick="advance(${c.steps})" id="tr_adv${c.steps}" class="sec"` +
+    `${ready ? '' : ' disabled'}>+${c.steps}</button></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  核心 LCG — 全程 BigInt，不碰 Number，避免精度截斷
+//  64-bit Number 只有 53-bit 有效位數，0x5D588B656C078965 本身
+//  就是 63-bit，乘法後必然爆精度，所以 BigInt 是唯一正確做法
+// ═══════════════════════════════════════════════════════════════
+const LCG_MULT = 0x5d588b656c078965n;
+const LCG_ADD  = 0x269ec3n;
+
+const LCG_MASK = 0xFFFFFFFFFFFFFFFFn;
+
+function lcgNext(seed) {
+  return (seed * LCG_MULT + LCG_ADD) & LCG_MASK;
+}
+
+// 取高 32-bit → [0, 2³²-1]；轉 Number 安全 (32bit < 2⁵³)
+function hi32(seed) {return Number(seed >> 32n); }
+
+// 取低 32-bit
+function lo32(seed) {return Number(seed & 0xFFFFFFFFn); }
+
+// 高 32-bit 轉百分比 [0, 100)
+function toPercent(seed) {return hi32(seed) / 4294967296 * 100; }
+
+// ═══════════════════════════════════════════════════════════════
+//  Boss 戰掉寶判定規則 —— 單一真相來源
+//  一次 Boss 戰消耗 15 個亂數，順序固定：
+//      A B x1 │ C D x2 │ E F x3 │ G H x4 │ I J x5
+//    A/C/E/G/I = 第 1～5 次「稀有掉寶」判定
+//    B/D/F/H/J = 第 1～5 次「普通掉寶」判定
+//    x1        = 100% 掉寶（恆計入）；x2～x5 被消耗但與判定無關
+//  第 2 次判定起（C/D 開始）受盜賊秘傳書限制，門檻降 1%。
+//
+//  兩個容易被混用的概念，這裡分開定義：
+//    drop  = 遊戲實際掉不掉寶。只由稀有／普通掉寶率決定；選「不限」時
+//            沒有已知門檻，退回最寬的 15% / 25%。用於「合計掉寶」、
+//            結果格線上色、RNG Trace 連框上色。
+//    match = 符不符合使用者設的搜尋條件。普通掉寶選「不限」＝不篩。
+//            只決定搜尋停在哪裡，不會改變 drop。
+// ═══════════════════════════════════════════════════════════════
+const BT_BOOK_OFFSET = 1;    // 盜賊秘傳書：第 2 次判定起門檻 −1%
+const BT_DROP_LIMIT  = 8;    // 一場戰鬥最多帶走 8 個掉寶，第 9 個起會消失
+
+// 掉寶率的可選值 —— 單一真相來源。B-Table 面板與 RNG Trace 的下拉選單都吃這裡，
+// 「不限」時退回的最寬門檻也直接取最大值，不會跟選項清單各走各的。
+const BT_RARE_RATES   = [2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+const BT_NORMAL_RATES = [5, 10, 15, 20, 25];
+const BT_RARE_MAX     = Math.max(...BT_RARE_RATES);
+const BT_NORMAL_MAX   = Math.max(...BT_NORMAL_RATES);
+
+const BT_SLOTS = [
+  { name:'A',  kind:'rare'   }, { name:'B',  kind:'normal' }, { name:'x1', kind:'always' },
+  { name:'C',  kind:'rare'   }, { name:'D',  kind:'normal' }, { name:'x2', kind:'skip'   },
+  { name:'E',  kind:'rare'   }, { name:'F',  kind:'normal' }, { name:'x3', kind:'skip'   },
+  { name:'G',  kind:'rare'   }, { name:'H',  kind:'normal' }, { name:'x4', kind:'skip'   },
+  { name:'I',  kind:'rare'   }, { name:'J',  kind:'normal' }, { name:'x5', kind:'skip'   },
+];
+const BT_ROUND_LEN  = 3;                      // 每次判定佔 3 個亂數：稀有 / 普通 / 空轉
+BT_SLOTS.forEach((sl, i) => { sl.round = Math.floor(i / BT_ROUND_LEN); });   // 第幾次判定（0-based）
+const BT_LEN        = BT_SLOTS.length;
+const BT_ROUNDS     = BT_LEN / BT_ROUND_LEN;  // 一場 Boss 戰最多 5 次判定
+const BT_RARE_LATER = [3, 6, 9, 12];    // C E G I
+const BT_NORM_LATER = [4, 7, 10, 13];   // D F H J
+
+// 15 格各自的掉寶門檻（%）；tA / tB 傳 0 代表「不限」，x 格為 null
+function btThresholds(tA, tB) {
+  return BT_SLOTS.map(sl => {
+    if (sl.kind !== 'rare' && sl.kind !== 'normal') return null;
+    const base = sl.kind === 'rare' ? (tA || BT_RARE_MAX) : (tB || BT_NORMAL_MAX);
+    return base - (sl.round === 0 ? 0 : BT_BOOK_OFFSET);
+  });
+}
+
+// 單格：實際掉不掉寶
+function btDrop(i, pct, thr) {
+  const k = BT_SLOTS[i].kind;
+  if (k === 'always') return true;
+  if (k === 'skip')   return false;
+  return pct < thr[i];
+}
+
+// 單格：符不符合搜尋條件（普通掉寶選「不限」就不篩）
+function btMatch(i, pct, thr, tB) {
+  const k = BT_SLOTS[i].kind;
+  if (k !== 'rare' && k !== 'normal') return true;
+  if (k === 'normal' && tB === 0)     return true;
+  return pct < thr[i];
+}
+
+// 從 seed 展開 15 步的百分比
+function btPercents(seed) {
+  const out = new Array(BT_LEN);
+  let x = seed;
+  for (let i = 0; i < BT_LEN; i++) { x = lcgNext(x); out[i] = toPercent(x); }
+  return out;
+}
+
+// 合計掉寶數
+function btDropCount(pct, thr) {
+  let n = 0;
+  for (let i = 0; i < BT_LEN; i++) if (btDrop(i, pct[i], thr)) n++;
+  return n;
+}
+
+// 把一次 Boss 戰的 15 格畫成結果格線（B-Table 搜尋與「搜尋掉寶≥9」共用）
+function btGridHtml(pct, thr) {
+  let rank = 0;
+  const rk = BT_SLOTS.map((sl, i) => btDrop(i, pct[i], thr) ? ++rank : 0);
+  const cells = BT_SLOTS.map((sl, i) => {
+    const v = pct[i].toFixed(7) + '%', r = rk[i];
+    if (sl.kind === 'skip')
+      return `<div class="drop-cell c-x"><div class="slot-name" style="color:#d1d5db">—</div>${v}</div>`;
+    const over = r > BT_DROP_LIMIT;
+    const cls  = over ? 'c-overflow' : 'c-pass';
+    if (sl.kind === 'always')
+      return `<div class="drop-cell ${cls}"><div class="slot-name">100% #${r}</div>${v}</div>`;
+    const k = sl.kind === 'rare' ? 'k-rare' : 'k-normal';
+    if (r)
+      return `<div class="drop-cell ${cls} ${k}"><div class="slot-name">${over ? '⚠' : '✓'}${r} ${sl.name}</div>${v}</div>`;
+    return `<div class="drop-cell c-neutral ${k}"><div class="slot-name">${sl.name}</div>${v}</div>`;
+  }).join('');
+  return { html: `<div class="drop-grid">${cells}</div>`, total: rank };
+}
+
+// 解析 Hex 字串 → BigInt（接受有無 0x 前綴）
+function parseSeed(str) {
+  const clean = str.trim().toLowerCase().replace(/^0x/, '');
+  if (!/^[0-9a-f]+$/.test(clean)) throw new Error('Hex 格式錯誤');
+  return BigInt('0x' + clean);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PANEL 0 : RNG Trace
+//  格狀顯示：桌面10欄、手機5欄，只顯示百分比小數後2位
+//  首次展開200步，可無限追加+200
+// ═══════════════════════════════════════════════════════════════
+let trCurSeed  = null;   // 目前展開到的 seed（BigInt）
+let trCurCount = 0;      // 已顯示步數
+let triStart   = null;   // 連框起始步數（1-based），null = 未選
+let trPos      = 0;      // 已消耗步數，下一步 = trPos + 1
+let advHistory = [];     // 推進紀錄，供「復原」退回上一步
+
+// 連框長度 = Boss 戰一次消耗的步數
+function triLen() { return bookSteps(); }
+function triHint() {
+  return t('tr.frameHint', { len: triLen() });
+}
+
+function doTrace(isAppend) {
+  const out     = document.getElementById('tr_out');
+  const moreBtn = document.getElementById('tr_more_btn');
+
+  if (!isAppend) {
+    // 全新展開
+    try { trCurSeed = parseSeed(document.getElementById('tr_seed').value || '0'); }
+    catch(e) { out.innerHTML = `<span class="bad">${t('common.seedError')}</span>`; return; }
+    out.innerHTML = '<div class="trace-grid" id="tr_grid"></div>';
+    document.getElementById('tr_tri_info').innerHTML = triHint();
+    trCurCount = 0;
+    triStart   = null;
+    trPos      = 0;
+    advHistory = [];
+    undoHint();
+    const mb = document.querySelector('.modal-body');   // 重新展開就回到最上面
+    if (mb) mb.scrollTop = 0;
+    moreBtn.disabled = false;
+    advButtons().forEach(b => b.disabled = false);
+  }
+
+  const grid = document.getElementById('tr_grid');
+  if (!grid) return;
+
+  const BATCH = 200;
+  for (let i = 0; i < BATCH; i++) {
+    trCurSeed = lcgNext(trCurSeed);
+    trCurCount++;
+    const n   = trCurCount;                    // 固定本圈步數供 closure 使用
+    const raw = toPercent(trCurSeed);
+    const cell = document.createElement('div');
+    cell.className = 'trace-cell';
+    cell.dataset.pct = raw;                    // 顯示只到小數 2 位，比門檻要用完整精度
+    cell.innerHTML = `<span class="tc-idx">${n}</span><span class="tc-val">${raw.toFixed(2)}%</span>`;
+    cell.addEventListener('click', () => {
+      if (triStart === n) { triStart = null; }  // 再點同一格 = 取消連框
+      else { trPos = n - 1; triStart = n; }     // 位置移到這一格，綠格就是連框第一格
+      repaintTrace();
+    });
+    grid.appendChild(cell);
+  }
+  repaintTrace();   // 追加後可能補齊原本不完整的三連
+}
+
+// ── 全屏 modal ──────────────────────────────────────────────
+function openTrace() {
+  document.getElementById('tr_modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+  repaintTrace();   // 全屏後欄數會變，連框的接邊要重算
+}
+
+function closeTrace() {
+  document.getElementById('tr_modal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('tr_modal').hidden) return;
+  if (e.key === 'Escape') { closeTrace(); return; }
+  // Backspace 復原上一次推進；焦點在輸入框或選單裡就讓它照原本的用途走
+  if (e.key === 'Backspace' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) {
+    e.preventDefault();
+    undoAdvance();
+  }
+});
+
+// 視窗尺寸改變會換欄數，連框的接邊跟著重算（用 rAF 併掉連續事件）
+let trResizeRaf = null;
+window.addEventListener('resize', () => {
+  if (document.getElementById('tr_modal').hidden) return;
+  if (trResizeRaf) cancelAnimationFrame(trResizeRaf);
+  trResizeRaf = requestAnimationFrame(repaintTrace);
+});
+
+// ── 消耗 RNG：+1 ホイミ等 / +4 ベホマラー / +8 ベホマズン / +(3+秘傳書×3) 討伐 ──
+const advButtons = () => TR_CASTS.map(c => document.getElementById('tr_adv' + c.steps))
+                                 .concat(document.getElementById('tr_advbook'));
+
+// 一次討伐消耗 3 步，每持有 1 本盜賊秘傳書再多 3 步
+function bookSteps() {
+  // 基本 1 次判定，每持有 1 本盜賊秘傳書再多 1 次；一次判定 = BT_ROUND_LEN 個亂數
+  return (parseInt(document.getElementById('tr_books').value) + 1) * BT_ROUND_LEN;
+}
+
+function bookHint() {
+  document.getElementById('tr_advbook').textContent = '+' + bookSteps();
+  repaintTrace();   // 連框長度跟著改，立即重畫
+}
+
+function advance(n) {
+  if (!document.getElementById('tr_grid')) return;
+  advHistory.push({ pos: trPos, tri: triStart });   // 推進前的完整狀態，復原時整組還原
+  trPos += n;
+
+  // 連框永遠從「下一步」起算 —— 綠格就是連框最左邊那一格，
+  // 框住的正是「現在去打，這場 Boss 戰會怎麼判定」。
+  triStart = trPos + 1;
+
+  // 游標與整個連框都要落在已展開的範圍內
+  const need = Math.max(trPos + 1, triStart + triLen() - 1);
+  while (need > trCurCount) { doTrace(true); }
+  repaintTrace();
+  undoHint();
+  focusFrame();
+}
+
+// 退回上一次推進：位置與連框整組還原成推進前的樣子
+function undoAdvance() {
+  if (!advHistory.length || !document.getElementById('tr_grid')) return;
+  const last = advHistory.pop();
+  trPos    = last.pos;
+  triStart = last.tri;
+  repaintTrace();
+  undoHint();
+  focusFrame();
+}
+
+// 復原鈕顯示下一次會退回多少
+function undoHint() {
+  const btn  = document.getElementById('tr_undo');
+  const last = advHistory[advHistory.length - 1];
+  btn.disabled    = !last;
+  btn.textContent = last ? `⌫ −${trPos - last.pos}` : '⌫';
+}
+
+// 捲到連框中央（沒開連框就對準游標），不用來回找最新位置
+function focusFrame() {
+  const grid = document.getElementById('tr_grid');
+  if (!grid) return;
+  const target = (triStart !== null)
+    ? grid.children[triStart - 1 + Math.floor(triLen() / 2)] || grid.children[trPos]
+    : grid.children[trPos];
+  if (target) target.scrollIntoView({ block: 'center' });
+}
+
+// 重畫整個 grid：已消耗的格子轉灰、下一步加綠環、連框接成一個框。
+// 連框在同一列的相鄰格子會拆掉中間邊框並接上 gap；落在換行處則各自收邊，不拖出列尾。
+function repaintTrace() {
+  const grid = document.getElementById('tr_grid');
+  const info = document.getElementById('tr_tri_info');
+  const pos  = document.getElementById('tr_pos_info');
+  if (!grid || !info || !pos) return;
+  const cells = grid.children;
+
+  // 先把連框成員與接邊算好，避免在寫 className 的迴圈裡讀 offsetTop 觸發重排
+  const tri = [];
+  if (triStart !== null) {
+    for (let k = 0; k < triLen(); k++) {
+      const c = cells[triStart - 1 + k];
+      if (c) tri.push(c);
+    }
+  }
+  const joins = tri.map((c, k) => ({
+    jp: !!(tri[k - 1] && tri[k - 1].offsetTop === c.offsetTop),
+    jn: !!(tri[k + 1] && tri[k + 1].offsetTop === c.offsetTop),
+  }));
+
+  // 連框就是一次 Boss 戰的判定窗，直接套用共用的掉寶判定規則
+  const thr = btThresholds(parseFloat(document.getElementById('tr_rare').value),
+                           parseFloat(document.getElementById('tr_normal').value));
+  let hitRare = 0, hitNorm = 0;
+  const hits = tri.map((c, k) => {
+    const kind = BT_SLOTS[k].kind;
+    if (kind !== 'rare' && kind !== 'normal') return '';
+    if (!btDrop(k, parseFloat(c.dataset.pct), thr)) return '';
+    if (kind === 'rare') { hitRare++; return ' hit-rare'; }
+    hitNorm++; return ' hit-normal';
+  });
+
+  for (let i = 0; i < cells.length; i++) {
+    const c = cells[i];
+    let cls = 'trace-cell';
+    if (i < trPos)       cls += ' used';
+    else if (i === trPos) cls += ' next';
+    const k = tri.indexOf(c);
+    if (k >= 0) {
+      cls += ' tri' + hits[k];
+      if (joins[k].jp) cls += ' tri-jp';
+      if (joins[k].jn) cls += ' tri-jn';
+    }
+    c.className = cls;
+  }
+
+  const nextCell = cells[trPos];
+  pos.innerHTML = t('tr.posLine', { used: trPos }) +
+    (trPos > 0 ? t('tr.posBreakdown', { parts: castBreakdown(trPos).join(' + ') }) : '') +
+    (nextCell ? t('tr.posNext', { next: trPos + 1,
+                                  pct: nextCell.querySelector('.tc-val').textContent }) : '');
+
+  if (tri.length === 0) { info.innerHTML = triHint(); return; }
+  // 連框長時值列太長，格子本身已經看得到，就只留範圍
+  const vals = tri.length <= 6
+    ? '　' + tri.map(c => c.querySelector('.tc-val').textContent).join('　/　')
+    : '';
+  info.innerHTML = t('tr.frameLine', {
+    len: tri.length, from: triStart, to: triStart + tri.length - 1,
+    vals, rare: hitRare, normal: hitNorm });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PANEL 1 : ホイミ Seed 逆推
+// ═══════════════════════════════════════════════════════════════
+// 回復手段參數（基本回復量 / 振れ幅 / 每次消耗的 RNG 步數）
+function spellParams() {
+  const sp = SPELLS[Number(document.getElementById('hs_spell').value)];
+  return { base: sp.base, m: sp.m, steps: sp.steps, name: t(sp.key) };
+}
+
+function spellHint() {
+  const { base, m, steps } = spellParams();
+  document.getElementById('hs_spell_hint').textContent =
+    t('hs.formula', { base, m, from: base, to: base + m, steps });
+}
+
+function doSeedSearch() {
+  const { base, m, steps } = spellParams();
+  const mB      = BigInt(m);
+  const seqRaw  = document.getElementById('hs_seq').value;
+  const seq     = seqRaw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  const rangeVal = document.getElementById('hs_range').value.split(',');
+  const minSeed = parseInt(rangeVal[0], 16);
+  const maxSeed = parseInt(rangeVal[1], 16);
+  const out     = document.getElementById('hs_out');
+
+  if (!seq.length) { out.innerHTML = `<span class="bad">${t('hs.seqError')}</span>`; return; }
+  const bad = seq.filter(v => v < base || v > base + m);
+  if (bad.length) {
+    out.innerHTML = `<span class="bad">${t('hs.outOfRange', { vals: bad.join(', ') })}</span>` +
+      `　<span class="dim">${t('hs.rangeOnly', { from: base, to: base + m })}</span>`;
+    return;
+  }
+  out.innerHTML = `<span class="dim">${t('common.searching')}</span>`;
+
+  setTimeout(() => {
+    const results = [];
+    const t0 = performance.now();
+
+    for (let i = minSeed; i <= maxSeed; i++) {
+      let s = BigInt(i);
+      let ok = true;
+
+      for (let j = 0; j < seq.length; j++) {
+        for (let k = 1; k < steps; k++) { s = lcgNext(s); }   // 藥草：先空轉 1 步
+        s = lcgNext(s);                                       // 取值步
+        // 回復量 = 基本回復量 + round(rng_hi32 × 振れ幅 / 2³²)
+        const val = base + Number(((s >> 32n) * mB + 0x80000000n) >> 32n);
+        if (val !== seq[j]) { ok = false; break; }
+      }
+
+      if (ok) results.push(i);
+    }
+
+    const ms = (performance.now() - t0).toFixed(1);
+    if (results.length) {
+      out.innerHTML = `<span class="ok">${t('hs.foundSeeds', { n: results.length })}</span>  <span class="dim">(${ms} ms)</span>\n\n` +
+        results.map(r => seedLine(r)).join('\n');
+    } else {
+      out.innerHTML = `<span class="bad">${t('hs.notFound', {
+          from: minSeed.toString(16).toUpperCase(),
+          to:   maxSeed.toString(16).toUpperCase(), ms })}</span>\n\n` + t('hs.hint');
+    }
+  }, 30);
+}
+
+// ── ホイミ 驗證：給定 seed，顯示它產生的前 N 個序列值 ──
+function doVerify() {
+  const out = document.getElementById('hs_out');
+  let seed;
+  try { seed = parseSeed(document.getElementById('hs_verify_seed').value); }
+  catch(e) { out.innerHTML = `<span class="bad">${t('common.seedError')}</span>`; return; }
+
+  const { base, m, steps, name } = spellParams();
+  const mB = BigInt(m);
+  const STEPS = 8;
+
+  let rows = [];
+  let s = seed;
+  for (let i = 0; i < STEPS; i++) {
+    for (let k = 1; k < steps; k++) { s = lcgNext(s); }   // 藥草：先空轉 1 步
+    s = lcgNext(s);
+    const rngHi = s >> 32n;
+    const val   = base + Number((rngHi * mB + 0x80000000n) >> 32n);
+    rows.push(
+      `  <span class="dim">#${i+1}</span>` +
+      `  <span class="hi">${val}</span>` +
+      `  <span class="dim">(hi32 = ${(Number(rngHi)/4294967296*100).toFixed(6)}%)</span>`
+    );
+  }
+  out.innerHTML =
+    `<span class="dim">${t('hs.verifyHead', { seed: seed.toString(16).toUpperCase(), name, n: STEPS })}</span>
+
+` +
+    rows.join('\n');
+}
+
+// ── 平台識別（共用）──────────────────────────────────────────
+function platformInfo(v) {
+  const inRange = r => v >= r.from && v <= r.to;
+  const hit = SEED_RANGES.find(r => !r.fallback && inRange(r))
+           || SEED_RANGES.find(r =>  r.fallback && inRange(r));
+  if (hit) return { label: t(hit.platKey), color: hit.color };
+  return { label: t('plat.out', { range: rangeText(seedRangeAll()) }), color: 'var(--warn)' };
+}
+
+// seed 輸入框即時提示（tr_seed / bt_seed 共用）
+function seedHint(inputId, hintId) {
+  const hint = document.getElementById(hintId);
+  let v;
+  try { v = Number(parseSeed(document.getElementById(inputId).value)); }
+  catch(e) { hint.style.color = 'var(--warn)'; hint.textContent = t('plat.format'); return; }
+  const p = platformInfo(v);
+  hint.style.color = p.color;
+  hint.textContent = p.label;
+}
+
+// 格式化單行 seed 結果（含平台標籤）
+function seedLine(n) {
+  const p = platformInfo(n);
+  return `  <span class="hi">0x${n.toString(16).toUpperCase().padStart(4,'0')}</span>` +
+         `  <span class="dim">(dec ${n})</span>` +
+         `  <span style="color:${p.color};font-size:.9em">${p.label}</span>`;
+}
+
+
+//
+//  15個亂數順序：A B x C D x E F x G H x I J x
+//  A = 第1稀有判定，B = 第1普通判定
+//  C/E/G/I = 第2/3/4/5稀有，D/F/H/J = 第2/3/4/5普通
+//  x = 被消耗但與判定無關
+//  第2-5個判定閾值 = 主條件 - 1%（盜賊秘傳書固定效果）
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+//  搜尋游標與預算 —— 單一真相來源
+//  「最大ホイミ次數」是總預算，不是每次搜尋各自的額度：
+//    「搜尋」        → reset()，從頭開始
+//    「搜尋下一個」  → 從 seed 接續，只能再花 budget() 步
+//    「搜尋掉寶≥N」  → 同上
+//  三個按鈕共用同一份記帳，回報的絕對次數不可能超過使用者設的上限。
+// ═══════════════════════════════════════════════════════════════
+const btCursor = {
+  seed: null,   // 下次從這個 seed 開始（BigInt）；null = 尚未搜尋過
+  used: 0,      // 已累積的ホイミ次數
+
+  reset() { this.seed = null; this.used = 0; },
+
+  // 這次還能跑幾步（可能是負的，代表預算已用完）
+  budget(maxSt) { return maxSt - this.used; },
+
+  // 在相對本次起點的第 found 步命中：推進游標，回傳從原始 seed 起算的絕對次數
+  advance(found, foundSeed) {
+    const abs = this.used + found;
+    this.used = abs + 1;
+    this.seed = lcgNext(foundSeed);
+    return abs;
+  },
+};
+
+// B-Table 搜尋條件 —— 單一真相來源：兩個搜尋按鈕都從這裡讀
+function readBtConditions() {
+  const reqMRaw  = document.getElementById('bt_m').value;
+  const reqNRaw  = document.getElementById('bt_n').value;
+  const isConsec = reqMRaw.startsWith('consec');
+  return {
+    tA:       parseInt(document.getElementById('bt_a').value),   // 0 = 不限（btThresholds 會退回最寬值）
+    tB:       parseInt(document.getElementById('bt_b').value),   // 0 = 不限
+    maxSt:    parseInt(document.getElementById('bt_steps').value) || 100000,
+    isConsec,
+    consecLv: isConsec ? parseInt(reqMRaw.slice(6)) : 0,
+    reqM:     (!isConsec && reqMRaw !== 'any') ? parseInt(reqMRaw) : -1,
+    reqN:     reqNRaw === 'any' ? -1 : parseInt(reqNRaw),
+  };
+}
+
+function doBTSearch(isContinue) {
+  const out  = document.getElementById('bt_out');
+  const nextBtn = document.getElementById('bt_next_btn');
+
+  // ── 起始 seed ──────────────────────────────────────────────
+  let startSeed;
+  if (isContinue) {
+    if (btCursor.seed === null) return;
+    startSeed = btCursor.seed;
+  } else {
+    try { startSeed = parseSeed(document.getElementById('bt_seed').value); }
+    catch(e) { out.innerHTML = `<span class="bad">${t('common.seedError')}</span>`; return; }
+    btCursor.reset();
+    nextBtn.disabled = true;
+    document.getElementById('bt_overflow_btn').disabled = true;
+  }
+
+  const { tA, tB, maxSt, isConsec, consecLv, reqM, reqN } = readBtConditions();
+
+  { const sy = window.scrollY; out.innerHTML = `<span class="dim">${t('common.searching')}</span>`; window.scrollTo(0, sy); }
+
+  setTimeout(() => {
+    let cur   = startSeed;
+    let found = -1;
+    let foundData = null;
+
+    const THR    = btThresholds(tA, tB);
+    const remain = btCursor.budget(maxSt);
+
+    for (let step = 0; step <= remain; step++) {
+      let t = cur;
+      t = lcgNext(t); const pA = toPercent(t);
+      t = lcgNext(t); const pB = toPercent(t);
+
+      // 主條件先擋掉，絕大多數位置不必展開剩下 13 步
+      if (!btMatch(0, pA, THR, tB) || !btMatch(1, pB, THR, tB)) { cur = lcgNext(cur); continue; }
+
+      const pct = [pA, pB];
+      for (let i = 2; i < BT_LEN; i++) { t = lcgNext(t); pct.push(toPercent(t)); }
+
+      const cntM = BT_RARE_LATER.filter(i => btMatch(i, pct[i], THR, tB)).length;
+      const cntN = BT_NORM_LATER.filter(i => btMatch(i, pct[i], THR, tB)).length;
+
+      // CEGI 判定
+      let matchM;
+      if (isConsec) {
+        // 連續N：A 已通過，再確認 C / CE / CEG
+        matchM = true;
+        for (let k = 0; k < consecLv; k++) {
+          const i = BT_RARE_LATER[k];
+          matchM = matchM && btMatch(i, pct[i], THR, tB);
+        }
+      } else {
+        matchM = (reqM === -1) || (cntM === reqM);
+      }
+
+      const matchN = (reqN === -1) || (cntN === reqN);
+
+      if (matchM && matchN) {
+        found = step;
+        foundData = { pct, cntM, cntN, curSeed: cur };
+        break;
+      }
+
+      cur = lcgNext(cur);
+    }
+
+    if (found === -1) {
+      { const sy = window.scrollY;
+      out.innerHTML = `<span class="bad">${t('bt.notFound', { n: maxSt })}</span>\n\n` + t('bt.hint');
+      nextBtn.disabled = true;
+      window.scrollTo(0, sy); return; }
+    }
+
+    const absStep = btCursor.advance(found, foundData.curSeed);
+    nextBtn.disabled = false;
+    document.getElementById('bt_overflow_btn').disabled = false;
+
+    const d = foundData;
+
+    const grid = btGridHtml(d.pct, btThresholds(tA, tB));
+
+    const consecLabel = isConsec
+      ? t('bt.consecLabel', { n: consecLv })
+      : (reqM === -1 ? t('bt.cegiAny') : t('bt.cegiCount', { n: d.cntM }));
+    const nLabel = reqN === -1 ? t('bt.dfhjAny') : t('bt.dfhjCount', { n: d.cntN });
+    const totalPass = grid.total;
+
+    { const sy = window.scrollY;
+    out.innerHTML =
+      `<span class="ok">${t('bt.found', { n: absStep })}  ${consecLabel}  ${nLabel}` +
+      `  ${t('bt.totalDrops', { n: totalPass })}` +
+      `${totalPass > BT_DROP_LIMIT ? ` <span class="bad">${t('bt.overLimit')}</span>` : ''}</span>` +
+      `  <span class="dim">(Seed: 0x${foundData.curSeed.toString(16).toUpperCase()})</span>\n\n` +
+      grid.html;
+    window.scrollTo(0, sy); }
+  }, 20);
+}
+
+// 從當前位置開始，搜尋第一個合計掉寶超過上限的 pattern
+function doSearchOverflow() {
+  if (btCursor.seed === null) return;
+  const out     = document.getElementById('bt_out');
+  const nextBtn = document.getElementById('bt_next_btn');
+  const ovBtn   = document.getElementById('bt_overflow_btn');
+
+  // 這裡只看「合計掉寶超過上限」，不看 CEGI / DFHJ 的個數條件
+  const { tA, tB, maxSt } = readBtConditions();
+
+  { const sy = window.scrollY; out.innerHTML = `<span class="dim">${t('bt.searchingOver')}</span>`; window.scrollTo(0, sy); }
+
+  setTimeout(() => {
+    let cur   = btCursor.seed;
+    let found = -1;
+    let foundData = null;
+
+    const THR    = btThresholds(tA, tB);
+    const remain = btCursor.budget(maxSt);
+
+    for (let step = 0; step <= remain; step++) {
+      let t = cur;
+      t = lcgNext(t); const pA = toPercent(t);
+      t = lcgNext(t); const pB = toPercent(t);
+      if (!btMatch(0, pA, THR, tB) || !btMatch(1, pB, THR, tB)) { cur = lcgNext(cur); continue; }
+
+      const pct = [pA, pB];
+      for (let i = 2; i < BT_LEN; i++) { t = lcgNext(t); pct.push(toPercent(t)); }
+
+      if (btDropCount(pct, THR) > BT_DROP_LIMIT) {
+        found = step;
+        foundData = { pct, curSeed: cur };
+        break;
+      }
+      cur = lcgNext(cur);
+    }
+
+    if (found === -1) {
+      const sy = window.scrollY;
+      out.innerHTML = `<span class="bad">${t('bt.notFoundOver', { n: maxSt })}</span>`;
+      window.scrollTo(0, sy);
+      return;
+    }
+
+    const absStep = btCursor.advance(found, foundData.curSeed);
+    nextBtn.disabled = false;
+    ovBtn.disabled = false;
+
+    const grid = btGridHtml(foundData.pct, THR);
+
+    const sy = window.scrollY;
+    out.innerHTML =
+      `<span class="ok">${t('bt.foundOver', { n: absStep })}  ${t('bt.totalDrops', { n: grid.total })}` +
+      ` <span class="bad">${t('bt.overLimit')}</span></span>` +
+      `  <span class="dim">(Seed: 0x${foundData.curSeed.toString(16).toUpperCase()})</span>
+
+` +
+      grid.html;
+    window.scrollTo(0, sy);
+  }, 20);
+}
+
+// 先把字典套到畫面：建立所有下拉選項、填入標籤與資訊列
+applyI18n();
+// 再明確寫回一次預設值，避免重整時被瀏覽器的表單狀態還原成上次的選擇。
+// 值同樣來自 selectDefaults()，不會跟建構選項時用的預設各走各的。
+const DEFAULTS = selectDefaults();
+for (const id in DEFAULTS) document.getElementById(id).value = String(DEFAULTS[id]);
+bookHint();
+
+</script>
+</body>
+</html>
