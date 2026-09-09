@@ -100,24 +100,16 @@ const J03=T('Item Table','寶箱內容物','アイテムテーブル');
 const K01=T('🗺️ Ultimate Search Help','🗺️ Ultimate Search 說明','🗺️ Ultimate Searchの使い方');
 const K02=T('🗺️ Chest Timer Search Help','🗺️ 中斷技搜尋說明','🗺️ 中断技検索の使い方');
 const K03=T('🗺️ Map Method (AT) Search Help','🗺️ 地圖法 (AT) 搜尋說明','🗺️ 地図法 (AT) 検索の使い方');
-const L01=T('Fixed damage','固定傷害','固定ダメージ');
 const L02=T('Attack','攻擊力','攻撃力');
-const L03=T('Magical Might','攻擊魔力','攻撃魔力');
 const L04=T('Strength','力','ちから');
-const L05=T('Magical Mending','回復魔力','回復魔力');
-const L06=T('Chip damage ≤','削HP ≤','HP削り ≤');
-const L07=T('Any','任意','任意');
 const L08=T('Finisher','收尾','とどめ');
-const L09=T('(Cannot KO)','(幹不掉)','(倒せない)');
-const L10=T('All hits ≤','總次數 ≤','回数 ≤');
-const L11=T('May be already KOed','前一招恐已被幹掉','前の技で倒された可能性あり');
 const L12=T('Wiped out','全滅','全滅');
 const L13=T('Turn 2','第 2 回合','2ターン目');
 const L14=T('Details','詳情','詳細');
 const L15=T('⚠ 2T (5–8 moves) AT +n/2 or +0 when entering Turn-2','⚠ 2T (5-8 招) 進入第 2 回合時 AT +n/2 或 +0','⚠ 2T (5～8手) 2ターン目に突入するとき AT +n/2 または +0');
 const L16=T(' more ▾',' 個組合 ▾','件をさらに表示 ▾');
 const L18=T('max','最大','最大');
-const L19=T('Neutral mode: Character stats are not loaded. Please enable the "Stats" checkbox if you want to load them.','中立模式: 角色能力值未被載入。如需載入，請勾選 Stats。','中立モード: ステータスは読み込んでいません。需要あれば「Stats」を選んで読み込ませてください。');
+const L19=T('Neutral conditions do not use the current character panel.','中立條件不使用目前角色面板。','中立条件では現在のキャラのステータスを使用しません。');
 const L20=T('Character ','角色','キャラ');
 const L21=T('On field: ','場上：','場にいる敵：');
 const L22=T('Move ','第','第');
@@ -150,6 +142,21 @@ const L48=T('Vocation','職業','職業');
 const L49=T('M.Might','攻擊魔力','攻撃魔力');
 const L50=T('Agility','速度','すばやさ');
 const L51=T('M.Mend','回復魔力','回復魔力');
+const L60=T('Conditions','成立條件','成立条件');
+const L61=T('See conditions','有成立條件','成立条件あり');
+const L64=T('Equipment','裝備','装備');
+const L65=T('Hits','擊數','ヒット数');
+const L66=T('Early-stop variant: KO on the last listed hit.','早停形態：必須在所列最後一擊擊殺。','早期終了形態：記載の最終ヒットで倒すこと。');
+const L67=T('Random-target skill: exactly one enemy must remain when used.','隨機指向招：出手當下必須只剩一隻怪。','ランダム対象技：使用時の生存敵は1体のみ。');
+const L68=T('Multiplayer required','需要多人模式','マルチプレイ必須');
+const L69=T('Keep the listed equipment, hits and action order.','須遵守所列裝備、擊數與出手順序。','記載の装備・ヒット数・行動順を守ること。');
+const L71=T('Verified stat combination','已驗證的能力值組合','検証済みステータスの組合せ');
+const L72=T('Use these values together, at Lv99 and in the listed agility order (vocation restrictions disabled). This is a verified example, not independent minimum thresholds.','以下數值須整組配合，Lv99，依所列速度順序出手（未套職業限制）。這是已驗證的可行範例，不是各項互相獨立的最低門檻。','以下の値を組み合わせ、Lv99・記載の素早さ順で使用（職業制限なし）。検証済みの一例であり、各値が独立した最低閾値ではありません。');
+const L73=T('Verified result','驗證結果','検証結果');
+const L75=T('Agility rank','速度順位','素早さ順位');
+const L76=T('Turn 1','第 1 回合','1ターン目');
+const L77=T('Character','角色','キャラ');
+const L78=T('No requirement','無要求','不要');
 const STR_SOLO=T('Solo','一人旅','一人旅');
 const STR_PARTY=T('Party','即開','即開');
 const STR_BOTH=T('Solo+Party','即+一人旅','即+一人旅');
@@ -286,6 +293,15 @@ for(let i=0;i<rows;i++){const b=i*4;if(v>=t[b]&&v<=t[b+1])return[t[b+2],t[b+3]];
 return dft;
 }
 const NO_ROW=[1,0];
+function selectChestItem(rank,roll){
+const start=TableO[rank-1],end=TableO[rank];
+let weight=0;
+for(let i=start;i<end;i++){
+weight+=TableP[i];
+if(roll<weight)return TableR[TableQ[i]];
+}
+return null;
+}
 class GrottoDetail{
 constructor(){
 this.di=[];
@@ -960,13 +976,8 @@ this._seed=(this.di[floor][0]+this.MapSeed+second)>>>0;
 for(let i1=0;i1<this.di[floor][8];i1++){
 const num1=this.routineRandom(100);
 if(i1===boxIndex){
-const index2=this.di[floor][i1+9];
-const num2=TableO[index2-1],num3=TableO[index2];
-let num4=0;
-for(let i3=num2;i3<num3;i3++){
-num4+=TableP[i3];
-if(num1<num4)return[TableR[TableQ[i3]][0],TableR[TableQ[i3]][1]];
-}
+const item=selectChestItem(this.di[floor][i1+9],num1);
+if(item!==null)return[item[0],item[1]];
 }
 }
 return[null,null];
@@ -978,14 +989,8 @@ this._seed=(d[0]+this.MapSeed+second)>>>0;
 const names=[];
 for(let i1=0;i1<boxCount;i1++){
 const num1=this.routineRandom(100);
-const index2=d[i1+9];
-const num2=TableO[index2-1],num3=TableO[index2];
-let num4=0,name=null;
-for(let i3=num2;i3<num3;i3++){
-num4+=TableP[i3];
-if(num1<num4){name=TableR[TableQ[i3]][0];break;}
-}
-names.push(name);
+const item=selectChestItem(d[i1+9],num1);
+names.push(item===null?null:item[0]);
 }
 return names;
 }
@@ -1207,6 +1212,9 @@ const ONLY_MONSTERS={
 4:["","03D","051","059","013","057","057","037","0B5","0F0","0F0","0B0","0B0"],
 5:["","03E","086","015","01B","080","02E","0AA","0C3","0B5","0C7","0AB","0AB"]
 };
+function matchesOnlyMonFloor(env,floorMR,name){
+return MONSTER_DB[ONLY_MONSTERS[env][floorMR]].en===name;
+}
 const SPAWN_DB={
 1:{
 1:[["00B",6555,13107],["00E",13108,19661],["022",0,6554],["026"],["027"],["028"],["082",26215,32767],["08C",19662,26214]],

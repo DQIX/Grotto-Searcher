@@ -3,6 +3,17 @@ let wkGen=-1;
 let wkJob=null;
 let wkCancelled=false;
 let wkChain=Promise.resolve();
+function setupSolverWorker(m){
+DISPLAY_LANG=m.lang||'EN';
+_L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
+self.window=self;
+self.document={getElementById:(id)=>(m.dom&&(id in m.dom))?{checked:!!m.dom[id]}:null};
+readCharStatsFromDom=()=>m.chars||[];
+window._solverComboMap={};window._solverComboId=m.idBase||0;
+window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
+window._solverFallback=!!m.initialFallback;window._solverSolvable=null;
+window._solverNeedsKillAll=null;
+}
 self.onmessage=(e)=>{
 const m=e.data;
 if(!m)return;
@@ -25,18 +36,29 @@ return;
 }
 if(m.type==='solve'){
 try{
-DISPLAY_LANG=m.lang||'EN';
-_L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
-self.window=self;
-self.document={getElementById:(id)=>(m.dom&&(id in m.dom))?{checked:!!m.dom[id]}:null};
-readCharStatsFromDom=()=>m.chars;
-window._solverComboMap={};window._solverComboId=m.idBase||0;
-window._solverBucketId=m.bucketBase||0;window._solverBuckets={};window._solverFallback=false;window._solverSolvable=null;
-const html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,m.render.mapDeft,m.render.canRound2);
+setupSolverWorker(m);
+const html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,
+m.render.mapDeft,m.render.canRound2,!!m.forceKillAll,
+m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll);
 self.postMessage({type:'solveDone',solveId:m.solveId,html,
-comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable});
+comboMap:window._solverComboMap,buckets:window._solverBuckets,
+fallback:window._solverFallback||false,solvable:window._solverSolvable,
+needsKillAll:window._solverNeedsKillAll||null});
 }catch(err){
 self.postMessage({type:'solveError',solveId:m.solveId,message:''+(err&&err.stack||err)});
+}
+return;
+}
+if(m.type==='solveKmcShard'||m.type==='solveKillAllShard'){
+try{
+setupSolverWorker(m);
+const payload=m.type==='solveKmcShard'
+?buildKmcShardPayload(m.spec,m.roots)
+:buildKillAllShardPayload(m.spec,m.roots);
+self.postMessage({type:m.type+'Done',solveId:m.solveId,payload});
+}catch(err){
+self.postMessage({type:m.type+'Error',solveId:m.solveId,
+message:''+(err&&err.stack||err)});
 }
 return;
 }
@@ -58,10 +80,8 @@ yield:()=>new Promise(r=>setTimeout(r,0)),
 const extra={startSeed:c.startSeed,endSeed:c.endSeed};
 if(job.kind==='scan')extra.ranks=[c.rank];
 const chunkJob=Object.assign({},job,extra);
-let hits=0;
-if(job.kind==='scan')hits=await coreRunScanJob(chunkJob,io);
-else if(job.kind==='atMonster')hits=await coreRunATMonsterJob(chunkJob,io);
-else if(job.kind==='atPattern')hits=await coreRunATPatternJob(chunkJob,io);
+const runner=getCoreSearchRunner(job.kind);
+const hits=runner?await runner(chunkJob,io):0;
 const aborted=io.cancelled();
 self.postMessage({type:'chunkDone',gen:c.gen,chunkId:c.chunkId,
 items:aborted?[]:items,hits:aborted?0:hits,aborted});

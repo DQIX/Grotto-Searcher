@@ -31,19 +31,9 @@ activeFloor=0;
 renderResult();
 }
 function calcR2N2(seed){
-const threshR=Math.floor(32768/256);
-const threshN=Math.floor(32768/128);
-const MAX=400;
-let rng=seed>>>0;
-const v=[];
-for(let i=0;i<MAX+4;i++){rng=lcg(rng);v.push((rng>>>16)&0x7FFF);}
-let r2=-1,r2_3=-1,n2=-1;
-for(let i=0;i<MAX;i++){
-if(r2===-1&&v[i]<threshR&&v[i+1]<threshR)r2=i+1;
-if(r2_3===-1&&v[i]<threshR&&i+3<v.length&&v[i+3]<threshR)r2_3=i+1;
-if(n2===-1&&i+3<v.length&&v[i]>=threshR&&v[i+1]<threshN&&v[i+2]>=threshR&&v[i+3]<threshN)n2=i+1;
-}
-return{r2,r2_3,n2};
+const slots=Array.from({length:5},(_,bk)=>({gIdx:0,bk,rareThreshold:dropATThreshold(256),normalThreshold:dropATThreshold(128)}));
+const first=key=>scanDropPatternStarts(seed,key,slots,1,400,1)[0]?.start??-1;
+return{r2:first('R2'),r2_3:first('R2_3'),n2:first('N2')};
 }
 function classifyElistState(st){
 st=''+st;
@@ -125,7 +115,7 @@ let html=`<div class="info-bar">
     <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C07}:
     <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
     </span>
-    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;" title="${T('Sum of per-floor shortest walking cost (Dijkstra, same rule as Fastest Map Search)','全樓層最短步數之和（Dijkstra，與最短地圖搜尋同規則）','全フロア最短歩数の合計（Dijkstra、最短地図検索と同ルール）')}">A*:
+    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">A*:
     <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${wHtml}</strong>
     </span>
     </div>
@@ -349,18 +339,16 @@ results.push({start:currentStart,end:255,itemEN:currentItemEN,itemJP:currentItem
 let htmlEN='';
 let htmlJP='';
 results.forEach(res=>{
-const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3,'0'):`${(res.start + 5).toString().padStart(3, '0')} ~ ${(res.end + 5).toString().padStart(3, '0')}`;
+const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3,'0'):`${(res.start+5).toString().padStart(3,'0')} ~ ${(res.end+5).toString().padStart(3,'0')}`;
 const isHighlight=(res.start<=2&&res.end>=1);
 const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15);border-left: 3px solid #ffd700;padding-left: 8px;':'';
 const textStyle=isHighlight?'color: #ffd700;font-weight: bold;':'';
-htmlEN+=`<div class="timer-row" style="${rowStyle}">
+const renderRow=item=>`<div class="timer-row" style="${rowStyle}">
     <span class="timer-range" style="${textStyle}">${rangeStr}</span>
-    <span class="timer-item" style="${textStyle}">${res.itemEN}</span>
+    <span class="timer-item" style="${textStyle}">${item}</span>
     </div>`;
-htmlJP+=`<div class="timer-row" style="${rowStyle}">
-    <span class="timer-range" style="${textStyle}">${rangeStr}</span>
-    <span class="timer-item" style="${textStyle}">${res.itemJP}</span>
-    </div>`;
+htmlEN+=renderRow(res.itemEN);
+htmlJP+=renderRow(res.itemJP);
 });
 body.style.padding='0';
 body.style.overflowY='hidden';
@@ -604,7 +592,6 @@ let mrtCustomHL1Item='',mrtCustomHL2Item='';
 const MRT_BUILTIN_HL={};
 for(const k in MRT_HL)MRT_BUILTIN_HL[k]=MRT_HL[k];
 function mrtPopulateCustomHL(){
-if(typeof TableR==='undefined')return;
 const seen={},items=[];
 TableR.forEach(r=>{if(!seen[r[0]]){seen[r[0]]=true;items.push({en:r[0],jp:r[1]});}});
 const isJP=mrtLang==='jp';
@@ -633,29 +620,12 @@ if(mrtCustomHL2Item)MRT_HL[mrtCustomHL2Item]=MRT_CUSTOM_HL2;
 mrtRenderRows();
 }
 window.addEventListener('resize',()=>{if(document.getElementById('marathonModal').classList.contains('open'))mrtResizeMain();});
-const DW_PATS=[
-['R2','連續 2 個稀有','2 Rare','レア×2'],
-['R2_3','連續 2 個稀有 (N/N+3)','2 Rare (N/N+3)','レア×2 (チカラめし)'],
-['R2_5','連續 2 個稀有 (N/N+5)','2 Rare (N/N+5)','レア×2 (N/N+5)'],
-['R2_7','連續 2 個稀有 (N/N+7)','2 Rare (N/N+7)','レア×2 (N/N+7)'],
-['R3','連續 3 個稀有','3 Rare','レア×3'],
-['R4','連續 4 個稀有','4 Rare','レア×4'],
-['R5','連續 5 個稀有','5 Rare','レア×5'],
-['4_in_6','6 個中 4 個稀有','4 in 6 Rare','レア×4 (6連続)'],
-['3_in_7','7 個中 3 個稀有','3 in 7 Rare','レア×3 (7連続)'],
-['N2','連續 2 個通常','2 Normal','通常×2'],
-['N3','連續 3 個通常','3 Normal','通常×3'],
-['N4','連續 4 個通常','4 Normal','通常×4'],
-['N5','連續 5 個通常','5 Normal','通常×5'],
-['4_in_10','10 個中 4 個通常','4 in 10 Normal','通常×4 (10連続)'],
-['3_in_10','10 個中 3 個通常','3 in 10 Normal','通常×3 (10連続)']
-];
 const DW_L={
 TW:{
 name:md=>md.jp,mainFmt:md=>`${md.jp} (${md.en})`,
 drop:l=>'掉'+l,book:(b,l)=>'書'+b+l,
 tag:['主怪','跟班1','跟班2'],single:'單組',
-corr:n=>`→ 對照上表「${n === 1 ? '敵1組' : n + '組同時'}」表頭列`,
+corr:n=>`→ 對照上表「${n===1?'敵1組':n+'組同時'}」表頭列`,
 jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表 5 欄',no:'上表未列',
 anchor:'Pattern 錨點（＝判定 1 的 AT 步數）：',
 more:m=>`（共 ${m} 個，僅列前 12）`,
@@ -668,7 +638,7 @@ EN:{
 name:md=>md.en,mainFmt:md=>md.en,
 drop:l=>l?'D-'+l:'D',book:(b,l)=>'B'+b+l,
 tag:['Main','Sup1','Sup2'],single:'Single',
-corr:n=>`→ matches the "(${n === 1 ? '1 group' : n + ' groups'})" header row above`,
+corr:n=>`→ matches the "(${n===1?'1 group':n+' groups'})" header row above`,
 jr:(a,b)=>`Judg. ${a}–${b}`,eq5:'= 5 cols above',no:'not in table',
 anchor:'Pattern anchors (AT step of judgment 1): ',
 more:m=>` (${m} total, first 12 shown)`,
@@ -681,7 +651,7 @@ JP:{
 name:md=>md.jp,mainFmt:md=>md.jp,
 drop:l=>'落'+l,book:(b,l)=>'盗'+b+l,
 tag:['メイン','取り巻き1','取り巻き2'],single:'単組',
-corr:n=>`→ 上表「${n === 1 ? '敵1組' : n + '組同時'}」の見出し行に対応`,
+corr:n=>`→ 上表「${n===1?'敵1組':n+'組同時'}」の見出し行に対応`,
 jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表の5欄',no:'上表対象外',
 anchor:'パターン錨点（＝判定1のATステップ）：',
 more:m=>`（全 ${m} 件、先頭12件のみ表示）`,
@@ -695,26 +665,18 @@ const DW_CLSC={cr:'#f88',ct:'#39C5BB',cy:'#ffd700',cp:'#c8c',ck:'#cc8'};
 const _dwSel={TW:0,EN:0,JP:0};
 const _dwTmr={};
 function dwSupPool(envType,floorMR){
-const raw=(typeof GROTTO_SUPPORT!=='undefined'&&GROTTO_SUPPORT[envType])?(GROTTO_SUPPORT[envType][floorMR]||[]):[];
-const out=[],seen=new Set();
-for(const e of raw){
-if(!Array.isArray(e))continue;
-if(typeof e[0]==='string'&&!seen.has(e[0])){seen.add(e[0]);out.push(e[0]);}
-for(const x of e){
-if(Array.isArray(x)&&typeof x[0]==='string'&&!seen.has(x[0])){seen.add(x[0]);out.push(x[0]);}
-}
-}
-return out;
+return getEncounterSupportPool(envType,floorMR).supportPool.map(s=>s.hex);
 }
 function dwInit(){
 ['TW','EN','JP'].forEach((L,li)=>{
 const patSel=document.getElementById('dw_pat_'+L);
 if(patSel){
 patSel.innerHTML='<option value="none">----</option>';
-DW_PATS.forEach(p=>{
+const langIndex=[1,0,2][li];
+AT_O.forEach(([key,label])=>{
 const o=document.createElement('option');
-o.value=p[0];
-o.textContent=p[1+li];
+o.value=key;
+o.textContent=label[langIndex];
 patSel.appendChild(o);
 });
 }
@@ -768,13 +730,14 @@ const n=groups.length;
 const LET=['A','B','C'];
 const BOOK_CLS=['','ct','cy','cp','ck'];
 const slots=[];
-for(let g=0;g<n;g++)slots.push({lbl:X.drop(n>1?LET[g]:''),cls:'cr',g});
-for(let b=1;b<=4;b++)
-for(let g=0;g<n;g++)slots.push({lbl:X.book(b,n>1?LET[g]:''),cls:BOOK_CLS[b],g});
+forEachDropSlot(n,[1,1,1,1],(g,bk)=>{
+slots.push({lbl:bk?X.book(bk,n>1?LET[g]:''):X.drop(n>1?LET[g]:''),
+cls:bk?BOOK_CLS[bk]:'cr',g});
+});
 const seedStr=($('dw_seed')?$('dw_seed').value:'').trim();
 const patKey=$('dw_pat')?$('dw_pat').value:'none';
 let scanHtml='',st=null;
-if(seedStr&&patKey&&patKey!=='none'&&typeof SI_PATTERN_INDICES!=='undefined'){
+if(seedStr&&patKey&&patKey!=='none'){
 if(!/^[0-9A-Fa-f]{1,4}$/.test(seedStr)){
 scanHtml=`<div style="color:#f66;font-size:11px;margin-bottom:4px">${X.bad}</div>`;
 }else{
@@ -783,23 +746,14 @@ const rr=parseInt($('dw_rr').value);
 const nr=parseInt($('dw_nr').value);
 const lv=Math.min(99,Math.max(1,parseInt($('dw_lv').value)||99));
 const tLvs=[lv,lv,lv,lv];
-const pats=SI_PATTERN_INDICES[patKey];
-const isN=patKey.startsWith('N')||patKey==='4_in_10'||patKey==='3_in_10';
-let rng=seed>>>0;
-for(let i=0;i<37;i++)rng=lcg(rng);
-const matches=[],rngs=[];
-for(let step=38;step<=2037;step++){
-const sim=siRunBattleSim(rng,n,rr,nr,tLvs,false);
-const hits=isN?sim.normHits:sim.rareHits;
-if(siMatchesPattern(hits,pats)){matches.push(step);rngs.push(rng);if(matches.length>=60)break;}
-rng=lcg(rng);
-}
+const evidence=scanDropPatternStarts(seed,patKey,buildDropSlots(n,rr,nr,tLvs),38,2037,60);
+const matches=evidence.map(item=>item.start);
 if(!matches.length){
 scanHtml=`<div style="color:#f80;font-size:11px;margin-bottom:4px">${X.nf}</div>`;
 }else{
 const sel=Math.min(_dwSel[L],matches.length-1);
 _dwSel[L]=sel;
-const seq=siRunBattleSim(rngs[sel],n,rr,nr,tLvs,true).seq;
+const seq=evidence[sel].simulation.seq;
 st=[];
 let si=-1;
 for(const e of seq){
@@ -807,14 +761,14 @@ if(e.type.indexOf('(R)')>=0){si++;st[si]=e.red?'R':'x';}
 else if(e.red&&st[si]==='x')st[si]='N';
 }
 const chips=matches.slice(0,12).map((s,i)=>
-`<span onclick="dwSelStep('${L}',${i})" style="cursor:pointer;padding:0 5px;border:1px solid ${i === sel ? '#0f0' : '#555'};border-radius:3px;color:${i === sel ? '#0f0' : '#aaa'};margin:0 3px 2px 0;display:inline-block">${s}</span>`).join('');
+`<span onclick="dwSelStep('${L}',${i})" style="cursor:pointer;padding:0 5px;border:1px solid ${i===sel?'#0f0':'#555'};border-radius:3px;color:${i===sel?'#0f0':'#aaa'};margin:0 3px 2px 0;display:inline-block">${s}</span>`).join('');
 const moreTxt=matches.length>12?`<span style="color:#666;font-size:10px">${X.more(matches.length)}</span>`:'';
 scanHtml=`<div style="font-size:11px;margin-bottom:4px;color:#0ca">${X.anchor}${chips}${moreTxt}</div>`;
 }
 }
 }
 let html=scanHtml+'<div style="margin-bottom:6px;font-size:12px">'+
-groups.map((gr,i)=>`<span style="color:#0ff">${n > 1 ? LET[i] : X.single}</span>＝<span style="color:${gr.color}">${gr.name}</span><span style="color:#666;font-size:10px">(${gr.tag})</span>`).join('　')+
+groups.map((gr,i)=>`<span style="color:#0ff">${n>1?LET[i]:X.single}</span>＝<span style="color:${gr.color}">${gr.name}</span><span style="color:#666;font-size:10px">(${gr.tag})</span>`).join('　')+
 `　<span style="color:#888;font-size:11px">${X.corr(n)}</span></div>`;
 html+='<table class="h3t sm ctr" style="margin-bottom:4px">';
 for(let r=0;r*5<slots.length;r++){
@@ -838,7 +792,7 @@ if(st){
 const hitR=[],hitN=[];
 st.forEach((v,i)=>{if(v==='R')hitR.push(i);else if(v==='N')hitN.push(i);});
 const fmt=i=>`<span style="color:${DW_CLSC[slots[i].cls]};font-weight:bold">${slots[i].lbl}</span>·<span style="color:${groups[slots[i].g].color}">${groups[slots[i].g].name}</span>`;
-html+=`<div style="font-size:11px;margin-bottom:2px"><span style="color:#0ca">${X.hits}</span><span style="color:#f88;font-weight:bold">R </span>${hitR.length ? hitR.map(fmt).join(X.sep) : '—'}　<span style="color:#ccc;font-weight:bold">N </span>${hitN.length ? hitN.map(fmt).join(X.sep) : '—'}<span style="color:#555;font-size:10px">　${X.leg}</span></div>`;
+html+=`<div style="font-size:11px;margin-bottom:2px"><span style="color:#0ca">${X.hits}</span><span style="color:#f88;font-weight:bold">R </span>${hitR.length?hitR.map(fmt).join(X.sep):'—'}　<span style="color:#ccc;font-weight:bold">N </span>${hitN.length?hitN.map(fmt).join(X.sep):'—'}<span style="color:#555;font-size:10px">　${X.leg}</span></div>`;
 }
 out.innerHTML=html;
 }
@@ -935,16 +889,9 @@ if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
 });
 }
 window.addEventListener('DOMContentLoaded',()=>{
-if(typeof advanceBqCountFeasibility!=='function')return;
-const schedule=window.requestIdleCallback
-?(fn)=>window.requestIdleCallback(fn,{timeout:200})
-:(fn)=>setTimeout(fn,1);
+const schedule=window.requestIdleCallback?(fn)=>window.requestIdleCallback(fn,{timeout:200}):(fn)=>setTimeout(fn,1);
 let next=2048;
-const step=()=>{
-if(advanceBqCountFeasibility(next))return;
-next+=2048;
-schedule(step);
-};
+const step=()=>{if(advanceBqCountFeasibility(next))return;next+=2048;schedule(step);};
 schedule(step);
 });
 window.addEventListener('DOMContentLoaded',()=>{
@@ -959,13 +906,13 @@ option.text=`${item[nameIdx1]} ${item[nameIdx2]}`;
 selectElement.appendChild(option);
 });
 }
-if(typeof PREFIX_NAMES!=='undefined')populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
-if(typeof SUFFIX_NAMES!=='undefined')populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
-if(typeof LOCALE_NAMES!=='undefined')populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
-if(typeof ENV_NAMES!=='undefined')populateDropdownObj('cond_env',ENV_NAMES,0,1);
-if(typeof BOSS_NAMES!=='undefined')populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
+populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
+populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
+populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
+populateDropdownObj('cond_env',ENV_NAMES,0,1);
+populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
 const atCountSel=document.getElementById('atConsecutiveCount');
-if(atCountSel&&typeof AT_O!=='undefined'){
+if(atCountSel){
 AT_O.forEach(pair=>{
 let opt=document.createElement('option');
 opt.value=pair[0];
@@ -994,7 +941,6 @@ sel.appendChild(s);
 topIds.forEach(id=>sel.appendChild(createOpt(id)));
 addSep();
 envOrder.forEach((env,idx)=>{
-if(ONLY_MONSTERS[env]){
 let added=false;
 ONLY_MONSTERS[env].forEach(id=>{
 if(id&&!seenIds.has(id)){
@@ -1004,7 +950,6 @@ added=true;
 }
 });
 if(added&&idx<envOrder.length-1)addSep();
-}
 });
 }
 initItemI18n();
@@ -1082,7 +1027,6 @@ hasSpecial=true;
 }
 if(hasSpecial)itemOpts+=`<option disabled>──────</option>`;
 let validItems=[];
-if(typeof TableR!=='undefined'&&typeof TableO!=='undefined'&&typeof TableQ!=='undefined'){
 if(r===0){
 TableR.forEach(p=>{if(!seen.has(p[0])){seen.add(p[0]);validItems.push(p[0]);}});
 }else{
@@ -1094,7 +1038,6 @@ if(!seen.has(itemName)){seen.add(itemName);validItems.push(itemName);}
 }
 }
 validItems.forEach(en=>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
-}
 itemSelect.innerHTML=itemOpts;
 itemSelect.value=itemSelect.querySelector(`option[value="${currentVal}"]`)?currentVal:"ANY";
 };
@@ -1114,8 +1057,8 @@ updateFSItems(i);
 }
 }
 initFreeSearchUI();
-if(typeof initSeedInspectorUI==='function'){initSeedInspectorUI();}
-if(typeof initCPUBenchmark==='function'){initCPUBenchmark();}
+initSeedInspectorUI();
+initCPUBenchmark();
 const urlParams=new URLSearchParams(window.location.search);
 const urlId=urlParams.get('id');
 if(urlId&&/^[0-9A-Fa-f]{6}$/.test(urlId)){

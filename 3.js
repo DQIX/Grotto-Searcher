@@ -3,7 +3,7 @@ document.querySelectorAll('[data-i18n]').forEach(el=>{
 const key=el.getAttribute('data-i18n');
 let text=i18nDict[key];
 if(text){
-if(el.tagName==='OPTION'&&typeof b3fThreeItems!=='undefined'&&b3fThreeItems.includes(el.value)){text=String(text)+String(' (3)');}
+if(el.tagName==='OPTION'&&b3fThreeItems.includes(el.value)){text=String(text)+String(' (3)');}
 el.textContent=text;
 }
 });
@@ -12,7 +12,7 @@ const sl=document.getElementById('lblSteps');if(sl)sl.textContent=_STEPS_LBL;
 if(typeof updateFSItems==='function'){for(let i=1;i<=3;i++)updateFSItems(i);}
 ['atConsecutiveCount','at_pattern','si_pattern'].forEach(sid=>{
 const sel=document.getElementById(sid);
-if(sel&&typeof AT_O!=='undefined'){
+if(sel){
 const cv=sel.value;
 sel.querySelectorAll('option').forEach((o,idx)=>{if(idx>0&&AT_O[idx-1])o.textContent=AT_O[idx-1][1];});
 sel.value=cv;
@@ -35,14 +35,14 @@ else{b.style.background='#224';b.style.color='#888';b.style.borderColor='#444';}
 });
 const mm=document.getElementById('marathonModal');
 if(mm){mrtLang=lang==='EN'?'en':'jp';const bl=document.getElementById('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();if(mm.classList.contains('open')){mrtBuildTable();mrtRenderRows();}}
-if(typeof mapData!=='undefined'&&mapData&&mapData.floorCount>0){
+if(mapData&&mapData.floorCount>0){
 const cc=document.getElementById('controls_container');
 const sc=document.getElementById('single_map_controls');
 if(cc&&sc)cc.appendChild(sc);
 renderResult();
 }
 }
-function seedCapForConds(conds,applyBqCount){
+function seedCapForConds(conds){
 return 0x7FFF;
 }
 function getValidatedSeedRange(){
@@ -92,9 +92,7 @@ const USP_FAST_MODES={
 function getUltimateConds(){
 const getV=(id)=>{const el=document.getElementById(id);return el?el.value.trim():"";};
 const reqBox={};
-BOX_RANK_CHARS.forEach((ch,i)=>{
-reqBox[i+1]=parseInt(getV('cond_box_'+ch))||0;
-});
+BOX_RANK_CHARS.forEach((ch,i)=>{reqBox[i+1]=parseInt(getV('cond_box_'+ch))||0;});
 const conds={};
 for(const[key,id]of Object.entries(COND_FIELDS))conds[key]=getV(id);
 conds.reqBox=reqBox;
@@ -192,6 +190,12 @@ if(typeof window.DQ9_WORKER_COUNT==='number'&&window.DQ9_WORKER_COUNT>=1)return 
 return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
 }
 function getWorkerBlobURL(){return '5.js';}
+function createPoolWorker(blobURL,wi){
+const w=new Worker(blobURL);
+w.onmessage=(e)=>handlePoolMessage(wi,e.data);
+w.onerror=(e)=>handlePoolFatalError(wi,e);
+return w;
+}
 function getSearchWorkerPool(){
 if(_dq9Pool)return _dq9Pool;
 if(!_dq9PreflightDone||_dq9PoolFailed||typeof Worker==='undefined')return null;
@@ -200,10 +204,7 @@ const blobURL=getWorkerBlobURL();
 const count=getWorkerCount();
 const workers=[];
 for(let i=0;i<count;i++){
-const w=new Worker(blobURL);
-w.onmessage=(e)=>handlePoolMessage(i,e.data);
-w.onerror=(e)=>handlePoolFatalError(i,e);
-workers.push(w);
+workers.push(createPoolWorker(blobURL,i));
 }
 _dq9Pool={workers,idle:workers.map((_,i)=>i)};
 console.info('[DQ9] Search worker pool ready: '+count+' workers (override with ?workers=N)');
@@ -227,7 +228,7 @@ a.inFlight.set(chunkId,0);
 p.workers[wi].postMessage(Object.assign({type:'chunk',gen:a.gen},a.chunks[chunkId]));
 }
 }
-if(typeof dispatchSolveQueue==='function')dispatchSolveQueue();
+dispatchSolveQueue();
 }
 function flushReadyResults(a){
 while(a.nextFlush<a.chunks.length&&a.slots[a.nextFlush]!==undefined){
@@ -266,13 +267,15 @@ return;
 }
 if(errMsg!==undefined){if(a.callbacks.onError)a.callbacks.onError(errMsg);}
 else{if(a.callbacks.onDone)a.callbacks.onDone(result);}
-if(typeof dispatchSolveQueue==='function')setTimeout(dispatchSolveQueue,0);
+setTimeout(dispatchSolveQueue,0);
 }
 function handlePoolMessage(workerIdx,m){
 const p=_dq9Pool;
 if(!m)return;
-if(m.type==='solveDone'||m.type==='solveError'){
-if(typeof handleSolveMessage==='function')handleSolveMessage(workerIdx,m);
+if(m.type==='solveDone'||m.type==='solveError'||
+m.type==='solveKmcShardDone'||m.type==='solveKmcShardError'||
+m.type==='solveKillAllShardDone'||m.type==='solveKillAllShardError'){
+handleSolveMessage(workerIdx,m);
 return;
 }
 if((m.type==='chunkDone'||m.type==='error')&&p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
@@ -315,7 +318,7 @@ function startPoolWatchdog(a){
 a._watchdog=setTimeout(()=>{
 if(a.doneCount===0&&!a.finished){
 console.warn('[DQ9] Workers unresponsive — falling back to main thread');
-if(typeof abortAllSolveTasks==='function')abortAllSolveTasks('Workers unresponsive');
+abortAllSolveTasks('Workers unresponsive');
 for(const w of _dq9Pool.workers)w.terminate();
 _dq9Pool=null;
 _dq9PoolFailed=true;
@@ -325,7 +328,7 @@ finishPoolRun(a,null,'_RETRY_MAIN_THREAD_');
 }
 function handlePoolFatalError(workerIdx,e){
 console.error('Search worker fatal error:',e&&(e.message||e));
-if(typeof _siSolveBusy!=='undefined'&&_siSolveBusy.has(workerIdx)){
+if(_siSolveBusy.has(workerIdx)){
 const t=_siSolveBusy.get(workerIdx);
 _siSolveBusy.delete(workerIdx);
 t.reject(new Error((e&&e.message)||'Worker error'));
@@ -348,7 +351,7 @@ finishPoolRun(a,{hits:a.hits,cancelled:true});
 function runSearchJob(job,callbacks){
 const pool=getSearchWorkerPool();
 if(pool){
-if(typeof requeueBusySolveTasks==='function')requeueBusySolveTasks();
+requeueBusySolveTasks();
 const gen=++_dq9Gen;
 const seedSpan=job.endSeed-job.startSeed+1;
 const rankCount=(job.kind==='scan'&&job.ranks)?job.ranks.length:1;
@@ -398,10 +401,8 @@ batch:(items)=>{if(callbacks.onBatch)callbacks.onBatch(items);},
 yield:()=>new Promise(r=>setTimeout(r,0)),
 };
 try{
-let hits=0;
-if(job.kind==='scan')hits=await coreRunScanJob(job,io);
-else if(job.kind==='atMonster')hits=await coreRunATMonsterJob(job,io);
-else if(job.kind==='atPattern')hits=await coreRunATPatternJob(job,io);
+const runner=getCoreSearchRunner(job.kind);
+const hits=runner?await runner(job,io):0;
 if(callbacks.onDone)callbacks.onDone({hits,cancelled:searchCancel});
 }catch(err){
 console.error(err);
@@ -439,7 +440,7 @@ if(config.validateConds&&!config.validateConds(conds,searchFilterLoc)){return;}
 const rangeData=getValidatedSeedRange();
 if(rangeData.error){alert(rangeData.error);return;}
 let{startSeed,endSeed}=rangeData;
-endSeed=Math.min(endSeed,seedCapForConds(conds,true));
+endSeed=Math.min(endSeed,seedCapForConds(conds));
 isSearching=true;searchCancel=false;
 const btn=document.getElementById(config.btnId);
 if(btn){
@@ -596,7 +597,7 @@ if(USP_FAST_MODES[conds.anomaly]){alert(A15);return;}
 if(conds.anomaly){alert(A12);return;}
 const cond_elist=conds.elist;
 const cond_only_mon=conds.onlyMon;
-const isCombinedSearch=(['2','3','4','PARTIAL_NONE'].includes(cond_elist))&&!!cond_only_mon;
+const isCombinedSearch=isCombinedElistMonsterSearch(conds);
 let effectiveElistCond=cond_elist;
 const searchOnlyWithDNode=document.getElementById('searchOnlyWithD');
 const searchOnlyWithD=searchOnlyWithDNode?searchOnlyWithDNode.checked:false;
@@ -637,7 +638,6 @@ const conds=getUltimateConds();
 if(!validateElistOnlyMonCombo(conds))return;
 if(conds.elist==='MULTI_SPECIAL'){alert(A13);return;}
 const fm=USP_FAST_MODES[conds.anomaly];
-if(conds.anomaly&&!fm){alert(A13);return;}
 const mode=fm?fm.mode:((conds.elist||conds.onlyMon)?'floor':'map');
 const slowest=fm?fm.slowest:false;
 const showFloors=fm?fm.showFloors:false;
@@ -751,7 +751,7 @@ let itm=document.getElementById(`fs_i_${i}`).value;
 let t_str=document.getElementById(`fs_t_${i}`).value.trim();
 if(b===-1&&r===0&&itm==="ANY")continue;
 if(f===0){
-alert(typeof T==='function'?T('Please specify a floor.','請指定目標樓層！','階層を指定してください！'):'請指定目標樓層');
+alert(T('Please specify a floor.','請指定目標樓層！','階層を指定してください！'));
 return;
 }
 let t_val=t_str===""?-1:parseInt(t_str);
@@ -785,7 +785,7 @@ timeStr:t_str,timerVal:t_val,
 allowedRanks:allowedRanks
 });
 }
-if(groups.length===0){alert(typeof A01!=='undefined'?A01:'A01');return;}
+if(groups.length===0){alert(A01);return;}
 executeItemSearch({
 btnId:'btnFreeSearch',btnText:'Free',btnBg:'linear-gradient(135deg,#08c,#048)',
 filterRanks:(ranks,conds)=>{
@@ -929,7 +929,7 @@ if(m==='9A'||m==='5A'){alert(A05);return;}
 const targetValue=document.getElementById('searchItem').value;
 const supportedForBox3=['Ethereal stone','Lucida shard','Sainted soma','Hephaestus\' flame','Millionaire'];
 if(!supportedForBox3.includes(targetValue)){
-alert(typeof A05!=='undefined'?A05:'A05');
+alert(A05);
 return;
 }
 ThirdChestSearch(targetValue==='Sainted soma');
@@ -1014,7 +1014,7 @@ sel.innerHTML='';
 const spawnList=getSpawnList(envType,floorMR);
 if(!spawnList.length)return;
 appendSpawnMonsterOptions(sel,spawnList,md=>`${md.jp} (${md.en})`);
-if(typeof updateATOnlyMonsters==='function')updateATOnlyMonsters();
+updateATOnlyMonsters();
 }
 if(document.readyState==='loading'){
 document.addEventListener('DOMContentLoaded',atinit);
@@ -1024,7 +1024,7 @@ setTimeout(atinit,0);
 function atinit(){
 atUpd();
 const patSel=document.getElementById('at_pattern');
-if(patSel&&typeof AT_O!=='undefined'){
+if(patSel){
 AT_O.forEach(pair=>{
 const opt=document.createElement('option');
 opt.value=pair[0];
@@ -1034,17 +1034,12 @@ patSel.appendChild(opt);
 }
 const lbl=document.getElementById('at_lblSteps');
 if(lbl)lbl.textContent=T('Steps','步數','ｽﾃｯﾌﾟ');
-if(typeof dwInit==='function')dwInit();
+dwInit();
 }
 function getMonsterNameByAT(atVal,envType,floorMR){
-const spawnList=getSpawnList(envType,floorMR);
-for(const entry of spawnList){
-if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2]){
-const md=MONSTER_DB[entry[0]];
+const id=getMonsterIdByAT(atVal,envType,floorMR);
+const md=id===null?null:MONSTER_DB[id];
 return md?(DISPLAY_LANG!=='EN'?md.jp:md.en):"?";
-}
-}
-return"?";
 }
 function getMonsterIdByAT(atVal,envType,floorMR){
 const spawnList=getSpawnList(envType,floorMR);
@@ -1064,17 +1059,14 @@ const deftInput=document.getElementById('at_deft');
 const userDeft=(deftInput&&deftInput.value!=='')?parseInt(deftInput.value):999;
 const nInput=document.getElementById('at_n_input');
 const n=(nInput&&nInput.value!=='')?parseInt(nInput.value):0;
-const cN=35+(29*n);
+const cN=atPopIndex(n);
 const envType=parseInt(document.getElementById('at_env').value);
 const floorMR=parseInt(document.getElementById('at_mr').value);
 document.querySelectorAll('.at-m-card').forEach(card=>{
 const seed=parseInt(card.getAttribute('data-seed'));
-let s=seed>>>0;
-for(let i=0;i<cN;i++)s=lcg(s);
-const atN=(s>>>16)&0x7FFF;
-s=lcg(s);
-const atN1=(s>>>16)&0x7FFF;
+const{atN,atN1}=getATPair(seed,cN);
 const{deft,color:deftColor,label:deftLabel}=formatDeftness(atN1);
+const frame=battleATContext(cN,deft,userDeft);
 const atnLabel=card.querySelector('.at-m-atn-label');
 if(atnLabel){
 atnLabel.textContent=atnLabel.textContent.includes('AT[')?`AT[${cN}]: `:`AT +${cN}: `;
@@ -1093,9 +1085,7 @@ deftSpan.textContent=`${G18} ${deftLabel}`;
 }
 card.querySelectorAll('.at-dynamic-battle').forEach(el=>{
 const target=parseInt(el.getAttribute('data-target'));
-const pop=cN;
-const base=userDeft<deft?4:3;
-const d1=target-(pop+base),d2=target-(pop+base+1),d4=target-(pop+base+2);
+const{d1,d2,d4}=battleATBudgets(frame,target);
 el.textContent=`${siFormatAT(d1)} / ${siFormatAT(d2)} / ${siFormatAT(d4)}`;
 });
 });
@@ -1114,7 +1104,7 @@ const monFloorMR=parseInt(document.getElementById('at_mr').value);
 const monId=document.getElementById('at_mon').value;
 const nVal=parseInt(document.getElementById('at_n_input').value);
 if(isNaN(nVal)||nVal<0){isSearching=false;restoreBtn();return;}
-const N=35+29*nVal;
+const N=atPopIndex(nVal);
 const spawnList=SPAWN_DB[monEnvType]&&SPAWN_DB[monEnvType][monFloorMR];
 const atEntry=spawnList.find(e=>e[0]===monId&&e.length>=3);
 const atmin=atEntry?atEntry[1]:-1,atmax=atEntry?atEntry[2]:-1;
@@ -1160,22 +1150,24 @@ resultDiv.innerHTML=`<div style="color:#aaa;font-size:13px;margin-bottom:8px;">
   ${B01} <span id="searchProgress" style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>`;
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
-let hitCount=0;
-let allResults=[];
 const job={
-kind:'atMonster',
-lang:DISPLAY_LANG,
-conds,searchFilterLoc,searchOnlyWithD,
-rank,rStr,targetRankKey,
+kind:'atMonster',lang:DISPLAY_LANG,
+conds,searchFilterLoc,searchOnlyWithD,rank,rStr,targetRankKey,
 startSeed,endSeed:Math.min(endSeed,maxSeed),
-N,atmin,atmax,deftMax,
-pType,atThreshold,atMaxSteps,
-patternName,probText,
+N,atmin,atmax,deftMax,userDeft:deftMax<0?999:deftMax,
+pType,atThreshold,atMaxSteps,patternName,probText,
 };
+runAtResultSearch(job,grid,progressSpan,restoreBtn,
+p=>Math.floor((p.processed/p.total)*100)+'% ['+B04+''+p.hits+' '+B03+']',
+"AT Monster Search error:");
+}
+function runAtResultSearch(job,grid,progressSpan,restoreBtn,formatProgress,errorLabel){
+let hitCount=0;
+const allResults=[];
 runSearchJob(job,{
 onProgress:(p)=>{
 hitCount=p.hits;
-progressSpan.textContent=Math.floor((p.processed/p.total)*100)+'% ['+B04+''+p.hits+' '+B03+']';
+progressSpan.textContent=formatProgress(p);
 },
 onBatch:(items)=>{
 for(const it of items)allResults.push({node:materializeResultItem(it),pop:it.pop});
@@ -1187,7 +1179,7 @@ restoreSearchUI(restoreBtn);
 progressSpan.textContent=searchDoneMsg(hitCount);
 },
 onError:(msg)=>{
-handleSearchError("AT Monster Search error:",msg,restoreBtn,progressSpan,hitCount);
+handleSearchError(errorLabel,msg,restoreBtn,progressSpan,hitCount);
 }
 });
 }
@@ -1196,7 +1188,7 @@ if(sortByPOP)results.sort((a,b)=>a.pop-b.pop);
 const fragment=document.createDocumentFragment();
 for(const res of results)fragment.appendChild(res.node);
 if(fragment.children.length>0)grid.appendChild(fragment);
-if(typeof updateBattleAT==='function')updateBattleAT();
+updateBattleAT();
 }
 function atPtnSearch(){
 if(isSearching){requestSearchCancel();return;}
@@ -1210,7 +1202,9 @@ if(pType===0){alert(A01);isSearching=false;restoreBtn();return;}
 let maxSteps=parseInt(document.getElementById('at_maxSteps').value);
 if(isNaN(maxSteps)||maxSteps<1)maxSteps=400;
 const nVal=parseInt(document.getElementById('at_n_input').value);
-const POPIndex=(isNaN(nVal)||nVal<0)?35:35+29*nVal;
+const POPIndex=atPopIndex((isNaN(nVal)||nVal<0)?0:nVal);
+const deftInput=document.getElementById('at_deft');
+const userDeft=deftInput&&deftInput.value!==''?parseInt(deftInput.value):999;
 if(maxSteps<POPIndex)maxSteps=POPIndex+1;
 const searchFilterLoc=true;
 const baseRankStr=document.getElementById('rank').value;
@@ -1231,34 +1225,13 @@ resultDiv.innerHTML=`<div style="color:#aaa;font-size:13px;margin-bottom:8px;">
     ${B01} <span id="searchProgress" style="color:#fff;font-weight:bold">0%</span></div><div id="searchGrid" class="search-grid"></div>`;
 const grid=document.getElementById('searchGrid');
 const progressSpan=document.getElementById('searchProgress');
-let hitCount=0;
-let allATResults=[];
 const job={
-kind:'atPattern',
-lang:DISPLAY_LANG,
-threshold,pType,maxSteps,POPIndex,
-searchFilterLoc,targetRankKey,
-startSeed,endSeed,
-patternName,probText,
+kind:'atPattern',lang:DISPLAY_LANG,
+threshold,pType,maxSteps,POPIndex,userDeft,searchFilterLoc,targetRankKey,startSeed,endSeed,patternName,probText,
 };
-runSearchJob(job,{
-onProgress:(p)=>{
-hitCount=p.hits;
-progressSpan.textContent=Math.floor((p.processed/p.total)*100)+'% (Seed '+p.seedHex+') ['+B04+''+p.hits+' '+B03+']';
-},
-onBatch:(items)=>{
-for(const it of items)allATResults.push({node:materializeResultItem(it),pop:it.pop});
-},
-onDone:(d)=>{
-hitCount=d.hits;
-finalizeAtSearchResults(allATResults,grid,document.getElementById('at_sortPOP').checked);
-restoreSearchUI(restoreBtn);
-progressSpan.textContent=searchDoneMsg(hitCount);
-},
-onError:(msg)=>{
-handleSearchError("AT Pattern Search error:",msg,restoreBtn,progressSpan,hitCount);
-}
-});
+runAtResultSearch(job,grid,progressSpan,restoreBtn,
+p=>Math.floor((p.processed/p.total)*100)+'% (Seed '+p.seedHex+') ['+B04+''+p.hits+' '+B03+']',
+"AT Pattern Search error:");
 }
 function buildSolverLegendHtml(){
 const L=DISPLAY_LANG;
@@ -1269,7 +1242,7 @@ const legends=[
 ['🗡',L==='EN'?'Metal Slime Sword/Spear':L==='JP'?'メタスラの剣／やり':'金屬史萊姆劍／槍'],
 ['🌀',L==='EN'?'Attribeauty':'風林火山'],
 ['💨',L==='EN'?'Miss (AT consumed)':L==='JP'?'ミス (AT消費あり)':'Miss (AT 照常消耗)'],
-['👉',L==='EN'?'Aim at the support, not the metal':L==='JP'?'メタルではなく仲間を指名':'瞄跟班、不瞄金屬'],
+['👉',L==='EN'?'Target Support Monster but not Metal':L==='JP'?'メタルではなく仲間を指名':'瞄跟班、不瞄金屬'],
 ['🔱',L==='EN'?'Poker':L==='JP'?'きしんのまそう':'鬼神槍'],
 ];
 return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;">'
@@ -1315,120 +1288,78 @@ el.innerHTML=renderSolverSimTrace(data);
 el.style.display='block';
 }
 function renderSolverSimTrace(data){
-const{combo,killTargets,eggAssign,assign,defend}=data;
-if(!killTargets||killTargets.length===0)return'<div style="color:#666;font-size:9px;margin-left:24px;">—</div>';
-const _sn=(v)=>DISPLAY_LANG==='EN'?(v.en||v.jp):v.jp;
-const instances=buildSimInstances(killTargets);
-const _gc={};
-for(const inst of instances){
-inst.mon=getMonDB(inst.hex);
-const t=killTargets[inst.groupIdx];
-const baseName=getMonsterDisplayName(inst.hex);
-const ci=_gc[inst.groupIdx]=(_gc[inst.groupIdx]||0)+1;
-inst.name=(t.count||1)>1?baseName+ci:baseName;
+if(data.neutralConditions)return renderSolverNeutralDetails(data);
+const{combo,killTargets,assign,defend}=data;
+if(!killTargets?.length)return'<div style="color:#666;font-size:9px;margin-left:24px;">—</div>';
+if(!data.battleProof&&!document.getElementById('si_useStats')?.checked)
+return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
+const chars=data.battleProof?.party||readCharStatsFromDom();
+let proof=data.battleProof;
+if(!proof){
+const out={},hex=killTargets[0].hex;
+const rating=checkSolverDamage(combo,hex,getMonDB(hex),killTargets,1,null,out,
+assign,data.eggAssign,chars,{captureActions:true});
+proof={...out,party:chars,rating};
 }
-if(!document.getElementById('si_useStats')?.checked)return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
-const chars=readCharStatsFromDom();
-const inlineFource=findInlineFource(combo);
-const _charLabel=(c)=>{
+const eggAssign=proof.eggAssign||data.eggAssign;
+const eggTargets=solverConditionEggTargets(combo,eggAssign);
+const rows=new Map((proof.actionResults||[]).map(r=>[r.ci,r]));
+const initial=buildSimInstances(killTargets),seen={};
+const names=initial.map(i=>{
+const n=seen[i.groupIdx]=(seen[i.groupIdx]||0)+1;
+return getMonsterDisplayName(i.hex)+((killTargets[i.groupIdx].count||1)>1?n:'');
+});
+const sn=v=>DISPLAY_LANG==='EN'?(v.en||v.jp):v.jp;
+const charLabel=c=>{
 if(!c)return'?';
-if(c.job!==null&&c.job!==undefined&&typeof VOC_STATS!=='undefined'&&VOC_STATS[c.job]){
+if(c.job!=null&&VOC_STATS[c.job])
 return DISPLAY_LANG==='EN'?VOC_STATS[c.job].en:VOC_STATS[c.job].jp;
-}
 return L20+(c.slot||'?');
 };
-const fEls=inlineFource?(getFourceEls(inlineFource.jp)||[]):null;
-let fourceOn=false;
-let _traceMainKilled=false;
+const hpRange=i=>'HP'+Math.max(0,i.hpLow)+'~'+Math.max(0,i.hp);
+const remainingText=left=>left.length?left.map(i=>'<b>'+names[i.index]+'</b> '+hpRange(i)).join(' / '):L28;
 let html='<div style="font-size:9px;color:#aaa;margin-left:24px;border-left:1px solid #555;padding-left:4px;margin-top:1px;">';
-const _hpRange=(i)=>'HP'+Math.max(0,i.hpLow)+'~'+i.hp;
-html+='<div style="color:#888;">'+L21+instances.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / ')+'</div>';
+html+='<div style="color:#888;">'+L21+initial.map((i,index)=>'<b>'+names[index]+'</b> '+hpRange(i)).join(' / ')+'</div>';
 for(let ci=0;ci<combo.length;ci++){
-const action=combo[ci];
-const char=chars[assign?assign[ci]:(chars.length?ci%chars.length:ci)]||chars[0]||{stats:{}};
-const whoTag='<span style="color:#6cf;font-size:8px;">'+_charLabel(char)+'</span> ';
-const sk=lookupSkill(action.jp);
-const alive=instances.filter(i=>i.alive);
-if(action.id===SK_MERCY){
-const removed=alive.filter(i=>i.death>0&&(i.groupIdx>0||_traceMainKilled));
-for(const i of removed)i.alive=false;
-const mainStuck=alive.some(i=>i.death>0&&i.groupIdx===0&&!_traceMainKilled);
-const left=instances.filter(i=>i.alive);
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#0ff;">'+_sn(action)+'</span> → ';
-html+=removed.length>0?removed.map(i=>i.name).join(',')+L24:L25;
-if(mainStuck)html+=' <span style="color:#f80;">'+L26+'</span>';
-html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
+const a=combo[ci],char=actorAt(chars,assign,ci),row=rows.get(ci);
+const who='<span style="color:#6cf;font-size:8px;">'+charLabel(char)+'</span> ';
+const lead='<div>'+L22+(ci+1)+L23+who;
+if(a.id===SK_EGG){
+const target=eggTargets[ci],beneficiary=target===undefined?'?':
+L20+((assign?assign[target]:target%4)+1)+' '+sn(combo[target]);
+html+=lead+'<span style="color:#ff0;">'+sn(a)+'</span> → '+beneficiary+'</div>';
 continue;
 }
-if(action.id===SK_EGG){
-const tgtCI=eggAssign?Object.keys(eggAssign).find(k=>+k>ci):null;
-const tgtAction=tgtCI?combo[+tgtCI]:null;
-const tgtName=tgtAction?_sn(tgtAction):'?';
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ff0;">'+_sn(action)+'</span> → '+L29+tgtName+'</div>';
+if(a.at===0&&getFourceEls(a.jp)){
+html+=lead+'<span style="color:#f80;">'+sn(a)+'</span> → '+T('All allies','全員','味方全員')+' '+L30+'</div>';
 continue;
 }
-if(inlineFource&&action.jp===inlineFource.jp&&!fourceOn){
-fourceOn=true;
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#f80;">'+_sn(action)+'</span> '+L30+'</div>';
+if(!row){html+=lead+sn(a)+'</div>';continue;}
+if(a.id===SK_MERCY){
+const removed=row.targets.map(t=>names[t.index]);
+html+=lead+'<span style="color:#0ff;">'+sn(a)+'</span> → '+
+(removed.length?removed.join(',')+L24:L25)+L27+remainingText(row.remaining)+'</div>';
 continue;
 }
-if(!sk||alive.length===0){
-html+='<div>'+L22+(ci+1)+L23+whoTag+_sn(action)+'</div>';
-continue;
+const kind=SolverActionGate.targetKind(lookupSkill(a.jp)),hits=SolverActionGate.hits(a);
+const mul=eggAssign?.[ci]||1,metalOnly=row.targets.every(t=>isMetalHex(t.hex));
+const mulStr=mul>1?'<span style="color:#ff0;">×'+mul+
+(metalOnly?'':'＋'+tensionFlat(mul,char?.lv||99))+'</span>':'';
+const count=(kind==='A'||kind==='G')?' · '+T('Hits per enemy','每隻擊數','1体あたりの攻撃回数')+' '+hits+
+' · '+T('Targets hit','命中','命中')+' '+row.targets.length+' '+T('enemies','隻','体'):'';
+const detail=row.targets.map(t=>{
+const ko=t.outcome==='ko',possible=t.outcome==='possible';
+const before={hp:t.hpBefore,hpLow:t.hpLowBefore};
+return names[t.index]+': '+hpRange(before)+'→<span style="color:'+
+(ko?'#f44':possible?'#f80':'#8f8')+';">'+Math.max(0,t.hpLow)+'~'+Math.max(0,t.hp)+
+'</span>'+(ko?L32:possible?L33:'');
+}).join(' / ');
+html+=lead+'<span style="color:#ccc;">'+sn(a)+'</span>'+mulStr+' ['+kind+']'+count+' → '+
+detail+L27+remainingText(row.remaining)+'</div>';
 }
-const mul=(eggAssign&&eggAssign[ci])?eggAssign[ci]:1;
-const tLv=mul>1?actorLv(chars,assign,ci):99;
-const tFlat=tensionFlat(mul,tLv);
-const curFEls=fourceOn?fEls:null;
-const hits=SolverActionGate.hits(action);
-const tgt=(sk.target==='A'||sk.target==='RA')?'A':(sk.target==='G'||sk.target==='RG')?'G':'S';
-let details='';
-const picked=SolverActionGate.targets(alive,action,sk,'groupIdx');
-const hitTargets=picked.targets;
-const mulStr=mul>1?'<span style="color:#ff0;">×'+mul
-+((hitTargets.length&&hitTargets.every(t=>isMetalHex(t.hex)))?'':'＋'+tFlat)+'</span>':'';
-const repInst=hitTargets.reduce((a,b)=>(b&&(!a||b.hp>a.hp))?b:a,null);
-const repHpHigh=repInst?repInst.hp:0;
-const repHpLow=repInst?repInst.hpLow:0;
-for(const inst of hitTargets){
-const isMetalTgt=isMetalHex(inst.hex);
-const exec=canExecuteMetal(action.id,inst.hex);
-if(exec){
-if(exec.isValid){
-details+=inst.name+': HP'+inst.hp+'→<span style="color:#f44;">'+L31+'</span> ';
-metalExecuteInst(inst);
-}
-continue;
-}
-let dMin,dMax,dPerHitMax;
-if(isMetalTgt){
-const mc=metalChipPerHit(sk,action.equip);
-dMin=applyTension(mc.min*hits,mul,tLv,true);dMax=applyTension(mc.max*hits,mul,tLv,true);dPerHitMax=Math.floor(mc.max*mul);
-}else{
-const r=calcSkillDamage(sk,char.stats,inst.hex,curFEls,getWeaponTypeMultiplier(action.equip,inst.hex),actionMetalEff(sk,action.equip));
-dMin=r?applyTension(r.min*hits,mul,tLv):0;
-dMax=r?applyTension(r.max*hits,mul,tLv):0;
-dPerHitMax=r?Math.floor(r.max*mul):0;
-}
-const step=SolverActionGate.step(inst,hits,dPerHitMax,dMin,dMax,isMetalTgt?0:tFlat);
-const dead=step.dead?L32:step.hpLow<=0?L33:'';
-details+=inst.name+': '+_hpRange(inst)+'→<span style="color:'+(step.dead?'#f44':step.hpLow<=0?'#f80':'#8f8')+';">'+step.hpLow+'~'+step.hp+'</span>'+dead+' ';
-SolverActionGate.commit(inst,step);
-if(step.dead&&inst.groupIdx===0)_traceMainKilled=true;
-}
-const left=instances.filter(i=>i.alive);
-html+='<div>'+L22+(ci+1)+L23+whoTag+'<span style="color:#ccc;">'+_sn(action)+'</span>'+mulStr+' ['+tgt+'] '+details;
-html+=L27+(left.length>0?left.map(i=>'<b>'+i.name+'</b> '+_hpRange(i)).join(' / '):L28)+'</div>';
-if(repInst){
-const repIsMetal=isMetalHex(repInst.hex);
-if(!repIsMetal)html+='<div style="margin-left:10px;font-size:8px;">↳ '+buildSolverHintText(sk,repInst.hex,hits,repHpHigh,repHpLow,curFEls,mul,getWeaponTypeMultiplier(action.equip,repInst.hex),actionMetalEff(sk,action.equip),tLv)+'</div>';
-}
-}
-if(defend&&defend.length){
-html+='<div style="color:#789;margin-top:1px;">'+L34+defend.map(i=>_charLabel(chars[i])).join(', ')+'</div>';
-}
-html+='</div>';
-return html;
+if(defend?.length)html+='<div style="color:#789;margin-top:1px;">'+L34+
+defend.map(i=>charLabel(chars[i])).join(', ')+'</div>';
+return html+'</div>';
 }
 function siBuildSeqHtml(seqArray){
 const _GC=[
@@ -1469,14 +1400,13 @@ const patSel=document.getElementById('si_pattern');
 if(patSel){
 patSel.options.length=0;
 patSel.options.add(new Option('----','none'));
-if(typeof AT_O!=='undefined'&&Array.isArray(AT_O)){
 AT_O.forEach(pair=>{
 patSel.options.add(new Option(pair[1],pair[0]));
 });
 }
 }
-}
 function updateSeedInspector(){
+window._siBuckets=null;
 const seedHex=document.getElementById('si_seed').value.trim()||'0000';
 const seed=parseInt(seedHex,16);
 const envType=parseInt(document.getElementById('si_env').value);
@@ -1505,17 +1435,16 @@ const scanMax=parseInt(document.getElementById('si_scan_max').value)||0;
 const targetTotalStep=parseInt(document.getElementById('si_target_step').value)||35;
 const pSelect=document.getElementById('si_pattern');
 const pTypeStr=pSelect.value;
-const pType=(typeof AT_PAT!=='undefined')?(AT_PAT[pTypeStr]||0):0;
+const pType=AT_PAT[pTypeStr]||0;
 const pText=pSelect.options[pSelect.selectedIndex].text;
 if(isNaN(seed))return;
-const N=35+(29*n);
+const N=atPopIndex(n);
 const{atN:atN_val,atN1:atN1_val}=getATPair(seed,N);
-const monName=(typeof getMonsterNameByAT==='function')?getMonsterNameByAT(atN_val,envType,floorMR):'?';
-const monId=(typeof getMonsterIdByAT==='function')?getMonsterIdByAT(atN_val,envType,floorMR):null;
+const monName=getMonsterNameByAT(atN_val,envType,floorMR);
+const monId=getMonsterIdByAT(atN_val,envType,floorMR);
 const _md=monId?MONSTER_DB[monId]:null;
-const _gbInfo=(typeof GROTTO_BATTLE!=='undefined'&&GROTTO_BATTLE[envType])?GROTTO_BATTLE[envType][floorMR]:null;
-const _gbEntry=(_gbInfo&&monId)?_gbInfo.m.find(e=>e[0]===monId):null;
-const _isAlone=_gbEntry&&_gbEntry[3]===1;
+const encounterModel=getEncounterModel(envType,floorMR,monId);
+const _isAlone=!!encounterModel?.isAlone;
 if(_isAlone)groupSize=1;
 const grpSel=document.getElementById('si_group_size');
 grpSel.disabled=_isAlone;
@@ -1534,31 +1463,20 @@ const _mdR=(md)=>md?md.d[3]:256;
 const _mdN=(md)=>md?md.d[1]:128;
 const rareRarity=groupSize>=2?[_mdR(_md),_mdR(_supId1?MONSTER_DB[_supId1]:_md),_mdR(_supId2?MONSTER_DB[_supId2]:_md)]:_mdR(_md);
 const normRarity=groupSize>=2?[_mdN(_md),_mdN(_supId1?MONSTER_DB[_supId1]:_md),_mdN(_supId2?MONSTER_DB[_supId2]:_md)]:_mdN(_md);
-const mapDeft=(typeof calcDeftness==='function')?calcDeftness(atN1_val):0;
-let actualCost=(userDeft>=mapDeft)?3:4;
-const canRound2=userDeft>=mapDeft;
-let totalStartCost=actualCost;
-const abs_1=N+totalStartCost,abs_2=abs_1+1,abs_4=abs_1+2;
+const mapDeft=calcDeftness(atN1_val);
+const atContext=battleATContext(N,mapDeft,userDeft);
+const{canRound2}=atContext;
+const[abs_1,abs_2,abs_4]=atContext.firstUnused;
 let patternMsg="";
 let foundOffset=-1;
 let foundSequence=null;
-const isNormPat=pTypeStr.startsWith('N')||pTypeStr==='4_in_10'||pTypeStr==='3_in_10';
 const targetPatterns=SI_PATTERN_INDICES[pTypeStr];
+const dropSlots=buildDropSlots(groupSize,rareRarity,normRarity,tLvs);
 if(pType>0&&scanMax>0&&targetPatterns){
-let baseRng=seed>>>0;
-for(let i=0;i<37;i++)baseRng=lcg(baseRng);
-for(let step=38;step<=N+scanMax;step++){
-const rngSnapshot=baseRng;
-let sim=siRunBattleSim(baseRng,groupSize,rareRarity,normRarity,tLvs,false);
-baseRng=lcg(baseRng);
-let currentHits=isNormPat?sim.normHits:sim.rareHits;
-if(siMatchesPattern(currentHits,targetPatterns)){
-if(step>=abs_1){
-foundOffset=step-abs_1;
-foundSequence=siRunBattleSim(rngSnapshot,groupSize,rareRarity,normRarity,tLvs,true).seq;
-break;
-}
-}
+const found=scanDropPatternStarts(seed,pTypeStr,dropSlots,Math.max(38,abs_1),N+scanMax,1)[0];
+if(found){
+foundOffset=battleATBudgets(atContext,found.start).d1;
+foundSequence=found.simulation.seq;
 }
 patternMsg=foundOffset!==-1?
 C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
@@ -1566,108 +1484,38 @@ C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</s
 let battleStr="";
 let seqHtml="";
 if(pType>0&&foundOffset!==-1){
-const d1=foundOffset,d2=d1-1,d4=d1-2;
+const budgets=battleATBudgets(atContext,abs_1+foundOffset);
+const{d1,d2,d4}=budgets;
 seqHtml=siBuildSeqHtml(foundSequence);
 const showCombos=d1>0&&d1<=970;
 const hexId=toMonsterHexId(monId);
 const mainMon=getMonDB(hexId);
 const mainDeath=mainMon?mainMon.s[12]:100;
-const mainDeath0=mainDeath===0;
-const gbInfo=(typeof GROTTO_BATTLE!=='undefined'&&GROTTO_BATTLE[envType])?GROTTO_BATTLE[envType][floorMR]:null;
-const battleMax=gbInfo?gbInfo.x:5;
-const mainEntry=(gbInfo&&hexId)?gbInfo.m.find(e=>e[0]===hexId):null;
-const isAlone=mainEntry&&mainEntry[3]===1;
-const mainMax=mainEntry?mainEntry[2]:1;
-const canSup1=!isAlone&&mainEntry&&mainEntry[4]>0;
-const canSup2=!isAlone&&mainEntry&&mainEntry[6]>0;
-const _rawPool=(!isAlone&&typeof GROTTO_SUPPORT!=='undefined'&&GROTTO_SUPPORT[envType])?(GROTTO_SUPPORT[envType][floorMR]||[]):[];
-const supportPool=(()=>{
-const out=[],seenHex=new Set();
-forEachPoolEntry(_rawPool,(a)=>{if(!seenHex.has(a[0])){seenHex.add(a[0]);out.push([a[0],a[1],a[2]]);}});
-return out;
-})();
+const encounters=enumerateEncounterOutcomes(encounterModel);
 const monNameFn=getMonsterDisplayName;
 battleStr='';
 if(showCombos){
 const useJP=(DISPLAY_LANG!=='EN');
-const mainMin=mainEntry?mainEntry[1]:1;
 const resultsByT=new Map();
-const probMap=new Map();
-const _pAdd=(k,p)=>probMap.set(k,(probMap.get(k)||0)+p);
-const _kA=(M)=>'A_'+M;
-const _kB=(hx,M,S)=>'B_'+hx+'_'+M+'_'+S;
-const _kC=(hA,SA,hB,SB,M)=>'C_'+hA+'_'+SA+'_'+hB+'_'+SB+'_'+M;
-{
-const pMain=1/(mainMax-mainMin+1);
-const wByHex=new Map();let wDen=0;
-forEachPoolEntry(_rawPool,(a)=>{if(!wByHex.has(a[0])){wByHex.set(a[0],{num:a[3]||0,min:a[1],max:a[2]});wDen=wDen||a[4]||0;}});
-const P1=(!isAlone&&mainEntry&&mainEntry[5]>0)?mainEntry[4]/mainEntry[5]:0;
-const P2=(!isAlone&&mainEntry&&mainEntry[7]>0)?mainEntry[6]/mainEntry[7]:0;
-const P0=Math.max(0,1-P1-P2);
-for(let mR=mainMin;mR<=mainMax;mR++){
-{const[M]=trimGroups([mR],battleMax);_pAdd(_kA(M),P0*pMain);}
-if(wDen>0&&(P1>0||P2>0)){
-if(P1>0)for(const[hx,w]of wByHex){
-if(!w.num)continue;
-const pS=w.num/wDen,nC=w.max-w.min+1;
-for(let sR=w.min;sR<=w.max;sR++){
-const[M,S]=trimGroups([mR,sR],battleMax);
-const p=P1*pMain*pS/nC;
-if(S===0)_pAdd(_kA(M),p);else _pAdd(_kB(hx,M,S),p);
-}
-}
-if(P2>0)for(let i=0;i<supportPool.length;i++){
-for(let j=0;j<supportPool.length;j++){
-const hAx=supportPool[i][0],hBx=supportPool[j][0];
-const wA=wByHex.get(hAx),wB=wByHex.get(hBx);
-if(!wA||!wB||!wA.num||!wB.num)continue;
-const pSS=(wA.num/wDen)*(wB.num/wDen);
-const nAB=(wA.max-wA.min+1)*(wB.max-wB.min+1);
-for(let aR=wA.min;aR<=wA.max;aR++)for(let bR=wB.min;bR<=wB.max;bR++){
-const[M,SA,SB]=trimGroups([mR,aR,bR],battleMax);
-const p=P2*pMain*pSS/nAB;
-if(SA===0&&SB===0){_pAdd(_kA(M),p);continue;}
-if(SB===0){_pAdd(_kB(hAx,M,SA),p);continue;}
-if(SA===0){_pAdd(_kB(hBx,M,SB),p);continue;}
-if(i<=j)_pAdd(_kC(hAx,SA,hBx,SB,M),p);
-else _pAdd(_kC(hBx,SB,hAx,SA,M),p);
-}
-}
-}
-}
-}
-}
-const _pFmt=(k)=>{
-const p=probMap.get(k);
-if(p===undefined||!(p>0))return'';
+const _pFmt=(p)=>{
+if(!(p>0))return'';
 const pc=p*100;
 const txt=pc>=10?pc.toFixed(0):pc>=1?pc.toFixed(1):pc>=0.01?pc.toFixed(2):'<0.01';
 return` <span style="color:#6a6;font-size:9px;">p≈${txt}%</span>`;
 };
 function _derivePlan(monGroups){
-const T=monGroups.reduce((s,g)=>s+g.count,0);
-const main=monGroups[0];
-const sups=monGroups.filter(g=>!g.isMain);
-const d0SC=sups.filter(g=>_effDeath(g)===0).reduce((s,g)=>s+g.count,0);
-const dG0SC=sups.filter(g=>_effDeath(g)>0).reduce((s,g)=>s+g.count,0);
-if(_effDeath(main)>0){
-if(main.count>=2||dG0SC>0)
-return{type:'kill_mercy_clear',effMon:1+d0SC,postAlive:d0SC};
-return{type:'kill_all',effMon:T,postAlive:0};
-}
-if(dG0SC>0)return{type:'mercy_first',effMon:main.count+d0SC,postAlive:main.count+d0SC};
-return{type:'kill_all',effMon:T,postAlive:0};
+const p=deriveSolverBattlePlan(monGroups,monId,_solverMercyLv,false);
+if(p.planType==='kill_mercy_clear')
+return{type:p.planType,effMon:1+p.postAlive,postAlive:p.postAlive};
+if(p.planType==='mercy_first')
+return{type:p.planType,effMon:p.postAlive,postAlive:p.postAlive};
+return{type:'kill_all',effMon:p.T,postAlive:0};
 }
 const _solverOpt=snapshotSolverOptions();
 const _solverMercyLv=(_solverOpt.chars&&_solverOpt.chars.length)
 ?Math.max(..._solverOpt.chars.map(c=>c.lv||99)):99;
-const _effDeath=(g)=>{
-if(!(g.death>0))return 0;
-const m=getMonDB(g.hex);
-return(m&&m.s&&(m.s[13]+7)>_solverMercyLv)?0:g.death;
-};
 const _fleeProbes=[];
-const _atForT=(t)=>(t===1)?d1:(t<=3?d2:d4);
+const _atForT=(t)=>battleATForCount(budgets,t);
 const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,canRound2});
 const _fleeState=(mg,t)=>{
 const task=_fleeTask(mg,t);
@@ -1681,142 +1529,55 @@ return'pending';
 const _pendTag=(st)=>st==='pending'
 ?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':'';
 const _fbTag=' <span style="color:#fa0;font-size:9px;" title="mercy/KMC → kill all">⚡</span>';
-function _addResult(T,effMon,desc,monGroups,killAllDesc){
-if(!resultsByT.has(T))resultsByT.set(T,{mixes:[],flee:[]});
+function _addResult(T,effMon,desc,monGroups,killAllDesc,fleeDesc){
+if(!resultsByT.has(T))resultsByT.set(T,{mixes:[],flee:[],nextOrder:0});
 const bucket=resultsByT.get(T);
-if(effMon<0){bucket.flee.push(desc);return;}
-bucket.mixes.push({effMon,desc,monGroups,killAllDesc});
+const order=bucket.nextOrder++;
+if(effMon<0){bucket.flee.push({order,desc});return;}
+bucket.mixes.push({effMon,desc,monGroups,killAllDesc,fleeDesc,order});
 }
-const seenMainOnly=new Set();
-for(let raw=mainMin;raw<=mainMax;raw++){
-const[M]=trimGroups([raw],battleMax);
-if(M<2||seenMainOnly.has(M))continue;
-seenMainOnly.add(M);
-const mgA=[{hex:hexId,count:M,death:mainDeath,isMain:true}];
-const planA=_derivePlan(mgA);
-const _fsA=_fleeState(mgA,M);
-const _kaDescA=`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span>${_pendTag(_fsA)}${_pFmt(_kA(M))}`;
-if(_fsA==='flee'){
-_addResult(M,-1,`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span>${_pFmt(_kA(M))}`);
-}else if(_fsA==='fallback'){
-_addResult(M,M,`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span>${_fbTag}${_pFmt(_kA(M))}`,mgA);
-}else if(planA.type==='kill_mercy_clear'){
-_addResult(M,planA.effMon,`<span style="color:#f9c">${monNameFn(hexId)}×${M}</span><span style="color:#0f0"> ${L36}→×${planA.effMon}</span>${_pendTag(_fsA)}${_pFmt(_kA(M))}`,mgA,_kaDescA);
-}else{
-_addResult(M,M,_kaDescA,mgA);
-}
-}
-if(canSup1){
-for(const sup of supportPool){
-const supHex=sup[0],supMin=sup[1],supMax=sup[2];
-const supName=monNameFn(supHex);
-const supMon=getMonDB(supHex);
-const supHP=supMon?supMon.s[0]:0;
-const supDeath=supMon?supMon.s[12]:100;
-const sameAsMain=supHex===hexId;
-const seen=new Set();
-for(let mR=mainMin;mR<=mainMax;mR++){
-for(let sR=supMin;sR<=supMax;sR++){
-const[M,S]=trimGroups([mR,sR],battleMax);
-if(S===0)continue;
-const key=M+'_'+S;
-if(seen.has(key))continue;
-seen.add(key);
-const T=M+S;
-const sLbl=S>1?supName+'×'+S:supName;
-const _mainTag=`<span style="color:#f9c">${monNameFn(hexId)}${M > 1 ? '×' + M : ''}</span> `;
-const mg=[{hex:hexId,count:M,death:mainDeath,isMain:true},
-{hex:supHex,count:S,death:supDeath,isMain:false}];
-const plan=_derivePlan(mg);
-const _fs=_fleeState(mg,T);
-const _kaDescB=`${_mainTag}<span style="color:#a8f">+${sLbl} HP${supHP}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`;
-if(_fs==='flee'){
-_addResult(T,-1,`${_mainTag}<span style="color:#a8f">+${sLbl}</span> <span style="color:#f44">HP${supHP}</span>${_pFmt(_kB(supHex, M, S))}`);
-}else if(_fs==='fallback'){
-_addResult(T,T,`${_mainTag}<span style="color:#a8f">+${sLbl} HP${supHP}</span>${_fbTag}${_pFmt(_kB(supHex, M, S))}`,mg);
-}else if(plan.type==='kill_all'){
-_addResult(T,T,_kaDescB,mg);
-}else if(plan.type==='mercy_first'){
-_addResult(T,plan.effMon,
-`${_mainTag}<span style="color:#a8f">+${sLbl}</span><span style="color:#0f0"> ${L39}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg,_kaDescB);
-}else{
-const lbl=plan.postAlive>0?L38:L37;
-_addResult(T,plan.effMon,
-`${_mainTag}<span style="color:#a8f">+${sLbl}</span><span style="color:#0f0"> ${lbl}→×${plan.effMon}</span>${_pendTag(_fs)}${_pFmt(_kB(supHex, M, S))}`,mg,_kaDescB);
+for(const encounter of encounters){
+const{total:T,mainCount:M,monGroups:mg,supports,probability}=encounter;
+if(T===1)continue;
+const plan=_derivePlan(mg),state=_fleeState(mg,T),pTag=_pFmt(probability);
+const mainTag=`<span style="color:#f9c">${monNameFn(hexId)}${M>1?'×'+M:''}</span>`;
+const labels=supports.map(s=>monNameFn(s.hex)+(s.count>1?'×'+s.count:''));
+const supText=labels.length?'+'+labels.join('+'):'';
+const mainPrefix=mainTag+(labels.length?' ':'');
+const supTag=labels.length?`<span style="color:#a8f">${supText}</span>`:'';
+const hp=labels.length===1?(getMonDB(supports[0].hex)?.s[0]??0):null;
+const base=mainPrefix+(hp===null?supTag:`<span style="color:#a8f">${supText} HP${hp}</span>`);
+const fleeDesc=mainPrefix+supTag+(hp===null?'':` <span style="color:#f44">HP${hp}</span>`)+pTag;
+const killAllDesc=base+_pendTag(state)+pTag;
+if(state==='flee')_addResult(T,-1,fleeDesc);
+else if(state==='fallback')_addResult(T,T,base+_fbTag+pTag,mg,undefined,fleeDesc);
+else if(plan.type==='kill_all')_addResult(T,T,killAllDesc,mg,undefined,fleeDesc);
+else{
+const label=!labels.length?L36:plan.type==='mercy_first'?L39:plan.postAlive>0?L38:L37;
+const desc=mainPrefix+supTag+`<span style="color:#0f0"> ${label}→×${plan.effMon}</span>`+_pendTag(state)+pTag;
+_addResult(T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
 }
 }
-}
-}
-}
-if(canSup2&&supportPool.length>=2){
-for(let i=0;i<supportPool.length;i++){
-for(let j=i;j<supportPool.length;j++){
-const sA=supportPool[i],sB=supportPool[j];
-const nA=monNameFn(sA[0]),nB=monNameFn(sB[0]);
-const mA=getMonDB(sA[0]);
-const mB=getMonDB(sB[0]);
-const sameA=sA[0]===hexId,sameB=sB[0]===hexId;
-const twoSameSup=sA[0]===sB[0];
-const hA=mA?mA.s[0]:0,hB=mB?mB.s[0]:0;
-const dA=mA?mA.s[12]:100,dB=mB?mB.s[12]:100;
-const seen=new Set();
-for(let mR=mainMin;mR<=mainMax;mR++){
-for(let aR=sA[1];aR<=sA[2];aR++){
-for(let bR=sB[1];bR<=sB[2];bR++){
-const[M,SA,SB]=trimGroups([mR,aR,bR],battleMax);
-if(SA===0||SB===0)continue;
-const key=M+'_'+SA+'_'+SB;
-if(seen.has(key))continue;
-seen.add(key);
-const T=M+SA+SB;
-const lA=SA>1?nA+'×'+SA:nA;
-const lB=SB>1?nB+'×'+SB:nB;
-const mg=[{hex:hexId,count:M,death:mainDeath,isMain:true},
-{hex:sA[0],count:SA,death:dA,isMain:false},
-{hex:sB[0],count:SB,death:dB,isMain:false}];
-const plan=_derivePlan(mg);
-const _mainTag=`<span style="color:#f9c">${monNameFn(hexId)}${M > 1 ? '×' + M : ''}</span> `;
-const _fsC=_fleeState(mg,T);
-const fleeHP=_fsC==='flee';
-const _kaDescC=`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`;
-if(fleeHP){
-_addResult(T,-1,`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span>${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`);
-}else if(_fsC==='fallback'){
-_addResult(T,T,`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span>${_fbTag}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg);
-}else if(plan.type==='kill_all'){
-_addResult(T,plan.effMon,_kaDescC,mg);
-}else if(plan.type==='mercy_first'){
-_addResult(T,plan.effMon,
-`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span><span style="color:#0f0"> ${L39}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg,_kaDescC);
-}else{
-const lbl=plan.postAlive>0?L38:L37;
-_addResult(T,plan.effMon,
-`${_mainTag}<span style="color:#a8f">+${lA}+${lB}</span><span style="color:#0f0"> ${lbl}→×${plan.effMon}</span>${_pendTag(_fsC)}${_pFmt(_kC(sA[0], SA, sB[0], SB, M))}`,mg,_kaDescC);
-}
-}
-}
-}
-}
-}
-}
-window._siBuckets={d1,d2,d4,monId,mapDeft,canRound2,hexId,mainDeath,resultsByT,useJP};
+window._siBuckets={d1,d2,d4,monId,mapDeft,canRound2,hexId,mainDeath,resultsByT,useJP,
+encounters,singleEncounter:encounters.find(e=>e.total===1)};
 if(_fleeProbes.length){
 Promise.all(_fleeProbes.map(t=>requestFleeVerdict(t,_solverOpt)))
-.then(()=>updateSeedInspector());
+.then((verdicts)=>{
+if(verdicts.every(v=>v!==null))updateSeedInspector();
+});
 }
 const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L40}${lbl}${L41}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
-battleStr=`<div style="margin:2px 0;">${BATTLE_LABEL} ${_batBtn(d1, 'd1', '×1')} / ${_batBtn(d2, 'd2', '×2-3')} / ${_batBtn(d4, 'd4', '×4-5')}</div>`
+battleStr=`<div style="margin:2px 0;">${BATTLE_LABEL} ${_batBtn(d1,'d1','×1')} / ${_batBtn(d2,'d2','×2-3')} / ${_batBtn(d4,'d4','×4-5')}</div>`
 +`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
-}else if(d1===0){
+}else if(d1===0&&encounters.some(e=>e.total===1)){
 battleStr+=`<div style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">0</span> <span style="color:#888;font-size:10px;">×1</span></div>`
-+renderSolverResult(0,[{hex:hexId,count:1,death:mainDeath,isMain:true}],monId,mapDeft);
++renderSolverResult(0,encounters.find(e=>e.total===1).monGroups,monId,mapDeft);
 }
 battleStr+=`<div style="color:#888;font-size:11px;margin-top:3px;">`+C22+`</div>`
 +`<div style="margin-top:3px;">${seqHtml}</div>`;
 }else{
-let currentRng=seed>>>0;
-for(let i=0;i<abs_1-1;i++)currentRng=lcg(currentRng);
-let defaultSim=siRunBattleSim(currentRng,groupSize,rareRarity,normRarity,tLvs,true);
+const currentRng=advanceATRng(seed,abs_1-1);
+const defaultSim=simulateDropSlots(currentRng,dropSlots,true);
 seqHtml=siBuildSeqHtml(defaultSim.seq);
 battleStr=`<div id="batLine1" style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_1}</span> <span style="color:#888;font-size:10px;">×1</span></div>`
 +`<div id="batLine2" style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_2}</span> <span style="color:#888;font-size:10px;">×2-3</span></div>`
@@ -1824,14 +1585,12 @@ battleStr=`<div id="batLine1" style="margin:2px 0;">${BATTLE_LABEL} <span style=
 +`<div style="color:#888;font-size:11px;margin-top:3px;">`+C23+`</div>`
 +`<div style="margin-top:3px;">${seqHtml}</div>`;
 }
-let s_target=seed>>>0;
-for(let i=0;i<targetTotalStep;i++)s_target=lcg(s_target);
+const s_target=advanceATRng(seed,targetTotalStep);
 const atTarget_val=(s_target>>>16)&0x7FFF;
 const _mainRR=Array.isArray(rareRarity)?rareRarity[0]:rareRarity;
-let DropThreshold=Math.floor(32768/_mainRR);
+const DropThreshold=dropATThreshold(_mainRR);
 let firstThiefLv=tLvs[0]>0?tLvs[0]:99;
-const effectiveRate=Math.floor((_mainRR*100)/firstThiefLv);
-const ThiefThreshold=Math.floor(32767/effectiveRate)+1;
+const ThiefThreshold=thiefATThreshold(_mainRR,firstThiefLv);
 const resBox=document.getElementById('si_at_results');
 resBox.innerHTML=`
   <div style="display:flex;justify-content:space-between;">
@@ -1846,8 +1605,8 @@ const targetBox=document.getElementById('si_target_results');
 targetBox.innerHTML=`
   <div>AT <span style="color:#fff;">${targetTotalStep}</span>: <span class="si-highlight" style="color:#f44;font-size:15px;">${atTarget_val}</span></div>
   <div style="font-size:11px;margin-top:5px;color:#ccc;">
-  `+C25+` (≤${DropThreshold}): ${atTarget_val <= DropThreshold ? '✅ ' + L46 : '❌ ' + L47}<br>
-  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${atTarget_val <= ThiefThreshold ? '✅ ' + L46 : '❌ ' + L47}
+  `+C25+` (≤${DropThreshold}): ${passesATThreshold(atTarget_val,DropThreshold)?'✅ '+L46:'❌ '+L47}<br>
+  `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${passesATThreshold(atTarget_val,ThiefThreshold)?'✅ '+L46:'❌ '+L47}
   </div>`;
 }
 function openSeedInspector(){
@@ -1861,6 +1620,56 @@ let _siSolveGen=0;
 let _siSolveSeq=0;
 const _siSolveQueue=[];
 const _siSolveBusy=new Map();
+const SOLVER_RESULT_CACHE_MAX=192;
+const _solverResultCache=new Map();
+const _solverResultPending=new Map();
+window._solverResultCacheStats={hits:0,pendingHits:0,misses:0};
+const solverCharsSig=(chars)=>(chars||[]).map(c=>{
+const s=c.stats||{};
+return[c.lv,c.job,c.agi,s.atk,s.might,s.str,s.mending,s.deft].join(',');
+}).join(';');
+function solverResultCacheKey(render,options){
+const canRound2=solverAllowsRound2(render.mapDeft,render.canRound2);
+const charSig=options.useStats?solverCharsSig(options.chars):'neutral';
+return[DISPLAY_LANG,render.monId,render.bat,canRound2?1:0,
+options.useStats?1:0,options.multiPlayer?1:0,charSig,
+(render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')
+].join('|');
+}
+function rebaseSolverCachedResult(entry,idBase,bucketBase){
+const src=entry.result,idDelta=(idBase||0)-(entry.idBase||0);
+const bucketDelta=(bucketBase||0)-(entry.bucketBase||0);
+const html=(src.html||'')
+.replace(/expandCombo\((\d+)\)/g,(_,n)=>'expandCombo('+(+n+idDelta)+')')
+.replace(/combo_detail_(\d+)/g,(_,n)=>'combo_detail_'+(+n+idDelta))
+.replace(/\bsb(\d+)(?=[_'"\s]|$)/g,(_,n)=>'sb'+(+n+bucketDelta));
+const comboMap={};
+for(const[id,value]of Object.entries(src.comboMap||{}))
+comboMap[+id+idDelta]=Object.assign({},value);
+const buckets={};
+for(const[id,value]of Object.entries(src.buckets||{})){
+const m=/^sb(\d+)$/.exec(id);
+buckets[m?'sb'+(+m[1]+bucketDelta):id]=Object.assign({},value);
+}
+return Object.assign({},src,{html,comboMap,buckets});
+}
+function getCachedSolverResult(key,idBase,bucketBase){
+const entry=_solverResultCache.get(key);
+if(!entry)return null;
+if(solverResultVerdict(entry.result)===null){_solverResultCache.delete(key);return null;}
+_solverResultCache.delete(key);_solverResultCache.set(key,entry);
+window._solverResultCacheStats.hits++;
+return rebaseSolverCachedResult(entry,idBase,bucketBase);
+}
+function setCachedSolverResult(key,result,idBase,bucketBase){
+const entry={result,idBase:idBase||0,bucketBase:bucketBase||0};
+if(solverResultVerdict(result)===null)return entry;
+if(_solverResultCache.has(key))_solverResultCache.delete(key);
+_solverResultCache.set(key,entry);
+while(_solverResultCache.size>SOLVER_RESULT_CACHE_MAX)
+_solverResultCache.delete(_solverResultCache.keys().next().value);
+return _solverResultCache.get(key);
+}
 function takeIdlePoolWorker(){
 const p=_dq9Pool;
 if(!p||p.idle.length===0)return-1;
@@ -1884,37 +1693,161 @@ _siSolveBusy.delete(workerIdx);
 const p=_dq9Pool;
 if(p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
 dispatchPoolJobs();
-if(m.type==='solveDone')t.resolve(m);
+if(m.type==='solveDone'||m.type==='solveKmcShardDone'||
+m.type==='solveKillAllShardDone')t.resolve(m);
 else t.reject(new Error(m.message||'Solver Worker error'));
 }
-function queueSolveTask(render,options,idBase,bucketBase){
-const pool=getSearchWorkerPool();
-if(!pool)return Promise.reject(new Error('Worker pool unavailable'));
+function queueSolverWorkerMessage(msg,front){
 const solveId=++_siSolveSeq;
 return new Promise((resolve,reject)=>{
-_siSolveQueue.push({solveId,resolve,reject,msg:{
-type:'solve',solveId,lang:DISPLAY_LANG,
-dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},
-chars:options.chars,render,idBase,bucketBase
-}});
+const task={solveId,resolve,reject,msg:Object.assign({},msg,{solveId})};
+if(front)_siSolveQueue.unshift(task);else _siSolveQueue.push(task);
 dispatchSolveQueue();
 });
+}
+function partitionSolverRoots(spec,workerCount){
+const src=spec.sSkills||spec.variants||[];
+const roots=[];
+for(let i=0;i<src.length;i++){
+if(src[i]&&src[i].at>0&&spec.spaces.some(sp=>
+(!sp.depths||sp.depths.length>0)&&src[i].at<=sp.target))roots.push(i);
+}
+if(workerCount<2)return null;
+if(roots.length===0)return[];
+if(roots.length<2)return null;
+return roots.map(root=>[root]);
+}
+function solverShardCapsFilled(spec,merged){
+if(spec.sSkills)return spec.spaces.every(sp=>(merged[sp.key]||[]).length>=sp.cap);
+return spec.spaces.every(sp=>sp.depths.every(depth=>
+(merged[sp.key]||[]).reduce((n,c)=>n+(c.length===depth?1:0),0)>=sp.cap));
+}
+async function runParallelSolverShards(type,spec,common,pool,solveGen){
+const groups=partitionSolverRoots(spec,pool.workers.length);
+if(groups===null)return null;
+const merge=type==='solveKmcShard'?mergeKmcShardPayloads:mergeKillAllShardPayloads;
+if(groups.length===0)return merge(spec,[]);
+window._solverLastParallelDispatch={type,workers:pool.workers.length,shards:0,roots:0,totalRoots:groups.length};
+const payloads=[],waveWidth=Math.max(2,pool.workers.length*2);
+for(let start=0;start<groups.length;start+=waveWidth){
+const wave=groups.slice(start,start+waveWidth);
+const settled=await Promise.all(wave.map(roots=>
+queueSolverWorkerMessage(Object.assign({},common,{type,spec,roots}),false).then(value=>({value}),error=>({error}))));
+if(solveGen!==_siSolveGen)throw makeSolverCancellationError('Solver generation changed');
+const failed=settled.find(x=>x.error);
+if(failed)throw failed.error;
+payloads.push(...settled.map(x=>x.value.payload));
+window._solverLastParallelDispatch.shards+=wave.length;
+window._solverLastParallelDispatch.roots+=wave.reduce((s,g)=>s+g.length,0);
+const partial=merge(spec,payloads);
+if(solverShardCapsFilled(spec,partial))return partial;
+}
+return merge(spec,payloads);
+}
+function queueSolveTask(render,options,idBase,bucketBase){
+const cacheKey=solverResultCacheKey(render,options);
+const cached=getCachedSolverResult(cacheKey,idBase,bucketBase);
+if(cached)return Promise.resolve(cached);
+const oldPending=_solverResultPending.get(cacheKey);
+if(oldPending&&oldPending.gen===_siSolveGen){
+window._solverResultCacheStats.pendingHits++;
+return oldPending.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucketBase));
+}
+if(oldPending)_solverResultPending.delete(cacheKey);
+const pool=getSearchWorkerPool();
+if(!pool)return Promise.reject(new Error('Worker pool unavailable'));
+window._solverResultCacheStats.misses++;
+const solveGen=_siSolveGen;
+const common={
+lang:DISPLAY_LANG,
+dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},
+chars:options.chars
+};
+const finalRender=(extra)=>queueSolverWorkerMessage(Object.assign({},common,{
+type:'solve',render,idBase,bucketBase
+},extra||{}),true);
+const ensureCurrent=()=>{
+if(solveGen!==_siSolveGen)throw makeSolverCancellationError('Solver generation changed');
+};
+const buildKillAllStage=async(stage)=>{
+const spec=prepareParallelSolverSpec(render,options,'killAll',stage);
+if(!spec)return null;
+return runParallelSolverShards('solveKillAllShard',spec,common,pool,solveGen);
+};
+const work=(async()=>{
+const planInfo=prepareParallelSolverSpec(render,options,'plan');
+const planType=planInfo&&planInfo.plan?planInfo.plan.planType:'kill_all';
+const isFallbackPath=planType!=='kill_all';
+let result,killAllR1=null;
+if(planType==='kill_all'){
+killAllR1=await buildKillAllStage('r1');ensureCurrent();
+if(!killAllR1)return finalRender();
+result=await finalRender({prebuiltKillAll:killAllR1,deferKillAll:true});ensureCurrent();
+}else{
+let prebuiltKmc=null;
+if(planType==='kill_mercy_clear'){
+const spec=prepareParallelSolverSpec(render,options,'kmc');
+if(spec)prebuiltKmc=await runParallelSolverShards('solveKmcShard',spec,common,pool,solveGen);
+ensureCurrent();
+}
+result=await finalRender({prebuiltKmc,deferKillAll:true});ensureCurrent();
+}
+if(result.needsKillAll==='r1'){
+killAllR1=await buildKillAllStage('r1');ensureCurrent();
+if(!killAllR1){
+result=await finalRender({forceKillAll:true,initialFallback:true});ensureCurrent();
+result.fallback=true;return result;
+}
+result=await finalRender({forceKillAll:true,initialFallback:true,
+prebuiltKillAll:killAllR1,deferKillAll:true});ensureCurrent();
+}
+if(result.needsKillAll==='r2'){
+const r2=await buildKillAllStage('r2');ensureCurrent();
+if(!r2){
+result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
+prebuiltKillAll:null});ensureCurrent();
+}else{
+const all=Object.assign({},killAllR1||{},r2);
+result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
+prebuiltKillAll:all,deferKillAll:false});ensureCurrent();
+}
+}
+if(result&&(planType!=='kill_all'||result.fallback))result.fallback=!!result.fallback;
+return result;
+})();
+const pending={gen:solveGen,promise:null};
+pending.promise=work.then(result=>{
+ensureCurrent();
+return setCachedSolverResult(cacheKey,result,idBase,bucketBase);
+}).finally(()=>{
+if(_solverResultPending.get(cacheKey)===pending)_solverResultPending.delete(cacheKey);
+});
+_solverResultPending.set(cacheKey,pending);
+return pending.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucketBase));
 }
 function replaceSolveWorker(wi){
 const p=_dq9Pool;
 if(!p)return;
 try{p.workers[wi].onmessage=null;p.workers[wi].onerror=null;p.workers[wi].terminate();}catch(e){}
-const w=new Worker(getWorkerBlobURL());
-w.onmessage=(e)=>handlePoolMessage(wi,e.data);
-w.onerror=(e)=>handlePoolFatalError(wi,e);
+const w=createPoolWorker(getWorkerBlobURL(),wi);
 p.workers[wi]=w;
 const a=_dq9Active;
 if(a&&!a.finished&&a._retryJob)w.postMessage({type:'job',gen:a.gen,job:a._retryJob});
 if(p.idle.indexOf(wi)===-1)p.idle.push(wi);
 }
+const SOLVER_CANCELLED='SOLVER_CANCELLED';
+function makeSolverCancellationError(reason){
+const err=new Error(reason||'Solver cancelled');
+err.code=SOLVER_CANCELLED;
+return err;
+}
+const isSolverCancellation=(err)=>!!err&&err.code===SOLVER_CANCELLED;
+const fleeFailureFallback=()=>null;
 function cancelAllSolveTasks(reason){
 _siSolveGen++;
-const err=new Error(reason||'Solver cancelled');
+_solverResultPending.clear();
+_fleePending.clear();
+const err=makeSolverCancellationError(reason);
 for(const t of _siSolveQueue)t.reject(err);
 _siSolveQueue.length=0;
 if(_siSolveBusy.size>0){
@@ -1924,6 +1857,7 @@ dispatchPoolJobs();
 }
 }
 function abortAllSolveTasks(reason){
+_solverResultPending.clear();
 const err=new Error(reason||'Worker pool lost');
 for(const t of _siSolveQueue)t.reject(err);
 _siSolveQueue.length=0;
@@ -1938,6 +1872,7 @@ _siSolveBusy.clear();
 function runSolveTaskOnMain(render,idBase,bucketBase){
 window._solverComboId=idBase;
 window._solverBucketId=bucketBase;window._solverFallback=false;window._solverSolvable=null;
+window._solverNeedsKillAll=null;
 const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
 return{html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable};
 }
@@ -1950,42 +1885,46 @@ const _fleeVerdict=new Map();
 const _fleePending=new Map();
 const FLEE_ID_BASE=900000,FLEE_BK_BASE=9000;
 let _fleeProbeSeq=0;
-const _fleeCharsSig=(chars)=>(chars||[]).map(c=>{
-const s=c.stats||{};
-return[c.lv,c.job,c.agi,s.atk,s.might,s.str,s.mending,s.deft].join(',');
-}).join(';');
-const fleeVerdictKey=(task,opt)=>
-task.monId+'@'+task.bat+'|'+(task.canRound2?1:0)+'|'+
-task.monGroups.map(g=>g.hex+':'+g.count+':'+g.death+(g.isMain?'*':'')).join(',')+
-'|'+(opt.useStats?1:0)+'|'+(opt.multiPlayer?1:0)+
-'|'+_fleeCharsSig(opt.chars);
+const fleeVerdictKey=solverResultCacheKey;
+function solverResultVerdict(result){
+if(!result||result.needsKillAll||typeof result.solvable!=='boolean')return null;
+return result.solvable;
+}
 function peekFleeVerdict(task,opt){
 const k=fleeVerdictKey(task,opt);
 return _fleeVerdict.has(k)?_fleeVerdict.get(k):null;
+}
+function cacheFleeVerdictResult(task,opt,result,key=fleeVerdictKey(task,opt)){
+const verdict=solverResultVerdict(result);
+if(verdict===null)return null;
+const solvable=verdict&&result.fallback?'fallback':verdict;
+_fleeVerdict.set(key,solvable);
+return solvable;
 }
 function requestFleeVerdict(task,opt){
 const k=fleeVerdictKey(task,opt);
 if(_fleeVerdict.has(k))return Promise.resolve(_fleeVerdict.get(k));
 if(_fleePending.has(k))return _fleePending.get(k);
+const solveGen=_siSolveGen;
 const n=++_fleeProbeSeq;
 const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n).then((m)=>{
-const solvable=m&&m.solvable===false?false:(m&&m.fallback?'fallback':true);
-_fleeVerdict.set(k,solvable);_fleePending.delete(k);
-return solvable;
-}).catch(()=>{
-_fleeVerdict.set(k,true);_fleePending.delete(k);
-return true;
+if(solveGen!==_siSolveGen)return null;
+return cacheFleeVerdictResult(task,opt,m,k);
+}).catch((err)=>{
+return fleeFailureFallback(err);
+}).finally(()=>{
+if(_fleePending.get(k)===p)_fleePending.delete(k);
 });
 _fleePending.set(k,p);
 return p;
 }
-const makeD1SolveTask=(b)=>({
+const makeD1SolveTask=(b)=>b.singleEncounter?({
 bat:b.d1,
-monGroups:[{hex:b.hexId,count:1,death:b.mainDeath,isMain:true}],
+monGroups:b.singleEncounter.monGroups,
 monId:b.monId,
 mapDeft:b.mapDeft,
 canRound2:b.canRound2
-});
+}):null;
 function ensureSolverSubmodal(){
 if(document.getElementById('si_submodal'))return;
 const ov=document.createElement('div');
@@ -2023,10 +1962,7 @@ return v;
 const detailSig=comboIds.map(id=>{
 const e=window._solverComboMap&&window._solverComboMap[id];
 if(!e)return'missing:'+id;
-const actionSig=(e.combo||[]).map(v=>[
-v.jp,v.at||0,v.equip||'',v.note||'',SolverActionGate.hits(v),v.earlyKill?1:0,
-v.aoeK!==undefined?v.aoeK:'',v.soloGroup?1:0,v.needle?1:0,v.needDeath0?1:0
-].join('\x1f')).join('\x1e');
+const actionSig=solverComboActionSignature(e.combo);
 const traceSig=useStats?(e.outcomeSig||''):'';
 return[actionSig,JSON.stringify(stable(e.eggAssign||null)),JSON.stringify(stable(e.assign||null)),
 JSON.stringify(stable(e.defend||null)),traceSig].join('\x1d');
@@ -2040,8 +1976,9 @@ cancelAllSolveTasks('Superseded by a new Solver view');
 const viewGen=_siSolveGen;
 ensureSolverSubmodal();
 window._solverComboMap={};window._solverComboId=0;window._solverBucketId=0;window._solverBuckets={};
-let html=(typeof buildSolverLegendHtml==='function'?buildSolverLegendHtml():''),title='';
+let html=buildSolverLegendHtml(),title='';
 const tasks=[],taskElementIds=[],taskMeta=[];
+const fleeSections=new Map();
 const _hdr=(bat,tLbl)=>`<div style="margin:6px 0 2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">${siFormatAT(bat)}</span> <span style="color:#888;font-size:10px;">${tLbl}</span></div>`;
 const _queueTask=(task,meta)=>{
 const id='si_solver_task_'+viewGen+'_'+tasks.length;
@@ -2051,7 +1988,9 @@ html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px
 if(bucket==='d1'){
 title=`${BATTLE_LABEL} ${siFormatAT(b.d1)}｜${L40}×1`;
 html+=_hdr(b.d1,'×1');
-_queueTask(makeD1SolveTask(b));
+const task=makeD1SolveTask(b);
+if(task)_queueTask(task);
+else html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
 }else{
 const Ts=bucket==='d2'?[2,3]:[4,5];
 const headBat=bucket==='d2'?b.d2:b.d4;
@@ -2062,7 +2001,7 @@ for(const T of Ts){
 const entry=b.resultsByT&&b.resultsByT.get(T);
 if(!entry||(entry.mixes.length===0&&entry.flee.length===0))continue;
 any=true;
-const tBat=T<=3?b.d2:b.d4;
+const tBat=battleATForCount(b,T);
 html+=_hdr(tBat,'×'+T);
 for(const m of entry.mixes){
 const taskNo=tasks.length;
@@ -2070,10 +2009,18 @@ const rowId='si_solver_pattern_'+viewGen+'_'+taskNo;
 const descId=rowId+'_desc';
 html+=`<div id="${rowId}"><div id="${descId}" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">${m.desc}</div>`;
 _queueTask({bat:tBat,monGroups:m.monGroups||[{hex:b.hexId,count:m.effMon,death:b.mainDeath,isMain:true}],monId:b.monId,mapDeft:b.mapDeft,canRound2:b.canRound2},
-{pattern:true,section:'T'+T,rowId,descId,desc:m.desc,killAllDesc:m.killAllDesc});
+{pattern:true,section:'T'+T,rowId,descId,desc:m.desc,
+fleeDesc:m.fleeDesc||m.desc,fleeOrder:m.order,killAllDesc:m.killAllDesc});
 html+='</div>';
 }
-if(entry.flee.length>0)html+=`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span> ${entry.flee.join(' · ')}</div>`;
+const fleeRowId='si_solver_flee_'+viewGen+'_T'+T;
+const fleeItemsId=fleeRowId+'_items';
+const fleeItems=entry.flee.map((v,i)=>typeof v==='string'
+?{order:i,html:v}:{order:v.order,html:v.desc});
+const _fleeItemsHtml=()=>fleeItems.slice().sort((a,b)=>a.order-b.order)
+.map(v=>v.html).join(' · ');
+fleeSections.set('T'+T,{rowId:fleeRowId,itemsId:fleeItemsId,items:fleeItems});
+html+=`<div id="${fleeRowId}" style="${fleeItems.length?'':'display:none;'}font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span> <span id="${fleeItemsId}">${_fleeItemsHtml()}</span></div>`;
 }
 if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
 }
@@ -2097,7 +2044,7 @@ const _mergeEquivalentPatterns=()=>{
 const seen=new Map();
 for(let i=0;i<tasks.length;i++){
 const meta=taskMeta[i],result=taskResults[i];
-if(!meta||!meta.pattern||!result)continue;
+if(!meta||!meta.pattern||!result||result.flee)continue;
 const sig=meta.section+'\x1a'+solverTaskOutputSignature(result.html,options.useStats);
 if(!seen.has(sig)){seen.set(sig,i);continue;}
 const keepMeta=taskMeta[seen.get(sig)];
@@ -2112,8 +2059,30 @@ if(duplicateRow)duplicateRow.remove();
 const _completeTask=(i,result,stateAlreadyMerged)=>{
 if(viewGen!==_siSolveGen)return;
 if(!stateAlreadyMerged)_mergeState(result);
-taskResults[i]={html:result&&result.html!==undefined?result.html:''};
-if(result.fallback&&taskMeta[i]?.killAllDesc){
+const verdict=cacheFleeVerdictResult(tasks[i],options,result);
+const meta=taskMeta[i];
+if(verdict===false&&meta?.pattern){
+taskResults[i]={html:'',flee:true};
+const section=fleeSections.get(meta.section);
+if(section){
+section.items.push({order:meta.fleeOrder,html:meta.fleeDesc});
+const itemsEl=document.getElementById(section.itemsId);
+const rowEl=document.getElementById(section.rowId);
+if(itemsEl)itemsEl.innerHTML=section.items.slice().sort((a,b)=>a.order-b.order)
+.map(v=>v.html).join(' · ');
+if(rowEl)rowEl.style.display='';
+}
+const patternRow=document.getElementById(meta.rowId);
+if(patternRow)patternRow.remove();
+completedTasks++;
+if(completedTasks===tasks.length)_mergeEquivalentPatterns();
+return;
+}
+const resultHtml=verdict===false
+?`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span></div>`
+:(result&&result.html!==undefined?result.html:'');
+taskResults[i]={html:resultHtml,flee:false};
+if(verdict==='fallback'&&taskMeta[i]?.killAllDesc){
 const descEl=document.getElementById(taskMeta[i].descId);
 const fbDesc=taskMeta[i].killAllDesc+' <span style="color:#fa0;font-size:9px;" title="mercy/KMC → kill all">⚡</span>';
 if(descEl)descEl.innerHTML=fbDesc;
