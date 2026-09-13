@@ -830,14 +830,14 @@ return`<span style="color:#fa0;margin-left:12px;font-size:11px;">${BATTLE_LABEL}
 function buildAtInfoCardHtml(seed,N,atN,atN1,diffsHtml){
 const{deft,color:deftColor,label:deftLabel}=formatDeftness(atN1);
 return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px;padding:5px 8px;background:#0a1a1a;border:1px solid #055;border-radius:3px;">
-    <span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]: </span><span class="at-m-atval">${atN}</span></span>
-    <strong class="at-dynamic-mon" data-at="${atN}" style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
-    <br><span class="at-m-deft" style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18} ${deftLabel}</span>
-    ${diffsHtml}</div>`;
+<span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]: </span><span class="at-m-atval">${atN}</span></span>
+<strong class="at-dynamic-mon" data-at="${atN}" style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
+<br><span class="at-m-deft" style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18} ${deftLabel}</span>
+${diffsHtml}</div>`;
 }
 function buildAtPatternBoxHtml(patternName,probText,offsetsHtml){
 return`<div style="margin-top:4px;padding:4px 8px;background:#111;border:1px solid #333;border-radius:4px;">
-  <span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName} (${probText})</span><br>${offsetsHtml}</div>`;
+<span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName} (${probText})</span><br>${offsetsHtml}</div>`;
 }
 const SI_PATTERN_INDICES={
 'R2':[[1,2]],
@@ -1472,13 +1472,13 @@ let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 const{specialHtml,anomalyHtml}=buildSearchDetailHtml(specialHitDetails,anomalyDetails);
 let mapNameDisp=dispName(searchEngine);
 const html=`
-    <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
-    <span style="color:#888">(Rank ${rStr})</span><br>
-    <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
-    <div style="margin-top:4px;">${boxHtml}</div>
-    ${specialHtml}
-    ${anomalyHtml}
-    `;
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
+<span style="color:#888">(Rank ${rStr})</span><br>
+<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+${specialHtml}
+${anomalyHtml}
+`;
 return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor};
 },
 multibug:(searchEngine,seed,rStr,targetRankKey,job)=>{
@@ -1632,14 +1632,14 @@ const cachedLocData=peekLocDataCached(seed,targetRankKey);
 const locHtml=cachedLocData?LocaHtmlFromData(cachedLocData,conds):"";
 let bugIcon=isFloorIncreased?'📈':'';
 const html=`
-      <span style="color:#ffd700;font-weight:bold;font-size:15px;">${hex4(seed)}</span>
-      <span style="color:#888">(Rank ${rStr})</span><br>
-      <div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
-      <span style="color:#aaa;font-size:11px">[Source] ${origName} | B${origFloors}F | ${origBoss}</span><br>
-      <span style="color:#f8f;font-size:11px">[Bug] ${bugName} | B${bugFloors}F | ${bugBoss} ${bugIcon}</span>
-      </div>${locHtml}${boxHtml}
-      <div style="padding-top:2px;">${elistHtmlStr}</div>
-      `;
+<span style="color:#ffd700;font-weight:bold;font-size:15px;">${hex4(seed)}</span>
+<span style="color:#888">(Rank ${rStr})</span><br>
+<div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
+<span style="color:#aaa;font-size:11px">[Source] ${origName} | B${origFloors}F | ${origBoss}</span><br>
+<span style="color:#f8f;font-size:11px">[Bug] ${bugName} | B${bugFloors}F | ${bugBoss} ${bugIcon}</span>
+</div>${locHtml}${boxHtml}
+<div style="padding-top:2px;">${elistHtmlStr}</div>
+`;
 searchEngine._force_16_floors=false;
 return{seed,rStr,html,hasD:hasAnyD};
 },
@@ -1660,12 +1660,12 @@ let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 let mapNameDisp=dispName(searchEngine);
 const fmtAstar=a=>` <span style="color:#ffc90e;font-size:11px;font-family:monospace;">${fmtStepD(a)}</span>`;
 const buildHtml=(astarHtml,displayHtml)=>`
-        <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
-        <span style="color:#888">(Rank ${rStr})</span>${astarHtml}<br>
-        <span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
-        <div style="margin-top:4px;">${boxHtml}</div>
-        <div style="margin-top:4px;">${displayHtml}</div>
-        `;
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
+<span style="color:#888">(Rank ${rStr})</span>${astarHtml}<br>
+<span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+<div style="margin-top:4px;">${displayHtml}</div>
+`;
 if(hitResult.multi){
 return hitResult.multi.map(row=>({
 seed,rStr,html:buildHtml(row.astarText!==undefined
@@ -1773,14 +1773,14 @@ let locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 const{specialHtml,anomalyHtml}=buildSearchDetailHtml(specialHitDetails,anomalyDetails);
 let mapNameDisp=dispName(searchEngine);
 const html=`
-    <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
-    <span style="color:#888">(Rank ${rStr})</span><br>
-    <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
-    ${fastestHtml}
-    <div style="margin-top:4px;">${boxHtml}</div>
-    ${specialHtml}
-    ${anomalyHtml}
-    `;
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span> 
+<span style="color:#888">(Rank ${rStr})</span><br>
+<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+${fastestHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+${specialHtml}
+${anomalyHtml}
+`;
 return{seed,rStr,html,hasD:hasMatchedD,jumpFloor:jumpToFloor,sortCost:fastestRes.cost,fc:searchEngine.floorCount};
 }
 };
@@ -1893,15 +1893,15 @@ diffsHtml=buildBattleAtDiffsHtml(patData.foundOffsets,N,deft,job.userDeft??999);
 }
 let atHtml=buildAtInfoCardHtml(seed,N,atinfo.atN,atinfo.atN1,diffsHtml);
 const html=`
-      <span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
-      <span style="color:#888">(Rank ${rStr})</span><br>
-      <span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
-      <div style="margin-top:4px;">${boxHtml}</div>
-      ${specialHtml}
-      ${anomalyHtml}
-      ${atHtml}
-      ${patHtml}
-      `;
+<span style="color:#ffd700;font-weight:bold">${hex4(seed)}</span>
+<span style="color:#888">(Rank ${rStr})</span><br>
+<span style="color:#0ff;font-size:11px">${mapNameDisp}</span>${locHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+${specialHtml}
+${anomalyHtml}
+${atHtml}
+${patHtml}
+`;
 batch.push({seed,rStr,html,hasD:elistResult.hasMatchedD,jumpFloor:jumpToFloor,pop:atinfo.atN});
 processed++;
 }
@@ -1935,10 +1935,10 @@ const{deft}=formatDeftness(defValue);
 const diffsHtml=buildBattleAtDiffsHtml(foundOffsets,job.POPIndex,deft,job.userDeft??999);
 const specificAtHtml=buildAtInfoCardHtml(seed,job.POPIndex,popValue,defValue,diffsHtml);
 const html=`
-        <span style="color:#ffd700;font-weight:bold;font-size:13px;">${hex4(seed)}</span><br>
-        ${buildAtPatternBoxHtml(job.patternName,job.probText,buildAtOffsetsHtml(foundOffsets))}
-        ${specificAtHtml}
-        `;
+<span style="color:#ffd700;font-weight:bold;font-size:13px;">${hex4(seed)}</span><br>
+${buildAtPatternBoxHtml(job.patternName,job.probText,buildAtOffsetsHtml(foundOffsets))}
+${specificAtHtml}
+`;
 batch.push({seed,rStr:null,html,pop:popValue});
 }
 }
@@ -2205,14 +2205,14 @@ const WEAPON_META={
 '弓(汎用)':{cat:'Bow',en:'Bow(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 'オノ(汎用)':{cat:'Axe',en:'Axe(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 'ナイフ(汎用)':{cat:'Knife',en:'Knife(any)',falcon:false,metal:0,antiBlk:false,generic:true},
-'ツメ(汎用)':{cat:'Claw',en:'Claw(any)',falcon:false,metal:0,antiBlk:false,generic:true},
-'棍(汎用)':{cat:'Pole',en:'Pole(any)',falcon:false,metal:0,antiBlk:false,generic:true},
+'ツメ(汎用)':{cat:'Claws',en:'Claws(any)',falcon:false,metal:0,antiBlk:false,generic:true},
+'棍(汎用)':{cat:'Staff',en:'Staff(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 '杖(汎用)':{cat:'Wand',en:'Wand(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 '扇(汎用)':{cat:'Fan',en:'Fan(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 'ハンマー(汎用)':{cat:'Hammer',en:'Hammer(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 'ムチ(汎用)':{cat:'Whip',en:'Whip(any)',falcon:false,metal:0,antiBlk:false,generic:true},
 };
-const _WTYPE_T={Sword:1,Spear:2,Bow:3,Axe:4,Knife:5,Claw:6,Pole:7,Wand:8,Fan:10,Hammer:11,Whip:12};
+const _WTYPE_T={Sword:1,Spear:2,Bow:3,Axe:4,Knife:5,Claws:6,Staff:7,Wand:8,Fan:10,Hammer:11,Whip:12};
 const _WTYPE_GENERIC_BY_T={};
 for(const _wjp in WEAPON_META){
 const _wm=WEAPON_META[_wjp];
