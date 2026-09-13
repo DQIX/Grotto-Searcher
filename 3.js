@@ -1302,13 +1302,9 @@ assign,data.eggAssign,chars,{captureActions:true});
 proof={...out,party:chars,rating};
 }
 const eggAssign=proof.eggAssign||data.eggAssign;
-const eggTargets=solverConditionEggTargets(combo,eggAssign);
+const eggTargets=solverConditionEggTargets(combo,eggAssign,proof.assign||assign,chars.length);
 const rows=new Map((proof.actionResults||[]).map(r=>[r.ci,r]));
-const initial=buildSimInstances(killTargets),seen={};
-const names=initial.map(i=>{
-const n=seen[i.groupIdx]=(seen[i.groupIdx]||0)+1;
-return getMonsterDisplayName(i.hex)+((killTargets[i.groupIdx].count||1)>1?n:'');
-});
+const initial=buildSimInstances(killTargets),names=solverTraceInstanceNames(initial,killTargets);
 const sn=v=>DISPLAY_LANG==='EN'?(v.en||v.jp):v.jp;
 const charLabel=c=>{
 if(!c)return'?';
@@ -1324,20 +1320,21 @@ for(let ci=0;ci<combo.length;ci++){
 const a=combo[ci],char=actorAt(chars,assign,ci),row=rows.get(ci);
 const who='<span style="color:#6cf;font-size:8px;">'+charLabel(char)+'</span> ';
 const lead='<div>'+L22+(ci+1)+L23+who;
+const atStr=' · AT '+(a.at||0);
 if(a.id===SK_EGG){
 const target=eggTargets[ci],beneficiary=target===undefined?'?':
 L20+((assign?assign[target]:target%4)+1)+' '+sn(combo[target]);
-html+=lead+'<span style="color:#ff0;">'+sn(a)+'</span> → '+beneficiary+'</div>';
+html+=lead+'<span style="color:#ff0;">'+sn(a)+'</span> → '+beneficiary+atStr+'</div>';
 continue;
 }
 if(a.at===0&&getFourceEls(a.jp)){
-html+=lead+'<span style="color:#f80;">'+sn(a)+'</span> → '+T('All allies','全員','味方全員')+' '+L30+'</div>';
+html+=lead+'<span style="color:#f80;">'+sn(a)+'</span> → '+T('All allies','全員','味方全員')+' '+L30+atStr+'</div>';
 continue;
 }
-if(!row){html+=lead+sn(a)+'</div>';continue;}
+if(!row){html+=lead+sn(a)+atStr+'</div>';continue;}
 if(a.id===SK_MERCY){
 const removed=row.targets.map(t=>names[t.index]);
-html+=lead+'<span style="color:#0ff;">'+sn(a)+'</span> → '+
+html+=lead+'<span style="color:#0ff;">'+sn(a)+'</span>'+atStr+' → '+
 (removed.length?removed.join(',')+L24:L25)+L27+remainingText(row.remaining)+'</div>';
 continue;
 }
@@ -1346,7 +1343,7 @@ const mul=eggAssign?.[ci]||1,metalOnly=row.targets.every(t=>isMetalHex(t.hex));
 const mulStr=mul>1?'<span style="color:#ff0;">×'+mul+
 (metalOnly?'':'＋'+tensionFlat(mul,char?.lv||99))+'</span>':'';
 const count=(kind==='A'||kind==='G')?' · '+T('Hits per enemy','每隻擊數','1体あたりの攻撃回数')+' '+hits+
-' · '+T('Targets hit','命中','命中')+' '+row.targets.length+' '+T('enemies','隻','体'):'';
+' · '+T('Targets hit','命中','命中')+' '+row.targets.length+' '+T('enemies','隻','体'):' · '+L65+' '+hits;
 const detail=row.targets.map(t=>{
 const ko=t.outcome==='ko',possible=t.outcome==='possible';
 const before={hp:t.hpBefore,hpLow:t.hpLowBefore};
@@ -1354,7 +1351,7 @@ return names[t.index]+': '+hpRange(before)+'→<span style="color:'+
 (ko?'#f44':possible?'#f80':'#8f8')+';">'+Math.max(0,t.hpLow)+'~'+Math.max(0,t.hp)+
 '</span>'+(ko?L32:possible?L33:'');
 }).join(' / ');
-html+=lead+'<span style="color:#ccc;">'+sn(a)+'</span>'+mulStr+' ['+kind+']'+count+' → '+
+html+=lead+'<span style="color:#ccc;">'+sn(a)+'</span>'+mulStr+' ['+kind+']'+atStr+count+' → '+
 detail+L27+remainingText(row.remaining)+'</div>';
 }
 if(defend?.length)html+='<div style="color:#789;margin-top:1px;">'+L34+
@@ -1470,13 +1467,17 @@ const[abs_1,abs_2,abs_4]=atContext.firstUnused;
 let patternMsg="";
 let foundOffset=-1;
 let foundSequence=null;
+let anchorEnd=-1;
 const targetPatterns=SI_PATTERN_INDICES[pTypeStr];
 const dropSlots=buildDropSlots(groupSize,rareRarity,normRarity,tLvs);
 if(pType>0&&scanMax>0&&targetPatterns){
-const found=scanDropPatternStarts(seed,pTypeStr,dropSlots,Math.max(38,abs_1),N+scanMax,1)[0];
+const founds=scanDropPatternStarts(seed,pTypeStr,dropSlots,Math.max(38,abs_1),N+scanMax,3);
+const found=founds[0];
 if(found){
 foundOffset=battleATBudgets(atContext,found.start).d1;
 foundSequence=found.simulation.seq;
+anchorEnd=found.start;
+for(let i=1;i<founds.length&&founds[i].start===anchorEnd+1;i++)anchorEnd=founds[i].start;
 }
 patternMsg=foundOffset!==-1?
 C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
@@ -1484,15 +1485,14 @@ C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</s
 let battleStr="";
 let seqHtml="";
 if(pType>0&&foundOffset!==-1){
-const budgets=battleATBudgets(atContext,abs_1+foundOffset);
+const budgets=battleATBudgetsForRun(atContext,abs_1+foundOffset,anchorEnd);
 const{d1,d2,d4}=budgets;
 seqHtml=siBuildSeqHtml(foundSequence);
-const showCombos=d1>0&&d1<=970;
+const showCombos=d1>=0&&d1<=970;
 const hexId=toMonsterHexId(monId);
 const mainMon=getMonDB(hexId);
 const mainDeath=mainMon?mainMon.s[12]:100;
 const encounters=enumerateEncounterOutcomes(encounterModel);
-const monNameFn=getMonsterDisplayName;
 battleStr='';
 if(showCombos){
 const useJP=(DISPLAY_LANG!=='EN');
@@ -1518,6 +1518,7 @@ const _fleeProbes=[];
 const _atForT=(t)=>battleATForCount(budgets,t);
 const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,canRound2});
 const _fleeState=(mg,t)=>{
+if(_atForT(t)<0)return'flee';
 const task=_fleeTask(mg,t);
 const v=peekFleeVerdict(task,_solverOpt);
 if(v===false)return'flee';
@@ -1537,15 +1538,16 @@ if(effMon<0){bucket.flee.push({order,desc});return;}
 bucket.mixes.push({effMon,desc,monGroups,killAllDesc,fleeDesc,order});
 }
 for(const encounter of encounters){
-const{total:T,mainCount:M,monGroups:mg,supports,probability}=encounter;
+const{total:T,monGroups:mg,probability}=encounter;
 if(T===1)continue;
-const plan=_derivePlan(mg),state=_fleeState(mg,T),pTag=_pFmt(probability);
-const mainTag=`<span style="color:#f9c">${monNameFn(hexId)}${M>1?'×'+M:''}</span>`;
-const labels=supports.map(s=>monNameFn(s.hex)+(s.count>1?'×'+s.count:''));
+const plan=_atForT(T)===0?{type:'kill_all',effMon:T,postAlive:0}:_derivePlan(mg);
+const state=_fleeState(mg,T),pTag=_pFmt(probability);
+const mainTag=`<span style="color:#f9c">${mergedSpeciesLabel(mg[0])}</span>`;
+const labels=mg.slice(1).map(s=>mergedSpeciesLabel(s));
 const supText=labels.length?'+'+labels.join('+'):'';
 const mainPrefix=mainTag+(labels.length?' ':'');
 const supTag=labels.length?`<span style="color:#a8f">${supText}</span>`:'';
-const hp=labels.length===1?(getMonDB(supports[0].hex)?.s[0]??0):null;
+const hp=labels.length===1?(getMonDB(mg[1].hex)?.s[0]??0):null;
 const base=mainPrefix+(hp===null?supTag:`<span style="color:#a8f">${supText} HP${hp}</span>`);
 const fleeDesc=mainPrefix+supTag+(hp===null?'':` <span style="color:#f44">HP${hp}</span>`)+pTag;
 const killAllDesc=base+_pendTag(state)+pTag;
@@ -1569,9 +1571,6 @@ if(verdicts.every(v=>v!==null))updateSeedInspector();
 const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L40}${lbl}${L41}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
 battleStr=`<div style="margin:2px 0;">${BATTLE_LABEL} ${_batBtn(d1,'d1','×1')} / ${_batBtn(d2,'d2','×2-3')} / ${_batBtn(d4,'d4','×4-5')}</div>`
 +`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
-}else if(d1===0&&encounters.some(e=>e.total===1)){
-battleStr+=`<div style="margin:2px 0;">${BATTLE_LABEL} <span style="color:#fa0;font-weight:bold;font-size:14px;">0</span> <span style="color:#888;font-size:10px;">×1</span></div>`
-+renderSolverResult(0,encounters.find(e=>e.total===1).monGroups,monId,mapDeft);
 }
 battleStr+=`<div style="color:#888;font-size:11px;margin-top:3px;">`+C22+`</div>`
 +`<div style="margin-top:3px;">${seqHtml}</div>`;
@@ -1626,7 +1625,7 @@ const _solverResultPending=new Map();
 window._solverResultCacheStats={hits:0,pendingHits:0,misses:0};
 const solverCharsSig=(chars)=>(chars||[]).map(c=>{
 const s=c.stats||{};
-return[c.lv,c.job,c.agi,s.atk,s.might,s.str,s.mending,s.deft].join(',');
+return[c.slot,c.lv,c.job,c.agi,s.atk,s.might,s.str,s.mending,s.deft].join(',');
 }).join(';');
 function solverResultCacheKey(render,options){
 const canRound2=solverAllowsRound2(render.mapDeft,render.canRound2);
@@ -1763,9 +1762,14 @@ lang:DISPLAY_LANG,
 dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},
 chars:options.chars
 };
-const finalRender=(extra)=>queueSolverWorkerMessage(Object.assign({},common,{
-type:'solve',render,idBase,bucketBase
+let searchIncomplete=false;
+const finalRender=async(extra)=>{
+const result=await queueSolverWorkerMessage(Object.assign({},common,{
+type:'solve',render,idBase,bucketBase,incomplete:searchIncomplete
 },extra||{}),true);
+searchIncomplete||=!!result.incomplete;
+return result;
+};
 const ensureCurrent=()=>{
 if(solveGen!==_siSolveGen)throw makeSolverCancellationError('Solver generation changed');
 };
@@ -1807,7 +1811,8 @@ if(!r2){
 result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
 prebuiltKillAll:null});ensureCurrent();
 }else{
-const all=Object.assign({},killAllR1||{},r2);
+const all=Object.assign({},killAllR1||{},r2,{r1:[],
+incomplete:!!(killAllR1?.incomplete||r2.incomplete)});
 result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
 prebuiltKillAll:all,deferKillAll:false});ensureCurrent();
 }
@@ -1874,7 +1879,7 @@ window._solverComboId=idBase;
 window._solverBucketId=bucketBase;window._solverFallback=false;window._solverSolvable=null;
 window._solverNeedsKillAll=null;
 const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
-return{html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable};
+return{html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable,incomplete:_solverSearchIncomplete};
 }
 const snapshotSolverOptions=()=>({
 chars:readCharStatsFromDom(),
@@ -2061,7 +2066,7 @@ if(viewGen!==_siSolveGen)return;
 if(!stateAlreadyMerged)_mergeState(result);
 const verdict=cacheFleeVerdictResult(tasks[i],options,result);
 const meta=taskMeta[i];
-if(verdict===false&&meta?.pattern){
+if((verdict===false||verdict===null)&&meta?.pattern){
 taskResults[i]={html:'',flee:true};
 const section=fleeSections.get(meta.section);
 if(section){
@@ -2078,7 +2083,7 @@ completedTasks++;
 if(completedTasks===tasks.length)_mergeEquivalentPatterns();
 return;
 }
-const resultHtml=verdict===false
+const resultHtml=(verdict===false||verdict===null)
 ?`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span></div>`
 :(result&&result.html!==undefined?result.html:'');
 taskResults[i]={html:resultHtml,flee:false};

@@ -13,6 +13,7 @@ window._solverComboMap={};window._solverComboId=m.idBase||0;
 window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
 window._solverFallback=!!m.initialFallback;window._solverSolvable=null;
 window._solverNeedsKillAll=null;
+_solverSearchIncomplete=false;_solverRenderDepth=0;
 }
 self.onmessage=(e)=>{
 const m=e.data;
@@ -39,10 +40,11 @@ try{
 setupSolverWorker(m);
 const html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,
 m.render.mapDeft,m.render.canRound2,!!m.forceKillAll,
-m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll);
+m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,false,!!m.incomplete);
 self.postMessage({type:'solveDone',solveId:m.solveId,html,
 comboMap:window._solverComboMap,buckets:window._solverBuckets,
 fallback:window._solverFallback||false,solvable:window._solverSolvable,
+incomplete:_solverSearchIncomplete,
 needsKillAll:window._solverNeedsKillAll||null});
 }catch(err){
 self.postMessage({type:'solveError',solveId:m.solveId,message:''+(err&&err.stack||err)});
