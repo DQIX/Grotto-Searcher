@@ -56,9 +56,11 @@ All other languages are AI translated from Traditional Chinese version and manua
 
 # Requirements
 
-iOS 10.3+ / Android 6.0+ / Windows 7+ / Any other OS which can run:
+iOS 14.5+ / Android 4.4+ / Windows 7+ / Any other OS which can run:
 
-Chrome 57+ / Firefox 52+ / Edge 17+ / Safari 10.1+
+Chrome 87+ / Firefox 79+ / Safari 14.1+
+
+(Dropped iOS 10.3-14.4 / Edge 17-18 support. Android 4.4 needs a standalone Chrome 87)
 
 Classic Web Worker is available online.
 
@@ -72,3 +74,5 @@ CPU Benchmark (2026.06.30 renewal)
 - R9-9950X3D: 1.98s
 
 # ドラクエ9 宝の地図検索ツール セレシア版
+
+過去最強の「ドラゴンクエストIX 星空の守り人」の宝の地図検索ツール dq9tmap101.exe の「敵無・敵減・オンリー」検索バグを修正し、拡張
