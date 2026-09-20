@@ -56,11 +56,11 @@ All other languages are AI translated from Traditional Chinese version and manua
 
 # Requirements
 
-iOS 14.5+ / Android 4.4+ / Windows 7+ / Any other OS which can run:
+iOS 14.5+ / Android 5+ / Windows 7+ / Any other OS which can run:
 
 Chrome 87+ / Firefox 79+ / Safari 14.1+
 
-(Dropped iOS 10.3-14.4 / Edge 17-18 support. Android 4.4 needs a standalone Chrome 87)
+(Dropped iOS 10.3-14.4 / Edge 18 support. Android 4.4 needs a standalone Chrome 87)
 
 Classic Web Worker is available online.
 
@@ -75,4 +75,30 @@ CPU Benchmark (2026.06.30 renewal)
 
 # ドラクエ9 宝の地図検索ツール セレシア版
 
-過去最強の「ドラゴンクエストIX 星空の守り人」の宝の地図検索ツール dq9tmap101.exe の「敵無・敵減・オンリー」検索バグを修正し、拡張
+過去最強だった「ドラゴンクエストIX 星空の守り人」の宝の地図検索ツール「dq9tmap101.exe」（作者：43氏）の「敵無・敵減・オンリー」の誤判定等を修正し、さらに検索機能を拡張して「場所・Base値」「ネタ・最短」「中断即開・PPAP・一人旅・体感・整列箱＆それらの最短」「地図法アイテムドロップ」の検索にも対応できるようにしたものです。
+
+修正したバグ・不具合
+- 「敵無・敵減・オンリー」の誤判定：「敵無→オンリー／敵減」、「オンリー→敵減」、「無無無→オンリー／敵減／敵無」等
+- 「危険？ハマる地図」該当フロアの階段・宝箱位置の間違い
+
+# 検索できるもの
+
+全般
+- URLの後に「?id=RRSSSS」を付けば、特定の地図を表示できる
+- 例えば https://dqix.github.io/Grotto-Searcher/?id=B50E5C で「見えざる魔神の地図Lv87」を直接に表示可能
+
+Ultimate search
+- 地図名、Lv、地形、敵ランク (B1F)、深さ (階層数)、BOSS、各ランクの宝箱の数
+- 場所コード (全150種、暗記推奨)、Base値
+- 特殊フロア (敵無、敵減、オンリーなど)、特定モンスターのオンリー
+- 乳首地図、イケない通路、危険？ハマるフロア、最短地図 など
+- 4人マルチによるバグ (マルチバグ)
+- CPUベンチマーク (💻)
+
+中断技 (アイテム地図) 検索
+- B3F/B4F/B9F 即開・一人旅 同じアイテムx2 (即一人旅)
+- 「即開→整列箱」の体感 同じアイテムx2 (体感)
+- 隣接フロアの整列箱 同じアイテムx2 (整列箱)
+- (New!) PPAP (5s,9s)・最短検索対応
+- フリー検索 (3つの宝箱まで)
+- マラソンツール (日本語・英語両対応)
