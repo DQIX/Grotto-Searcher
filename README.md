@@ -56,11 +56,11 @@ All other languages are AI translated from Traditional Chinese version and manua
 
 # Requirements
 
-iOS 14.5+ / Android 5+ / Windows 7+ / Any other OS which can run:
+iOS 12.2+ / Android 5+ / Windows 7+ / Any other OS which can run:
 
-Chrome 87+ / Firefox 79+ / Safari 14.1+
+Chrome 73+ / Firefox 63+ / Safari 12.1+
 
-(Dropped iOS 10.3-14.4 / Edge 18 support. Android 4.4 needs a standalone Chrome 87)
+(Dropped iOS 10.3-12.1 / Edge 18 support. Android 4.4 needs a standalone Chrome)
 
 Classic Web Worker is available online.
 
