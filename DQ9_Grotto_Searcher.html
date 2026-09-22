@@ -2798,21 +2798,76 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 </div>
 <div class="modal-lang-scroll modal-lang-scroll-help">
 <div id="h2ListTW" style="display: block">
-<h4 class=h1h4>※ 2026 年，TKG 開發出「PPAP 技」。詳情參見下方「中斷技的使用方法」之後的章節。</h4>
 <h3 class="h1sec">中斷技</h3>
 <h4 class=h1h4 style="margin-top:8px">甚麼是中斷技？</h4>
-<p style="margin-bottom:8px">　中斷技 指 玩家進入地圖之後，在指定的樓層<strong class="h2k">中斷存檔</strong>，之後<strong class="h2k">中斷讀檔</strong>，進行<strong class="h2op">「打開戰歷→關閉」「配合時機上/下樓梯 (階段合わせ)」之類的操作後 開寶箱</strong>，或 <strong class="h2k">甚麼也不做 直接開寶箱</strong>，藉此得到「想要的物品」的秘技。詳細如下：</p>
+<p style="margin-bottom:8px">　中斷技 指 玩家進入地圖之後，在指定樓層<strong class="h2k">中斷存檔</strong>，之後<strong class="h2k">中斷讀檔</strong>，進行<strong class="h2op">「打開戰歷→關閉」「配合時機上/下樓梯 (階段合わせ)」</strong>之類的操作後 開寶箱，或 <strong class="h2k">甚麼也不做 直接開寶箱</strong>，藉此得到「想要的物品」的秘技。步驟如下：</p>
+<ol style="padding-left:20px;margin-bottom:16px">
+<li>準備一個秒錶 (iPhone 手機的 時鐘 有這個功能)。</li>
+<li>進入地圖，在指定樓層「中斷存檔」之後，<strong class="h2op">同時 做以下兩件事</strong>：<br><strong>① 在標題畫面 按 A 鍵「讀取中斷檔」<br>② 啟動 秒錶 開始計時</strong></li>
+<li>此後 過了大約 5 秒，遊戲中也有一個 計時器 (Chest Timer) 在後台啟動，每秒前進一次，永不停擺。</li>
+<li>之後玩家可以<strong class=h2k>「打開戰歷→關閉」</strong>或<strong class="h2k">「配合時機上/下樓梯 (階段合わせ)」</strong> (<strong class="h2op">就像按下秒錶的 LAP 鍵 記錄 LAP TIME 一樣</strong>) 來暫存「做完上述操作那一瞬間」Chest Timer 的秒數，然後<strong>査表</strong>得到<strong style=color:#11F514>「那一秒 哪個寶箱 能開出甚麼物品」</strong>。</li>
+</ol><h4 class=h1h4>補充</h4>
 <ul style="padding-left:20px;margin-bottom:16px">
-<li>寶箱個數與位置由「地圖 Seed＋層號」、樓層大小及該層放箱規則決定；<strong class="h2k">寶箱等級還取決於 SMR</strong>：以 <code>FloorMR＝SMR＋floor((f−1)÷4)</code>（B1F 的 f＝1）查 TableF 取得等級上下限，再依箱號對應的亂數抽選。</li>
-<li>每個寶箱的物品，以「地圖 Seed＋層號＋經過時間 (內部秒數)」重設亂數，按<strong class="h2k">箱號</strong>取得抽值，再依<strong class="h2k">該箱等級對應的加權物品表</strong>決定；不能只看 Seed、樓層與秒數而忽略箱號及等級。</li>
-<li>上述的「經過時間 (秒數)」，是遊戲系統的「內部時間」。</li>
-<li><strong class="h2op">在指定樓層「中斷存檔」之後，在標題畫面按下 A 鍵 選擇「讀取中斷檔」(下稱「中斷讀檔」) </strong>可以 Reset「內部時間」。</li>
-<li>但「中斷讀檔」時「內部時間」開始的瞬間並不明確，玩家無法準確掌握它。</li>
-<li>因此，玩家選擇<strong class="h2op">按下 A 鍵「讀取中斷檔」的那一瞬間</strong>的同時，用秒錶測量秒數 (稱之為「中斷秒數」) 來換算「內部時間」。<strong class="h2k">「中斷秒數＝內部時間＋5 秒」</strong>。</li>
-<li>一旦開始計測「中斷秒數」，時間就會在後台 每秒前進一次。這個系統被稱為「計時器 (Chest Timer)」。</li>
-<li>之後進行<strong class="h2k">「打開戰歷→關閉」</strong>或<strong class="h2k">「配合時機上/下樓梯 (階段合わせ)」</strong>等操作，<strong class="h2op">就像按下秒錶的 LAP 鍵 記錄 LAP TIME 一樣</strong>，把計時器的秒數 更新並固定下來。「第幾秒 從哪個寶箱 開出甚麼物品」就由這個「固定操作」決定。</li>
+<li>秒錶測的時間叫「中斷秒數」，Chest Timer 的時間叫「內部時間」。<strong class=h2k>中斷秒數＝內部時間＋5 秒</strong>。</li>
+<li>玩家無法準確測量「內部時間」的起點，但「按 A 鍵讀檔的同時啟動秒錶」測「中斷秒數」的起點很準，故玩家一直用「中斷秒數」代替「內部時間」。</li>
+<li>玩家 讀檔 後，甚麼也不做，直接開那層樓的寶箱時，若玩家隊伍有 4 人，則「中斷秒數」為 7 秒 (內部時間 2 秒)；若玩家隊伍只有 1 人，則「中斷秒數」為 6 秒 (內部時間 1 秒)。</li>
+<li>2026 年，TKG 開發了「PPAP 技」: 進入<strong class="h2k">「戰歷」→「思い出の仲間たち」</strong>時，<strong class="h2op">內部時間 會被重置為 0 秒 (＝中斷秒數 5 秒)</strong>。</li>
+<li>玩家 進 PPAP 後，用第二快的速度關閉戰歷，之後直接開那層樓的寶箱時「中斷秒數」為 9 秒 (內部時間 4 秒)。</li>
+<li>更多詳情，請見下方「中斷技、PPAP 技的應用方法」。</li>
 </ul>
-<h4 class=h1h4 style="margin-top:8px">中斷技的使用方法</h4>
+<details class=h1det>
+<summary>📖 寶箱物品一覽</summary>
+<table class=h1t style="font-size:11px">
+<tr class=hdr2><th>寶箱等級</th><th>裝備</th><th>素材及其他</th></tr>
+<tr><td rowspan=3>S</td><td rowspan=3><strong>ほしくずのつるぎ<br>きしんのまそう<br>サウザンドダガー<br>ひかりの杖<br>グリンガムのムチ<br>しゅらのこん<br>竜王のツメ<br>ひっさつのおうぎ<br>グレートアックス<br>大地くだき<br>メテオエッジ<br>天使の弓</strong></td><td><strong>天使のソーマ</strong><br><b>せかいじゅのは<br>リサイクルストーン</b><br>オリハルコン<br>きんかい<br>けんじゃのせいすい<br>おもいでのすず</td></tr>
+<tr><td>グビアナきんか</td></tr>
+<tr><td>パンドラボックス</td></tr>
+<tr><td rowspan=3>A</td><td rowspan=3><strong>メタスラの剣<br>メタスラのやり<br>メタスラの盾<br>メタスラヘルム<br>メタスラよろい<br>メタスラのこて<br>メタスラブーツ</strong><br>しにがみの首かざり</td><td><strong>げんませき</strong><br>オリハルコン<br>天使のはね<br>けんじゃのせいすい<br>ちいさなメダル</td></tr>
+<tr><td>グビアナきんか<br>3000G</td></tr>
+<tr><td>パンドラボックス</td></tr>
+<tr><td rowspan=3>B</td><td rowspan=3><strong>えいゆうのやり<br>こがらしのダガー<br>ドラゴンの杖<br>カルベロビュート</strong><br>まじゅうのツメ<br><strong>風林火山</strong><br>ふんさいのおおなた<br>メガトンハンマー<br><strong>ペンタグラム</strong></td><td><b>せいれいせき</b><br>きんかい<br>ミスリルこうせき<br>けんじゃのせいすい<br>ちいさなメダル</td></tr>
+<tr><td>グビアナきんか<br>1500G</td></tr>
+<tr><td>パンドラボックス</td></tr>
+<tr><td rowspan=3>C</td><td rowspan=3>しわよせのくつ<br><strong>しわよせのぼうし<br>古強者のよろい<br>だいまどうシューズ<br>古強者のブーツ<br>ぶしんのブーツ<br>まじょのブーツ<br>しんかんのタイツ</strong><br>はめつの盾<br>さとりのワンピース<br>ドクロのかぶと<br>マタドールグラブ</td><td><strong>ほしのカケラ</strong><br><b>超ばんのうぐすり</b><br>せいじゃのはい<br>ヘビーメタル<br>けんじゃのせいすい<br>ちいさなメダル</td></tr>
+<tr><td>グビアナぎんか<br>880G</td></tr>
+<tr><td>ミミック</td></tr>
+<tr><td rowspan=3>D</td><td rowspan=3><strong>ぶしんのリスト<br>オープンフィンガー<br>古強者のグローブ<br>じごくの弓</strong><br>しんかんのブーツ<br>ドクロのゆびわ<br>まじんのかなづち<br>サタンヘルム<br>あくまのムチ</td><td><b>おかしなくすり</b><br>天使のはね<br>ミスリルこうせき<br>ヘビーメタル<br>ヘパイトスのひだね<br>ちいさなメダル</td></tr>
+<tr><td>グビアナぎんか</td></tr>
+<tr><td>ミミック</td></tr>
+<tr><td rowspan=3>E</td><td rowspan=3><b>あらくれベルト</b><br>メイド服<br><b>あらくれブーツ<br>あらくれマスク</b><br>ヘッドドレス<br><b>あらくれズボン</b><br><strong class=h2op>あぶないビスチェ</strong><br>まてきの杖</td><td><b>ばんのうぐすり<br>あやかしそう<br>ぶどうエキス<br>とうこんエキス</b><br>ヘパイトスのひだね<br>まほうのせいすい<br>ちいさなメダル</td></tr>
+<tr><td>グビアナぎんか</td></tr>
+<tr><td>ミミック</td></tr>
+<tr><td rowspan=3>F</td><td rowspan=3><strong class=h2op>ゆうわくの弓</strong><br>ふしぎなボレロ<br>ひらめきのジュエル</td><td><b>つけもの石<br>かがみ石<br>どくどくヘドロ<br>花のみつ<br>うらみのほうじゅ</b><br>せいじゃのはい<br>まほうのせいすい<br>ちいさなメダル</td></tr>
+<tr><td>グビアナぎんか<br>670G</td></tr>
+<tr><td>ミミック</td></tr>
+<tr><td rowspan=3>G</td><td rowspan=3><strong style=color:#0ce>スライムトレイ</strong><br>ちからのゆびわ<br>はやてのリング</td><td><b>命の石<br>てっこうせき<br>ルビーのげんせき<br>ガマのあぶら</b><br>げんこつダケ<br>ちいさなメダル</td></tr>
+<tr><td>グビアナぎんか<br>グビアナどうか<br>450G</td></tr>
+<tr><td>ひとくいばこ</td></tr>
+<tr><td rowspan=2>H</td><td rowspan=2>きんのゆびわ<br>きんのブレスレット<br>てっかめん<br>シルバートレイ</td><td><b>上どくけしそう<br>いやしそう<br>天使のすず<br>ばくだん石<br>てつのクギ<br>ようがんのカケラ<br>まりょくの土</b><br>げんこつダケ</td></tr>
+<tr><td>グビアナどうか<br>268G</td></tr>
+<tr><td rowspan=2>I</td><td rowspan=2>こんぼう<br>ぎんのリスト<br>ニーソックス<br>うさぎのおまもり</td><td><b>やくそう<br>上やくそう<br>どくけしそう<br>まんげつそう<br>せいすい</b><br>まほうのせいすい<br><b>キメラのつばさ</b><br>おもいでのすず</td></tr>
+<tr><td>グビアナどうか<br>125G</td></tr>
+</table>
+</details>
+<h3 class="h1sec">PPAP 技</h3>
+<h4 class=h1h4 style="margin-top:8px">甚麼是 PPAP 技？</h4>
+<p style="margin-bottom:8px">　2026 年，TKG 在開發亂數調整法的過程中，發現進入<strong class="h2k">「戰歷」→「思い出の仲間たち」</strong>時，<strong class="h2op">中斷技的計時器 (秒數) 會被重置為「內部時間 0 秒」</strong>。
+<br>　之後，TKG 將這個秘技命名為「PPAP 技」(源自「思い出の仲間たち」的英文名「<b>Pals Past &amp; Present</b>」首字母)，並發表給社群。發表後，在社群成員們的共同努力下，又發現了幾項特徵。詳細如下：</p>
+<ol style="padding-left:20px;margin-bottom:16px">
+<li>「秒數被重置的瞬間」是進入「思い出の仲間たち」時「畫面暗轉」的途中。</li>
+<li>用 B 鍵 以<strong>第二快的速度</strong> 關閉「思い出の仲間たち」再關閉「戰歷」，該樓層的秒數會變成「中斷秒數 9 秒 (內部時間 4 秒)」。重現性很高，發表當天就被實用化。
+<br>※用 B 鍵 or 觸控筆 以最快速度關閉的話，秒數會變成「中斷秒數 8 秒 (內部時間 3 秒)」，但不穩定。</li>
+<li>也可以不馬上關閉戰歷，改成像「體感」或「馬拉松」那樣使用。馬拉松工具 已用 4.6/4.7 秒作為起點 支援 PPAP 馬拉松。</li>
+<li>這個「PPAP 技」單人有效，多人連線 (主機、客機皆然) 也有效。</li>
+<li><strong class=h2k>多人連線時，只要有人進入「思い出の仲間たち」就會重置所有人的 Timer</strong>，<strong class=h2op>但 關閉戰歷 or 階段合わせ 等「更新秒數的操作」(類似按下秒錶 LAP 鍵) 只影響做這個操作的機器本身。</strong>
+<br>因此 機器 A 進入「思い出の仲間たち」的同時 機器 B 關閉「戰歷」，機器 B 能取得「中斷秒數 5 秒 (內部時間 0 秒)」的物品，但 機器 A / 機器 C / 機器 D 不行。</li>
+<li>「重置所有人的 Timer」不需要在地圖內，在城鎮/村莊中「遙控操作」也可以 —— 如果「重置所有人的 Timer」是 Host 在遙控操作，Host 還可以「在 Guest 開最後一個寶箱時 關閉地圖再打開」讓 Guest 開完最後一個寶箱後 自動被送到入口 跑下一輪，省去單機時「取得所有物品後 リレミト → 關閉地圖再打開 甚麼都要自己來」的繁瑣操作。但「更新秒數的操作」必須在地圖中所選樓層實施，否則隨便走個樓梯都會 再更新一次秒數 而破壞原有的操縱結果。</li>
+</ol>
+<h4 class=h1h4 style="margin-top:8px">注意</h4>
+<ul style="padding-left:20px;margin-bottom:16px">
+<li>「思い出の仲間たち」<strong class="h2op">必須曾經參加過多人連線、並向其他成員的角色搭話之後 才會出現</strong>。</li>
+</ul>
+<h3 class=h1sec>中斷技、PPAP 技的應用方法</h4>
 <ul style="padding-left:20px;margin-bottom:8px">
 <li><strong class="h2m">馬拉松</strong>：隊伍 4 人，打開「馬拉松工具」，輸入指定的 Rank・Seed (或載入 Preset)，按下 ▶ 按鈕。在計時器走到 0.00 秒的那一瞬間「讀取中斷檔」，然後邊看工具邊跑地圖，用「開關戰歷」讓 該樓層的寶箱 開出想要的物品，或用「階段合わせ」讓 相鄰樓層的寶箱 開出想要的物品。</li>
 <li><strong class="h2m">中斷即開</strong>：隊伍 4 人「讀取中斷檔」之後，直接開 該樓層的寶箱，取得「中斷秒數 7 秒」的物品。(約 5% 機率偏移成「一人旅」的時機)</li>
@@ -2824,9 +2879,9 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <p style="margin-bottom:8px">※ 以前還有一種叫「曲芸」的方法：在特定位置 中斷存檔並讀檔後，走特定路線，①同一層樓 則觸碰目標箱後 開關戰歷 ②相鄰樓層 則階段合わせ之後 開目標箱，開出「特定秒數」的物品。難度非常高，未能普及。</p>
 <span><strong class="h2w">注意：</strong></span>
 <ul style="padding-left:20px;margin-bottom:16px">
-<li>部分非正版環境 (模擬器、燒錄卡、CFW 等) 下，隊伍 4 人的「中斷即開 (7 秒)」會高機率偏移成「一人旅 (6 秒)」或「初始值 (5 秒)」，使「即開」屬性的地圖 幾乎失去使用價值。</li>
+<li>部分非正版環境 (模擬器、燒錄卡、CFW 等) 下，隊伍 4 人的「中斷即開 (7 秒)」會高機率偏移成「一人旅 (6 秒)」或「初始値 (5 秒)」，使「即開」屬性的地圖 幾乎失去使用價値。</li>
 <li>「馬拉松」和「體感」也可能因 時機偏移 或 無法精確計時 而失敗。</li>
-<li>並非所有非正版環境 都會發生上述問題，但<strong class="h2leg">正版卡帶 絕對不會發生上述問題</strong>，因此若想把「馬拉松・即開・一人旅・體感」地圖的價值利用到最大，<strong class="h2leg">最好玩正版</strong>。</li>
+<li>並非所有非正版環境 都會發生上述問題，但<strong class="h2leg">正版卡帶 絕對不會發生上述問題</strong>，因此若想把「馬拉松・即開・一人旅・體感」地圖的價値利用到最大，<strong class="h2leg">最好玩正版</strong>。</li>
 </ul>
 <details class="h1det">
 <summary>📖 階段合わせ 的操作方法</summary>
@@ -2849,24 +2904,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <tr><td>9+4N</td><td>【N 為小數時】<br>到達目標樓層→<strong class="h2k">立即回上一層</strong>→中斷存檔<br>讀檔後，邊連打 A 邊按住上方向鍵，以最快速度 走 N 個來回<br>【N 為整數時】<br>到達目標樓層→中斷存檔<br>讀檔後，邊連打 A 邊按住上方向鍵，以最快速度 走 N 個來回</td></tr>
 </table>
 </details>
-<h3 class="h1sec">PPAP 技</h3>
-<h4 class=h1h4 style="margin-top:8px">甚麼是 PPAP 技？</h4>
-<p style="margin-bottom:8px">　2026 年，TKG 在開發亂數調整法的過程中，發現進入<strong class="h2k">「戰歷」→「思い出の仲間たち」</strong>時，<strong class="h2op">中斷技的計時器 (秒數) 會被重置為「內部時間 0 秒」</strong>。
-<br>　之後，TKG 將這個秘技命名為「PPAP 技」(源自「思い出の仲間たち」的英文名「<b>Pals Past &amp; Present</b>」首字母)，並發表給社群。發表後，在社群成員們的共同努力下，又發現了幾項特徵。詳細如下：</p>
-<ol style="padding-left:20px;margin-bottom:16px">
-<li>「秒數被重置的瞬間」是進入「思い出の仲間たち」時「畫面暗轉」的途中。</li>
-<li>用 B 鍵 以<strong>次快速度</strong> 關閉「思い出の仲間たち」再關閉「戰歷」，該樓層的秒數會變成「中斷秒數 9 秒 (內部時間 4 秒)」。重現性很高，發表當天就被實用化。
-<br>※用 B 鍵 or 觸控筆 以最快速度關閉的話，秒數會變成「中斷秒數 8 秒 (內部時間 3 秒)」，但不穩定。</li>
-<li>也可以不馬上關閉戰歷，改成像「體感」或「馬拉松」那樣使用。馬拉松工具 已用 4.6/4.7 秒作為起點 嘗試性支援 PPAP 馬拉松。</li>
-<li>這個「PPAP 技」單人有效，多人連線 (主機、客機皆然) 也有效。</li>
-<li><strong class=h2k>多人連線時，只要有人進入「思い出の仲間たち」就會重置所有人的 Timer</strong>，<strong class=h2op>但 關閉戰歷 or 階段合わせ (類似按下秒錶 LAP 鍵、更新秒數的操作) 只影響做這個操作的那台機本身。</strong>
-<br>因此 機器 A 進入「思い出の仲間たち」的同時 機器 B 關閉「戰歷」，機器 B 能取得「中斷秒數 5 秒 (內部時間 0 秒)」的物品，但 機器 A / 機器 C / 機器 D 不行。</li>
-</ol>
-<h4 class=h1h4 style="margin-top:8px">注意</h4>
-<ul style="padding-left:20px;margin-bottom:16px">
-<li>「思い出の仲間たち」<strong class="h2op">必須曾經參加過多人連線、並向其他成員的角色搭話之後 才會出現</strong>。</li>
-</ul>
-<h4 class=h1h4 style="margin-top:8px;margin-bottom:16px">本工具的 按鈕 使用說明</h4>
+<h3 class=h1sec>本工具的 按鈕 使用說明</h3>
 <strong class="h2btn">【即一人旅】</strong>
 <ul style="padding-left:20px;margin-bottom:16px;color:#fff">
 <li>找出在同一層樓中，能透過<strong class="h2m">「中斷即開」</strong>或<strong class="h2m">「一人旅」</strong>取得 2~3 個指定物品的地圖。</li>
