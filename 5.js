@@ -40,7 +40,7 @@ try{
 setupSolverWorker(m);
 const html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,
 m.render.mapDeft,m.render.canRound2,!!m.forceKillAll,
-m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,false,!!m.incomplete);
+m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,false,!!m.incomplete,m.render.userDeft);
 self.postMessage({type:'solveDone',solveId:m.solveId,html,
 comboMap:window._solverComboMap,buckets:window._solverBuckets,
 fallback:window._solverFallback||false,solvable:window._solverSolvable,

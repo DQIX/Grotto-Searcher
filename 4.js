@@ -30,9 +30,9 @@ mapData.calculateDetail();
 activeFloor=0;
 renderResult();
 }
-function calcR2N2(seed){
+function calcR2N2(seed){var _ios17,_ios18;
 const slots=Array.from({length:5},(_,bk)=>({gIdx:0,bk,rareThreshold:dropATThreshold(256),normalThreshold:dropATThreshold(128)}));
-const first=key=>scanDropPatternStarts(seed,key,slots,1,400,1)[0]?.start??-1;
+const first=key=>((_ios18=((_ios17=scanDropPatternStarts(seed,key,slots,1,400,1)[0])==null?void 0:_ios17.start))!=null?_ios18:-1);
 return{r2:first('R2'),r2_3:first('R2_3'),n2:first('N2')};
 }
 function classifyElistState(st){
@@ -156,9 +156,10 @@ renderFloor(f);
 }
 function getCanvasTilePoint(canvas,event){
 const rect=canvas.getBoundingClientRect();
+const point=event.touches&&event.touches[0]||event.changedTouches&&event.changedTouches[0]||event;
 return{
-x:Math.floor((event.clientX-rect.left)/TILE_SIZE),
-y:Math.floor((event.clientY-rect.top)/TILE_SIZE),
+x:Math.floor((point.clientX-rect.left)/TILE_SIZE),
+y:Math.floor((point.clientY-rect.top)/TILE_SIZE),
 };
 }
 function renderFloor(f){
@@ -234,7 +235,7 @@ infoHtml+='</div>';
 container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${canvasW}" height="${canvasH}" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div>${infoHtml}`;
 document.querySelector('.map-container').style.position='relative';
 const mapCanvas=document.getElementById('mapCanvas');
-mapCanvas.addEventListener('mousemove',(e)=>{
+const showMapCoordinate=(e)=>{
 const{x:mx,y:my}=getCanvasTilePoint(mapCanvas,e);
 const coordEl=document.getElementById('coordDisplay');
 if(mx>=0&&mx<w&&my>=0&&my<h){
@@ -249,7 +250,10 @@ mapCanvas.style.cursor=boxPositions.has(mx+','+my)?'pointer':'default';
 coordEl.textContent='';
 mapCanvas.style.cursor='default';
 }
-});
+};
+mapCanvas.addEventListener('mousemove',showMapCoordinate);
+mapCanvas.addEventListener('touchstart',showMapCoordinate,{passive:true});
+mapCanvas.addEventListener('touchmove',showMapCoordinate,{passive:true});
 const boxPositions=new Map();
 for(let i=0;i<boxCount;i++){
 const b=mapData.getBoxInfo(f,i);
@@ -959,10 +963,6 @@ if(b.dataset.lang===DISPLAY_LANG){b.style.background='#00A2E8';b.style.color='#f
 });
 const srDiv=document.getElementById('searchResults');
 if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
-const prefixEl=document.getElementById('cond_prefix');
-const suffixEl=document.getElementById('cond_suffix');
-const elistEl=document.getElementById('cond_elist');
-const onlyMonEl=document.getElementById('cond_only_mon');
 const seedInput=document.getElementById('seed');
 const rankSelect=document.getElementById('rank');
 if(seedInput){
@@ -1123,11 +1123,13 @@ const blob=new Blob([txtContent],{type:'text/plain;charset=utf-8'});
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');
 a.href=url;
-a.download=`DQ9_Search_Results_${new Date().getTime()}.txt`;
+const legacyIOS=/iP(?:hone|ad|od).*OS 12[_\.]/.test(navigator.userAgent);
+if(legacyIOS||!('download'in a)){a.target='_blank';a.rel='noopener';}
+else a.download=`DQ9_Search_Results_${new Date().getTime()}.txt`;
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
-URL.revokeObjectURL(url);
+setTimeout(()=>URL.revokeObjectURL(url),60000);
 }catch(error){
 alert(A07+error.message);
 console.error("匯出錯誤詳細資訊：",error);

@@ -1,3 +1,121 @@
+(function(){
+if(typeof document==='undefined'||!document.createElement||!document.body||
+!document.body.appendChild||!document.body.removeChild||
+!document.body.querySelectorAll||typeof MutationObserver!=='function')return;
+function supportsFlexGap(){
+var probe=document.createElement('div');
+probe.style.cssText='position:absolute;visibility:hidden;display:flex;flex-direction:column;row-gap:1px';
+probe.innerHTML='<i style="height:1px"></i><i style="height:1px"></i>';
+document.body.appendChild(probe);
+var supported=probe.scrollHeight===3;
+document.body.removeChild(probe);
+return supported;
+}
+function start(){
+if(supportsFlexGap())return;
+var selector='.header,.checkbox-field,.cb-pair,.chest-count-row,.si-grid,.si-field,'+
+'#solverPanel .sv-row,#solverPanel .sv-hdr,#marathonModal .mrt-topbar,'+
+'#marathonModal .mrt-tbg,.chest-count-row>label,[style*="gap:"]';
+var states=new WeakMap(),bases=new WeakMap(),applied=new WeakMap(),ownedStyle=new WeakMap();
+function base(child){
+var saved=bases.get(child);
+if(!saved){
+var css=getComputedStyle(child);
+saved=[css.marginTop,css.marginRight,css.marginBottom,css.marginLeft];
+saved.paddingTop=css.paddingTop;
+saved.paddingLeft=css.paddingLeft;
+bases.set(child,saved);
+}
+return saved;
+}
+function setStyle(el,key,value){
+var changes=applied.get(el);
+if(!changes){changes={};applied.set(el,changes);}
+var prior=changes[key];
+if(prior&&prior[0]===value&&el.style[key]===prior[1])return;
+if(el.style[key]!==value){
+el.style[key]=value;
+ownedStyle.set(el,el.getAttribute('style'));
+}
+changes[key]=[value,el.style[key]];
+}
+function setMargin(child,values){
+['marginTop','marginRight','marginBottom','marginLeft'].forEach(function(key,i){
+setStyle(child,key,values[i]);
+});
+}
+function add(value,gap){return gap?'calc('+value+' + '+gap+'px)':value;}
+function update(el){
+var state=states.get(el),css=getComputedStyle(el);
+if(css.display!=='flex'&&css.display!=='inline-flex')return;
+var row=parseFloat(css.rowGap)||0,col=parseFloat(css.columnGap)||0;
+if(!row&&!col)return;
+if(css.flexWrap!=='nowrap'){
+if(!state){
+state={paddingTop:css.paddingTop,paddingLeft:css.paddingLeft,
+marginTop:css.marginTop,marginLeft:css.marginLeft,width:el.style.width};
+states.set(el,state);
+}
+if(parseFloat(state.paddingLeft)>=col)setStyle(el,'paddingLeft',
+'calc('+state.paddingLeft+' - '+col+'px)');
+else{
+setStyle(el,'marginLeft','calc('+state.marginLeft+' - '+col+'px)');
+if(state.width==='100%')setStyle(el,'width','calc(100% + '+col+'px)');
+}
+if(parseFloat(state.paddingTop)>=row)setStyle(el,'paddingTop',
+'calc('+state.paddingTop+' - '+row+'px)');
+else setStyle(el,'marginTop','calc('+state.marginTop+' - '+row+'px)');
+Array.prototype.forEach.call(el.children,function(child){
+var margins=base(child);
+setMargin(child,[margins[0]==='auto'?'auto':add(margins[0],row),
+margins[1],margins[2],margins[3]==='auto'?'auto':add(margins[3],col)]);
+if(margins[0]==='auto'&&row)setStyle(child,'paddingTop',add(margins.paddingTop,row));
+if(margins[3]==='auto'&&col)setStyle(child,'paddingLeft',add(margins.paddingLeft,col));
+});
+}else{
+var previous=false,vertical=css.flexDirection.indexOf('column')===0;
+Array.prototype.forEach.call(el.childNodes,function(child){
+if(child.nodeType===3){if(child.textContent.trim())previous=true;return;}
+if(child.nodeType!==1)return;
+var margins=base(child),visible=getComputedStyle(child).display!=='none';
+setMargin(child,[add(margins[0],vertical&&previous&&visible?row:0),
+margins[1],margins[2],add(margins[3],!vertical&&previous&&visible?col:0)]);
+if(visible)previous=true;
+});
+}
+}
+function scan(root){
+if(root.nodeType!==1)return;
+if(root.matches(selector))update(root);
+Array.prototype.forEach.call(root.querySelectorAll(selector),update);
+}
+scan(document.body);
+var scheduled=false;
+function rescan(){
+if(scheduled)return;
+scheduled=true;
+setTimeout(function(){scheduled=false;scan(document.body);},0);
+}
+new MutationObserver(function(records){
+for(var i=0;i<records.length;i++){
+var record=records[i],target=record.target;
+if(record.type==='attributes'&&target.matches(selector)){
+if(record.attributeName==='style'&&ownedStyle.get(target)===target.getAttribute('style'))continue;
+rescan();return;
+}
+if(record.type!=='childList')continue;
+if(states.has(target)){rescan();return;}
+for(var j=0;j<record.addedNodes.length;j++){
+var node=record.addedNodes[j];
+if(node.nodeType===1&&(node.matches(selector)||node.querySelector(selector))){rescan();return;}
+}
+}
+}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+window.addEventListener('resize',rescan);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);
+else start();
+})();
 function refreshI18n(){
 document.querySelectorAll('[data-i18n]').forEach(el=>{
 const key=el.getAttribute('data-i18n');
@@ -120,7 +238,9 @@ const mR=document.getElementById('mrt_inRank');
 const mS=document.getElementById('mrt_inSeed');
 if(mR&&rStr)mR.value=rStr;
 if(mS)mS.value=seedHex;
-document.getElementById('result').scrollIntoView({behavior:'smooth'});
+const resultEl=document.getElementById('result');
+try{resultEl.scrollIntoView({behavior:'smooth'});}
+catch(err){resultEl.scrollIntoView(true);}
 if(jumpFloor!==undefined&&jumpFloor!==null&&jumpFloor!==-1){
 setTimeout(()=>{
 const tab=document.querySelectorAll('.floor-tab')[jumpFloor];
@@ -1006,9 +1126,10 @@ opt.textContent=formatName(md);
 select.appendChild(opt);
 }
 }
+const readAtEnvMR=()=>({envType:parseInt(document.getElementById('at_env').value),
+floorMR:parseInt(document.getElementById('at_mr').value)});
 function atUpd(){
-const envType=parseInt(document.getElementById('at_env').value);
-const floorMR=parseInt(document.getElementById('at_mr').value);
+const{envType,floorMR}=readAtEnvMR();
 const sel=document.getElementById('at_mon');
 sel.innerHTML='';
 const spawnList=getSpawnList(envType,floorMR);
@@ -1047,8 +1168,7 @@ for(const entry of spawnList)if(entry.length>=3&&atVal>=entry[1]&&atVal<=entry[2
 return null;
 }
 function updateATOnlyMonsters(){
-const envType=parseInt(document.getElementById('at_env').value);
-const floorMR=parseInt(document.getElementById('at_mr').value);
+const{envType,floorMR}=readAtEnvMR();
 document.querySelectorAll('.at-dynamic-mon').forEach(el=>{
 const atVal=parseInt(el.getAttribute('data-at'));
 if(!isNaN(atVal))el.textContent=getMonsterNameByAT(atVal,envType,floorMR);
@@ -1060,8 +1180,7 @@ const userDeft=(deftInput&&deftInput.value!=='')?parseInt(deftInput.value):999;
 const nInput=document.getElementById('at_n_input');
 const n=(nInput&&nInput.value!=='')?parseInt(nInput.value):0;
 const cN=atPopIndex(n);
-const envType=parseInt(document.getElementById('at_env').value);
-const floorMR=parseInt(document.getElementById('at_mr').value);
+const{envType,floorMR}=readAtEnvMR();
 document.querySelectorAll('.at-m-card').forEach(card=>{
 const seed=parseInt(card.getAttribute('data-seed'));
 const{atN,atN1}=getATPair(seed,cN);
@@ -1099,8 +1218,7 @@ isSearching=true;searchCancel=false;
 const btn=document.getElementById('atSearchBtn');
 btn.textContent='STOP';btn.style.background='#f44';btn.style.color='#fff';
 const restoreBtn=()=>{btn.textContent='M';btn.style.background='linear-gradient(135deg,#0ca,#065)';btn.style.color='#fff';};
-const monEnvType=parseInt(document.getElementById('at_env').value);
-const monFloorMR=parseInt(document.getElementById('at_mr').value);
+const{envType:monEnvType,floorMR:monFloorMR}=readAtEnvMR();
 const monId=document.getElementById('at_mon').value;
 const nVal=parseInt(document.getElementById('at_n_input').value);
 if(isNaN(nVal)||nVal<0){isSearching=false;restoreBtn();return;}
@@ -1238,7 +1356,7 @@ const L=DISPLAY_LANG;
 const legends=[
 ['⚔',L==='EN'?'Falcon Blade':L==='JP'?'はやぶさの剣':'隼劍'],
 ['🪡',L==='EN'?'Poison Needle':L==='JP'?'どくばり':'毒針'],
-['🎯',L==='EN'?'×1.1':L==='JP'?'×1.1':'×1.1'],
+[L==='EN'?'(weapon)':'(武器)',L==='EN'?'×1.1':L==='JP'?'×1.1':'×1.1'],
 ['🗡',L==='EN'?'Metal Slime Sword/Spear':L==='JP'?'メタスラの剣／やり':'金屬史萊姆劍／槍'],
 ['🌀',L==='EN'?'Attribeauty':'風林火山'],
 ['💨',L==='EN'?'Miss (AT consumed)':L==='JP'?'ミス (AT消費あり)':'Miss (AT 照常消耗)'],
@@ -1264,6 +1382,18 @@ updateSeedInspector();
 window._solverComboMap={};
 window._solverComboId=0;
 window._solverBucketId=0;
+function showBlockFallback(bucketId){
+const st=window._solverBuckets&&window._solverBuckets[bucketId];
+if(!st||!st.blocked)return;
+const rows=document.getElementsByClassName(bucketId+'_row');
+for(let i=0;i<st.init;i++){if(rows[i])rows[i].style.display='';}
+st.shown=st.init;
+st.blocked=false;
+const blkEl=document.getElementById(bucketId+'_blk');
+if(blkEl)blkEl.style.display='none';
+const moreEl=document.getElementById(bucketId+'_more');
+if(moreEl&&st.shown<st.total)moreEl.style.display='';
+}
 function showMoreCombos(bucketId){
 const st=window._solverBuckets&&window._solverBuckets[bucketId];
 if(!st)return;
@@ -1290,17 +1420,10 @@ el.style.display='block';
 function renderSolverSimTrace(data){
 if(data.neutralConditions)return renderSolverNeutralDetails(data);
 const{combo,killTargets,assign,defend}=data;
-if(!killTargets?.length)return'<div style="color:#666;font-size:9px;margin-left:24px;">—</div>';
-if(!data.battleProof&&!document.getElementById('si_useStats')?.checked)
+if(!(killTargets==null?void 0:killTargets.length))return'<div style="color:#666;font-size:9px;margin-left:24px;">—</div>';
+if(!data.battleProof)
 return'<div style="color:#888;font-size:9px;margin-left:24px;">'+L19+'</div>';
-const chars=data.battleProof?.party||readCharStatsFromDom();
-let proof=data.battleProof;
-if(!proof){
-const out={},hex=killTargets[0].hex;
-const rating=checkSolverDamage(combo,hex,getMonDB(hex),killTargets,1,null,out,
-assign,data.eggAssign,chars,{captureActions:true});
-proof={...out,party:chars,rating};
-}
+const proof=data.battleProof,chars=proof.party;
 const eggAssign=proof.eggAssign||data.eggAssign;
 const eggTargets=solverConditionEggTargets(combo,eggAssign,proof.assign||assign,chars.length);
 const rows=new Map((proof.actionResults||[]).map(r=>[r.ci,r]));
@@ -1339,9 +1462,9 @@ html+=lead+'<span style="color:#0ff;">'+sn(a)+'</span>'+atStr+' → '+
 continue;
 }
 const kind=SolverActionGate.targetKind(lookupSkill(a.jp)),hits=SolverActionGate.hits(a);
-const mul=eggAssign?.[ci]||1,metalOnly=row.targets.every(t=>isMetalHex(t.hex));
+const mul=(eggAssign==null?void 0:eggAssign[ci])||1,metalOnly=row.targets.every(t=>isMetalHex(t.hex));
 const mulStr=mul>1?'<span style="color:#ff0;">×'+mul+
-(metalOnly?'':'＋'+tensionFlat(mul,char?.lv||99))+'</span>':'';
+(metalOnly?'':'＋'+tensionFlat(mul,(char==null?void 0:char.lv)||99))+'</span>':'';
 const count=(kind==='A'||kind==='G')?' · '+T('Hits per enemy','每隻擊數','1体あたりの攻撃回数')+' '+hits+
 ' · '+T('Targets hit','命中','命中')+' '+row.targets.length+' '+T('enemies','隻','体'):' · '+L65+' '+hits;
 const detail=row.targets.map(t=>{
@@ -1354,9 +1477,9 @@ return names[t.index]+': '+hpRange(before)+'→<span style="color:'+
 html+=lead+'<span style="color:#ccc;">'+sn(a)+'</span>'+mulStr+' ['+kind+']'+atStr+count+' → '+
 detail+L27+remainingText(row.remaining)+'</div>';
 }
-if(defend?.length)html+='<div style="color:#789;margin-top:1px;">'+L34+
+if((defend==null?void 0:defend.length))html+='<div style="color:#789;margin-top:1px;">'+L34+
 defend.map(i=>charLabel(chars[i])).join(', ')+'</div>';
-return html+'</div>';
+return html+renderSolverPlanVariantRows(data)+'</div>';
 }
 function siBuildSeqHtml(seqArray){
 const _GC=[
@@ -1402,7 +1525,7 @@ patSel.options.add(new Option(pair[1],pair[0]));
 });
 }
 }
-function updateSeedInspector(){
+function updateSeedInspector(){var _ios15,_ios16;
 window._siBuckets=null;
 const seedHex=document.getElementById('si_seed').value.trim()||'0000';
 const seed=parseInt(seedHex,16);
@@ -1433,7 +1556,6 @@ const targetTotalStep=parseInt(document.getElementById('si_target_step').value)|
 const pSelect=document.getElementById('si_pattern');
 const pTypeStr=pSelect.value;
 const pType=AT_PAT[pTypeStr]||0;
-const pText=pSelect.options[pSelect.selectedIndex].text;
 if(isNaN(seed))return;
 const N=atPopIndex(n);
 const{atN:atN_val,atN1:atN1_val}=getATPair(seed,N);
@@ -1441,7 +1563,7 @@ const monName=getMonsterNameByAT(atN_val,envType,floorMR);
 const monId=getMonsterIdByAT(atN_val,envType,floorMR);
 const _md=monId?MONSTER_DB[monId]:null;
 const encounterModel=getEncounterModel(envType,floorMR,monId);
-const _isAlone=!!encounterModel?.isAlone;
+const _isAlone=!!(encounterModel==null?void 0:encounterModel.isAlone);
 if(_isAlone)groupSize=1;
 const grpSel=document.getElementById('si_group_size');
 grpSel.disabled=_isAlone;
@@ -1516,7 +1638,7 @@ const _solverMercyLv=(_solverOpt.chars&&_solverOpt.chars.length)
 ?Math.max(..._solverOpt.chars.map(c=>c.lv||99)):99;
 const _fleeProbes=[];
 const _atForT=(t)=>battleATForCount(budgets,t);
-const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,canRound2});
+const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,userDeft,canRound2});
 const _fleeState=(mg,t)=>{
 if(_atForT(t)<0)return'flee';
 const task=_fleeTask(mg,t);
@@ -1547,7 +1669,7 @@ const labels=mg.slice(1).map(s=>mergedSpeciesLabel(s));
 const supText=labels.length?'+'+labels.join('+'):'';
 const mainPrefix=mainTag+(labels.length?' ':'');
 const supTag=labels.length?`<span style="color:#a8f">${supText}</span>`:'';
-const hp=labels.length===1?(getMonDB(mg[1].hex)?.s[0]??0):null;
+const hp=labels.length===1?(((_ios16=((_ios15=getMonDB(mg[1].hex))==null?void 0:_ios15.s[0]))!=null?_ios16:0)):null;
 const base=mainPrefix+(hp===null?supTag:`<span style="color:#a8f">${supText} HP${hp}</span>`);
 const fleeDesc=mainPrefix+supTag+(hp===null?'':` <span style="color:#f44">HP${hp}</span>`)+pTag;
 const killAllDesc=base+_pendTag(state)+pTag;
@@ -1560,7 +1682,7 @@ const desc=mainPrefix+supTag+`<span style="color:#0f0"> ${label}→×${plan.effM
 _addResult(T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
 }
 }
-window._siBuckets={d1,d2,d4,monId,mapDeft,canRound2,hexId,mainDeath,resultsByT,useJP,
+window._siBuckets={d1,d2,d4,monId,mapDeft,userDeft,canRound2,hexId,mainDeath,resultsByT,useJP,
 encounters,singleEncounter:encounters.find(e=>e.total===1)};
 if(_fleeProbes.length){
 Promise.all(_fleeProbes.map(t=>requestFleeVerdict(t,_solverOpt)))
@@ -1630,7 +1752,7 @@ return[c.slot,c.lv,c.job,c.agi,s.atk,s.might,s.str,s.mending,s.deft].join(',');
 function solverResultCacheKey(render,options){
 const canRound2=solverAllowsRound2(render.mapDeft,render.canRound2);
 const charSig=options.useStats?solverCharsSig(options.chars):'neutral';
-return[DISPLAY_LANG,render.monId,render.bat,canRound2?1:0,
+return[DISPLAY_LANG,render.monId,render.bat,canRound2?1:0,render.userDeft,render.mapDeft,
 options.useStats?1:0,options.multiPlayer?1:0,charSig,
 (render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')
 ].join('|');
@@ -1767,7 +1889,7 @@ const finalRender=async(extra)=>{
 const result=await queueSolverWorkerMessage(Object.assign({},common,{
 type:'solve',render,idBase,bucketBase,incomplete:searchIncomplete
 },extra||{}),true);
-searchIncomplete||=!!result.incomplete;
+(searchIncomplete||(searchIncomplete=!!result.incomplete));
 return result;
 };
 const ensureCurrent=()=>{
@@ -1778,7 +1900,7 @@ const spec=prepareParallelSolverSpec(render,options,'killAll',stage);
 if(!spec)return null;
 return runParallelSolverShards('solveKillAllShard',spec,common,pool,solveGen);
 };
-const work=(async()=>{
+const execute=async()=>{
 const planInfo=prepareParallelSolverSpec(render,options,'plan');
 const planType=planInfo&&planInfo.plan?planInfo.plan.planType:'kill_all';
 const isFallbackPath=planType!=='kill_all';
@@ -1812,14 +1934,27 @@ result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
 prebuiltKillAll:null});ensureCurrent();
 }else{
 const all=Object.assign({},killAllR1||{},r2,{r1:[],
-incomplete:!!(killAllR1?.incomplete||r2.incomplete)});
+incomplete:!!((killAllR1==null?void 0:killAllR1.incomplete)||r2.incomplete)});
 result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
 prebuiltKillAll:all,deferKillAll:false});ensureCurrent();
 }
 }
 if(result&&(planType!=='kill_all'||result.fallback))result.fallback=!!result.fallback;
 return result;
-})();
+};
+const blockedExecute=async()=>{
+const main=await execute();ensureCurrent();
+if(!main||main.solvable===true
+||!(solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0))return main;
+common.dom.si_blockFallback=true;
+try{
+const fallback=await execute();ensureCurrent();
+if(!fallback||fallback.solvable!==true)return main;
+if(main.incomplete)fallback.incomplete=true;
+return fallback;
+}finally{common.dom.si_blockFallback=false;}
+};
+const work=blockedExecute();
 const pending={gen:solveGen,promise:null};
 pending.promise=work.then(result=>{
 ensureCurrent();
@@ -1846,7 +1981,6 @@ const err=new Error(reason||'Solver cancelled');
 err.code=SOLVER_CANCELLED;
 return err;
 }
-const isSolverCancellation=(err)=>!!err&&err.code===SOLVER_CANCELLED;
 const fleeFailureFallback=()=>null;
 function cancelAllSolveTasks(reason){
 _siSolveGen++;
@@ -1875,16 +2009,34 @@ for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);replaceSolveWorker(wi);
 _siSolveBusy.clear();
 }
 function runSolveTaskOnMain(render,idBase,bucketBase){
+const run=()=>{
 window._solverComboId=idBase;
 window._solverBucketId=bucketBase;window._solverFallback=false;window._solverSolvable=null;
 window._solverNeedsKillAll=null;
-const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2);
+const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2,
+false,null,null,false,false,false,render.userDeft);
 return{html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable,incomplete:_solverSearchIncomplete};
+};
+const main=run();
+if(main.solvable===true||!(solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0))return main;
+let flag=document.getElementById('si_blockFallback');
+if(!flag){
+flag=document.createElement('input');
+flag.type='checkbox';flag.id='si_blockFallback';flag.hidden=true;
+document.body.appendChild(flag);
+}
+flag.checked=true;
+try{
+const fallback=run();
+if(fallback.solvable!==true)return main;
+if(main.incomplete)fallback.incomplete=true;
+return fallback;
+}finally{flag.checked=false;}
 }
 const snapshotSolverOptions=()=>({
 chars:readCharStatsFromDom(),
-useStats:!!document.getElementById('si_useStats')?.checked,
-multiPlayer:!!document.getElementById('si_multiPlayer')?.checked
+useStats:solverUseStatsEnabled(),
+multiPlayer:solverMultiPlayerEnabled()
 });
 const _fleeVerdict=new Map();
 const _fleePending=new Map();
@@ -1928,16 +2080,17 @@ bat:b.d1,
 monGroups:b.singleEncounter.monGroups,
 monId:b.monId,
 mapDeft:b.mapDeft,
+userDeft:b.userDeft,
 canRound2:b.canRound2
 }):null;
 function ensureSolverSubmodal(){
 if(document.getElementById('si_submodal'))return;
 const ov=document.createElement('div');
 ov.id='si_submodal';
-ov.style.cssText='display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;padding:18px;overflow:auto;';
+ov.style.cssText='display:none;position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:10001;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;padding:18px;overflow:auto;';
 ov.onclick=(e)=>{if(e.target===ov)closeSolverBucket();};
 ov.innerHTML='<div onclick="event.stopPropagation()" style="background:#0a0a1a;border:1px solid #0ff;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:14px;box-shadow:0 0 24px rgba(0,255,255,0.25);">'
-+'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:sticky;top:0;background:#0a0a1a;padding-bottom:6px;border-bottom:1px solid #224;">'
++'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:-webkit-sticky;position:sticky;top:0;background:#0a0a1a;padding-bottom:6px;border-bottom:1px solid #224;">'
 +'<span id="si_submodal_title" style="color:#0ff;font-size:14px;font-weight:bold;"></span>'
 +'<span onclick="closeSolverBucket()" style="cursor:pointer;color:#999;font-size:22px;line-height:1;padding:0 4px;">&times;</span>'
 +'</div><div id="si_submodal_body"></div></div>';
@@ -1950,7 +2103,10 @@ if(ov){ov.style.display='none';const b=document.getElementById('si_submodal_body
 }
 function solverTaskOutputSignature(htmlStr,useStats){
 const rawHtml=htmlStr||'<div style="color:#666;font-size:10px;margin-left:16px;">—</div>';
-const comboIds=[...rawHtml.matchAll(/expandCombo\((\d+)\)/g)].map(m=>m[1]);
+const comboIds=[];
+const comboPattern=/expandCombo\((\d+)\)/g;
+let comboMatch;
+while((comboMatch=comboPattern.exec(rawHtml))!==null)comboIds.push(comboMatch[1]);
 const htmlSig=rawHtml
 .replace(/expandCombo\(\d+\)/g,'expandCombo(#)')
 .replace(/combo_detail_\d+/g,'combo_detail_#')
@@ -1964,13 +2120,13 @@ return out;
 }
 return v;
 };
+const rowSig=(r)=>[solverComboActionSignature(r.combo),JSON.stringify(stable(r.eggAssign||null)),
+JSON.stringify(stable(r.assign||null)),JSON.stringify(stable(r.defend||null)),
+useStats?(r.outcomeSig||''):''].join('\x1d');
 const detailSig=comboIds.map(id=>{
 const e=window._solverComboMap&&window._solverComboMap[id];
 if(!e)return'missing:'+id;
-const actionSig=solverComboActionSignature(e.combo);
-const traceSig=useStats?(e.outcomeSig||''):'';
-return[actionSig,JSON.stringify(stable(e.eggAssign||null)),JSON.stringify(stable(e.assign||null)),
-JSON.stringify(stable(e.defend||null)),traceSig].join('\x1d');
+return[rowSig(e),...(e.planVariants||[]).map(rowSig),e.planVariantsHidden||0].join('\x1e');
 }).join('\x1c');
 return htmlSig+'\x1b'+detailSig;
 }
@@ -2013,7 +2169,7 @@ const taskNo=tasks.length;
 const rowId='si_solver_pattern_'+viewGen+'_'+taskNo;
 const descId=rowId+'_desc';
 html+=`<div id="${rowId}"><div id="${descId}" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">${m.desc}</div>`;
-_queueTask({bat:tBat,monGroups:m.monGroups||[{hex:b.hexId,count:m.effMon,death:b.mainDeath,isMain:true}],monId:b.monId,mapDeft:b.mapDeft,canRound2:b.canRound2},
+_queueTask({bat:tBat,monGroups:m.monGroups||[{hex:b.hexId,count:m.effMon,death:b.mainDeath,isMain:true}],monId:b.monId,mapDeft:b.mapDeft,userDeft:b.userDeft,canRound2:b.canRound2},
 {pattern:true,section:'T'+T,rowId,descId,desc:m.desc,
 fleeDesc:m.fleeDesc||m.desc,fleeOrder:m.order,killAllDesc:m.killAllDesc});
 html+='</div>';
@@ -2066,7 +2222,7 @@ if(viewGen!==_siSolveGen)return;
 if(!stateAlreadyMerged)_mergeState(result);
 const verdict=cacheFleeVerdictResult(tasks[i],options,result);
 const meta=taskMeta[i];
-if((verdict===false||verdict===null)&&meta?.pattern){
+if((verdict===false||verdict===null)&&(meta==null?void 0:meta.pattern)){
 taskResults[i]={html:'',flee:true};
 const section=fleeSections.get(meta.section);
 if(section){
@@ -2087,7 +2243,7 @@ const resultHtml=(verdict===false||verdict===null)
 ?`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span></div>`
 :(result&&result.html!==undefined?result.html:'');
 taskResults[i]={html:resultHtml,flee:false};
-if(verdict==='fallback'&&taskMeta[i]?.killAllDesc){
+if(verdict==='fallback'&&(taskMeta[i]==null?void 0:taskMeta[i].killAllDesc)){
 const descEl=document.getElementById(taskMeta[i].descId);
 const fbDesc=taskMeta[i].killAllDesc+' <span style="color:#fa0;font-size:9px;" title="mercy/KMC → kill all">⚡</span>';
 if(descEl)descEl.innerHTML=fbDesc;

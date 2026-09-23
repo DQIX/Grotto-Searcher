@@ -1,3 +1,4 @@
+var _ios1,_ios2;
 let DISPLAY_LANG='EN';
 let _L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
 function T(en,tw,jp){const a=[en,tw,jp];a.toString=a.valueOf=function(){return this[_L];};return a;}
@@ -108,6 +109,7 @@ const L13=T('Turn 2','第 2 回合','2ターン目');
 const L14=T('Details','詳情','詳細');
 const L15=T('⚠ 2T (5–8 moves) AT +n/2 or +0 when entering Turn-2','⚠ 2T (5-8 招) 進入第 2 回合時 AT +n/2 或 +0','⚠ 2T (5～8手) 2ターン目に突入するとき AT +n/2 または +0');
 const L16=T(' more ▾',' 個組合 ▾','件をさらに表示 ▾');
+const L17=T('No 100% anti-block under these stats — click for alternatives','此條件下無法100% anti-block，點擊查看替代方案','この条件では 100% 盾貫通不可 — 代替案を表示');
 const L18=T('max','最大','最大');
 const L19=T('Neutral conditions do not use the current character panel.','中立條件不使用目前角色面板。','中立条件では現在のキャラのステータスを使用しません。');
 const L20=T('Character ','角色','キャラ');
@@ -116,16 +118,12 @@ const L22=T('Move ','第','第');
 const L23=T(' ','招 ','手 ');
 const L24=T(' removed by Mercy',' 被 Mercy 移除',' みのがすで離脱');
 const L25=T('Ineffective','無效','無効');
-const L26=T('(Using Mercy is not allowed before defeating at least one main monster.)','(幹掉至少一隻主怪前，不允許使用 Mercy)','(メインモンスターを最低限 1 匹倒していないため、みのがすで逃がせるのは許可されない)');
 const L27=T(' → Remaining: ',' → 剩餘：',' → 残り：');
 const L28=T('✓Cleared','✓清場','✓クリア');
-const L29=T('Boosts ','加成給 ','強化対象：');
 const L30=T('(Fource active)','(Fource 啟動)','（フォース発動）');
-const L31=T('💀Metal KO','💀金屬必殺','💀メタル必殺');
 const L32=T('💀Guaranteed KO','💀確殺','💀確実に倒す');
 const L33=T('⚠Possible KO','⚠可能殺','⚠乱数で倒す');
 const L34=T('Defend: ','防禦：','防御：');
-const L35=T('KO all','全部幹掉','全滅');
 const L36=T('①KO 1 main monster ②Mercy','①幹掉1隻主怪 ②Mercy','①メインを1体倒す ②みのがす');
 const L37=T('①KO main monster ②Mercy','①幹掉主怪 ②Mercy','①メインを倒す ②みのがす');
 const L38=T('①KO main monster ②Mercy ③KO the rest','①幹掉主怪 ②Mercy ③清場','①メインを倒す ②みのがす ③全滅');
@@ -143,7 +141,6 @@ const L49=T('M.Might','攻擊魔力','攻撃魔力');
 const L50=T('Agility','速度','すばやさ');
 const L51=T('M.Mend','回復魔力','回復魔力');
 const L60=T('Conditions','成立條件','成立条件');
-const L61=T('See conditions','有成立條件','成立条件あり');
 const L64=T('Equipment','裝備','装備');
 const L65=T('Hits','擊數','ヒット数');
 const L66=T('Early-stop variant: KO on the last listed hit.','早停形態：必須在所列最後一擊擊殺。','早期終了形態：記載の最終ヒットで倒すこと。');
@@ -155,7 +152,6 @@ const L72=T('Use these values together, at Lv99 and in the listed agility order 
 const L73=T('Verified result','驗證結果','検証結果');
 const L75=T('Agility rank','速度順位','素早さ順位');
 const L76=T('Turn 1','第 1 回合','1ターン目');
-const L77=T('Character','角色','キャラ');
 const L78=T('No requirement','無要求','不要');
 const STR_SOLO=T('Solo','一人旅','一人旅');
 const STR_PARTY=T('Party','即開','即開');
@@ -931,11 +927,8 @@ this._details2[d[i14+9]-1]++;
 }
 get floorCount(){return this._details[1];}
 get monsterRank(){return this._details[2];}
-get mapLevel(){return this._details[4];}
 get mapTypeName(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][0]:"Unknown";}
 get mapTypeNameJP(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][1]:"不明";}
-get mapTypeIndex(){return this._details[3]-1;}
-get bossIndex(){return this._details[0]-1;}
 get bossName(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][0]:"Unknown";}
 get bossNameJP(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][2]:"不明";}
 get mapName(){
@@ -1188,15 +1181,15 @@ const MONSTER_DB={
 "14B":{t:8,en:"Slugly Betsy",jp:"うみうしひめ",g:16,s:[1477,404,236,0,0,150,50,100,100,50,150,100,0,60,170],d:["Watermaul wand",64,"Nomadic deel",128]},
 "14D":{t:2,en:"Hell's Gatekeeper",jp:"ヘルガーディアン",g:20,s:[996,535,645,0,4,100,100,100,150,100,75,150,50,98,115],d:[81,64,80,128]},
 "14E":{t:2,en:"Wishmaster",jp:"ギリメカラ",g:12,s:[663,513,563,0,0,100,150,100,100,50,50,150,50,77,96],d:[71,32,"Holy femail",128]},
-"025":{t:8,en:"Jinkster",jp:"ひとつめピエロ",s:[60,50,60,2,0,100,100,100,100,100,100,125,100,14,78],d:[0,256,0,256]},
+"025":{t:8,en:"Jinkster",jp:"ひとつめピエロ",s:[60,50,60,2,0,100,100,100,100,100,100,125,100,14,78],d:[17,32,"Pointy hat",64]},
 "032":{t:12,en:"Gum Shield",jp:"ビッグフェイス",s:[80,80,101,0,4,100,100,100,100,100,100,125,75,18,81],d:["Light shield",64,"Iron broadsword",128]},
-"04B":{t:0,en:"Slime Stack",jp:"スライムタワー",s:[177,93,68,0,0,100,100,100,125,100,200,100,50,14,102],d:[0,256,0,256]},
+"04B":{t:0,en:"Slime Stack",jp:"スライムタワー",s:[177,93,68,0,0,100,100,100,125,100,200,100,50,14,102],d:["Slimedrop",8,"Slime earrings",32]},
 "054":{t:11,en:"Brrearthenwarrior",jp:"ふゆしょうぐん",s:[125,125,135,0,4,150,50,100,100,75,100,100,50,27,105],d:["Ice crystal",32,"Ice shield",256]},
-"05C":{t:3,en:"Weaken Beakon",jp:"デッドペッカー",s:[78,72,90,0,0,100,150,75,100,125,100,100,75,19,88],d:[0,256,0,256]},
+"05C":{t:3,en:"Weaken Beakon",jp:"デッドペッカー",s:[78,72,90,0,0,100,150,75,100,125,100,100,75,19,88],d:["Flurry feather",16,"Crow's claws",128]},
 "064":{t:2,en:"Tearwolf",jp:"キラーリカント",s:[136,121,125,0,0,100,75,100,125,100,100,100,50,27,112],d:["Magic beast hide",8,"Cloak of evasion",64]},
-"08A":{t:4,en:"Treeface",jp:"じんめんじゅ",s:[95,83,78,2,0,125,100,100,100,100,100,100,100,18,63],d:[0,256,0,256]},
+"08A":{t:4,en:"Treeface",jp:"じんめんじゅ",s:[95,83,78,2,0,125,100,100,100,100,100,100,100,18,63],d:[14,32,20,64]},
 "0AD":{t:11,en:"Stone Guardian",jp:"だいまじん",s:[255,160,255,0,0,75,75,150,100,100,75,100,0,11,102],d:[49,64,123,256]},
-"100":{t:5,en:"Crabid",jp:"ぐんたいガニ",s:[72,72,83,0,0,100,100,100,100,100,150,150,100,16,15],d:[0,256,0,256]},
+"100":{t:5,en:"Crabid",jp:"ぐんたいガニ",s:[72,72,83,0,0,100,100,100,100,100,150,150,100,16,15],d:["Tortoiseshell",16,"Crimson coral",64]},
 };
 const G_VALUES={
 1:[0,116,132,128,128,144,132,140,124,128,124,132,140],
