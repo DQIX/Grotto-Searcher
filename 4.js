@@ -711,7 +711,7 @@ else{isModalDragging=true;}
 });
 window.addEventListener(window.PointerEvent?'pointerup':'mouseup',(e)=>{
 const target=document.elementFromPoint(e.clientX,e.clientY);
-if(!isModalDragging&&allModalIds.includes(target?.id)){target.style.display='none';}
+if(!isModalDragging&&target&&allModalIds.includes(target.id)){target.style.display='none';}
 isModalDragging=false;
 });
 function exportSearchResults(){
