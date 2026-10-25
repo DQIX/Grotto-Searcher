@@ -1,26 +1,24 @@
 const TILE_SIZE=22;
 const COLORS={
 0:'#f5f0e0',
-1:'#000',
 2:'#e8e0c8',
-3:'#000',
 4:'#4c4',
 5:'#f44',
 6:'#ffd700',
-8:'#ccd8c0',
+8:'#ccd8c0'
 };
 const WALL_COLOR='#000';
 let mapData=null;
 let activeFloor=0;
 function calculate(){
-const safeZone=document.getElementById('controls_container');
-const controlsDiv=document.getElementById('single_map_controls');
+const safeZone=byId('controls_container');
+const controlsDiv=byId('single_map_controls');
 if(safeZone&&controlsDiv){safeZone.appendChild(controlsDiv);}
-const seedStr=document.getElementById('seed').value.trim();
+const seedStr=uiVal('seed').trim();
 const seed=parseInt(seedStr,16);
-const rank=parseInt(document.getElementById('rank').value);
+const rank=parseInt(uiVal('rank'));
 if(isNaN(seed)||seed<0||seed>0x7FFF||!/^[0-9a-fA-F]{1,4}$/.test(seedStr)){
-document.getElementById('result').innerHTML='<div class="error">'+C17+'</div>';
+byId('result').innerHTML='<div class="error">'+C17+'</div>';
 return;
 }
 mapData=new GrottoDetail();
@@ -30,23 +28,13 @@ mapData.calculateDetail();
 activeFloor=0;
 renderResult();
 }
-function calcR2N2(seed){var _ios17,_ios18;
-const slots=Array.from({length:5},(_,bk)=>({gIdx:0,bk,rareThreshold:dropATThreshold(256),normalThreshold:dropATThreshold(128)}));
-const first=key=>((_ios18=((_ios17=scanDropPatternStarts(seed,key,slots,1,400,1)[0])==null?void 0:_ios17.start))!=null?_ios18:-1);
+function calcR2N2(seed){
+const slots=Array.from({length:5},(_,bk)=>({gIdx:0,bk,rareThreshold:dropATThreshold(DEFAULT_RARE_RATE),normalThreshold:dropATThreshold(DEFAULT_NORMAL_RATE)}));
+const first=key=>{const r=scanDropPatternStarts(seed,key,slots,1,400,1)[0];return r?r.start:-1;};
 return{r2:first('R2'),r2_3:first('R2_3'),n2:first('N2')};
 }
-function classifyElistState(st){
-st=''+st;
-if(st.includes(''+EL_0)&&!st.includes(''+EL_P))return{kind:'none'};
-if(st.includes('only')||st.includes('オンリー'))return{kind:'only'};
-if(st.includes(''+EL_4))return{kind:'reduced',count:4};
-if(st.includes(''+EL_3))return{kind:'reduced',count:3};
-if(st.includes(''+EL_2))return{kind:'reduced',count:2};
-if(st.includes(''+EL_P))return{kind:'partial'};
-return{kind:'normal'};
-}
 function renderResult(){
-const el=document.getElementById('result');
+const el=byId('result');
 if(!mapData||mapData.floorCount===0){
 el.innerHTML='<div class="error">'+C18+'</div>';
 return;
@@ -65,12 +53,7 @@ locHtmlString=locStrings.join('<br>');
 }else{
 locHtmlString=C19;
 }
-let currentSeed=mapData.MapSeed;
-const atValues=[];
-for(let i=1;i<=37;i++){
-currentSeed=lcg(currentSeed);
-if(i>=35&&i<=37)atValues.push((currentSeed>>>16)&0x7FFF);
-}
+const atValues=[35,36,37].map(i=>atFromRng(advanceATRng(mapData.MapSeed,i)));
 const atHtmlString=`[35] ${atValues[0]}<br>[36] ${atValues[1]}<br>[37] ${atValues[2]}`;
 const rn=calcR2N2(mapData.MapSeed);
 const fmtRN=v=>v===-1?`<span style="color:#555;">—</span>`:`<span style="color:#0f0;">${v}</span>`;
@@ -83,54 +66,38 @@ const totalBoxes=boxData.total;
 let boxCountHtmlArr=[];
 for(let r=10;r>=1;r--){
 if(boxCounts[r]>0){
-let bg="#6b7490";
-if(r===10)bg="#caa64a";
-else if(r===9)bg="#c018a0";
-else if(r===8)bg="#4a8fd4";
-else if(r===7)bg="#B5E61D";
-else if(r===6)bg="#4a9e9e";
-else if(r===5)bg="#6aaa7a";
-else if(r===4)bg="#8a8a6a";
-else if(r===3)bg="#d48a3d";
-else if(r===1)bg="#8a7490";
-boxCountHtmlArr.push(`<span style="margin-right:5px;display:inline-flex;align-items:center;gap:3px;font-size:12px;"><span style="background:${bg};color:#000;font-size:9px;font-weight:700;width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;border-radius:2px;">${CHEST_RANK[r]}</span><span style="color:#fff;font-weight:500;">${boxCounts[r]}</span></span>`);
+boxCountHtmlArr.push(`<span style="margin-right:5px;display:inline-flex;align-items:center;gap:3px;font-size:12px;"><span class="rank-${CHEST_RANK[r]}" style="color:#000;font-size:9px;font-weight:700;width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;border-radius:2px;">${CHEST_RANK[r]}</span><span style="color:#fff;font-weight:500;">${boxCounts[r]}</span></span>`);
 }
 }
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
+const nm=(l,a,b)=>`<span style="display:inline-flex;align-items:flex-start;"><span>${l}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${a}</span><span style="display:block;color:#ffd700">${b}</span></strong></span>`;
+const col=(l,c,ta,h)=>`<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${l}:
+<strong style="display:block;${c}font-family:monospace;font-size:12px;margin-top:2px;${ta}">${h}</strong>
+</span>`;
 let html=`<div class="info-bar">
-    <span>Rank: <strong>${rStr}</strong></span>
-    <span>Seed: <strong>${seedHex}</strong></span>
-    <span style="display:inline-flex;align-items:flex-start;"><span>${C01}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapName}</span><span style="display:block;color:#ffd700">${mapData.mapNameJP}</span></strong></span>
-    <span style="display:inline-flex;align-items:flex-start;"><span>${C02}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.mapTypeName}</span><span style="display:block;color:#ffd700">${mapData.mapTypeNameJP}</span></strong></span>
-    <span>${C03}: <strong>${mapData.monsterRank}</strong></span>
-    <span>${C04}: <strong>${mapData.floorCount}</strong></span>
-    <span style="display:inline-flex;align-items:flex-start;"><span>Boss:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${mapData.bossName}</span><span style="display:block;color:#ffd700">${mapData.bossNameJP}</span></strong></span>
-
-    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C05}:
-    <strong style="display:block;color:#0ff;font-family:monospace;font-size:12px;margin-top:2px;">${locHtmlString}</strong>
-    </span>
-    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C06}:
-    <strong style="display:block;color:#4c4;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${atHtmlString}</strong>
-    </span>
-    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${C07}:
-    <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${rnHtml}</strong>
-    </span>
-    <span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">A*:
-    <strong style="display:block;font-family:monospace;font-size:12px;margin-top:2px;text-align:left;">${wHtml}</strong>
-    </span>
-    </div>
-
-    <div class="info-bar" style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
-    <span style="color:#88b;font-weight:bold;white-space:nowrap;">${C08}</span>
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;min-width:0;">
-    ${boxString}
-    </div>
-    <span style="white-space:nowrap;padding-left:8px;border-left:2px solid #4a4a8a;color:#8cc8ff;font-weight:bold;">📦 ${totalBoxes}</span>
-    <div id="controls_target_area" style="display:flex;align-items:center;"></div>
-    </div>`;
+<span>Rank: <strong>${rStr}</strong></span>
+<span>Seed: <strong>${seedHex}</strong></span>
+${nm(C01,mapData.mapName,mapData.mapNameJP)}
+${nm(C02,mapData.mapTypeName,mapData.mapTypeNameJP)}
+<span>${C03}: <strong>${mapData.monsterRank}</strong></span>
+<span>${C04}: <strong>${mapData.floorCount}</strong></span>
+${nm('Boss',mapData.bossName,mapData.bossNameJP)}
+${col(C05,'color:#0ff;','',locHtmlString)}
+${col(C06,'color:#4c4;','text-align:left;',atHtmlString)}
+${col(C07,'','text-align:left;',rnHtml)}
+${col('A*','','text-align:left;',wHtml)}
+</div>
+<div class="info-bar" style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
+<span style="color:#88b;font-weight:bold;white-space:nowrap;">${C08}</span>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;min-width:0;">
+${boxString}
+</div>
+<span style="white-space:nowrap;padding-left:8px;border-left:2px solid #4a4a8a;color:#8cc8ff;font-weight:bold;">📦 ${totalBoxes}</span>
+<div id="controls_target_area" style="display:flex;align-items:center;"></div>
+</div>`;
 setTimeout(()=>{
-const target=document.getElementById('controls_target_area');
-const controls=document.getElementById('single_map_controls');
+const target=byId('controls_target_area');
+const controls=byId('single_map_controls');
 if(target&&controls)target.appendChild(controls);
 },0);
 html+='<div class="floor-tabs">';
@@ -163,7 +130,7 @@ y:Math.floor((point.clientY-rect.top)/TILE_SIZE),
 };
 }
 function renderFloor(f){
-const container=document.getElementById('floor-content');
+const container=byId('floor-content');
 const w=mapData.getFloorWidth(f);
 const h=mapData.getFloorHeight(f);
 const map=mapData.getFloorMap(f);
@@ -176,32 +143,25 @@ let infoHtml='<div class="floor-info">';
 infoHtml+=`<h3>B${f+1}F</h3>`;
 infoHtml+='<table>';
 infoHtml+=`<tr><td>${C10}</td><td>${w} × ${h}</td></tr>`;
-if(f<mapData.floorCount-1)
-infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　▼ (${down.x}, ${down.y})</td></tr>`;
-else
-infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　Boss (${down.x}, ${down.y})</td></tr>`;
+infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　${f<mapData.floorCount-1?'▼':'Boss'} (${down.x}, ${down.y})</td></tr>`;
 const elistInfo=getFloorElistInfo(mapData,f);
 let stateHtml=elistInfo.state?` <span style="background:#f4c;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:6px;white-space:nowrap;">${elistInfo.state}</span>`:'';
-let dHtml=elistInfo.dValue>0?` <span style="background:#fa0;color:#000;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px;white-space:nowrap;">${elistInfo.dValue}</span>`:'';
+let dHtml=makeDBadge(elistInfo.dValue);
 infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
 const envType=mapData._details[3];
 let floorMR=floorMRAt(mapData._details[2],f);
 const spawnList=getSpawnList(envType,floorMR);
 const normals=spawnList.filter(e=>e.length===3);
-const isJP=(DISPLAY_LANG!=='EN');
 const stCls=classifyElistState(elistInfo.state||'');
 let grayFrom=normals.length;
 if(stCls.kind==='reduced')grayFrom=stCls.count;
 else if(stCls.kind==='none')grayFrom=0;
-else if(stCls.kind==='only')grayFrom=0;
 const onlyMonId=(ONLY_MONSTERS[envType]&&ONLY_MONSTERS[envType][floorMR])||'';
 const isOnlyMode=(stCls.kind==='only');
 let monsterSpans=normals.map((entry,i)=>{
-const md=MONSTER_DB[entry[0]];
-if(!md)return'';
-const name=isJP?md.jp:md.en;
-let isGray;
-isGray=isOnlyMode?(entry[0]!==onlyMonId):(i>=grayFrom);
+if(!MONSTER_DB[entry[0]])return'';
+const name=getMonsterDisplayName(entry[0]);
+const isGray=isOnlyMode?(entry[0]!==onlyMonId):(i>=grayFrom);
 const bg=isGray?'#1a1a2e':'#2a2a4a';
 const fg=isGray?'#555':'#ddd';
 return`<span class="mon-pill" style="color:${fg};background:${bg};">${name}</span>`;
@@ -214,18 +174,13 @@ infoHtml+=`<tr><td>${C13}</td><td>${boxCount} <font color=#666>${C14}</font></td
 for(let i=0;i<boxCount;i++){
 const box=mapData.getBoxInfo(f,i);
 const rn=CHEST_RANK[box.rank]||box.rank;
-const[soloEN,soloJP]=mapData.getBoxItem(f,i,1).map(v=>v||'?');
-const[partyEN,partyJP]=mapData.getBoxItem(f,i,2).map(v=>v||'?');
-const[ppapEN,ppapJP]=mapData.getBoxItem(f,i,4).map(v=>v||'?');
-const dispSolo=DISPLAY_LANG!=='EN'?soloJP:soloEN;
-const dispParty=DISPLAY_LANG!=='EN'?partyJP:partyEN;
-const dispPpap=DISPLAY_LANG!=='EN'?ppapJP:ppapEN;
+const[dispSolo,dispParty,dispPpap]=[1,2,4].map(s=>mapData.getBoxItem(f,i,s)[DISPLAY_LANG!=='EN'?1:0]||'?');
 infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
-        <div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span> (${box.x}, ${box.y})</div>
-        <div class="chest-item"><span class="chest-item-solo">Item (${STR_SOLO}): ${dispSolo}</span></div>
-        <div class="chest-item"><span class="chest-item-party">Item (${STR_PARTY}): ${dispParty}</span></div>
-        <div class="chest-item"><span class="chest-item-ppap">Item (PPAP): ${dispPpap}</span></div>
-      </td></tr>`;
+<div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span> (${box.x}, ${box.y})</div>
+<div class="chest-item"><span class="chest-item-solo">Item (${STR_SOLO}): ${dispSolo}</span></div>
+<div class="chest-item"><span class="chest-item-party">Item (${STR_PARTY}): ${dispParty}</span></div>
+<div class="chest-item"><span class="chest-item-ppap">Item (PPAP): ${dispPpap}</span></div>
+</td></tr>`;
 }
 }else{
 infoHtml+=`<tr><td>${C15}</td><td>${C16}</td></tr>`;
@@ -234,12 +189,12 @@ infoHtml+='</table>';
 infoHtml+='</div>';
 container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${canvasW}" height="${canvasH}" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div>${infoHtml}`;
 document.querySelector('.map-container').style.position='relative';
-const mapCanvas=document.getElementById('mapCanvas');
+const mapCanvas=byId('mapCanvas');
 const showMapCoordinate=(e)=>{
 const{x:mx,y:my}=getCanvasTilePoint(mapCanvas,e);
-const coordEl=document.getElementById('coordDisplay');
+const coordEl=byId('coordDisplay');
 if(mx>=0&&mx<w&&my>=0&&my<h){
-const tNames={0:D01,1:D02,2:D03,3:D02,4:C11,5:C11,6:D07,8:D04};
+const tNames={0:D01,1:D02,2:D03,3:D02,4:C11,5:C11,6:C15,8:D04};
 const tile=map[my][mx];
 let label=tNames[tile]||`tile:${tile}`;
 if(mx===up.x&&my===up.y)label=D05+'▲';
@@ -266,7 +221,7 @@ const boxObj=boxPositions.get(mx+','+my);
 showChestTimer(f,boxObj.num-1,mx,my);
 }
 });
-const canvas=document.getElementById('mapCanvas');
+const canvas=byId('mapCanvas');
 const ctx=canvas.getContext('2d');
 ctx.fillStyle='#000';
 ctx.fillRect(0,0,canvasW,canvasH);
@@ -321,9 +276,9 @@ ctx.textAlign='left';
 for(let y=0;y<h;y++)ctx.fillText(y,2,y*TILE_SIZE+TILE_SIZE/2);
 }
 function showChestTimer(floorIndex,boxIndex,x,y){
-const modal=document.getElementById('chestModal');
-const title=document.getElementById('chestModalTitle');
-const body=document.getElementById('chestModalBody');
+const modal=byId('chestModal');
+const title=byId('chestModalTitle');
+const body=byId('chestModalBody');
 const boxInfo=mapData.getBoxInfo(floorIndex,boxIndex);
 const rn=CHEST_RANK[boxInfo.rank]||boxInfo.rank;
 title.textContent=`B${floorIndex+1}F ${C15} ${boxIndex+1} (Rank ${rn}) @ (${x}, ${y})`;
@@ -343,14 +298,14 @@ results.push({start:currentStart,end:255,itemEN:currentItemEN,itemJP:currentItem
 let htmlEN='';
 let htmlJP='';
 results.forEach(res=>{
-const rangeStr=res.start===res.end?(res.start+5).toString().padStart(3,'0'):`${(res.start+5).toString().padStart(3,'0')} ~ ${(res.end+5).toString().padStart(3,'0')}`;
+const rangeStr=res.start===res.end?(res.start+CHEST_TIMER_OFFSET).toString().padStart(3,'0'):`${(res.start+CHEST_TIMER_OFFSET).toString().padStart(3,'0')} ~ ${(res.end+CHEST_TIMER_OFFSET).toString().padStart(3,'0')}`;
 const isHighlight=(res.start<=2&&res.end>=1);
 const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15);border-left: 3px solid #ffd700;padding-left: 8px;':'';
 const textStyle=isHighlight?'color: #ffd700;font-weight: bold;':'';
 const renderRow=item=>`<div class="timer-row" style="${rowStyle}">
-    <span class="timer-range" style="${textStyle}">${rangeStr}</span>
-    <span class="timer-item" style="${textStyle}">${item}</span>
-    </div>`;
+<span class="timer-range" style="${textStyle}">${rangeStr}</span>
+<span class="timer-item" style="${textStyle}">${item}</span>
+</div>`;
 htmlEN+=renderRow(res.itemEN);
 htmlJP+=renderRow(res.itemJP);
 });
@@ -359,277 +314,22 @@ body.style.overflowY='hidden';
 body.style.display='flex';
 body.style.flexDirection='column';
 body.innerHTML=`<div class="modal-tabs">
-  <div id="ctTabEN" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#1a1a3a;color:#ffd700;border-color:#4a4a8a" onclick="switchCtTab('EN')">English</div>
-  <div id="ctTabJP" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#224;color:#888;border-color:#333" onclick="switchCtTab('JP')">日本語</div>
-  </div>
-  <div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
-  <div id="ctListEN" style="display: block;">${htmlEN}</div>
-  <div id="ctListJP" style="display: none;">${htmlJP}</div>
-  </div>
-  `;
+<div id="ctTabEN" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#1a1a3a;color:#ffd700;border-color:#4a4a8a" onclick="switchCtTab('EN')">English</div>
+<div id="ctTabJP" class="modal-lang-tab modal-lang-tab-bordered modal-lang-tab-animated" style="background:#224;color:#888;border-color:#333" onclick="switchCtTab('JP')">日本語</div>
+</div>
+<div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
+<div id="ctListEN" style="display: block;">${htmlEN}</div>
+<div id="ctListJP" style="display: none;">${htmlJP}</div>
+</div>`;
 modal.style.display='flex';
 switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
 }
-const MRT_PREVIEW_ROWS=30;
-const MRT_HL={};
-MRT_HL['Sainted soma']={bg:'#FFC90E',fg:'#000',bd:'#da0'};
-ITEMS_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff',bd:'#2a4'});
-MRT_HL['Ethereal stone']={bg:'#c018a0',fg:'#fff',bd:'#e4c'};
-['Metal slime shield','Metal slime armour','Metal slime helm','Metal slime gauntlets','Metal slime sollerets'].forEach(i=>MRT_HL[i]={bg:'#383850',fg:'#d0d8f0',bd:'#88a'});
-ITEMS_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff',bd:'#4af'});
-MRT_HL['Lucida shard']={bg:'#B5E61D',fg:'#000',bd:'#8c0'};
-['Dangerous bustier','Fuddle bow'].forEach(i=>MRT_HL[i]={bg:'#FFAEC9',fg:'#000',bd:'#f8a'});
-const MRT_RK_COLORS={10:'#f4f',9:'#fa0',8:'#4cf',7:'#8f8',6:'#ff8',5:'#aaa',4:'#888',3:'#666',2:'#555',1:'#444'};
-const MRT_PRESETS={
-'DD,263C':{custom:{3:[0],4:[0],7:[0],8:[1],9:[0],10:[0],11:[0],12:[0],13:[0],14:[0],15:[0],16:[0]}},
-'B5,3CA2':{custom:{4:[0],5:[0],6:[0],7:[0],8:[0,2],9:[0],10:[1],13:[0],14:[0]}},
-'DD,2E7A':{custom:{3:[0],4:[0],6:[0],7:[1],9:[0],10:[0],11:[0,2],12:[1]}},
-'C9,7FE0':{custom:{3:[0],4:[0,2],5:[0],8:[0],9:[1],10:[0],11:[0],12:[0],13:[0]}},
-'C9,2AC6':{custom:{3:[0,1]}},
-'DD,32BB':{custom:{3:[0,1,2],4:[0,1]}},
-'DD,235E':{custom:{3:[0,1]}},
-'C9,158D':{custom:{3:[0,1]}},
-'DD,5C43':{custom:{3:[0,1],4:[0],5:[1],6:[0],9:[0],10:[0],11:[0],13:[0,1],14:[1]}},
-'DD,47D0':{custom:{3:[0,1],4:[1],5:[0],6:[0],7:[0,1,2],8:[0]}},
-};
-let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null,mrtHiddenChests=new Set(),mrtRankWidths={};
-function mrtMeasureRankWidths(){
-const canvas=document.createElement('canvas');
-const ctx=canvas.getContext('2d');
-const isMobile=window.innerWidth<=600;
-const isEN=mrtLang!=='jp';
-ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'"Hiragino Sans","PingFang TC",sans-serif');
-mrtRankWidths={};
-const ranks=new Set(mrtChests.map(cd=>cd.rank));
-for(const rank of ranks){
-let maxW=0,acc=0;
-for(let i3=TableO[rank-1];i3<TableO[rank];i3++){
-if(acc>99)break;
-acc+=TableP[i3];
-const r=TableR[TableQ[i3]];
-const name=isEN?(r[0]||'\u2014'):(r[1]||r[0]||'\u2014');
-const w=ctx.measureText(name).width;
-if(w>maxW)maxW=w;
-}
-mrtRankWidths[rank]=Math.ceil(maxW)+12;
-}
-}
-let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=0,mrtElapsedMs=0;
-function mrtInternalSec(){return mrtRealSec-5;}
-function mrtGetItem(f,b,s){return s>=0?mrtEngine.getBoxItem(f,b,s):[null,null];}
-function mrtGetStartSec(){
-const el=document.getElementById('mrt_timerStart');
-const v=el?parseFloat(el.value):NaN;
-return isNaN(v)?0:v;
-}
-function mrtOpen(){
-mrtCacheEls();
-mrtLang=DISPLAY_LANG==='EN'?'en':'jp';
-const bl=document.getElementById('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();
-mrtPopulateCustomHL();
-const modal=document.getElementById('marathonModal');
-modal.classList.add('open');
-const rSel=document.getElementById('rank');
-const sSel=document.getElementById('seed');
-if(rSel){const v=rSel.value.replace('0x','');document.getElementById('mrt_inRank').value=v;}
-if(sSel&&sSel.value)document.getElementById('mrt_inSeed').value=sSel.value;
-mrtInputChange();
-mrtResizeMain();
-}
-function mrtClose(){mrtResetTimer();document.getElementById('marathonModal').classList.remove('open');}
-function mrtResizeMain(){
-const tb=document.querySelector('#marathonModal .mrt-topbar');
-const ma=document.getElementById('mrt_mainArea');
-if(tb&&ma)ma.style.height=(window.innerHeight-tb.offsetHeight)+'px';
-}
-function mrtCompute(){
-const seed=parseInt(document.getElementById('mrt_inSeed').value.trim(),16);
-if(isNaN(seed)||seed<0||seed>0x7FFF){document.getElementById('mrt_mainArea').innerHTML='<p style="color:#f44;padding:20px">Invalid Seed</p>';return;}
-mrtEngine=new GrottoDetail();
-mrtEngine.MapSeed=seed;
-mrtEngine.MapRank=parseInt(document.getElementById('mrt_inRank').value,16);
-mrtEngine.calculateDetail();
-mrtChests=[];
-for(let f=0;f<mrtEngine.floorCount;f++){
-const d=mrtEngine.di[f];
-for(let b=0;b<d[8];b++){
-const info=mrtEngine.getBoxInfo(f,b);
-mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:CHEST_RANK[info.rank]||'?'});
-}
-}
-mrtMeasureRankWidths();
-mrtBuildTable();
-mrtRenderRows();
-}
-function mrtIsVis(cd){
-if(mrtFilter==='CUSTOM'&&mrtCustom){const a=mrtCustom[cd.floorNum];return a?a.includes(cd.box):false;}
-if(mrtFilter==='SA')return cd.rank>=9;
-if(mrtFilter==='AB')return cd.rank===9||cd.rank===8;
-return true;
-}
-function mrtBuildTable(keepScroll){
-const area=document.getElementById('mrt_mainArea');
-const savedScroll=keepScroll?area.scrollLeft:0;
-area.scrollLeft=0;area.scrollTop=0;
-mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd)&&!mrtHiddenChests.has(cd.floor+':'+cd.box));
-if(!mrtVisChests.length){area.innerHTML='<p style="color:#555;padding:20px;text-align:center">No chests</p>';return;}
-const gridCols='42px '+mrtVisChests.map(cd=>(mrtRankWidths[cd.rank]||100)+'px').join(' ');
-let hdr='<div class="mrt-vhdr-time">sec</div>';
-for(let ci=0;ci<mrtVisChests.length;ci++){
-const cd=mrtVisChests[ci];
-const clr=MRT_RK_COLORS[cd.rank]||'#888';
-hdr+='<div class="mrt-vhdr" data-ck="'+cd.floor+':'+cd.box+'" style="cursor:pointer"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
-}
-area.innerHTML='<div class="mrt-vgrid" style="grid-template-columns:'+gridCols+'">'+hdr+'<div id="mrt_vbody" style="display:contents"></div></div>';
-area.querySelector('.mrt-vgrid').addEventListener('click',function(e){
-const cell=e.target.closest('[data-ck]');
-if(!cell)return;
-mrtHiddenChests.add(cell.dataset.ck);
-document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));
-mrtBuildTable(true);mrtRenderRows();
-});
-if(savedScroll)area.scrollLeft=savedScroll;
-}
-function mrtRenderRows(){
-const vb=document.getElementById('mrt_vbody');
-if(!vb||!mrtVisChests.length)return;
-const is=mrtInternalSec();
-const st=Math.max(0,is),ed=Math.max(st+MRT_PREVIEW_ROWS,is+MRT_PREVIEW_ROWS);
-const isEN=mrtLang!=='jp';
-const cellCls=isEN?'mrt-vcell mrt-vcell-en':'mrt-vcell';
-const parts=[];
-for(let s=st;s<=ed;s++){
-const cur=(s===is),rCls=cur?' mrt-vrow-cur':'';
-parts.push('<div class="mrt-vtime',rCls,'">',String(s+5).padStart(3,'0'),'</div>');
-for(let ci=0;ci<mrtVisChests.length;ci++){
-const cd=mrtVisChests[ci];
-const[en,jp]=(s>=0)?mrtGetItem(cd.floor,cd.box,s):[null,null];
-const hl=en?MRT_HL[en]:null;
-const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+';cursor:pointer"':' style="cursor:pointer"';
-const label=mrtLang==='jp'?(jp||en||'\u2014'):(en||'\u2014');
-parts.push('<div class="',cellCls,rCls,'" data-ck="',cd.floor,':',cd.box,'"',style,'>',label,'</div>');
-}
-}
-vb.innerHTML=parts.join('');
-}
-function mrtTimerLoop(){
-if(!mrtRunning)return;
-mrtElapsedMs=Date.now()-mrtOrigin;
-const ns=Math.floor(mrtElapsedMs/1000);
-mrtUpdateStopwatch(mrtElapsedMs);
-if(ns!==mrtRealSec){mrtRealSec=ns;mrtRenderRows();}
-mrtRAF=requestAnimationFrame(mrtTimerLoop);
-}
-let _mrtTimerText=null,_mrtTimerDisp=null,_mrtBtnStart=null;
-function mrtCacheEls(){
-_mrtTimerText=document.getElementById('mrt_timerText');
-_mrtTimerDisp=document.getElementById('mrt_timerDisp');
-_mrtBtnStart=document.getElementById('mrt_btnStart');
-}
-function mrtUpdateStopwatch(ms){
-if(!_mrtTimerText)mrtCacheEls();
-if(!_mrtTimerText)return;
-const isPrep=ms<0;
-const absMs=Math.abs(ms);
-const s=Math.floor(absMs/1000);
-const cs=Math.floor((absMs%1000)/10);
-_mrtTimerText.textContent=isPrep?'-'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0')
-:String(s).padStart(3,'0')+'.'+String(cs).padStart(2,'0');
-_mrtTimerDisp.style.color=isPrep?'#f88':'#0f0';
-}
-function mrtToggleTimer(){
-if(mrtRunning){
-mrtRunning=false;
-if(mrtRAF){cancelAnimationFrame(mrtRAF);mrtRAF=null;}
-_mrtBtnStart.textContent='\u25B6';
-_mrtBtnStart.classList.remove('running');
-}else{
-mrtOrigin=Date.now()-mrtElapsedMs;
-mrtRunning=true;
-_mrtBtnStart.textContent='\u23F8';
-_mrtBtnStart.classList.add('running');
-mrtTimerLoop();
-}
-}
-function mrtResetTimer(){
-if(mrtRunning){cancelAnimationFrame(mrtRAF);mrtRAF=null;mrtRunning=false;}
-const s=mrtGetStartSec();
-mrtRealSec=s;mrtElapsedMs=s*1000;
-if(_mrtBtnStart){_mrtBtnStart.textContent='\u25B6';_mrtBtnStart.classList.remove('running');}
-mrtUpdateStopwatch(mrtElapsedMs);
-mrtRenderRows();
-}
-function mrtSetFilter(f){
-mrtFilter=f;mrtCustom=null;mrtHiddenChests.clear();
-document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
-mrtBuildTable();mrtRenderRows();
-}
-function mrtToggleLang(){
-mrtLang=mrtLang==='en'?'jp':'en';
-document.getElementById('mrt_btnLang').textContent=mrtLang.toUpperCase();
-mrtPopulateCustomHL();
-mrtMeasureRankWidths();
-mrtBuildTable();mrtRenderRows();
-}
-function mrtApplyPreset(){
-const sel=document.getElementById('mrt_presets');
-if(!sel.value)return;
-const[rank,seed]=sel.value.split(',');
-document.getElementById('mrt_inRank').value=rank;
-document.getElementById('mrt_inSeed').value=seed;
-const pd=MRT_PRESETS[sel.value];
-if(pd&&pd.custom){mrtFilter='CUSTOM';mrtCustom=pd.custom;document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.remove('active'));}
-mrtHiddenChests.clear();
-mrtResetTimer();mrtCompute();
-}
-function mrtInputChange(){
-const seedVal=document.getElementById('mrt_inSeed').value.trim();
-if(seedVal.length<1||/[^0-9A-Fa-f]/.test(seedVal))return;
-mrtCustom=null;mrtFilter='ALL';mrtHiddenChests.clear();
-document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f==='ALL'));
-mrtResetTimer();mrtCompute();
-}
-const debouncedMrtInput=debounce(mrtInputChange,200);
-const MRT_CUSTOM_HL1={bg:'#801',fg:'#fff',bd:'#c24'};
-const MRT_CUSTOM_HL2={bg:'#3f48cc',fg:'#fff',bd:'#66f'};
-let mrtCustomHL1Item='',mrtCustomHL2Item='';
-const MRT_BUILTIN_HL={};
-for(const k in MRT_HL)MRT_BUILTIN_HL[k]=MRT_HL[k];
-function mrtPopulateCustomHL(){
-const seen={},items=[];
-TableR.forEach(r=>{if(!seen[r[0]]){seen[r[0]]=true;items.push({en:r[0],jp:r[1]});}});
-const isJP=mrtLang==='jp';
-items.sort((a,b)=>isJP?a.jp.localeCompare(b.jp,'ja'):a.en.localeCompare(b.en));
-['mrt_customHL1','mrt_customHL2'].forEach(id=>{
-const sel=document.getElementById(id);
-if(!sel)return;
-const prev=sel.value;
-const label=id.endsWith('1')?'\u2014 HL1 \u2014':'\u2014 HL2 \u2014';
-let html='<option value="">'+label+'</option>';
-items.forEach(it=>{html+='<option value="'+it.en+'">'+(isJP?it.jp:it.en)+'</option>';});
-sel.innerHTML=html;
-sel.value=prev;
-});
-}
-function mrtApplyCustomHL(){
-[mrtCustomHL1Item,mrtCustomHL2Item].forEach(name=>{
-if(!name)return;
-if(MRT_BUILTIN_HL[name])MRT_HL[name]=MRT_BUILTIN_HL[name];
-else delete MRT_HL[name];
-});
-mrtCustomHL1Item=document.getElementById('mrt_customHL1').value;
-mrtCustomHL2Item=document.getElementById('mrt_customHL2').value;
-if(mrtCustomHL1Item)MRT_HL[mrtCustomHL1Item]=MRT_CUSTOM_HL1;
-if(mrtCustomHL2Item)MRT_HL[mrtCustomHL2Item]=MRT_CUSTOM_HL2;
-mrtRenderRows();
-}
-window.addEventListener('resize',()=>{if(document.getElementById('marathonModal').classList.contains('open'))mrtResizeMain();});
 const DW_L={
 TW:{
 name:md=>md.jp,mainFmt:md=>`${md.jp} (${md.en})`,
 drop:l=>'掉'+l,book:(b,l)=>'書'+b+l,
-tag:['主怪','跟班1','跟班2'],single:'單組',
-corr:n=>`→ 對照上表「${n===1?'敵1組':n+'組同時'}」表頭列`,
+tag:['主怪','跟班1','跟班2'],single:'單隻',
+corr:n=>`→ 對照上表「${n===1?'1組':n+'組'}」表頭列`,
 jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表 5 欄',no:'上表未列',
 anchor:'Pattern 錨點（＝判定 1 的 AT 步數）：',
 more:m=>`（共 ${m} 個，僅列前 12）`,
@@ -642,7 +342,7 @@ EN:{
 name:md=>md.en,mainFmt:md=>md.en,
 drop:l=>l?'D-'+l:'D',book:(b,l)=>'B'+b+l,
 tag:['Main','Sup1','Sup2'],single:'Single',
-corr:n=>`→ matches the "(${n===1?'1 group':n+' groups'})" header row above`,
+corr:n=>`→ matches the "(${n===1?'1G':n+'G'})" header row above`,
 jr:(a,b)=>`Judg. ${a}–${b}`,eq5:'= 5 cols above',no:'not in table',
 anchor:'Pattern anchors (AT step of judgment 1): ',
 more:m=>` (${m} total, first 12 shown)`,
@@ -654,41 +354,36 @@ nomon:'No selectable main monster for this terrain × FloorMR.'
 JP:{
 name:md=>md.jp,mainFmt:md=>md.jp,
 drop:l=>'落'+l,book:(b,l)=>'盗'+b+l,
-tag:['メイン','取り巻き1','取り巻き2'],single:'単組',
-corr:n=>`→ 上表「${n===1?'敵1組':n+'組同時'}」の見出し行に対応`,
+tag:['メイン','お供1','お供2'],single:'単体',
+corr:n=>`→ 上表「${n===1?'1ｸﾞﾙｰﾌﾟ':n+'ｸﾞﾙｰﾌﾟ'}」の見出し行に対応`,
 jr:(a,b)=>`判定 ${a}–${b}`,eq5:'＝上表の5欄',no:'上表対象外',
 anchor:'パターン錨点（＝判定1のATステップ）：',
 more:m=>`（全 ${m} 件、先頭12件のみ表示）`,
 nf:'AT 38～2037 の範囲に一致する錨点なし',
 bad:'Seed は16進数 1～4 桁で入力',
 hits:'命中：',leg:'R＝レア成立　xN＝通常成立　xx＝不成立',sep:'、',
-nomon:'この地形×FloorMRでは選択可能なメインがいません。'
+nomon:'この地形×FloorMRでは選択可能なモンスターがいません。'
 }
 };
 const DW_CLSC={cr:'#f88',ct:'#39C5BB',cy:'#ffd700',cp:'#c8c',ck:'#cc8'};
 const _dwSel={TW:0,EN:0,JP:0};
 const _dwTmr={};
-function dwSupPool(envType,floorMR){
-return getEncounterSupportPool(envType,floorMR).supportPool.map(s=>s.hex);
-}
+function dwSupPool(envType,floorMR){return getEncounterSupportPool(envType,floorMR).supportPool.map(s=>s.hex);}
 function dwInit(){
 ['TW','EN','JP'].forEach((L,li)=>{
-const patSel=document.getElementById('dw_pat_'+L);
+const patSel=byId('dw_pat_'+L);
+const langIndex=[1,0,2][li];
+const envSel=byId('dw_env_'+L);
+if(envSel)envSel.querySelectorAll('option').forEach((o,i)=>{if(ENV_OPTS[i])o.textContent=ENV_OPTS[i][langIndex];});
 if(patSel){
 patSel.innerHTML='<option value="none">----</option>';
-const langIndex=[1,0,2][li];
-AT_O.forEach(([key,label])=>{
-const o=document.createElement('option');
-o.value=key;
-o.textContent=label[langIndex];
-patSel.appendChild(o);
-});
+appendPatternOptions(patSel,langIndex);
 }
 dwUpd(L);
 });
 }
 function dwUpd(L){
-const $=id=>document.getElementById(id+'_'+L);
+const $=id=>byId(id+'_'+L);
 const envEl=$('dw_env');
 if(!envEl)return;
 _dwSel[L]=0;
@@ -718,7 +413,7 @@ function dwChanged(L){_dwSel[L]=0;dwRender(L);}
 function dwRenderDeb(L){_dwSel[L]=0;clearTimeout(_dwTmr[L]);_dwTmr[L]=setTimeout(()=>dwRender(L),200);}
 function dwSelStep(L,i){_dwSel[L]=i;dwRender(L);}
 function dwRender(L){
-const $=id=>document.getElementById(id+'_'+L);
+const $=id=>byId(id+'_'+L);
 const out=$('dw_out');
 if(!out)return;
 const X=DW_L[L];
@@ -734,10 +429,7 @@ const n=groups.length;
 const LET=['A','B','C'];
 const BOOK_CLS=['','ct','cy','cp','ck'];
 const slots=[];
-forEachDropSlot(n,[1,1,1,1],(g,bk)=>{
-slots.push({lbl:bk?X.book(bk,n>1?LET[g]:''):X.drop(n>1?LET[g]:''),
-cls:bk?BOOK_CLS[bk]:'cr',g});
-});
+forEachDropSlot(n,[1,1,1,1],(g,bk)=>{slots.push({lbl:bk?X.book(bk,n>1?LET[g]:''):X.drop(n>1?LET[g]:''),cls:bk?BOOK_CLS[bk]:'cr',g});});
 const seedStr=($('dw_seed')?$('dw_seed').value:'').trim();
 const patKey=$('dw_pat')?$('dw_pat').value:'none';
 let scanHtml='',st=null;
@@ -776,8 +468,8 @@ groups.map((gr,i)=>`<span style="color:#0ff">${n>1?LET[i]:X.single}</span>＝<sp
 `　<span style="color:#888;font-size:11px">${X.corr(n)}</span></div>`;
 html+='<table class="h3t sm ctr" style="margin-bottom:4px">';
 for(let r=0;r*5<slots.length;r++){
-html+='<tr><td class="bg" style="width:18%">'+X.jr(r*5+1,r*5+5)+
-(r===0?`<br><span style="color:#0ca;font-size:10px">${X.eq5}</span>`:`<br><span style="color:#666;font-size:10px">${X.no}</span>`)+'</td>';
+html+='<tr><td class="bg" style="width:18%">'+X.jr(r*5+1,r*5+5)+(
+r===0?`<br><span style="color:#0ca;font-size:10px">${X.eq5}</span>`:`<br><span style="color:#666;font-size:10px">${X.no}</span>`)+'</td>';
 for(let c=0;c<5;c++){
 const s=slots[r*5+c];
 let stat='',bg='';
@@ -815,8 +507,8 @@ h3:{id:'h3Modal',prefix:'h3',theme:MODAL_THEMES.teal},
 };
 function switchTab(prefix,lang,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
 MODAL_TAB_KEYS.forEach(key=>{
-let tab=document.getElementById(prefix+'Tab'+key);
-let list=document.getElementById(prefix+'List'+key);
+let tab=byId(prefix+'Tab'+key);
+let list=byId(prefix+'List'+key);
 if(!tab||!list)return;
 const active=key===lang;
 tab.style.background=active?'#1a1a3a':inactiveBg;
@@ -826,7 +518,7 @@ list.style.display=active?'block':'none';
 });
 }
 function openModal(modalId,tabPrefix,activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder){
-const modal=document.getElementById(modalId);
+const modal=byId(modalId);
 if(!modal)return;
 modal.style.display='flex';
 switchTab(tabPrefix,['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW',activeColor,activeBorder,inactiveBg,inactiveColor,inactiveBorder);
@@ -840,7 +532,7 @@ const config=MODAL_CONFIGS[configKey];
 openModal(config.id,config.prefix,...config.theme);
 }
 function closeConfiguredModal(configKey){
-document.getElementById(MODAL_CONFIGS[configKey].id).style.display='none';
+byId(MODAL_CONFIGS[configKey].id).style.display='none';
 }
 function closeChestModal(){closeConfiguredModal('chest');}
 function switchCtTab(lang){switchConfiguredModalTab('chest',lang);}
@@ -856,42 +548,6 @@ function switchH2Tab(lang){switchConfiguredModalTab('h2',lang);}
 function openh3Modal(){openConfiguredModal('h3');}
 function closeh3Modal(){closeConfiguredModal('h3');}
 function switchH3Tab(lang){switchConfiguredModalTab('h3',lang);}
-function initCPUBenchmark(){
-const h4=document.querySelector('#unified_search_panel h4');
-if(!h4)return;
-const cpuBtn=document.createElement('button');
-cpuBtn.id='cpuBenchBtn';
-cpuBtn.textContent='💻';
-cpuBtn.title='CPU Benchmark';
-cpuBtn.style.cssText='margin-left:6px;background:#224;color:#0ff;border:1px solid #088;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:bold;cursor:pointer;display:flex;justify-content:center;align-items:center;transition:all 0.2s;';
-cpuBtn.onmouseover=function(){this.style.background='#0ff';this.style.color='#000';};
-cpuBtn.onmouseout=function(){this.style.background='#224';this.style.color='#0ff';};
-cpuBtn.onclick=startCPUBenchmark;
-h4.appendChild(cpuBtn);
-}
-function startCPUBenchmark(){
-if(isSearching){requestSearchCancel();return;}
-const t0=performance.now();
-executeSharedSearch({
-btnId:'cpuBenchBtn',
-btnText:'💻',
-btnBg:'#224',
-btnColor:'#0ff',
-stopText:'🛑',
-emptyRankMsg:B07,
-searchFilterLoc:true,
-validateConds:()=>true,
-renderCap:0,
-filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
-processor:'fastest',
-params:{searchOnlyWithD:false,benchmarkMode:true},
-onDoneExtra:(d)=>{
-const elapsed=((performance.now()-t0)/1000).toFixed(2);
-const sp=document.getElementById('searchProgress');
-if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
-},
-});
-}
 window.addEventListener('DOMContentLoaded',()=>{
 const schedule=window.requestIdleCallback?(fn)=>window.requestIdleCallback(fn,{timeout:200}):(fn)=>setTimeout(fn,1);
 let next=2048;
@@ -900,7 +556,7 @@ schedule(step);
 });
 window.addEventListener('DOMContentLoaded',()=>{
 function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
-let selectElement=document.getElementById(selectId);
+let selectElement=byId(selectId);
 if(!selectElement)return;
 Object.keys(dataObj).forEach(key=>{
 let item=dataObj[key];
@@ -910,24 +566,20 @@ option.text=`${item[nameIdx1]} ${item[nameIdx2]}`;
 selectElement.appendChild(option);
 });
 }
+MAP_RANK.forEach(r=>{const h=hex2(r),d=r===0xDD;byId('rank').add(new Option(h,'0x'+h,d,d));byId('mrt_inRank').add(new Option(h,h,d,d));});
 populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
 populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
 populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
 populateDropdownObj('cond_env',ENV_NAMES,0,1);
 populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
-const atCountSel=document.getElementById('atConsecutiveCount');
-if(atCountSel){
-AT_O.forEach(pair=>{
-let opt=document.createElement('option');
-opt.value=pair[0];
-opt.textContent=pair[1];
-atCountSel.appendChild(opt);
-});
-}
+const boxRow=document.querySelector('.chest-count-row');
+for(let r=10;r>=1;r--)boxRow.insertAdjacentHTML('beforeend',`<label>${CHEST_RANK[r]} <input type="number" id="cond_box_${CHEST_RANK[r]}" min="0" max="40" class="cbox-in"></label>`);
+const anomOpts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}" data-i18n="${v.i18n}"></option>`).join('');
+byId('cond_anomaly').insertAdjacentHTML('beforeend',anomOpts(_ANOM_RULE)+'<option disabled>─────</option>'+anomOpts(USP_FAST_MODES));
 let topIds=["0B5","01B","0B9"];
 let seenIds=new Set(topIds);
 let envOrder=[1,2,3,4,5];
-let sel=document.getElementById('cond_only_mon');
+let sel=byId('cond_only_mon');
 if(sel){
 const createOpt=(id)=>{
 let opt=document.createElement('option');
@@ -957,14 +609,11 @@ if(added&&idx<envOrder.length-1)addSep();
 });
 }
 initItemI18n();
-refreshI18n();
-document.querySelectorAll('.lang-sw').forEach(b=>{
-if(b.dataset.lang===DISPLAY_LANG){b.style.background='#00A2E8';b.style.color='#fff';b.style.borderColor='#00A2E8';}
-});
-const srDiv=document.getElementById('searchResults');
+switchUILang(DISPLAY_LANG);
+const srDiv=byId('searchResults');
 if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
-const seedInput=document.getElementById('seed');
-const rankSelect=document.getElementById('rank');
+const seedInput=byId('seed');
+const rankSelect=byId('rank');
 if(seedInput){
 seedInput.addEventListener('keydown',(e)=>{
 if(e.key==='Enter')calculate();
@@ -976,55 +625,36 @@ if(mapData)calculate();
 });
 }
 function initFreeSearchUI(){
-const container=document.getElementById('fs_container');
+const container=byId('fs_container');
 if(!container)return;
 let floorOpts=`<option value="0">---</option>`;
 for(let i=3;i<=16;i++)floorOpts+=`<option value="${i}">B${i}F</option>`;
 let boxOpts=`
-    <option value="-1">---</option>
-    <option value="0">1</option>
-    <option value="1">2</option>
-    <option value="2">3${T('rd','(整列)','(整列)')}</option>
-    <option value="3">${T('Non-3','非整列','非整列')}</option>
-    `;
+<option value="-1">---</option>
+<option value="0">1</option>
+<option value="1">2</option>
+<option value="2">3${T('rd','(整列)')}</option>
+<option value="3">${T('Non-3','非整列')}</option>
+`;
 let rankOpts=`<option value="0">---</option>`;
-['S','A','B','C','D','E','F','G','H','I'].forEach((r,idx)=>{rankOpts+=`<option value="${10-idx}">${r}</option>`;});
+for(let r=10;r>=1;r--)rankOpts+=`<option value="${r}">${CHEST_RANK[r]}</option>`;
 window.updateFSItems=function(groupId){
-let rankSelect=document.getElementById(`fs_r_${groupId}`);
-let itemSelect=document.getElementById(`fs_i_${groupId}`);
+let rankSelect=byId(`fs_r_${groupId}`);
+let itemSelect=byId(`fs_i_${groupId}`);
 if(!rankSelect||!itemSelect)return;
 let currentVal=itemSelect.value;
 let r=parseInt(rankSelect.value);
 let itemOpts=`<option value="ANY">---</option>`;
 let seen=new Set();
 let hasSpecial=false;
-if(r===0||r===10){
-itemOpts+=`<option value="Sainted soma">${getDispItem("Sainted soma")}</option>`;
-seen.add("Sainted soma");
+const inRank=v=>r===0||getChestRanksForItems(expandItemGroup(v)).includes(r);
+[["Sainted soma"],["Ethereal stone"],["Millionaire",T('Millionaire','大富豪')],["Attribeauty"],
+["Metasla",T('Metal Slime Equips','金屬史萊姆裝備','メタスラ装備')],["S weapon",T('S Weapon','S武器')]].forEach(([v,label])=>{
+if(!inRank(v))return;
+itemOpts+=`<option value="${v}">${label||getDispItem(v)}</option>`;
+seen.add(v);
 hasSpecial=true;
-}
-if(r===0||r===9){
-itemOpts+=`<option value="Ethereal stone">${getDispItem("Ethereal stone")}</option>`;
-seen.add("Ethereal stone");
-hasSpecial=true;
-}
-if(r===0||r===9||r===8){
-itemOpts+=`<option value="Rich">${T('Millionaire','大富豪','大富豪')}</option>`;
-hasSpecial=true;
-}
-if(r===0||r===8){
-itemOpts+=`<option value="Attribeauty">${getDispItem("Attribeauty")}</option>`;
-seen.add("Attribeauty");
-hasSpecial=true;
-}
-if(r===0||r===9){
-itemOpts+=`<option value="Metasla">${T('Metal Slime Equips','金屬史萊姆裝備','メタスラ装備')}</option>`;
-hasSpecial=true;
-}
-if(r===0||r===10){
-itemOpts+=`<option value="S_wpn">${T('S Weapon','S武器','S武器')}</option>`;
-hasSpecial=true;
-}
+});
 if(hasSpecial)itemOpts+=`<option disabled>──────</option>`;
 let validItems=[];
 if(r===0){
@@ -1042,15 +672,14 @@ itemSelect.innerHTML=itemOpts;
 itemSelect.value=itemSelect.querySelector(`option[value="${currentVal}"]`)?currentVal:"ANY";
 };
 for(let i=1;i<=3;i++){
-container.innerHTML+=`
-      <div style="display:flex;gap:2px;align-items:center;">
-      <span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
-      <select id="fs_f_${i}" class="fs-ctl" style="width:45px;">${floorOpts}</select>
-      <select id="fs_b_${i}" class="fs-ctl" style="width:50px;">${boxOpts}</select>
-      <select id="fs_r_${i}" onchange="updateFSItems(${i})" class="fs-ctl" style="width:40px;">${rankOpts}</select>
-      <select id="fs_i_${i}" class="fs-ctl" style="flex:1;width:50px;text-overflow:ellipsis;"></select>
-      <input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" class="fs-ctl" style="width:35px;text-align:center;">
-      </div>`;
+container.innerHTML+=`<div style="display:flex;gap:2px;align-items:center;">
+<span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
+<select id="fs_f_${i}" class="fs-ctl" style="width:45px;">${floorOpts}</select>
+<select id="fs_b_${i}" class="fs-ctl" style="width:50px;">${boxOpts}</select>
+<select id="fs_r_${i}" onchange="updateFSItems(${i})" class="fs-ctl" style="width:40px;">${rankOpts}</select>
+<select id="fs_i_${i}" class="fs-ctl" style="flex:1;width:50px;text-overflow:ellipsis;"></select>
+<input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" class="fs-ctl" style="width:35px;text-align:center;">
+</div>`;
 }
 for(let i=1;i<=3;i++){
 updateFSItems(i);
@@ -1064,8 +693,8 @@ const urlId=urlParams.get('id');
 if(urlId&&/^[0-9A-Fa-f]{6}$/.test(urlId)){
 const urlRank=urlId.substring(0,2).toUpperCase();
 const urlSeed=urlId.substring(2,6).toUpperCase();
-const rankEl=document.getElementById('rank');
-const seedEl=document.getElementById('seed');
+const rankEl=byId('rank');
+const seedEl=byId('seed');
 const rankVal='0x'+urlRank;
 if([...rankEl.options].some(o=>o.value===rankVal)){
 rankEl.value=rankVal;
@@ -1076,12 +705,13 @@ calculate();
 });
 let isModalDragging=false;
 const allModalIds=Object.values(MODAL_CONFIGS).map(config=>config.id);
-window.addEventListener('mousedown',(e)=>{
+window.addEventListener(window.PointerEvent?'pointerdown':'mousedown',(e)=>{
 if(allModalIds.includes(e.target.id)){isModalDragging=false;}
 else{isModalDragging=true;}
 });
-window.addEventListener('mouseup',(e)=>{
-if(!isModalDragging&&allModalIds.includes(e.target.id)){e.target.style.display='none';}
+window.addEventListener(window.PointerEvent?'pointerup':'mouseup',(e)=>{
+const target=document.elementFromPoint(e.clientX,e.clientY);
+if(!isModalDragging&&allModalIds.includes(target?.id)){target.style.display='none';}
 isModalDragging=false;
 });
 function exportSearchResults(){
@@ -1092,7 +722,34 @@ alert(A06);
 return;
 }
 let txtContent="RANK,SEED,"+T('Result','搜尋結果','検索結果')+"\n";
+const keepLine=line=>{
+if(/Lv\.?\s*\d+/i.test(line))return false;
+if(Object.values(ENV_NAMES).flat().some(n=>n.toLowerCase()===line.toLowerCase()))return false;
+return true;
+};
+const tagLines=row=>{
+const c=row.cloneNode(true);
+c.removeChild(c.firstChild);
+c.querySelectorAll('br').forEach(br=>br.replaceWith('\0'));
+return c.textContent.split('\0').map(t=>t.replace(/[ \t\n\r\f]+/g,' ').trim()).filter(t=>t!=="");
+};
+let seedRows=[];
+const flushSeedRows=()=>{
+seedRows.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+for(const r of seedRows)txtContent+=r[2];
+seedRows=[];
+};
 items.forEach(item=>{
+if(item.classList.contains('srs')){
+const seed=+item.dataset.seed,lines=[...item.querySelectorAll('.srs-lines > span')];
+for(const b of item.querySelectorAll('.srs-ranks button')){
+const rank=b.textContent,fc=+b.dataset.fc,row=b.parentNode.classList.contains('srs-rr')?b.parentNode:null;
+const text=[...(row?tagLines(row):[]),...lines.filter(s=>+s.dataset.f<fc).map(s=>s.textContent.trim())].filter(keepLine).join(" / ");
+seedRows.push([MAP_RANK.indexOf(parseInt(rank,16)),seed,`${rank},${hex4(seed)},${text}${b.dataset.hasD==="true"?",D":""}\n`]);
+}
+return;
+}
+flushSeedRows();
 let lines=item.innerText.split('\n').map(s=>s.trim()).filter(s=>s!=="");
 if(lines.length===0)return;
 let firstLine=lines[0];
@@ -1102,23 +759,15 @@ let seedMatch=firstLine.match(/^([0-9A-F]{4})/i);
 if(seedMatch)seed=seedMatch[1].toUpperCase();
 let rankMatch=firstLine.match(/\(Rank\s*([0-9A-F]{2})\)/i);
 if(rankMatch)rank=rankMatch[1].toUpperCase();
-let resultLines=lines.slice(1).filter(line=>{
-if(/Lv\.?\s*\d+/i.test(line))return false;
-if(/^(Caves|Ruins|Ice|Water|Fire|洞窟|遺跡|氷|水|火山)$/i.test(line))return false;
-return true;
-});
+let resultLines=lines.slice(1).filter(keepLine);
 let resultText=resultLines.join(" / ");
 if(/^(B3F|B4F|B9F|B10F)\s+(Solo|Party|一人旅|即開)/i.test(resultText)||/^B\d+F\s+[⑤⑨]\s*x/.test(resultText)){
-const itemName=document.getElementById('searchItem').value;
+const itemName=uiVal('searchItem');
 resultText=`${getDispItem(itemName)} ${resultText}`;
 }
-let hasD=item.dataset.hasD==="true";
-if(hasD){
-txtContent+=`${rank},${seed},${resultText},D\n`;
-}else{
-txtContent+=`${rank},${seed},${resultText}\n`;
-}
+txtContent+=`${rank},${seed},${resultText}${item.dataset.hasD==="true"?",D":""}\n`;
 });
+flushSeedRows();
 const blob=new Blob([txtContent],{type:'text/plain;charset=utf-8'});
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');

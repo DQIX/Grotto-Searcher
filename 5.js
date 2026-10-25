@@ -3,19 +3,7 @@ let wkGen=-1;
 let wkJob=null;
 let wkCancelled=false;
 let wkChain=Promise.resolve();
-function setupSolverWorker(m){
-DISPLAY_LANG=m.lang||'EN';
-_L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
-self.window=self;
-self.document={getElementById:(id)=>(m.dom&&(id in m.dom))?{checked:!!m.dom[id]}:null};
-readCharStatsFromDom=()=>m.chars||[];
-window._solverComboMap={};window._solverComboId=m.idBase||0;
-window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
-window._solverFallback=!!m.initialFallback;window._solverSolvable=null;
-window._solverNeedsKillAll=null;
-_solverSearchIncomplete=false;_solverRenderDepth=0;
-}
-self.onmessage=(e)=>{
+self.addEventListener('message',(e)=>{
 const m=e.data;
 if(!m)return;
 if(m.type==='cancel'){wkCancelled=true;return;}
@@ -23,8 +11,7 @@ if(m.type==='job'){
 wkGen=m.gen;
 wkJob=m.job;
 wkCancelled=false;
-DISPLAY_LANG=m.job.lang||'EN';
-_L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
+setDisplayLang(m.job.lang||'EN');
 initItemI18n();
 return;
 }
@@ -35,6 +22,48 @@ self.postMessage({type:'error',gen:m.gen,chunkId:m.chunkId,message:''+(err&&err.
 });
 return;
 }
+});
+async function runChunk(c){
+if(c.gen!==wkGen||!wkJob){
+self.postMessage({type:'chunkDone',gen:c.gen,chunkId:c.chunkId,items:[],hits:0,aborted:true});
+return;
+}
+const job=wkJob;
+const items=[];
+const io={
+cancelled:()=>wkCancelled||c.gen!==wkGen,
+progress:(p)=>self.postMessage({type:'tick',gen:c.gen,chunkId:c.chunkId,
+frac:p.total>0?p.processed/p.total:1,rStr:p.rStr,seedHex:p.seedHex}),
+batch:(b)=>{for(const x of b)items.push(x);},
+yield:()=>new Promise(r=>setTimeout(r,0)),
+};
+const extra={startSeed:c.startSeed,endSeed:c.endSeed};
+if(job.kind==='scan'){
+extra.allRanks=job.ranks;
+extra.ranks=c.ranks||[c.rank];
+if(c.ranks)extra.seedMajor=true;
+}
+const chunkJob=Object.assign({},job,extra);
+const runner=getCoreSearchRunner(job.kind);
+const hits=runner?await runner(chunkJob,io):0;
+const aborted=io.cancelled();
+self.postMessage({type:'chunkDone',gen:c.gen,chunkId:c.chunkId,
+items:aborted?[]:items,hits:aborted?0:hits,aborted});
+}
+function setupSolverWorker(m){
+setDisplayLang(m.lang||'EN');
+self.window=self;
+self.document={getElementById:(id)=>(m.dom&&(id in m.dom))?{checked:!!m.dom[id]}:null};
+readCharStatsFromDom=()=>m.chars||[];
+window._solverComboMap={};window._solverComboId=m.idBase||0;
+window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
+window._solverFallback=!!m.initialFallback;window._solverSolvable=null;
+window._solverNeedsKillAll=null;
+_solverSearchIncomplete=false;_solverRenderDepth=0;
+}
+self.addEventListener('message',(e)=>{
+const m=e.data;
+if(!m)return;
 if(m.type==='solve'){
 try{
 setupSolverWorker(m);
@@ -64,27 +93,4 @@ message:''+(err&&err.stack||err)});
 }
 return;
 }
-};
-async function runChunk(c){
-if(c.gen!==wkGen||!wkJob){
-self.postMessage({type:'chunkDone',gen:c.gen,chunkId:c.chunkId,items:[],hits:0,aborted:true});
-return;
-}
-const job=wkJob;
-const items=[];
-const io={
-cancelled:()=>wkCancelled||c.gen!==wkGen,
-progress:(p)=>self.postMessage({type:'tick',gen:c.gen,chunkId:c.chunkId,
-frac:p.total>0?p.processed/p.total:1,rStr:p.rStr,seedHex:p.seedHex}),
-batch:(b)=>{for(const x of b)items.push(x);},
-yield:()=>new Promise(r=>setTimeout(r,0)),
-};
-const extra={startSeed:c.startSeed,endSeed:c.endSeed};
-if(job.kind==='scan')extra.ranks=[c.rank];
-const chunkJob=Object.assign({},job,extra);
-const runner=getCoreSearchRunner(job.kind);
-const hits=runner?await runner(chunkJob,io):0;
-const aborted=io.cancelled();
-self.postMessage({type:'chunkDone',gen:c.gen,chunkId:c.chunkId,
-items:aborted?[]:items,hits:aborted?0:hits,aborted});
-}
+});

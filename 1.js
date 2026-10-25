@@ -1,7 +1,9 @@
-var _ios1,_ios2;
-let DISPLAY_LANG='EN';
-let _L=(DISPLAY_LANG==='EN')?0:(DISPLAY_LANG==='JP')?2:1;
-function T(en,tw,jp){const a=[en,tw,jp];a.toString=a.valueOf=function(){return this[_L];};return a;}
+let DISPLAY_LANG,_L;
+function setDisplayLang(lang){DISPLAY_LANG=lang;_L=(lang==='EN')?0:(lang==='JP')?2:1;}
+setDisplayLang('EN');
+function T(en,tw,jp=tw){const a=[en,tw,jp];a.toString=a.valueOf=function(){return this[_L];};return a;}
+function byId(id){return document.getElementById(id);}
+function groupTotal(g){return g.reduce((n,x)=>n+(x.count||1),0);}
 const A01=T('Please choose at least one condition.','請至少輸入一個搜尋條件！','少なくとも1つの条件を入力してください。');
 const A02=T('Unexpected error during search. See Console (Google Chrome F12) for details.','搜尋過程中發生意外錯誤，已安全中斷。詳情請見 Console (Google Chrome F12)。','検索中にエラーが発生しました。詳細は Console (Google Chrome F12) を確認してください。');
 const A03=T('Sorry! Quickload search is not available for chest monsters.','非常抱歉！寶箱怪只能搜體感。','宝箱モンスターは体感検索のみ対応しています。');
@@ -9,28 +11,28 @@ const A05=T('Sorry! Searching for this item is currently unavailable.','非常�
 const A06=T('No output! Please perform a search first.','目前沒有搜尋結果可以匯出！請先執行一次搜索。','出力する結果がありません！先に検索を実行してください。');
 const A07=T('❌ Output error!\\n\\nReason:','❌ 匯出失敗！\\n\\n錯誤原因：','❌ 出力に失敗しました！\\n\\n原因：');
 const A08=T('No valid maps in this Seed range when filtering by location.','在勾選「排除無位置地圖」的情況下，您輸入的 Seed 範圍內沒有合法地圖！','場所候補フィルター有効時、この Seed 範囲に該当する地図はありません！');
-const A09=T('Invalid Location. Valid range: 01–96 (hex), digits 0–9 and A–F only.','無效的位置值。有效範圍：01–96（十六進制），僅限 0–9 及 A–F。','無効な場所コードです。有効な入力範囲：01–96（16進数）、0–9 および A–F のみ。');
-const A10=T('Invalid Seed. Valid range: 0000–FFFF (hex), digits 0–9 and A–F only.','無效的 Seed 值。有效範圍：0000–FFFF（十六進制），僅限 0–9 及 A–F。','無効な Seed です。有効な入力範囲：0000–FFFF（16進数）、0–9 および A–F のみ。');
+const A09=T('Invalid Location. Valid range: 01–96 (hex), digits 0–9 and A–F only.','無效的位置値。有效範圍：01–96（十六進制），僅限 0–9 及 A–F。','無効な場所コードです。有効な入力範囲：01–96（16進数）、0–9 および A–F のみ。');
+const A10=T('Invalid Seed. Valid range: 0000–7FFF (hex), digits 0–9 and A–F only.','無效的 Seed 値。有效範圍：0000–7FFF（十六進制），僅限 0–9 及 A–F。','無効な Seed です。有効な入力範囲：0000–7FFF（16進数）、0–9 および A–F のみ。');
 const A11=T('"Only Monster" cannot be paired with ONLY (1-enemy) / No-enemy / 15x15 / Multi-special together.','「指定 ONLY 怪物」不可與 ONLY(任何怪)／敵無／15x15／複數特殊層 一起選擇。','「オンリーモンスター」は オンリー／敵無／15x15／複数の特殊フロア と併用できません。')
 const A12=T('Multibug search does not support Bug Terrain conditions.','Multibug 搜尋不支援 Bug地形。','マルチバグ検索はネタ地形に対応しておりません。')
 const A13=T('Fastest Map Search does not support this option.','最短地圖搜尋不支援此選項。','最短地図検索はこの選択肢に対応しておりません。')
 const A14=T('Fastest Map Search requires at least one of: Depth, Lv, Sp.Floor (ElistOfs), ONLY Monster, Location, or Boss.','最短地圖搜尋需至少填寫以下其中一項：樓層深度、Lv、特殊樓層 (ElistOfs)、指定 ONLY 怪物、位置、Boss。','最短地図検索では、深さ・Lv・特殊フロア (ElistOfs)・オンリーモンスター・場所・ボス のうち、少なくとも 1 つの入力が必要です。')
-const A15=T('This is a Fastest / Slowest search mode. Please press the main "🎯 Search" button to run it.','這是「最短／最長」搜尋模式，請按主搜尋鈕「🎯 Search」執行。','これは「最短／最長」検索モードです。メインの「🎯 Search」ボタンで実行してください。')
+const A15=T('This is a Fastest / Slowest search mode. Please press the main "Search" button to run it.','這是「最短／最長」搜尋模式，請按主搜尋鈕「Search」執行。','これは「最短／最長」検索モードです。メインの「Search」ボタンで実行してください。')
 const A16=T('Fastest Floor requires Sp.Floor (ElistOfs), ONLY Monster, or Depth as the cutoff floor.','最短樓層需以 特殊樓層 (ElistOfs)／指定 ONLY 怪物／樓層深度 其中之一作為截止樓層。','最短フロアでは、特殊フロア (ElistOfs)／オンリーモンスター／深さ のいずれかを到達フロアとして指定してください。')
 const B01=T('Progress:','搜尋進度:','Progress:');
 const B02=T('Rank','掃描 Rank','Rank');
-const B03=T('Found','個','個');
+const B03=T('Found','個');
 const B04=T('','找到 ','');
 const B05=T('Stopped','已停止','STOP');
 const B06=T('','掃描完成，共找到','合計');
 const B07=T('Conditions conflict. All searches skipped.','因條件衝突，已略過所有搜尋','条件が矛盾しているため、全ての検索をスキップしました。');
 const B08=T('Unable to match this Rank. Skipped.','此條件組合不可能在所選 Rank 出現，已略過','この条件は選択した Rank では不可能です。スキップしました。');
 const C01=T('Name','地圖名稱','地図名');
-const C02=T('Type','地形','地形');
+const C02=T('Type','地形');
 const C03=T('SMR','怪物等級','敵ランク');
 const C04=T('Depth','樓層數','深さ');
 const C05=T('Location & BQ','位置與 BQ','場所 & Base値');
-const C06=T('AT value','AT 判定值','AT 判定値');
+const C06=T('AT value','AT 判定値');
 const C07=T('AT Ptn','地圖法','地図法');
 const C08=T('Chests:','寶箱:','宝箱:');
 const C09=T('No Chest','無寶箱','箱無し');
@@ -41,7 +43,7 @@ const C13=T('Chests','寶箱數','宝箱の数');
 const C14=T('(Tap the chest to see Chest Timer)','(點圖看 Chest Timer)','(クリックで中断技の秒数を見る)');
 const C15=T('Chest','寶箱','宝箱');
 const C16=T('None','無','なし');
-const C17=T('Seed must be a hex value from 0000 to 7FFF','Seed 必須是 0000~7FFF 的十六進位值','Seed は 0000～7FFF の16進数で入力してください');
+const C17=T('Seed must be a hex value from 0000 to 7FFF','Seed 必須是 0000~7FFF 的十六進位値','Seed は 0000～7FFF の16進数で入力してください');
 const C18=T('Invalid Seed/Rank','無效的 Seed/Rank 組合','無効な Seed/Rank の組み合わせ');
 const C19=T('No Location','無符合條件的位置','場所候補なし');
 const C20=T('Fastest','最快達成','最短');
@@ -54,10 +56,9 @@ const C26=T('Auto','秘傳書','盗');
 const D01=T('Floor','地板','床');
 const D02=T('Wall','牆壁','壁');
 const D03=T('Corridor','走廊','通路');
-const D04=T('Door','門','門');
+const D04=T('Door','門');
 const D05=T('Upstairs','上樓梯','上り階段');
 const D06=T('Downstairs','下樓梯','下り階段');
-const D07=T('Chest','寶箱','宝箱');
 const F01=T('Search all Ranks','掃描所有 Rank','全てのRankを検索');
 const F03=T('Maps with Flag0','僅搜含 Flag0 的地圖','「敵無・無無無判定→有」のみ');
 const F04=T('Depth↑','樓層↑','深さ↑');
@@ -66,8 +67,6 @@ const G03=T('Prefix','前綴','地図名1');
 const G04=T('Suffix','後綴','地図名2');
 const G05=T('Locale','中間名','地図名3');
 const G06=T('Location','位置','場所');
-const G07=T('Type','地形','地形');
-const G08=T('SMR','怪物等級','敵ランク');
 const G09=T('FloorMR','FloorMR','ﾌﾛｱ敵ﾗﾝｸ');
 const G10=T('Depth','樓層深度','深さ');
 const G11=T('Bug Terrain/Fastest','Bug地形／最短','ネタ／最短');
@@ -85,36 +84,40 @@ const G22=T('E.Group','敵組','敵ｸﾞﾙｰﾌﾟ');
 const G23=T('Support②','跟班②','お供②');
 const G24=T('Support③','跟班③','お供③');
 const G25=T('Thief\'s Theory User Lv','盜賊秘傳書 持有者 Lv','とうぞくの秘伝書 所持者 Lv');
-const G26=T('Map Deftness','地圖靈巧值','地図きようさ');
+const G26=T('Map Deftness','地圖靈巧値','地図きようさ');
 const GBQ=T('Base Quality','BQ','Base値');
 const H00=T('Chest Timer Search','中斷技 搜尋','中断技 検索');
-const H01=T('QL','即一人旅','即一人旅');
+const H01=T('QL','即一人旅');
 const H02=T('Combo','體感','体感');
-const H03=T('3rd','整列箱','整列箱');
+const H03=T('3rd','整列箱');
 const H04=T('Map Method (AT) Search','地圖法 (AT) 搜尋','地図法 (AT) 検索');
-const H05=T('Multibug','Multibug','マルチバグ');
-const H06=T('📥 TXT Output','📥 匯出TXT','📥 TXT出力');
-const H07=T('Chest Timer','馬拉松工具','マラソンツール');
+const H05=T('Steps','步數','ｽﾃｯﾌﾟ');
+const H06=T('Bat.','戰','戦');
+const H07=T('Multibug','Multibug','マルチバグ');
+const H08=T('📥 TXT Output','📥 匯出TXT','📥 TXT出力');
+const H09=T('Chest Timer','馬拉松工具','マラソンツール');
 const J01=T('Click to preview','點擊直接預覽此地圖','クリックでプレビュー');
 const J02=T('Waiting for searching...','等待執行搜尋...','検索待ち中...');
-const J03=T('Item Table','寶箱內容物','アイテムテーブル');
 const K01=T('🗺️ Ultimate Search Help','🗺️ Ultimate Search 說明','🗺️ Ultimate Searchの使い方');
 const K02=T('🗺️ Chest Timer Search Help','🗺️ 中斷技搜尋說明','🗺️ 中断技検索の使い方');
 const K03=T('🗺️ Map Method (AT) Search Help','🗺️ 地圖法 (AT) 搜尋說明','🗺️ 地図法 (AT) 検索の使い方');
-const L02=T('Attack','攻擊力','攻撃力');
-const L04=T('Strength','力','ちから');
-const L08=T('Finisher','收尾','とどめ');
-const L12=T('Wiped out','全滅','全滅');
-const L13=T('Turn 2','第 2 回合','2ターン目');
-const L14=T('Details','詳情','詳細');
-const L15=T('⚠ 2T (5–8 moves) AT +n/2 or +0 when entering Turn-2','⚠ 2T (5-8 招) 進入第 2 回合時 AT +n/2 或 +0','⚠ 2T (5～8手) 2ターン目に突入するとき AT +n/2 または +0');
-const L16=T(' more ▾',' 個組合 ▾','件をさらに表示 ▾');
-const L17=T('No 100% anti-block under these stats — click for alternatives','此條件下無法100% anti-block，點擊查看替代方案','この条件では 100% 盾貫通不可 — 代替案を表示');
-const L18=T('max','最大','最大');
+const L01=T('Strength','力','ちから');
+const L02=T('M.Might','攻擊魔力','攻撃魔力');
+const L03=T('Agility','速度','すばやさ');
+const L04=T('M.Mend','回復魔力');
+const L05=T('Turn 1','第 1 回合','1ターン目');
+const L06=T('Turn 2','第 2 回合','2ターン目');
+const L07=T('Details','詳情','詳細');
+const L08=T('⚠ 2T (5–8 moves) AT +n/2 or +0 when entering Turn-2','⚠ 2T (5-8 招) 進入第 2 回合時 AT +n/2 或 +0','⚠ 2T (5～8手) 2ターン目に突入するとき AT +n/2 または +0');
+const L09=T(' more ▾',' 個組合 ▾','件をさらに表示 ▾');
+const L10=T('Finisher','收尾','とどめ');
+const L12=T('Wiped out','全滅');
+const L17=T('No 100% anti-block combo — click for alternatives','沒有可完全防止盾格擋的組合，點擊查看替代方案','盾ガードを完全に防げる組み合わせがありません — 代替案を表示');
+const L18=T('max','最大');
 const L19=T('Neutral conditions do not use the current character panel.','中立條件不使用目前角色面板。','中立条件では現在のキャラのステータスを使用しません。');
 const L20=T('Character ','角色','キャラ');
 const L21=T('On field: ','場上：','場にいる敵：');
-const L22=T('Move ','第','第');
+const L22=T('Move ','第');
 const L23=T(' ','招 ','手 ');
 const L24=T(' removed by Mercy',' 被 Mercy 移除',' みのがすで離脱');
 const L25=T('Ineffective','無效','無効');
@@ -129,17 +132,14 @@ const L37=T('①KO main monster ②Mercy','①幹掉主怪 ②Mercy','①メイ�
 const L38=T('①KO main monster ②Mercy ③KO the rest','①幹掉主怪 ②Mercy ③清場','①メインを倒す ②みのがす ③全滅');
 const L39=T('①Mercy ②KO main monster','①Mercy ②幹掉主怪','①みのがす ②メインを倒す');
 const L40=T('Enemies ','敵怪 ','敵 ');
-const L41=T(' recommended combos',' 推薦組合',' おすすめ組み合わせ');
-const L42=T('▸ Click an AT value to view recommended combos for that enemy pattern','▸ 點 AT 值查看該 pattern 的推薦組合','▸ AT値をクリックすると、その敵パターンのおすすめ組み合わせを表示');
-const L43=T('Solver calculating…','Solver 計算中…','Solver 計算中…');
-const L44=T('Flee:','逃跑：','にげる：');
+const L41=T(' recommended combos',' 推薦組合',' おすすめの組み合わせ');
+const L42=T('▸ Click an AT value to view recommended combos for that enemy pattern','▸ 點 AT 値査看該 pattern 的推薦組合','▸ AT値をクリックすると、その敵パターンのおすすめ組み合わせを表示');
+const L43=T('Solver calculating…','Solver 計算中…');
+const L44=T('Flee','逃跑','にげる');
 const L45=T('(No corresponding formation for this case)','（此情形無對應形態）','（この条件に対応する編成なし）');
 const L46=T('YES','是','はい');
 const L47=T('NO','否','いいえ');
-const L48=T('Vocation','職業','職業');
-const L49=T('M.Might','攻擊魔力','攻撃魔力');
-const L50=T('Agility','速度','すばやさ');
-const L51=T('M.Mend','回復魔力','回復魔力');
+const L48=T('Vocation','職業');
 const L60=T('Conditions','成立條件','成立条件');
 const L64=T('Equipment','裝備','装備');
 const L65=T('Hits','擊數','ヒット数');
@@ -147,24 +147,23 @@ const L66=T('Early-stop variant: KO on the last listed hit.','早停形態：必
 const L67=T('Random-target skill: exactly one enemy must remain when used.','隨機指向招：出手當下必須只剩一隻怪。','ランダム対象技：使用時の生存敵は1体のみ。');
 const L68=T('Multiplayer required','需要多人模式','マルチプレイ必須');
 const L69=T('Keep the listed equipment, hits and action order.','須遵守所列裝備、擊數與出手順序。','記載の装備・ヒット数・行動順を守ること。');
-const L71=T('Verified stat combination','已驗證的能力值組合','検証済みステータスの組合せ');
-const L72=T('Use these values together, at Lv99 and in the listed agility order (vocation restrictions disabled). This is a verified example, not independent minimum thresholds.','以下數值須整組配合，Lv99，依所列速度順序出手（未套職業限制）。這是已驗證的可行範例，不是各項互相獨立的最低門檻。','以下の値を組み合わせ、Lv99・記載の素早さ順で使用（職業制限なし）。検証済みの一例であり、各値が独立した最低閾値ではありません。');
+const L71=T('Verified stat combination','已驗證的能力値組合','検証済みステータスの組合せ');
+const L72=T('Use these values together, at Lv99 and in the listed agility order (vocation restrictions disabled). This is a verified example, not independent minimum thresholds.','以下數値須整組配合，Lv99，依所列速度順序出手（未套職業限制）。這是已驗證的可行範例，不是各項互相獨立的最低門檻。','以下の値を組み合わせ、Lv99・記載の素早さ順で使用（職業制限なし）。検証済みの一例であり、各値が独立した最低閾値ではありません。');
 const L73=T('Verified result','驗證結果','検証結果');
-const L75=T('Agility rank','速度順位','素早さ順位');
-const L76=T('Turn 1','第 1 回合','1ターン目');
+const L75=T('Agility rank','速度順','素早さ順位');
 const L78=T('No requirement','無要求','不要');
-const STR_SOLO=T('Solo','一人旅','一人旅');
-const STR_PARTY=T('Party','即開','即開');
-const STR_BOTH=T('Solo+Party','即+一人旅','即+一人旅');
+const STR_SOLO=T('Solo','一人旅');
+const STR_PARTY=T('Party','即開');
+const STR_BOTH=T('Solo+Party','即+一人旅');
 const TKB1_1=T('Nipple (Inaccessible chest)','乳首','乳首 (取れない宝箱)');
-const TKB2_1=T('Chamber','イケない通路','イケない通路');
+const TKB2_1=T('Chamber','イケない通路');
 const TKB2_2=T('Chamber (Multi-floor)','イケない通路 (多層樓)','イケない通路 (複数階層)');
 const TKB2_3=T('Chamber (Same floor, multiple)','イケない通路 (同層多個)','イケない通路 (同じフロアに複数)');
 const TKB1_2=T('Nipple+Chamber','チラリズム','チラリズム (イケない乳首)');
 const TKB1_3=T('Chestless','無寶箱樓層','箱無しフロア');
 const TKB3_0=T('Wall-Embedded Stair','被牆壁封死的樓梯','壁に埋まった階段');
 const TKB3_1=T('Ghost Stair','幽靈樓梯','ゴースト階段');
-const TKB3_2=T('Softlock','危険？ハマるフロア','危険？ハマるフロア');
+const TKB3_2=T('Softlock','危険？ハマるフロア');
 const TKB4_1=T('Fastest Map','最短地圖','最短地図');
 const TKB4_2=T('Fastest Map (Detail)','最短地圖 (詳細版)','最短地図 (詳細版)');
 const TKB4_3=T('Fastest Floor','最短樓層','最短フロア');
@@ -177,36 +176,50 @@ const TKB4_9=T('Max Floor Walk Dist','最大樓層行走距離','マス目最長
 const TKB4_10=T('Max Chamber Area (Floor)','單層最大イケない通路面積','イケない通路 最大面積 (フロア)');
 const TKB4_11=T('Max Ghost Stairs (Floor)','單層最多幽靈樓梯','ゴースト階段 最多 (フロア)');
 const EL_M=T('Multi-Special-Floor','複數特殊層','複数の特殊フロア');
-const EL_P=T('Partially No-enemy','部分敵無','部分敵無');
-const EL_4=T('4-enemy','敵減 4 種','敵減 4 種');
-const EL_3=T('3-enemy','敵減 3 種','敵減 3 種');
-const EL_2=T('2-enemy','敵減 2 種','敵減 2 種');
+const EL_P=T('Partially No-enemy','部分敵無');
+const EL_4=T('4-enemy','敵減 4 種');
+const EL_3=T('3-enemy','敵減 3 種');
+const EL_2=T('2-enemy','敵減 2 種');
 const EL_1=T('ONLY (1-enemy)','ONLY (任何怪)','オンリー');
-const EL_0=T('No-enemy','敵無','敵無');
+const EL_0=T('No-enemy','敵無');
 const EL_NP=T(" (No Pandora's Box)"," (Pandora's Box 消失)"," (パンドラボックス消失)");
 const EL_NM=T(" (No Mimic)"," (Mimic 消失)"," (ミミック消失)");
 const EL_NC=T(" (No Cannibox)"," (Cannibox 消失)"," (ひとくいばこ消失)");
+const EL_ONLY=T(' only','オンリー');
 const EL_NORMAL=T('Normal','一般','通常');
-const AT_O=[['R2',T('2 Rare','連續 2 個稀有','レア×2')],['R2_3',T('2 Rare (N/N+3)','連續 2 個稀有 (N/N+3)','レア×2 (チカラめし)')],['R2_5',T('2 Rare (N/N+5)','連續 2 個稀有 (N/N+5)','レア×2 (N/N+5)')],['R2_7',T('2 Rare (N/N+7)','連續 2 個稀有 (N/N+7)','レア×2 (N/N+7)')],['R3',T('3 Rare','連續 3 個稀有','レア×3')],['R4',T('4 Rare','連續 4 個稀有','レア×4')],['R5',T('5 Rare','連續 5 個稀有','レア×5')],['4_in_6',T('4 in 6 Rare','6 個中 4 個稀有','レア×4 (6連続)')],['3_in_7',T('3 in 7 Rare','7 個中 3 個稀有','レア×3 (7連続)')],['N2',T('2 Normal','連續 2 個通常','通常×2')],['N3',T('3 Normal','連續 3 個通常','通常×3')],['N4',T('4 Normal','連續 4 個通常','通常×4')],['N5',T('5 Normal','連續 5 個通常','通常×5')],['4_in_10',T('4 in 10 Normal','10 個中 4 個通常','通常×4 (10連続)')],['3_in_10',T('3 in 10 Normal','10 個中 3 個通常','通常×3 (10連続)')]];
-const AT_PAT={'R2':1,'N2':2,'R2_3':3,'R2_5':14,'R2_7':15,'R3':4,'R4':5,'R5':6,'4_in_6':7,'3_in_7':8,'N3':9,'N4':10,'N5':11,'4_in_10':12,'3_in_10':13};
-const BATTLE_LABEL=T('Bat.','戰','戦');
+const AT_O=[
+['R2',T('2 Rare','連續 2 個稀有','レア×2'),[[1,2]]],
+['R2_3',T('2 Rare (N/N+3)','連續 2 個稀有 (N/N+3)','レア×2 (チカラめし)'),[[1,4]]],
+['R2_5',T('2 Rare (N/N+5)','連續 2 個稀有 (N/N+5)','レア×2 (N/N+5)'),[[1,6]]],
+['R2_7',T('2 Rare (N/N+7)','連續 2 個稀有 (N/N+7)','レア×2 (N/N+7)'),[[1,8]]],
+['R3',T('3 Rare','連續 3 個稀有','レア×3'),[[1,2,3]]],
+['R4',T('4 Rare','連續 4 個稀有','レア×4'),[[1,2,3,4]]],
+['R5',T('5 Rare','連續 5 個稀有','レア×5'),[[1,2,3,4,5]]],
+['4_in_6',T('4 in 6 Rare','6 個中 4 個稀有','レア×4 (6連続)'),[[1,2,3,6],[1,2,5,6],[1,4,5,6]]],
+['3_in_7',T('3 in 7 Rare','7 個中 3 個稀有','レア×3 (7連続)'),[[1,2,5],[1,2,7],[1,4,5],[1,4,7],[1,6,7]]],
+['N2',T('2 Normal','連續 2 個通常','通常×2'),[[2,4]],1],
+['N3',T('3 Normal','連續 3 個通常','通常×3'),[[2,4,6]],1],
+['N4',T('4 Normal','連續 4 個通常','通常×4'),[[2,4,6,8]],1],
+['N5',T('5 Normal','連續 5 個通常','通常×5'),[[2,4,6,8,10]],1],
+['4_in_10',T('4 in 10 Normal','10 個中 4 個通常','通常×4 (10連続)'),[[2,4,6,10],[2,4,8,10],[2,6,8,10]],1],
+['3_in_10',T('3 in 10 Normal','10 個中 3 個通常','通常×3 (10連続)'),[[2,4,8],[2,4,10],[2,6,8],[2,6,10],[2,8,10]],1]];
+const AT_PAT=Object.fromEntries(AT_O.map(([k],i)=>[k,i+1]));
 const i18nDict={
 'F01':F01,'F03':F03,'F04':F04,
-'G01':G01,'G03':G03,'G04':G04,'G05':G05,'G06':G06,'G07':G07,'G08':G08,'G09':G09,'G10':G10,'G11':G11,'G12':G12,'G13':G13,'G14':G14,'G15':G15,
-'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'G26':G26,'GBQ':GBQ,
-'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H05':H05,'H06':H06,'H07':H07,
-'J02':J02,'J03':J03,'K01':K01,'K02':K02,'K03':K03,
+'G01':G01,'G03':G03,'G04':G04,'G05':G05,'G06':G06,'C02':C02,'C03':C03,'G09':G09,'G10':G10,'G11':G11,'G12':G12,'G13':G13,'G14':G14,'G15':G15,
+'G16':G16,'G17':G17,'G18':G18,'G19':G19,'G20':G20,'G21':G21,'G22':G22,'G23':G23,'G24':G24,'G25':G25,'GBQ':GBQ,
+'H00':H00,'H01':H01,'H02':H02,'H03':H03,'H04':H04,'H07':H07,'H08':H08,'H09':H09,
+'K01':K01,'K02':K02,'K03':K03,
 'TKB1_1':TKB1_1,'TKB1_2':TKB1_2,'TKB1_3':TKB1_3,'TKB2_1':TKB2_1,'TKB2_2':TKB2_2,'TKB2_3':TKB2_3,'TKB3_0':TKB3_0,'TKB3_1':TKB3_1,'TKB3_2':TKB3_2,'TKB4_1':TKB4_1,'TKB4_2':TKB4_2,'TKB4_3':TKB4_3,'TKB4_4':TKB4_4,'TKB4_5':TKB4_5,'TKB4_6':TKB4_6,'TKB4_7':TKB4_7,'TKB4_8':TKB4_8,'TKB4_9':TKB4_9,'TKB4_10':TKB4_10,'TKB4_11':TKB4_11,
 'EL_M':EL_M,'EL_P':EL_P,'EL_4':EL_4,'EL_3':EL_3,'EL_2':EL_2,'EL_1':EL_1,'EL_0':EL_0,
-'L48':L48,'L02':L02,'L49':L49,'L04':L04,'L50':L50,'L51':L51,
+'L01':L01,'L02':L02,'L03':L03,'L04':L04,'L48':L48,
 };
-const _OG={og1:T('Materials','素材/消耗品','素材/消耗品'),ogS:T('B9F Items','B9F物品','B9Fアイテム'),og2:T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'),og3:T('Cursed Equipment','詛咒裝備','呪い装備'),og4:T('Other Equipment','其他裝備','その他の装備'),og5:T('Chest Monsters','寶箱怪','宝箱モンスター')};
-const _STEPS_LBL=T('Steps','步數','歩');
+const _OG={og1:T('Materials','素材/消耗品'),ogS:T('B9F Items','B9F物品','B9Fアイテム'),og2:T('Rare Equipment','限定裝備/大富豪','限定装備/大富豪'),og3:T('Cursed Equipment','詛咒裝備','呪い装備'),og4:T('Other Equipment','其他裝備','その他の装備'),og5:T('Chest Monsters','寶箱怪','宝箱モンスター')};
 const b3fThreeItems=["Mini medal","Sage's elixir","Iron nails","Hephaestus' flame"];
 const MAP_RANK=[0x02,0x38,0x3D,0x4C,0x51,0x65,0x79,0x8D,0xA1,0xB5,0xC9,0xDD];
 const CHEST_RANK={10:'S',9:'A',8:'B',7:'C',6:'D',5:'E',4:'F',3:'G',2:'H',1:'I'};
-const ENV_NAMES={1:['Caves','洞窟'],2:['Ruins','遺跡'],3:['Ice','氷'],4:['Water','水'],5:['Fire','火山']};
-const ENV_OPTS=[T('Caves','洞窟','洞窟'),T('Ruins','遺跡','遺跡'),T('Ice','冰','氷'),T('Water','水','水'),T('Fire','火山','火山')];
+const ENV_OPTS=[T('Caves','洞窟'),T('Ruins','遺跡'),T('Ice','冰','氷'),T('Water','水'),T('Fire','火山')];
+const ENV_NAMES=Object.fromEntries(ENV_OPTS.map((o,i)=>[i+1,[o[0],o[2]]]));
 const BOSS_NAMES={
 1:['Equinox','馬','黒竜丸'],2:['Nemean','爪','ハヌマーン'],3:['Shogum','髭','スライムジェネラル'],4:['Trauminator','機','Sキラーマシン'],
 5:['Elusid','教','イデアラゴン'],6:['Sir Sanguinus','血','ブラッドナイト'],7:['Atlas','巨','アトラス'],8:['Hammibal','猪','怪力軍曹イボイノス'],
@@ -251,7 +264,7 @@ const TableR=[
 ["Mini medal","ちいさなメダル"],["Medicinal herb","やくそう"],["Strong medicine","上やくそう"],["Evac-u-bell","おもいでのすず"],
 ["Holy water","せいすい"],["Magic water","まほうのせいすい"],["Sage's elixir","けんじゃのせいすい"],["Antidotal herb","どくけしそう"],
 ["Strong antidote","上どくけしそう"],["Narspicious","あやかしそう"],["Mystifying mixture","おかしなくすり"],["Superior medicine","いやしそう"],
-["Moonwort bulb","まんげつそう"],["Panacea","ばんのうくすり"],["Perfect panacea","超ばんのうくすり"],["Yggdrasil leaf","せかいじゅのは"],
+["Moonwort bulb","まんげつそう"],["Panacea","ばんのうぐすり"],["Perfect panacea","超ばんのうぐすり"],["Yggdrasil leaf","せかいじゅのは"],
 ["Chimaera wing","キメラのつばさ"],["Oaken club","こんぼう"],["Pop socks","ニーソックス"],["Silver bracelets","ぎんのリスト"],
 ["Bunny tail","うさぎのおまもり"],["Royal soil","まりょくの土"],["Lava lump","ようがんのカケラ"],["Angel bell","天使のすず"],
 ["Silver platter","シルバートレイ"],["Fisticup","げんこつダケ"],["Iron nails","てつのクギ"],["Gold ring","きんのゆびわ"],
@@ -284,10 +297,9 @@ const TableR=[
 ];
 function debounce(fn,ms){let timer;return function(...args){clearTimeout(timer);timer=setTimeout(()=>fn.apply(this,args),ms);};}
 function lcg(seed){return(Math.imul(seed,1103515245)+12345)>>>0;}
-function row4(t,rows,v,dft){
-for(let i=0;i<rows;i++){const b=i*4;if(v>=t[b]&&v<=t[b+1])return[t[b+2],t[b+3]];}
-return dft;
-}
+function atFromRng(rng){return(rng>>>16)&0x7FFF;}
+function row4(t,rows,v,dft){for(let i=0;i<rows;i++){const b=i*4;if(v>=t[b]&&v<=t[b+1])return[t[b+2],t[b+3]];}return dft;}
+function rowsHit(t,rows,lo,hi,v){for(let k=lo;k<=hi;k++){const[a,b]=row4(t,rows,k,NO_ROW);if(v>=a&&v<=b)return true;}return false;}
 const NO_ROW=[1,0];
 function selectChestItem(rank,roll){
 const start=TableO[rank-1],end=TableO[rank];
@@ -298,6 +310,11 @@ if(roll<weight)return TableR[TableQ[i]];
 }
 return null;
 }
+const STAIR_REJECT_SHAPE=new Uint8Array(256);
+for(const v of[46,58,139,142,163,171,174,184,186,226,232,234])STAIR_REJECT_SHAPE[v]=1;
+const FLOOR_CACHE_MAX=256;
+const floorSizeBucket=(index1)=>index1>12?3:index1>8?2:index1>4?1:0;
+const floorChestClass=(index1)=>index1<=2?0:index1===3?1:2;
 class GrottoDetail{
 constructor(){
 this.di=[];
@@ -310,8 +327,8 @@ this.MapRank=0;
 this.MapLocale=0;
 this.isStairOverflow=new Array(16).fill(false);
 this.trackOverflow=false;
-this._at_offset=0;
-this._force_16_floors=false;
+this.multibug_offset=0;
+this.force_16_floors=false;
 }
 _readI32(floor,offset){
 const d=this.di[floor];
@@ -325,8 +342,9 @@ d[offset+2]=(val>>>16)&0xFF;
 d[offset+3]=(val>>>24)&0xFF;
 }
 gRNG(){
-this._seed=lcg(this._seed);
-return(this._seed>>>16)&0x7FFF;
+const s=(Math.imul(this._seed,1103515245)+12345)|0;
+this._seed=s;
+return(s>>>16)&0x7FFF;
 }
 gRNGDiv(div){
 return this.gRNG()%div;
@@ -377,8 +395,7 @@ routineRandom(value){
 return(Math.fround(this.gRNG()-1)*value/32767)>>>0;
 }
 routine1(floor,address,value1,value2){
-for(let i=0;i<value2;i++)
-this.di[floor][address+i]=value1&0xFF;
+if(value2>0)this.di[floor].fill(value1&0xFF,address,address+value2);
 }
 setValue(floor,address,v1,v2,v3,v4){
 const d=this.di[floor];
@@ -435,19 +452,9 @@ this.routineF(floor,address);
 routineF(floor,address){
 const d=this.di[floor];
 if(d[21]>=15)return;
-if(d[address+5]!==0){
-if(!this.routineA(floor,address,d[21]*12+24,(d[22]<<4)+216))return;
-this.routineB(floor,address);
-}else if(d[address+4]!==0){
-if(!this.routineE(floor,address,d[21]*12+24,(d[22]<<4)+216))return;
-this.routineB(floor,address);
-}else if((this.gRNG()&1)!==0){
-if(!this.routineE(floor,address,d[21]*12+24,(d[22]<<4)+216))return;
-this.routineB(floor,address);
-}else{
-if(!this.routineA(floor,address,d[21]*12+24,(d[22]<<4)+216))return;
-this.routineB(floor,address);
-}
+const useA=d[address+5]!==0?true:d[address+4]!==0?false:(this.gRNG()&1)===0;
+const split=useA?this.routineA(floor,address,d[21]*12+24,(d[22]<<4)+216):this.routineE(floor,address,d[21]*12+24,(d[22]<<4)+216);
+if(split)this.routineB(floor,address);
 }
 routineC(floor,address1,address2){
 const d=this.di[floor];
@@ -562,10 +569,10 @@ const random1=this.gRNGRange(0,num2);
 const num9=i3-1;
 for(let i4=0;i4<random1&&
 d[i3+((d[index1+1]+i4)<<4)+792]!==8&&
-d[i3+((d[index1+1]+i4+1)<<4)+792]!==1&&
-(d[((d[index1+1]+i4)<<4)+i3+1+792]===1||
-d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1)&&
-(d[((d[index1+1]+i4)<<4)+num9+792]===1||
+d[i3+((d[index1+1]+i4+1)<<4)+792]!==1&&(
+d[((d[index1+1]+i4)<<4)+i3+1+792]===1||
+d[((d[index1+1]+i4+1)<<4)+i3+1+792]!==1)&&(
+d[((d[index1+1]+i4)<<4)+num9+792]===1||
 d[num9+((d[index1+1]+i4+1)<<4)+792]!==1);
 i4++)
 d[i3+((d[index1+1]+i4)<<4)+792]=1;
@@ -594,10 +601,10 @@ const random3=this.gRNGRange(0,num2);
 const num11=i7-1;
 for(let i9=0;i9<random3&&
 d[i7+((d[index1+3]-i9)<<4)+792]!==8&&
-d[i7+((d[index1+3]-i9-1)<<4)+792]!==1&&
-(d[((d[index1+3]-i9)<<4)+i7+1+792]===1||
-d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1)&&
-(d[num11+((d[index1+3]-i9)<<4)+792]===1||
+d[i7+((d[index1+3]-i9-1)<<4)+792]!==1&&(
+d[((d[index1+3]-i9)<<4)+i7+1+792]===1||
+d[((d[index1+3]-i9-1)<<4)+i7+1+792]!==1)&&(
+d[num11+((d[index1+3]-i9)<<4)+792]===1||
 d[num11+((d[index1+3]-i9-1)<<4)+792]!==1);
 i9++)
 d[i7+((d[index1+3]-i9)<<4)+792]=1;
@@ -620,10 +627,10 @@ const random4=this.gRNGRange(0,num1);
 const num13=i10-1;
 for(let i12=0;i12<random4&&
 d[i12+(i10<<4)+d[index1]+792]!==8&&
-d[i12+(i10<<4)+d[index1]+792+1]!==1&&
-(d[i12+((i10+1)<<4)+d[index1]+792]===1||
-d[i12+((i10+1)<<4)+d[index1]+792+1]!==1)&&
-(d[i12+(num13<<4)+d[index1]+792]===1||
+d[i12+(i10<<4)+d[index1]+792+1]!==1&&(
+d[i12+((i10+1)<<4)+d[index1]+792]===1||
+d[i12+((i10+1)<<4)+d[index1]+792+1]!==1)&&(
+d[i12+(num13<<4)+d[index1]+792]===1||
 d[i12+(num13<<4)+d[index1]+792+1]!==1);
 i12++)
 d[i12+(i10<<4)+d[index1]+792]=1;
@@ -646,10 +653,10 @@ const random5=this.gRNGRange(0,num1);
 const num15=i13-1;
 for(let i15=0;i15<random5&&
 d[(i13<<4)+792+d[index1+2]-i15]!==8&&
-d[(i13<<4)+792+d[index1+2]-i15-1]!==1&&
-(d[((i13+1)<<4)+792+d[index1+2]-i15]===1||
-d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1)&&
-(d[(num15<<4)+792+d[index1+2]-i15]===1||
+d[(i13<<4)+792+d[index1+2]-i15-1]!==1&&(
+d[((i13+1)<<4)+792+d[index1+2]-i15]===1||
+d[((i13+1)<<4)+792+d[index1+2]-i15-1]!==1)&&(
+d[(num15<<4)+792+d[index1+2]-i15]===1||
 d[(num15<<4)+792+d[index1+2]-i15-1]!==1);
 i15++)
 d[(i13<<4)+792+d[index1+2]-i15]=1;
@@ -683,33 +690,15 @@ return value3;
 routineG(floor,address){
 const d=this.di[floor];
 const address3=address;
-if(d[address3+12]===1){
+const split=d[address3+12];
+if(split!==1&&split!==2)return 1;
 const parentAddr=this._readI32(floor,address3+4);
 const address1=this._readI32(floor,parentAddr+8);
 const siblingAddr=this._readI32(floor,address3+8);
 const address2=this._readI32(floor,siblingAddr+8);
-const num1=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,16,address2,12,address3,num1);
-const num2=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,18,address2,12,address3,num2);
-const num3=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,16,address2,14,address3,num3);
-const num4=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,18,address2,14,address3,num4);
-}else if(d[address3+12]===2){
-const parentAddr=this._readI32(floor,address3+4);
-const address1=this._readI32(floor,parentAddr+8);
-const siblingAddr=this._readI32(floor,address3+8);
-const address2=this._readI32(floor,siblingAddr+8);
-const num5=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,8,address2,4,address3,num5);
-const num6=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,10,address2,4,address3,num6);
-const num7=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,8,address2,6,address3,num7);
-const num8=this.gRNGRange(0,7)===0?1:0;
-this.routineH(floor,address1,10,address2,6,address3,num8);
-}
+const draw=(v1,v2)=>this.routineH(floor,address1,v1,address2,v2,address3,this.gRNGRange(0,7)===0?1:0);
+if(split===1){draw(16,12);draw(18,12);draw(16,14);draw(18,14);}
+else{draw(8,4);draw(10,4);draw(8,6);draw(10,6);}
 return 1;
 }
 routineH(floor,address1,value1,address2,value2,address3,value3){
@@ -794,7 +783,7 @@ const w9=(n5===1||n5===3)?1:0;
 const w10=(n6===1||n6===3)?1:0;
 if((w7||w8)&&(w9||w10)){num2++;continue;}
 const ri=this.routineI(floor,random4,random5,0)&255;
-if([46,58,139,142,163,171,174,184,186,226,232,234].includes(ri)){num2++;continue;}
+if(STAIR_REJECT_SHAPE[ri]===1){num2++;continue;}
 }
 d[random4+(random5<<4)+792]=4;
 d[4]=random4;d[5]=random5;
@@ -850,16 +839,17 @@ return 1;
 }
 calculateDetail(skipMapGen=false){
 for(let i=0;i<16;i++)this.di[i].fill(0);
+if(this._floorSlot)this._floorSlot.fill(null);
 this._details.fill(0);
 this._details2.fill(0);
 if(this.trackOverflow)this.isStairOverflow.fill(false);
 if(this.MapRank<2||this.MapRank>248)return;
 this._seed=this.MapSeed;
-if(this._at_offset===1){this._seed=lcg(this._seed);}
+if(this.multibug_offset===1){this._seed=lcg(this._seed);}
 for(let i=0;i<12;i++)this.gRNGDiv(100);
 this._details[3]=this.seek1(TableA,5);
 this._details[1]=this.seek2(TableB,this.MapRank,9);
-if(this._force_16_floors){this._details[1]=16;}
+if(this.force_16_floors){this._details[1]=16;}
 this._details[2]=this.seek2(TableC,this.MapRank,8);
 this._details[0]=this.seek4(TableD,TableE,9);
 for(let i=0;i<12;i++)
@@ -883,9 +873,7 @@ if(!skipMapGen){
 this.createDungeonDetail();
 }
 }
-createDungeonDetail(){
-for(let index1=1;index1<this._details[1]+1;index1++){
-const floor=index1-1;
+generateFloorLayout(floor,index1){
 const d=this.di[floor];
 d[0]=index1;
 d[8]=0;
@@ -895,13 +883,9 @@ d[21]=1;d[22]=0;d[23]=0;d[1]=0;
 this.setValue(floor,24,1,1,d[2]-2,d[3]-2);
 d[28]=0;d[29]=0;
 this.routineF(floor,24);
-for(let i2=0;i2<d[21];i2++)
-if(this.routineC(floor,i2*12+24,d[23]*20+472))
-d[23]++;
-for(let i3=0;i3<d[21];i3++)
-this.generateFloorMap(floor,i3*12+24);
-for(let i4=0;i4<d[22];i4++)
-this.routineG(floor,(i4<<4)+216);
+for(let i2=0;i2<d[21];i2++)if(this.routineC(floor,i2*12+24,d[23]*20+472))d[23]++;
+for(let i3=0;i3<d[21];i3++)this.generateFloorMap(floor,i3*12+24);
+for(let i4=0;i4<d[22];i4++)this.routineG(floor,(i4<<4)+216);
 for(let i5=0;i5<d[2];i5++){
 d[i5+792]=1;
 d[((d[3]-1)<<4)+i5+792]=1;
@@ -910,9 +894,35 @@ for(let i6=0;i6<d[3];i6++){
 d[(i6<<4)+792]=1;
 d[(i6<<4)+792+d[2]-1]=1;
 }
+const track=this.trackOverflow,before=this.isStairOverflow[floor];
+this.trackOverflow=true;this.isStairOverflow[floor]=false;
 this.routineJ(floor);
+const overflow=this.isStairOverflow[floor];
+this.trackOverflow=track;this.isStairOverflow[floor]=track?overflow:before;
+return{bytes:d.slice(),seed:this._seed,overflow,derived:[null,null,null]};
+}
+createDungeonDetail(){
+const cache=this._floorCache||(this._floorCache=new Map());
+const slots=this._floorSlot||(this._floorSlot=new Array(16).fill(null));
+for(let index1=1;index1<this._details[1]+1;index1++){
+const floor=index1-1;
+const d=this.di[floor];
+const key=((this.MapSeed+index1)>>>0)*4+floorSizeBucket(index1);
+let layout=cache.get(key);
+if(layout){
+d.set(layout.bytes);
+d[0]=index1;
+this._seed=layout.seed;
+if(this.trackOverflow&&layout.overflow)this.isStairOverflow[floor]=true;
+}else{
+layout=this.generateFloorLayout(floor,index1);
+cache.set(key,layout);
+if(cache.size>FLOOR_CACHE_MAX)cache.delete(cache.keys().next().value);
+}
 if(d[0]<=2)d[8]=0;
 else this.routineK(floor);
+const cls=floorChestClass(index1);
+slots[floor]=layout.derived[cls]||(layout.derived[cls]={});
 }
 for(let i12=2;i12<this._details[1];i12++){
 const d=this.di[i12];
@@ -1198,107 +1208,99 @@ const G_VALUES={
 4:[0,140,132,132,128,140,144,124,128,136,128,124,124],
 5:[0,128,128,112,128,128,132,128,136,140,136,140,136]
 };
-const ONLY_MONSTERS={
-1:["","00B","036","034","076","052","02F","04D","037","035","0B5","035","0D7"],
-2:["","053","02A","040","034","062","097","01B","035","035","04D","0B9","0E4"],
-3:["","008","012","068","056","031","0B2","02F","05D","0B8","0B9","0EC","0EC"],
-4:["","03D","051","059","013","057","057","037","0B5","0F0","0F0","0B0","0B0"],
-5:["","03E","086","015","01B","080","02E","0AA","0C3","0B5","0C7","0AB","0AB"]
-};
-function matchesOnlyMonFloor(env,floorMR,name){
-return MONSTER_DB[ONLY_MONSTERS[env][floorMR]].en===name;
-}
+function matchesOnlyMonFloor(env,floorMR,name){return MONSTER_DB[ONLY_MONSTERS[env][floorMR]].en===name;}
 const SPAWN_DB={
 1:{
-1:[["00B",6555,13107],["00E",13108,19661],["022",0,6554],["026"],["027"],["028"],["082",26215,32767],["08C",19662,26214]],
-2:[["026"],["027"],["028"],["036",6555,13107],["03B",19662,26214],["063",0,6554],["087",26215,32767],["0BD",13108,19661]],
-3:[["026"],["027"],["028"],["034",13108,19661],["083",6555,13107],["08B",26215,32767],["099",0,6554],["101",19662,26214]],
-4:[["026"],["027"],["028"],["076",0,6554],["07C",13108,19661],["080",19662,26214],["0AE",26215,32767],["0D9",6555,13107]],
-5:[["026"],["027"],["028"],["052",13108,19661],["07D",6555,13107],["0B6",19662,26214],["0C5",0,6554],["0DD",26215,32767]],
-6:[["026"],["027"],["028"],["02F",26215,32767],["089",0,6554],["097",6555,13107],["0A9",19662,26214],["105",13108,19661]],
-7:[["026"],["027"],["028"],["04D",16385,18724],["089",25747,32767],["0B4",0,8192],["0B7",18725,25746],["0D5",8193,16384]],
-8:[["026"],["027"],["028"],["037",0,5958],["0C6",25818,32767],["0F5",5959,11916],["102",18867,25817],["109",11917,18866]],
-9:[["026"],["027"],["028"],["035",13903,20852],["0AF",26811,32767],["0ED",0,6951],["109",20853,26810],["14E",6952,13902]],
-10:[["026"],["027"],["028"],["0B5",31555,32767],["0ED",16992,24272],["0F1",0,8496],["147",8497,16991],["14E",24273,31554]],
-11:[["026"],["027"],["028"],["035",21846,26214],["0D7",7647,15292],["0E2",0,7646],["0ED",26215,32767],["147",15293,21845]],
-12:[["026"],["027"],["028"],["0D7",20481,26624],["0E2",14337,20480],["0EB",0,7168],["0F1",26625,32767],["149",7169,14336]],
+1:[["00B",6555],["00E",13108],["022",0],["026"],["027"],["028"],["082",26215],["08C",19662]],
+2:[["026"],["027"],["028"],["036",6555],["03B",19662],["063",0],["087",26215],["0BD",13108]],
+3:[["026"],["027"],["028"],["034",13108],["083",6555],["08B",26215],["099",0],["101",19662]],
+4:[["026"],["027"],["028"],["076",0],["07C",13108],["080",19662],["0AE",26215],["0D9",6555]],
+5:[["026"],["027"],["028"],["052",13108],["07D",6555],["0B6",19662],["0C5",0],["0DD",26215]],
+6:[["026"],["027"],["028"],["02F",26215],["089",0],["097",6555],["0A9",19662],["105",13108]],
+7:[["026"],["027"],["028"],["04D",16385],["089",25747],["0B4",0],["0B7",18725],["0D5",8193]],
+8:[["026"],["027"],["028"],["037",0],["0C6",25818],["0F5",5959],["102",18867],["109",11917]],
+9:[["026"],["027"],["028"],["035",13903],["0AF",26811],["0ED",0],["109",20853],["14E",6952]],
+10:[["026"],["027"],["028"],["0B5",31555],["0ED",16992],["0F1",0],["147",8497],["14E",24273]],
+11:[["026"],["027"],["028"],["035",21846],["0D7",7647],["0E2",0],["0ED",26215],["147",15293]],
+12:[["026"],["027"],["028"],["0D7",20481],["0E2",14337],["0EB",0],["0F1",26625],["149",7169]],
 },
 2:{
-1:[["026"],["027"],["028"],["053",19662,26214],["077",0,6554],["084",13108,19661],["096",26215,32767],["0BA",6555,13107]],
-2:[["026"],["027"],["028"],["02A",6555,13107],["09F",26215,32767],["0A4",19662,26214],["0C8",13108,19661],["0DC",0,6554]],
-3:[["026"],["027"],["028"],["040",11917,22342],["04C",10427,11916],["0A3",22343,32767],["0B1",0,10426]],
-4:[["026"],["027"],["028"],["034",13108,19661],["062",6555,13107],["086",26215,32767],["08F",19662,26214],["0AC",0,6554]],
-5:[["026"],["027"],["028"],["062",13108,19661],["094",19662,26214],["0B2",6555,13107],["0CB",0,6554],["0DD",26215,32767]],
-6:[["026"],["027"],["028"],["097",13108,19661],["0A6",26215,32767],["0BC",0,6554],["0D5",19662,26214],["105",6555,13107]],
-7:[["01B",0,1425],["026"],["027"],["028"],["0B8",5700,12822],["0DE",12823,22795],["105",22796,32767],["141",1426,5699]],
-8:[["026"],["027"],["028"],["035",18725,23405],["04D",29648,32767],["0A8",23406,29647],["0B8",0,10923],["141",10924,18724]],
-9:[["026"],["027"],["028"],["035",28836,32767],["0B8",15730,19661],["0C2",6555,15729],["0EF",0,6554],["141",19662,28835]],
-10:[["026"],["027"],["028"],["04D",31555,32767],["0C2",24273,31554],["0EF",16992,24272],["0FE",0,8496],["14A",8497,16991]],
-11:[["026"],["027"],["028"],["0B9",4856,7282],["0E6",0,4855],["0EF",24273,32767],["0FE",7283,15777],["14A",15778,24272]],
-12:[["026"],["027"],["028"],["0E4",0,7282],["0E5",7283,14564],["0E6",14565,20025],["0F2",20026,21845],["14A",21846,32767]],
+1:[["026"],["027"],["028"],["053",19662],["077",0],["084",13108],["096",26215],["0BA",6555]],
+2:[["026"],["027"],["028"],["02A",6555],["09F",26215],["0A4",19662],["0C8",13108],["0DC",0]],
+3:[["026"],["027"],["028"],["040",11917],["04C",10427],["0A3",22343],["0B1",0]],
+4:[["026"],["027"],["028"],["034",13108],["062",6555],["086",26215],["08F",19662],["0AC",0]],
+5:[["026"],["027"],["028"],["062",13108],["094",19662],["0B2",6555],["0CB",0],["0DD",26215]],
+6:[["026"],["027"],["028"],["097",13108],["0A6",26215],["0BC",0],["0D5",19662],["105",6555]],
+7:[["01B",0],["026"],["027"],["028"],["0B8",5700],["0DE",12823],["105",22796],["141",1426]],
+8:[["026"],["027"],["028"],["035",18725],["04D",29648],["0A8",23406],["0B8",0],["141",10924]],
+9:[["026"],["027"],["028"],["035",28836],["0B8",15730],["0C2",6555],["0EF",0],["141",19662]],
+10:[["026"],["027"],["028"],["04D",31555],["0C2",24273],["0EF",16992],["0FE",0],["14A",8497]],
+11:[["026"],["027"],["028"],["0B9",4856],["0E6",0],["0EF",24273],["0FE",7283],["14A",15778]],
+12:[["026"],["027"],["028"],["0E4",0],["0E5",7283],["0E6",14565],["0F2",20026],["14A",21846]],
 },
 3:{
-1:[["008",0,8192],["026"],["027"],["028"],["067",16385,24576],["06A",24577,32767],["06D",8193,16384]],
-2:[["012",26215,32767],["026"],["027"],["028"],["05F",0,6554],["065",6555,13107],["072",13108,19661],["0CA",19662,26214]],
-3:[["026"],["027"],["028"],["068",13108,19661],["06D",6555,13107],["0A5",0,6554],["0E8",26215,32767],["0E9",19662,26214]],
-4:[["026"],["027"],["028"],["056",19662,26214],["079",13108,19661],["0A2",6555,13107],["0A5",0,6554],["0D9",26215,32767]],
-5:[["026"],["027"],["028"],["031",13108,19661],["0BE",0,6554],["0CC",26215,32767],["0D9",19662,26214],["103",6555,13107]],
-6:[["026"],["027"],["028"],["0B2",19662,26214],["0B7",26215,32767],["0C1",6555,13107],["0CC",13108,19661],["103",0,6554]],
-7:[["026"],["027"],["028"],["02F",26215,32767],["0B7",19662,26214],["0C1",6555,13107],["0CE",0,6554],["0DE",13108,19661]],
-8:[["026"],["027"],["028"],["05D",26811,32767],["0C4",13903,20852],["0E0",20853,26810],["0F3",0,6951],["143",6952,13902]],
-9:[["026"],["027"],["028"],["0B8",13903,20852],["0E0",26811,32767],["0F7",6952,13902],["0FA",0,6951],["143",20853,26810]],
-10:[["026"],["027"],["028"],["0B9",31130,32767],["0F6",0,11469],["0F7",21300,31129],["0FA",11470,21299]],
-11:[["026"],["027"],["028"],["0EC",8823,17644],["0F6",17645,25206],["0FA",25207,32767],["145",0,8822]],
-12:[["026"],["027"],["028"],["0EC",17040,24903],["0F4",0,9175],["0F8",24904,32767],["145",9176,17039]],
+1:[["008",0],["026"],["027"],["028"],["067",16385],["06A",24577],["06D",8193]],
+2:[["012",26215],["026"],["027"],["028"],["05F",0],["065",6555],["072",13108],["0CA",19662]],
+3:[["026"],["027"],["028"],["068",13108],["06D",6555],["0A5",0],["0E8",26215],["0E9",19662]],
+4:[["026"],["027"],["028"],["056",19662],["079",13108],["0A2",6555],["0A5",0],["0D9",26215]],
+5:[["026"],["027"],["028"],["031",13108],["0BE",0],["0CC",26215],["0D9",19662],["103",6555]],
+6:[["026"],["027"],["028"],["0B2",19662],["0B7",26215],["0C1",6555],["0CC",13108],["103",0]],
+7:[["026"],["027"],["028"],["02F",26215],["0B7",19662],["0C1",6555],["0CE",0],["0DE",13108]],
+8:[["026"],["027"],["028"],["05D",26811],["0C4",13903],["0E0",20853],["0F3",0],["143",6952]],
+9:[["026"],["027"],["028"],["0B8",13903],["0E0",26811],["0F7",6952],["0FA",0],["143",20853]],
+10:[["026"],["027"],["028"],["0B9",31130],["0F6",0],["0F7",21300],["0FA",11470]],
+11:[["026"],["027"],["028"],["0EC",8823],["0F6",17645],["0FA",25207],["145",0]],
+12:[["026"],["027"],["028"],["0EC",17040],["0F4",0],["0F8",24904],["145",9176]],
 },
 4:{
-1:[["026"],["027"],["028"],["03D",19662,26214],["05E",0,6554],["09D",6555,13107],["0CF",26215,32767],["104",13108,19661]],
-2:[["026"],["027"],["028"],["051",26215,32767],["095",19662,26214],["09E",13108,19661],["0B3",6555,13107],["0D4",0,6554]],
-3:[["026"],["027"],["028"],["059",19662,26214],["06E",6555,13107],["0A2",13108,19661],["0CD",0,6554],["104",26215,32767]],
-4:[["013",6555,13107],["026"],["027"],["028"],["05A",0,6554],["0A0",13108,19661],["0FF",26215,32767],["106",19662,26214]],
-5:[["026"],["027"],["028"],["057",26215,32767],["060",6555,13107],["070",19662,26214],["0B4",13108,19661],["107",0,6554]],
-6:[["026"],["027"],["028"],["057",6555,13107],["0A8",26215,32767],["0A9",0,6554],["0B4",19662,26214],["102",13108,19661]],
-7:[["026"],["027"],["028"],["037",26215,32767],["0A8",19662,26214],["0AF",0,6554],["0DA",13108,19661],["102",6555,13107]],
-8:[["026"],["027"],["028"],["0B5",16385,18724],["0DA",25747,32767],["0F3",18725,25746],["0F5",8193,16384],["14B",0,8192]],
-9:[["026"],["027"],["028"],["0F0",6952,13902],["0F3",26811,32767],["0F5",20853,26810],["0F8",0,6951],["14B",13903,20852]],
-10:[["026"],["027"],["028"],["0F0",20481,26624],["0F8",14337,20480],["0FB",0,7168],["10C",7169,14336],["14B",26625,32767]],
-11:[["026"],["027"],["028"],["0B0",7169,14336],["0F8",26625,32767],["0FB",14337,20480],["0FD",0,7168],["10C",20481,26624]],
-12:[["026"],["027"],["028"],["0B0",18725,25746],["0FD",11704,18724],["108",3512,11703],["10C",25747,32767],["148",0,3511]],
+1:[["026"],["027"],["028"],["03D",19662],["05E",0],["09D",6555],["0CF",26215],["104",13108]],
+2:[["026"],["027"],["028"],["051",26215],["095",19662],["09E",13108],["0B3",6555],["0D4",0]],
+3:[["026"],["027"],["028"],["059",19662],["06E",6555],["0A2",13108],["0CD",0],["104",26215]],
+4:[["013",6555],["026"],["027"],["028"],["05A",0],["0A0",13108],["0FF",26215],["106",19662]],
+5:[["026"],["027"],["028"],["057",26215],["060",6555],["070",19662],["0B4",13108],["107",0]],
+6:[["026"],["027"],["028"],["057",6555],["0A8",26215],["0A9",0],["0B4",19662],["102",13108]],
+7:[["026"],["027"],["028"],["037",26215],["0A8",19662],["0AF",0],["0DA",13108],["102",6555]],
+8:[["026"],["027"],["028"],["0B5",16385],["0DA",25747],["0F3",18725],["0F5",8193],["14B",0]],
+9:[["026"],["027"],["028"],["0F0",6952],["0F3",26811],["0F5",20853],["0F8",0],["14B",13903]],
+10:[["026"],["027"],["028"],["0F0",20481],["0F8",14337],["0FB",0],["10C",7169],["14B",26625]],
+11:[["026"],["027"],["028"],["0B0",7169],["0F8",26625],["0FB",14337],["0FD",0],["10C",20481]],
+12:[["026"],["027"],["028"],["0B0",18725],["0FD",11704],["108",3512],["10C",25747],["148",0]],
 },
 5:{
-1:[["026"],["027"],["028"],["03E",6555,13107],["074",26215,32767],["07B",0,6554],["07F",13108,19661],["0C8",19662,26214]],
-2:[["026"],["027"],["028"],["086",19662,26214],["087",26215,32767],["08D",0,6554],["0BB",6555,13107],["0D0",13108,19661]],
-3:[["015",6555,13107],["026"],["027"],["028"],["02C",19662,26214],["078",26215,32767],["08C",0,6554],["0DC",13108,19661]],
-4:[["01B",15820,16949],["026"],["027"],["028"],["040",0,7910],["078",7911,15819],["0A7",24859,32767],["0B1",16950,24858]],
-5:[["026"],["027"],["028"],["080",0,6554],["088",19662,26214],["092",26215,32767],["0A7",6555,13107],["0C9",13108,19661]],
-6:[["026"],["027"],["028"],["02E",19662,26214],["06B",6555,13107],["0B2",0,6554],["0C0",26215,32767],["0DF",13108,19661]],
-7:[["026"],["027"],["028"],["0AA",19662,26214],["0C0",13108,19661],["0C3",0,6554],["0C6",6555,13107],["0DF",26215,32767]],
-8:[["026"],["027"],["028"],["0C3",13903,20852],["0D5",26811,32767],["0D6",6952,13902],["0DA",20853,26810],["0FC",0,6951]],
-9:[["026"],["027"],["028"],["0B5",30428,32767],["0D6",23406,30427],["0F9",0,8192],["0FC",16385,23405],["109",8193,16384]],
-10:[["026"],["027"],["028"],["0C7",0,7910],["0F9",15820,22598],["0FC",29379,32767],["109",22599,29378],["144",7911,15819]],
-11:[["026"],["027"],["028"],["0AB",7169,14336],["0C7",14337,20480],["0F9",26625,32767],["144",20481,26624],["14D",0,7168]],
-12:[["026"],["027"],["028"],["0AB",18725,25746],["0C7",25747,32767],["0E7",8193,11703],["0EE",0,8192],["14D",11704,18724]],
+1:[["026"],["027"],["028"],["03E",6555],["074",26215],["07B",0],["07F",13108],["0C8",19662]],
+2:[["026"],["027"],["028"],["086",19662],["087",26215],["08D",0],["0BB",6555],["0D0",13108]],
+3:[["015",6555],["026"],["027"],["028"],["02C",19662],["078",26215],["08C",0],["0DC",13108]],
+4:[["01B",15820],["026"],["027"],["028"],["040",0],["078",7911],["0A7",24859],["0B1",16950]],
+5:[["026"],["027"],["028"],["080",0],["088",19662],["092",26215],["0A7",6555],["0C9",13108]],
+6:[["026"],["027"],["028"],["02E",19662],["06B",6555],["0B2",0],["0C0",26215],["0DF",13108]],
+7:[["026"],["027"],["028"],["0AA",19662],["0C0",13108],["0C3",0],["0C6",6555],["0DF",26215]],
+8:[["026"],["027"],["028"],["0C3",13903],["0D5",26811],["0D6",6952],["0DA",20853],["0FC",0]],
+9:[["026"],["027"],["028"],["0B5",30428],["0D6",23406],["0F9",0],["0FC",16385],["109",8193]],
+10:[["026"],["027"],["028"],["0C7",0],["0F9",15820],["0FC",29379],["109",22599],["144",7911]],
+11:[["026"],["027"],["028"],["0AB",7169],["0C7",14337],["0F9",26625],["144",20481],["14D",0]],
+12:[["026"],["027"],["028"],["0AB",18725],["0C7",25747],["0E7",8193],["0EE",0],["14D",11704]],
 },
 };
+const ONLY_MONSTERS={};
+for(const[env,floors]of Object.entries(SPAWN_DB)){
+const only=ONLY_MONSTERS[env]=[''];
+for(const[mr,rows]of Object.entries(floors)){
+const regular=rows.filter(row=>row.length>1).sort((a,b)=>a[1]-b[1]);
+regular.forEach((row,i)=>{row[2]=i+1<regular.length?regular[i+1][1]-1:32767;});
+only[mr]=regular.reduce((hex,row)=>!hex||parseInt(row[0],16)<parseInt(hex,16)?row[0]:hex,'');
+}
+}
 const _elistWtL=new Uint8Array(256);
 const _elistWtU=new Uint8Array(256);
 function floorMRAt(baseMR,f){return Math.min(12,baseMR+(f>>2));}
 function getSpawnList(envType,floorMR){return(SPAWN_DB[envType]&&SPAWN_DB[envType][floorMR])||[];}
-function getFloorElistInfo(engine,f){
-const d=engine.di[f];
+function getMonsterDisplayName(hx){
+const m=MONSTER_DB[hx];
+return m?(DISPLAY_LANG==='EN'?m.en:m.jp):hx;
+}
+function elistTileStats(d){
 const width=d[2];
 const height=d[3];
-const envType=engine._details[3];
-const baseMR=engine._details[2];
-let floorMR=floorMRAt(baseMR,f);
-const gArr=G_VALUES[envType];
-const G=gArr?gArr[floorMR]:0;
-const omArr=ONLY_MONSTERS[envType];
-const onlyMonId=omArr?omArr[floorMR]:"";
-const monData=onlyMonId?MONSTER_DB[onlyMonId]:null;
-const isJP=(DISPLAY_LANG!=='EN');
-const onlyMon=monData?(isJP?monData.jp:monData.en):"Unknown";
-const strOnly=isJP?"オンリー":" only";
 let W=0,X=0;
 let wtCount=0;
 for(let y=0;y<height;y++){
@@ -1336,6 +1338,21 @@ if(_elistWtU[i]&&B_pool>0)B_pool--;
 }
 }
 }
+return{A,B,D};
+}
+function getFloorElistInfo(engine,f){
+const envType=engine._details[3];
+const baseMR=engine._details[2];
+let floorMR=floorMRAt(baseMR,f);
+const gArr=G_VALUES[envType];
+const G=gArr?gArr[floorMR]:0;
+const omArr=ONLY_MONSTERS[envType];
+const onlyMonId=omArr?omArr[floorMR]:"";
+const onlyMon=onlyMonId&&MONSTER_DB[onlyMonId]?getMonsterDisplayName(onlyMonId):"Unknown";
+const strOnly=EL_ONLY;
+const slot=engine._floorSlot&&engine._floorSlot[f];
+const tiles=slot?(slot.elist||(slot.elist=elistTileStats(engine.di[f]))):elistTileStats(engine.di[f]);
+const{A,B,D}=tiles;
 const isIce10_12=(envType===3&&floorMR>=10&&floorMR<=12);
 const isRuins3=(envType===2&&floorMR===3);
 const isIce1=(envType===3&&floorMR===1);
@@ -1364,6 +1381,16 @@ default:state=EL_0+EL_NC;break;
 }
 if(state!==null)state=String(state);
 return{hex:ElistOfs.toString(16).toUpperCase(),state:state,dValue:D};
+}
+function classifyElistState(st){
+st=''+st;
+if(st.includes(''+EL_0)&&!st.includes(''+EL_P))return{kind:'none'};
+if(EL_ONLY.some(s=>st.includes(s)))return{kind:'only'};
+if(st.includes(''+EL_4))return{kind:'reduced',count:4};
+if(st.includes(''+EL_3))return{kind:'reduced',count:3};
+if(st.includes(''+EL_2))return{kind:'reduced',count:2};
+if(st.includes(''+EL_P))return{kind:'partial'};
+return{kind:'normal'};
 }
 const _anom_visited=new Uint8Array(256);
 const _anom_queue=new Uint16Array(256);
@@ -1416,23 +1443,32 @@ _anom_queue[qTail++]=nIdx;
 }
 return regionSize;
 }
-function getFloorAnomalies(engine,f,checkGhostStair=false,skipIsoScan=false){
+function getFloorAnomalies(engine,f,skipIsoScan=false){
 const di=engine.di[f];
+const slot=engine._floorSlot&&engine._floorSlot[f],known=slot&&slot.anomalies;
+if(known&&(skipIsoScan||known.isolatedRegions))return{
+hasChamber:!skipIsoScan&&known.isolatedRegions.length>0,
+hasInaccessibleChest:known.hasInaccessibleChest,hasInaccessibleStair:known.hasInaccessibleStair,
+isolatedRegions:skipIsoScan?[]:known.isolatedRegions.slice(),totalChests:known.totalChests
+};
 const width=di[2];
 const height=di[3];
 const upX=di[4],upY=di[5];
 const downX=di[6],downY=di[7];
 const boxes=di[8];
+if(known)_anom_visited.set(known.visited);
+else{
 _anom_visited.fill(0,0,height<<4);
 runBFS(upX,upY,width,height,di,isMainWalkable);
-let hasInaccessibleChest=false;
-for(let b=0;b<boxes;b++){
+}
+let hasInaccessibleChest=known?known.hasInaccessibleChest:false;
+if(!known)for(let b=0;b<boxes;b++){
 if(!_anom_visited[(di[b*2+14]<<4)|di[b*2+13]]){
 hasInaccessibleChest=true;
 break;
 }
 }
-const hasInaccessibleStair=!_anom_visited[(downY<<4)|downX];
+const hasInaccessibleStair=known?known.hasInaccessibleStair:!_anom_visited[(downY<<4)|downX];
 const isolatedRegions=[];
 if(!skipIsoScan){
 for(let y=0;y<height;y++){
@@ -1449,13 +1485,18 @@ isolatedRegions.push(regionSize);
 }
 }
 const hasChamber=isolatedRegions.length>0;
-let GhostStairs=[];
-let hasGhostStair=false;
-if(checkGhostStair)hasGhostStair=scanGhostStairs(di,GhostStairs)>0;
-const isAllInvalidStair=engine.isStairOverflow[f];
-return{hasChamber,hasInaccessibleChest,hasInaccessibleStair,isolatedRegions,totalChests:boxes,hasGhostStair,GhostStairs,isAllInvalidStair};
+if(slot){
+const cached=known||(slot.anomalies={hasInaccessibleChest,hasInaccessibleStair,totalChests:boxes});
+if(skipIsoScan)cached.visited=_anom_visited.slice();
+else{cached.isolatedRegions=isolatedRegions.slice();delete cached.visited;}
 }
-const _uspDIST=new Float64Array(256);
+return{hasChamber,hasInaccessibleChest,hasInaccessibleStair,isolatedRegions,totalChests:boxes};
+}
+const _USP_STRIDE=18;
+const _uspDIST=new Float64Array(_USP_STRIDE*_USP_STRIDE);
+const _uspWALK=new Uint8Array(_USP_STRIDE*_USP_STRIDE);
+const _uspOFS=new Int32Array(8);
+for(let k=0;k<8;k++)_uspOFS[k]=_DIR_Y[k]*_USP_STRIDE+_DIR_X[k];
 const _uspHC=new Float64Array(4096);
 const _uspHN=new Int32Array(4096);
 let _uspHS=0,_uspPC=0;
@@ -1488,22 +1529,36 @@ const W=di[2],H=di[3];
 if(W<=0||H<=0)return null;
 if(sx===gx&&sy===gy)return 0;
 if(sx<0||sx>=W||sy<0||sy>=H||gx<0||gx>=W||gy<0||gy>=H)return null;
-const wk=(x,y)=>(x>=0&&x<W&&y>=0&&y<H&&isMainWalkable(di[(y<<4)+x+792]));
-_uspDIST.fill(Infinity,0,(H<<4));
-const s=(sy<<4)+sx;_uspDIST[s]=0;_uspHS=0;pushAstarNode(0,s);
+const S=_USP_STRIDE,dist=_uspDIST,slot=eng._floorSlot&&eng._floorSlot[f];
+let paths=slot&&slot.paths;
+const walk=paths?paths.walk:_uspWALK;
+if(!paths){
+walk.fill(0);
+for(let y=0;y<H;y++){
+const row=(y<<4)+792,base=(y+1)*S+1;
+for(let x=0;x<W;x++)walk[base+x]=isMainWalkable(di[row+x])?1:0;
+}
+if(slot)paths=slot.paths={walk:walk.slice(),costs:new Map()};
+}
+const tx=gx+1,ty=gy+1,goal=ty*S+tx,s=(sy+1)*S+sx+1;
+const key=paths&&(walk[s]&&walk[goal]&&s>goal?goal+','+s:s+','+goal);
+if(paths&&paths.costs.has(key))return paths.costs.get(key);
+dist.fill(Infinity);
+const h=(n)=>{const dx=Math.abs(n%S-tx),dy=Math.abs((n/S|0)-ty);return dx>dy?dx+0.5*dy:dy+0.5*dx;};
+dist[s]=0;_uspHS=0;pushAstarNode(h(s),s);
 while(_uspHS>0){
-const nd=popAstarNode();const co=_uspPC;
-if(co>_uspDIST[nd])continue;
-const cx=nd&0xF,cy=nd>>4;
-if(cx===gx&&cy===gy)return co;
+const nd=popAstarNode();const co=dist[nd];
+if(_uspPC-h(nd)>co)continue;
+if(nd===goal){if(paths)paths.costs.set(key,co);return co;}
 for(let k=0;k<8;k++){
-const nx=cx+_DIR_X[k],ny=cy+_DIR_Y[k];
-if(!wk(nx,ny))continue;
-if(k>=4&&(!wk(nx,cy)||!wk(cx,ny)))continue;
-const ni=(ny<<4)+nx,nc=co+_DIR_W[k];
-if(nc<_uspDIST[ni]){_uspDIST[ni]=nc;pushAstarNode(nc,ni);}
+const ni=nd+_uspOFS[k];
+if(!walk[ni])continue;
+if(k>=4&&(!walk[nd+_DIR_X[k]]||!walk[nd+_DIR_Y[k]*S]))continue;
+const nc=co+_DIR_W[k];
+if(nc<dist[ni]){dist[ni]=nc;pushAstarNode(nc+h(ni),ni);}
 }
 }
+if(paths)paths.costs.set(key,null);
 return null;
 }
 function calcFloorWalkCost(eng,f){
