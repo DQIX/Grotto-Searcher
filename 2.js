@@ -627,15 +627,15 @@ const locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 const specialHtml=specialHitDetails.length>0?`<div style="margin-top:4px;">${specialHitDetails.map(specialTagHtml).join('<br>')}</div>`:'';
 const anomalyHtml=anomalyDetails.length>0?`<div style="margin-top:6px;display:flex;flex-direction:column;align-items:flex-start;">${anomalyDetails.map(html=>html.replace('<span style="','<span style="display:inline-block;line-height:1.4;margin-top:4px;')).join('')}</div>`:'';
 return`
-    ${seedTagHtml(seed)}
-    ${rankTagHtml(rStr)}<br>
-    <span style="color:#0ff;font-size:11px">${dispName(searchEngine)}</span>${locHtml}
-    ${mid}
-    <div style="margin-top:4px;">${boxHtml}</div>
-    ${specialHtml}
-    ${anomalyHtml}
-    ${tail}
-    `;
+${seedTagHtml(seed)}
+${rankTagHtml(rStr)}<br>
+<span style="color:#0ff;font-size:11px">${dispName(searchEngine)}</span>${locHtml}
+${mid}
+<div style="margin-top:4px;">${boxHtml}</div>
+${specialHtml}
+${anomalyHtml}
+${tail}
+`;
 }
 const matchJumpFloor=(elistResult,anomResult)=>elistResult.jumpToFloor!==-1?elistResult.jumpToFloor:anomResult.jumpToFloor;
 function buildAtOffsetsHtml(foundOffsets){
@@ -652,14 +652,14 @@ return`<span style="color:#fa0;margin-left:12px;font-size:11px;">${H06} ${lines}
 function buildAtInfoCardHtml(seed,N,atN,atN1,diffsHtml){
 const{color:deftColor,label:deftLabel}=formatDeftness(atN1);
 return`<div class="at-m-card" data-seed="${seed}" style="margin-top:4px;padding:5px 8px;background:#0a1a1a;border:1px solid #055;border-radius:3px;">
-    <span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]: </span><span class="at-m-atval">${atN}</span></span>
-    <strong class="at-dynamic-mon" data-at="${atN}" style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
-    <br><span class="at-m-deft" style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18} ${deftLabel}</span>
-    ${diffsHtml}</div>`;
+<span style="color:#4c4;font-size:11px;"><span class="at-m-atn-label">AT[${N}]: </span><span class="at-m-atval">${atN}</span></span>
+<strong class="at-dynamic-mon" data-at="${atN}" style="color:#f8f;margin-left:8px;font-size:11px;text-shadow:0 0 2px rgba(255,136,255,0.5);"></strong>
+<br><span class="at-m-deft" style="color:${deftColor};display:inline-block;margin-top:4px;font-size:11px;">${G18} ${deftLabel}</span>
+${diffsHtml}</div>`;
 }
 function buildAtPatternBoxHtml(patternName,probText,offsetsHtml){
 return`<div style="margin-top:4px;padding:4px 8px;background:#111;border:1px solid #333;border-radius:4px;">
-  <span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName} (${probText})</span><br>${offsetsHtml}</div>`;
+<span style="color:#fa0;font-size:11px;font-weight:bold;">${patternName} (${probText})</span><br>${offsetsHtml}</div>`;
 }
 const SI_PATTERN_INDICES=Object.fromEntries(AT_O.map(([k,,p])=>[k,p]));
 const isNormalDropPattern=key=>AT_O.some(o=>o[0]===key&&o[3]);
@@ -1206,14 +1206,14 @@ const cachedLocData=peekLocDataCached(seed,targetRankKey);
 const locHtml=cachedLocData?LocaHtmlFromData(cachedLocData,conds):"";
 const bugIcon=isFloorIncreased?'📈':'';
 const html=`
-      ${seedTagHtml(seed,15)}
-      ${rankTagHtml(rStr)}<br>
-      <div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
-      <span style="color:#aaa;font-size:11px">[Source] ${origName} | B${origFloors}F | ${origBoss}</span><br>
-      <span style="color:#f8f;font-size:11px">[Bug] ${bugName} | B${bugFloors}F | ${bugBoss} ${bugIcon}</span>
-      </div>${locHtml}${boxHtml}
-      <div style="padding-top:2px;">${elistHtmlStr}</div>
-      `;
+${seedTagHtml(seed,15)}
+${rankTagHtml(rStr)}<br>
+<div style="background:#111;padding:4px 8px;border-radius:4px;margin:4px 0;border:1px solid #333;">
+<span style="color:#aaa;font-size:11px">[Source] ${origName} | B${origFloors}F | ${origBoss}</span><br>
+<span style="color:#f8f;font-size:11px">[Bug] ${bugName} | B${bugFloors}F | ${bugBoss} ${bugIcon}</span>
+</div>${locHtml}${boxHtml}
+<div style="padding-top:2px;">${elistHtmlStr}</div>
+`;
 return{seed,rStr,html,hasD:hasAnyD};
 }finally{searchEngine.force_16_floors=false;}
 },
@@ -1233,12 +1233,12 @@ const locHtml=getLocHtmlCached(seed,targetRankKey,conds);
 const mapNameDisp=dispName(searchEngine);
 const astarSpan=(text,attr='')=>` <span${attr} style="color:#ffc90e;font-size:11px;font-family:monospace;">${text}</span>`;
 const buildHtml=(astarHtml,displayHtml)=>`
-        ${seedTagHtml(seed)}
-        ${rankTagHtml(rStr)}${astarHtml}<br>
-        <span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
-        <div style="margin-top:4px;">${boxHtml}</div>
-        <div style="margin-top:4px;">${displayHtml}</div>
-        `;
+${seedTagHtml(seed)}
+${rankTagHtml(rStr)}${astarHtml}<br>
+<span style="color:#0ff;font-size:11px;margin-bottom:2px;display:inline-block;">${mapNameDisp}</span>${locHtml}
+<div style="margin-top:4px;">${boxHtml}</div>
+<div style="margin-top:4px;">${displayHtml}</div>
+`;
 if(hitResult.multi){
 return hitResult.multi.map((row)=>({seed,rStr,html:buildHtml(astarSpan(row.astarText!==undefined?row.astarText:fmtStepD(row.astar)),row.displayHtml),jumpFloor:row.floor,specialStyle:'',title:''+J01,sortCost:row.astar==null?1e9:row.astar,isB10:row.isB10,isJfireB10:!!row.isJfireB10,isX3:!!row.isX3}));
 }
@@ -1452,10 +1452,10 @@ const{foundOffsets}=scanSeedForAtPattern(seed,job.maxSteps,job.threshold,job.pTy
 if(foundOffsets.length===0)continue;
 hitCount++;
 const html=`
-        ${seedTagHtml(seed,13)}<br>
-        ${buildAtPatternBoxHtml(job.patternName,job.probText,buildAtOffsetsHtml(foundOffsets))}
-        ${buildAtInfoCardHtml(seed,N,atN,atN1,buildBattleAtDiffsHtml(foundOffsets,N,deft,userDeft))}
-        `;
+${seedTagHtml(seed,13)}<br>
+${buildAtPatternBoxHtml(job.patternName,job.probText,buildAtOffsetsHtml(foundOffsets))}
+${buildAtInfoCardHtml(seed,N,atN,atN1,buildBattleAtDiffsHtml(foundOffsets,N,deft,userDeft))}
+`;
 batch.push({seed,rStr:null,html,pop:atN});
 }
 if(batch.length>0)io.batch(batch);
@@ -1814,7 +1814,7 @@ function getWeaponTypeMultiplier(equip,monId){
 if(!equip)return 1;
 const wm=WEAPON_META[equip],cat=wm&&WEAPON_CAT_META[wm.cat];
 const mon=getMonDB(monId);
-return(mon&&cat&&cat.wmul&&cat.wmul[mon.t])||1;
+return mon&&(wm&&wm.wmul&&wm.wmul[mon.t]||cat&&cat.wmul&&cat.wmul[mon.t])||1;
 }
 function solverWeaponMul(sk,equip,hex){return sk&&sk.dmg?1:getWeaponTypeMultiplier(equip,hex);}
 const _solverMinimumDamageBasis=new WeakMap();
@@ -3249,6 +3249,13 @@ function buildKmcRootSpace(spec,space,rootIdx){
 const res=[],sSkills=spec.sSkills||[];
 const root=sSkills[rootIdx];
 if(!root||root.at>space.target)return res;
+let state;
+if(spec.postAlive!==0){
+state=_solverDmgCache.search;
+const context=JSON.stringify([spec.bat,spec.T,spec.postAlive,spec.tc2,spec.canRound2,spec.hexId,spec.metalSupNeed,
+solverBuildContextSnapshot(),_solverIssenNeed,solverBlockRuleEnabled(),solverMultiPlayerEnabled(),DISPLAY_LANG]);
+if(state.kmcTailContext!==context){state.kmcTails.clear();state.kmcTailContext=context;}
+}
 const pushV=(arr)=>{
 if(arr.length>=space.loLen&&arr.length<=space.hiLen&&!solverSearchCapped(res.length>=space.cap))res.push(arr);
 };
@@ -3266,7 +3273,29 @@ const bTgt=space.target-aSum;
 if(bTgt>0){
 const maxLenB=space.hiLen-seqA.length-1;
 if(maxLenB>=1){
-const bCombos=solveBattleCombo(bTgt,spec.postAlive,maxLenB);
+const key=bTgt+':'+maxLenB;
+let tail=state.kmcTails.get(key),bCombos;
+if(!tail){
+const before=_solverSearchIncomplete;
+_solverSearchIncomplete=false;
+try{
+bCombos=solveBattleCombo(bTgt,spec.postAlive,maxLenB);
+const copies=new Map();
+const combos=bCombos.map(combo=>combo.map(action=>{
+if(!copies.has(action))copies.set(action,Object.assign({},action));
+return copies.get(action);
+}));
+tail={combos,incomplete:_solverSearchIncomplete};
+state.kmcTails.set(key,tail);
+}finally{_solverSearchIncomplete=before||_solverSearchIncomplete;}
+}else{
+const copies=new Map();
+bCombos=tail.combos.map(combo=>combo.map(action=>{
+if(!copies.has(action))copies.set(action,Object.assign({},action));
+return copies.get(action);
+}));
+if(tail.incomplete)_solverSearchIncomplete=true;
+}
 for(const b of bCombos){
 pushV([...seqA,_ACT_MERCY,...b]);
 pushV([_ACT_EGG,...seqA,_ACT_MERCY,...b]);
@@ -3557,27 +3586,27 @@ const hits=SolverActionGate.hits(combo[ci]);
 const tgt=SolverActionGate.targetKind(sk);
 const dmg={},dmgF={};
 for(const hex of uniqueHexes){
-if(!sk){dmg[hex]={min:0,max:0,phMax:0};dmgF[hex]=dmg[hex];continue;}
+if(!sk){dmg[hex]={min:0,max:0};dmgF[hex]=dmg[hex];continue;}
 const tMon=getMonDB(hex);
-if(!tMon){dmg[hex]={min:0,max:0,phMax:0};dmgF[hex]=dmg[hex];continue;}
+if(!tMon){dmg[hex]={min:0,max:0};dmgF[hex]=dmg[hex];continue;}
 if(isMetalHex(hex)){
 const mc=skillDamagePerHit(sk,combo[ci],hex,null,null);
-const _md={min:mc.min*hits,max:mc.max*hits,phMax:mc.max,hit:mc};
+const _md={min:mc.min*hits,max:mc.max*hits,hit:mc};
 dmg[hex]=_md;dmgF[hex]=_md;
 continue;
 }
 const _ac=_actor(ci);
-if(!_ac){dmg[hex]={min:0,max:0,phMax:0};dmgF[hex]=dmg[hex];continue;}
+if(!_ac){dmg[hex]={min:0,max:0};dmgF[hex]=dmg[hex];continue;}
 const r=skillDamagePerHit(sk,combo[ci],hex,_ac.stats,null);
-dmg[hex]=r.none?{min:0,max:0,phMax:0}:{min:r.min*hits,max:r.max*hits,phMax:r.max,hit:r};
+dmg[hex]=r.none?{min:0,max:0}:{min:r.min*hits,max:r.max*hits,hit:r};
 if(hasFource){
 const rF=calcSkillDamageCache(sk,_ac.stats,hex,effectiveFEls,solverWeaponMul(sk,combo[ci].equip,hex),actionMetalEff(sk,combo[ci].equip),combo[ci].equip);
-dmgF[hex]=rF?{min:rF.min*hits,max:rF.max*hits,phMax:rF.max,hit:rF}:dmg[hex];
+dmgF[hex]=rF?{min:rF.min*hits,max:rF.max*hits,hit:rF}:dmg[hex];
 }else{
 dmgF[hex]=dmg[hex];
 }
 }
-skillDmg.push({dmg,dmgF,tgt,hits,ci,jp:combo[ci].jp});
+skillDmg.push({dmg,dmgF,tgt,hits});
 }
 const eggCIs=[];
 const dmgCIs=[];
@@ -3620,9 +3649,10 @@ const sd=skillDmg[ci];
 const alive=sim.filter(i=>i.alive);
 if(alive.length===0){path.push(ci+':!earlyclear');return _done(false,ci,'earlyclear');}
 if(combo[ci].id===SK_MERCY){
-const removed=[],removedTargets=[];
+const removed=[],removedTargets=[],casterLv=actorLv(chars,assign,ci);
 for(const inst of sim){
-if(!solverMercyCanRemove(inst,actorLv(chars,assign,ci)))continue;
+if(!solverMercyCanRemove(inst,maxCharLv(chars)))continue;
+if(!solverMercyCanRemove(inst,casterLv)){path.push(ci+':m?');return _done(false,ci,'mercy_lv');}
 if(inst.groupIdx===0&&!mainKilled){path.push(ci+':m!');return _done(false,ci,'mercymain');}
 removed.push(_targetKey(inst));
 if(actionResults)removedTargets.push(resultTarget(inst,'removed'));
@@ -3819,7 +3849,7 @@ function resetSolverDamageCache(context){
 if(context!==undefined&&_solverDmgCache.context===context)return;
 _solverDmgCache=new WeakMap();
 _solverDmgCache.context=context;
-_solverDmgCache.search={objects:new WeakMap(),paper:new Map(),damage:new Map(),aggregate:new Map(),finisher:new Map(),requirements:new Map(),scores:new Map(),variables:new Map()};
+_solverDmgCache.search={objects:new WeakMap(),paper:new Map(),damage:new Map(),aggregate:new Map(),finisher:new Map(),requirements:new Map(),scores:new Map(),variables:new Map(),boosted:new Map(),boostedBasis:new WeakMap(),kmcTails:new Map(),kmcTailContext:null};
 }
 resetSolverDamageCache();
 function calcSkillDamageCache(sk,st,hexId,fEls,wmul,metalEff,equip){
@@ -3856,7 +3886,20 @@ best=0;
 for(const els of fEls?[null,fEls]:[null]){
 const range=calcSkillDamageCache(sk,_EXT_STATS,hexId,els,solverWeaponMul(sk,action.equip,hexId),actionMetalEff(sk,action.equip),action.equip);
 if(!range||!Number.isFinite(range.max)){best=Infinity;break;}
-const damage=solverActionDamage(sk,hexId,els,range,SolverActionGate.hits(action),solverEggDamageAction(action)?mul:1,99);
+const hits=SolverActionGate.hits(action),boost=solverEggDamageAction(action)?mul:1;
+const boostKey=JSON.stringify([sk,hexId,els,hits,boost,99]);
+let table=state.boosted.get(boostKey);
+if(!table){table=new Map();state.boosted.set(boostKey,table);}
+let basis=state.boostedBasis.get(range);
+if(basis===undefined){
+basis=range.min+'|'+range.max+'|'+(range.pre?range.pre.min+'|'+range.pre.max:'')+'|'+(range.metalEff||0);
+state.boostedBasis.set(range,basis);
+}
+let damage=table.get(basis);
+if(damage===undefined){
+damage=solverActionDamage(sk,hexId,els,range,hits,boost,99);
+table.set(basis,damage);
+}
 best=Math.max(best,damage.max);
 }
 }
@@ -3889,13 +3932,15 @@ if(sk&&!canExecuteMetal(action,hexId)&&!(fource&&sk.el)&&!(!sk.dmg&&sk.el)){
 if(sk.el&&solverTargetImmuneToElement(sk.el,hexId))result={stat:null,min:Infinity,label:'×'};
 else{
 const keys=solverConditionStatKeys(sk),key=keys[0],scaling=!!key;
+const memoKey=ids[0]+'|'+JSON.stringify([hexId,fEls,'single',key||'',mul,levels[0]]);
+let table=state.damage.get(memoKey);
+if(!table){table=[];state.damage.set(memoKey,table);}
 const damageAt=value=>{
-const memoKey=ids[0]+'|'+JSON.stringify([hexId,fEls,'single',key||'',value,mul,levels[0]]);
-if(state.damage.has(memoKey))return state.damage.get(memoKey);
+if(table[value]!==undefined)return table[value];
 const stats={..._MIN_STATS};if(key)stats[key]=value;
 const range=calcSkillDamageCache(sk,stats,hexId,fEls,solverWeaponMul(sk,action.equip,hexId),actionMetalEff(sk,action.equip),action.equip);
 const damage=range?solverActionDamage(sk,hexId,fEls,range,hits[0],mul,levels[0]):null;
-state.damage.set(memoKey,damage);return damage;
+table[value]=damage;return damage;
 };
 const kill=value=>{const damage=damageAt(value);return!!damage&&damage.min>=hp;};
 const safe=value=>{const damage=damageAt(value);return!!damage&&SolverActionGate.survivesBeforeHit(hits[0],damage.head,hpLow);};
@@ -3915,10 +3960,10 @@ const paper=solverPaperDamageUpperBound(combo,hexId,mul,fEls);
 if(!(Number.isFinite(paper)&&paper<hpLow)){
 const all=ids.slice().sort().join('\x1d'),rows=[];
 const damageAt=(ci,key,value)=>{
-if(!skills[ci]||combo[ci].at===0||canExecuteMetal(combo[ci],hexId))return{min:0,max:0,perHitMax:0};
-const rowKey=ids[ci]+'|'+JSON.stringify([hexId,fEls,key||'']);
+if(!skills[ci]||combo[ci].at===0||canExecuteMetal(combo[ci],hexId))return{min:0,max:0};
 let table=rows[ci]&&rows[ci][key||''];
 if(!table){
+const rowKey=ids[ci]+'|'+JSON.stringify([hexId,fEls,key||'']);
 table=state.damage.get(rowKey);
 if(!table){table=[];state.damage.set(rowKey,table);}
 if(!rows[ci])rows[ci]={};rows[ci][key||'']=table;
@@ -3926,10 +3971,24 @@ if(!rows[ci])rows[ci]={};rows[ci][key||'']=table;
 if(table[value]!==undefined)return table[value];
 const stats={..._EXT_STATS};if(key)stats[key]=value;
 const range=calcSkillDamageCache(skills[ci],stats,hexId,fEls,solverWeaponMul(skills[ci],combo[ci].equip,hexId),actionMetalEff(skills[ci],combo[ci].equip),combo[ci].equip);
-const damage=range?{min:range.min*hits[ci],max:range.max*hits[ci],perHitMax:range.max,hit:range}:{min:0,max:0,perHitMax:0};
+const damage=range?{min:range.min*hits[ci],max:range.max*hits[ci],hit:range}:{min:0,max:0};
 table[value]=damage;return damage;
 };
-const boosted=(damage,ci)=>solverActionDamage(skills[ci],hexId,fEls,damage.hit||{min:0,max:0},hits[ci],mul,levels[ci]);
+const boostKeys=skills.map((sk,ci)=>JSON.stringify([sk,hexId,fEls,hits[ci],mul,levels[ci]]));
+const boosted=(damage,ci)=>{
+const basis=damage.hit||damage;
+let saved=state.boosted.get(boostKeys[ci]);
+if(!saved){saved=new Map();state.boosted.set(boostKeys[ci],saved);}
+let key=state.boostedBasis.get(basis);
+if(key===undefined){
+const range=damage.hit||{min:0,max:0};
+key=range.min+'|'+range.max+'|'+(range.pre?range.pre.min+'|'+range.pre.max:'')+'|'+(range.metalEff||0);
+state.boostedBasis.set(basis,key);
+}
+if(saved.has(key))return saved.get(key);
+const value=solverActionDamage(skills[ci],hexId,fEls,damage.hit||{min:0,max:0},hits[ci],mul,levels[ci]);
+saved.set(key,value);return value;
+};
 const gate=makeFinisherGate(combo);
 let best=null;
 for(let fi=0;fi<combo.length;fi++){
@@ -4100,27 +4159,35 @@ const trace=[],info={};
 const rating=checkSolverDamage(combo,hexId,getMonDB(hexId),targets,tensionMul,fourceEls,info,
 proof.assign,proof.eggAssign,proof.party,{trace});
 if(rating!==proof.rating)return null;
-const instances=buildSimInstances(targets),constraints=[],terms=[];
+const instances=buildSimInstances(targets),constraints=[],terms=[],termRows=combo.map(()=>new Map());
 const cumulative=instances.map(()=>[]);
 const fource=findInlineFource(combo),fEls=fource?getFourceEls(fource.jp):fourceEls;
 const reference=vars.map(v=>proof.party[v.index].stats[v.key]);
 const term=(ci,hex,on)=>{
+const termKey=hex+'|'+!!on,saved=termRows[ci].get(termKey);
+if(saved!==undefined)return saved;
 const action=combo[ci],sk=lookupSkill(action.jp),ai=proof.assign[ci];
 const keys=isMetalHex(hex)?[]:solverConditionStatKeys(sk);
 const depends=vars.map((v,i)=>v.index===ai&&keys.includes(v.key)?i:-1).filter(i=>i>=0);
 const hits=SolverActionGate.hits(action),mul=(proof.eggAssign||{})[ci]||1;
-const lv=proof.party[ai].lv,cache=new Map();
-const t={depends,read(values){
-const key=depends.map(i=>values[i]).join(',');
-if(cache.has(key))return cache.get(key);
+const lv=proof.party[ai].lv,single=depends.length===1?depends[0]:-1;
+const cache=depends.length>1?new Map():[];
+const t={depends,read(values,box,upper){
+const key=single>=0?(values?values[single]:upper?box[single].hi:box[single].lo)
+:depends.length?depends.map(i=>values?values[i]:upper?box[i].hi:box[i].lo).join(','):0;
+const known=depends.length>1?cache.get(key):cache[key];
+if(known!==undefined)return known;
 const stats={...proof.party[ai].stats};
-for(const i of depends)stats[vars[i].key]=values[i];
+if(single>=0)stats[vars[single].key]=key;
+else for(const i of depends)stats[vars[i].key]=values?values[i]:upper?box[i].hi:box[i].lo;
 const d=skillDamagePerHit(sk,action,hex,stats,on?fEls:null);
 const t=solverActionDamage(sk,hex,on?fEls:null,d,hits,mul,lv);
 const result={min:t.min,max:t.max,head:t.head,hitmin:d.min,hitmax:d.max};
-cache.set(key,result);return result;
+if(depends.length>1)cache.set(key,result);else cache[key]=result;
+return result;
 }};
-terms.push(t);return terms.length-1;
+const index=terms.length;
+terms.push(t);termRows[ci].set(termKey,index);return index;
 };
 const expression=(ids,part,sign=1)=>ids.map(t=>({t,part,sign}));
 const add=(expr,op,rhs)=>constraints.push({expr,op,rhs});
@@ -4157,10 +4224,17 @@ else add(expression(cumulative[i],'max'),'le',inst.hpLow-1);
 }
 }
 if(orange.length)constraints.push({any:orange});
+for(const original of constraints)for(const c of original.any||[original]){
+c.directions=new Int8Array(vars.length);
+for(const x of c.expr)for(const vi of terms[x.t].depends){
+const prior=c.directions[vi];
+if(prior!==2)c.directions[vi]=prior&&prior!==x.sign?2:x.sign;
+}
+}
 const limits=(c,box,point)=>{
 if(c.any)return c.any.some(x=>limits(x,box,point));
-const lo=point||box.map(x=>x.lo),hi=point||box.map(x=>x.hi);
-const value=c.expr.reduce((sum,x)=>sum+x.sign*terms[x.t].read((c.op==='ge')===(x.sign>0)?hi:lo)[x.part],0);
+let value=0;
+for(const x of c.expr)value+=x.sign*terms[x.t].read(point,box,(c.op==='ge')===(x.sign>0))[x.part];
 return c.op==='ge'?value>=c.rhs:value<=c.rhs;
 };
 const propagate=box=>{
@@ -4173,9 +4247,9 @@ if(!active.length)return null;
 if(active.length>1)continue;
 const c=active[0];
 for(let vi=0;vi<vars.length;vi++){
-const signs=c.expr.filter(x=>terms[x.t].depends.includes(vi)).map(x=>x.sign);
-if(!signs.length||signs.some(s=>s!==signs[0]))continue;
-const lower=(c.op==='ge')===(signs[0]>0),b=box[vi];
+const direction=c.directions[vi];
+if(!direction||direction===2)continue;
+const lower=(c.op==='ge')===(direction>0),b=box[vi];
 if(b.lo===b.hi)continue;
 const possible=value=>{
 const old=box[vi];box[vi]={lo:value,hi:value};
@@ -4532,8 +4606,7 @@ const p=pMain*branches[1]*a.weight/denominator/(a.max-a.min+1);
 for(let n=a.min;n<=a.max;n++)add(m,[a],[n],p);
 }
 if(branches[2]>0)for(const a of supportPool)for(const b of supportPool){
-const p=pMain*branches[2]*(a.weight/denominator)*(b.weight/denominator)
-/((a.max-a.min+1)*(b.max-b.min+1));
+const p=pMain*branches[2]*(a.weight/denominator)*(b.weight/denominator)/((a.max-a.min+1)*(b.max-b.min+1));
 for(let na=a.min;na<=a.max;na++)for(let nb=b.min;nb<=b.max;nb++)add(m,[a,b],[na,nb],p);
 }
 }

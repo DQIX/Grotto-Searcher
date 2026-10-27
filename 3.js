@@ -254,7 +254,7 @@ if(callbacks.onError)callbacks.onError(''+(err&&err.message||err));
 }
 })();
 }
-let _siSolveGen=0;
+let _siSolveGen=0,_siInspectorGen=0,_siInspectorSignature=null;
 let _siSolveSeq=0;
 const _siSolveQueue=[];
 const _siSolveBusy=new Map();
@@ -285,10 +285,10 @@ if(m.type==='solveDone'||m.type==='solveKmcShardDone'||
 m.type==='solveKillAllShardDone')t.resolve(m);
 else t.reject(new Error(m.message||'Solver Worker error'));
 }
-function queueSolverWorkerMessage(msg,front){
+function queueSolverWorkerMessage(msg,front,owner){
 const solveId=++_siSolveSeq;
 return new Promise((resolve,reject)=>{
-const task={solveId,resolve,reject,msg:Object.assign({},msg,{solveId})};
+const task={solveId,resolve,reject,owner,msg:Object.assign({},msg,{solveId})};
 if(front)_siSolveQueue.unshift(task);else _siSolveQueue.push(task);
 dispatchSolveQueue();
 });
@@ -310,7 +310,7 @@ if(spec.sSkills)return spec.spaces.every(sp=>(merged[sp.key]||[]).length>=sp.cap
 return spec.spaces.every(sp=>sp.depths.every(depth=>
 (merged[sp.key]||[]).reduce((n,c)=>n+(c.length===depth?1:0),0)>=sp.cap));
 }
-async function runParallelSolverShards(type,spec,common,pool,solveGen){
+async function runParallelSolverShards(type,spec,common,pool,operation){
 const groups=partitionSolverRoots(spec,pool.workers.length);
 if(groups===null)return null;
 if(groups.length===0)return mergeSolverShardPayloads(spec,[]);
@@ -319,8 +319,8 @@ const payloads=[],waveWidth=Math.max(2,pool.workers.length*2);
 for(let start=0;start<groups.length;start+=waveWidth){
 const wave=groups.slice(start,start+waveWidth);
 const settled=await Promise.all(wave.map(roots=>
-queueSolverWorkerMessage(Object.assign({},common,{type,spec,roots}),false).then(value=>({value}),error=>({error}))));
-if(solveGen!==_siSolveGen)throw makeSolverCancellationError('Solver generation changed');
+queueSolverWorkerMessage(Object.assign({},common,{type,spec,roots}),false,operation).then(value=>({value}),error=>({error}))));
+if(operation.cancelled||operation.gen!==_siSolveGen)throw operation.error||makeSolverCancellationError('Solver generation changed');
 const failed=settled.find(x=>x.error);
 if(failed)throw failed.error;
 payloads.push(...settled.map(x=>x.value.payload));
@@ -331,13 +331,14 @@ if(solverShardCapsFilled(spec,partial))return partial;
 }
 return mergeSolverShardPayloads(spec,payloads);
 }
-function queueSolveTask(render,options,idBase,bucketBase){
+function queueSolveTask(render,options,idBase,bucketBase,owner){
 const cacheKey=solverResultCacheKey(render,options);
 const cached=getCachedSolverResult(cacheKey,idBase,bucketBase);
 if(cached)return Promise.resolve(cached);
 if(solverBatUnreachable(render))return Promise.resolve(rebaseSolverCachedResult(setCachedSolverResult(cacheKey,solverBatUnreachableResult(),idBase,bucketBase),idBase,bucketBase));
 const oldPending=_solverResultPending.get(cacheKey);
-if(oldPending&&oldPending.gen===_siSolveGen){
+if(oldPending&&!oldPending.cancelled&&oldPending.gen===_siSolveGen){
+if(owner!=='probe')oldPending.owner='view';
 window._solverResultCacheStats.pendingHits++;
 return oldPending.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucketBase));
 }
@@ -345,73 +346,70 @@ if(oldPending)_solverResultPending.delete(cacheKey);
 const pool=getSearchWorkerPool();
 if(!pool)return Promise.reject(new Error('Worker pool unavailable'));
 window._solverResultCacheStats.misses++;
-const solveGen=_siSolveGen;
-const common={
-lang:DISPLAY_LANG,
-dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},
-chars:options.chars
-};
+const operation={gen:_siSolveGen,owner:owner==='probe'?'probe':'view',cancelled:false,stages:new Map(),promise:null};
+_solverResultPending.set(cacheKey,operation);
+const common={lang:DISPLAY_LANG,dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},chars:options.chars};
 let searchIncomplete=false;
+const ensureCurrent=()=>{
+if(operation.cancelled||operation.gen!==_siSolveGen||_solverResultPending.get(cacheKey)!==operation)
+throw operation.error||makeSolverCancellationError('Solver generation changed');
+};
 const finalRender=async(extra)=>{
+ensureCurrent();
 const result=await queueSolverWorkerMessage(Object.assign({},common,{
 type:'solve',render,idBase,bucketBase,incomplete:searchIncomplete
-},extra||{}),true);
+},extra||{}),true,operation);
+ensureCurrent();
 (searchIncomplete||(searchIncomplete=!!result.incomplete));
 return result;
 };
-const ensureCurrent=()=>{
-if(solveGen!==_siSolveGen)throw makeSolverCancellationError('Solver generation changed');
-};
-const buildKillAllStage=async(stage)=>{
-const spec=prepareParallelSolverSpec(render,options,'killAll',stage);
-if(!spec)return null;
-return runParallelSolverShards('solveKillAllShard',spec,common,pool,solveGen);
+const buildStage=async(kind,stage)=>{
+ensureCurrent();
+const key=kind+':'+(stage||'');
+if(!operation.stages.has(key)){
+const spec=prepareParallelSolverSpec(render,options,kind,stage);
+operation.stages.set(key,spec?runParallelSolverShards(kind==='kmc'?'solveKmcShard':'solveKillAllShard',spec,common,pool,operation):Promise.resolve(null));
+}
+const result=await operation.stages.get(key);
+ensureCurrent();
+return result;
 };
 const execute=async()=>{
-const planInfo=prepareParallelSolverSpec(render,options,'plan');
+ensureCurrent();
+if(!operation.stages.has('plan'))operation.stages.set('plan',prepareParallelSolverSpec(render,options,'plan'));
+const planInfo=operation.stages.get('plan');
 const planType=planInfo&&planInfo.plan?planInfo.plan.planType:'kill_all';
 const isFallbackPath=planType!=='kill_all';
 let result,killAllR1=null;
 if(planType==='kill_all'){
-killAllR1=await buildKillAllStage('r1');ensureCurrent();
+killAllR1=await buildStage('killAll','r1');
 if(!killAllR1)return finalRender();
-result=await finalRender({prebuiltKillAll:killAllR1,deferKillAll:true});ensureCurrent();
+result=await finalRender({prebuiltKillAll:killAllR1,deferKillAll:true});
 }else{
-let prebuiltKmc=null;
-if(planType==='kill_mercy_clear'){
-const spec=prepareParallelSolverSpec(render,options,'kmc');
-if(spec)prebuiltKmc=await runParallelSolverShards('solveKmcShard',spec,common,pool,solveGen);
-ensureCurrent();
-}
-result=await finalRender({prebuiltKmc,deferKillAll:true});ensureCurrent();
+const prebuiltKmc=planType==='kill_mercy_clear'?await buildStage('kmc'):null;
+result=await finalRender({prebuiltKmc,deferKillAll:true});
 }
 if(result.needsKillAll==='r1'){
-killAllR1=await buildKillAllStage('r1');ensureCurrent();
+killAllR1=await buildStage('killAll','r1');
 if(!killAllR1){
-result=await finalRender({forceKillAll:true,initialFallback:true});ensureCurrent();
+result=await finalRender({forceKillAll:true,initialFallback:true});
 result.fallback=true;return result;
 }
-result=await finalRender({forceKillAll:true,initialFallback:true,
-prebuiltKillAll:killAllR1,deferKillAll:true});ensureCurrent();
+result=await finalRender({forceKillAll:true,initialFallback:true,prebuiltKillAll:killAllR1,deferKillAll:true});
 }
 if(result.needsKillAll==='r2'){
-const r2=await buildKillAllStage('r2');ensureCurrent();
-if(!r2){
-result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
-prebuiltKillAll:null});ensureCurrent();
-}else{
-const all=Object.assign({},killAllR1||{},r2,{r1:[],
-incomplete:!!((killAllR1==null?void 0:killAllR1.incomplete)||r2.incomplete)});
-result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,
-prebuiltKillAll:all,deferKillAll:false});ensureCurrent();
+const r2=await buildStage('killAll','r2');
+if(!r2)result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,prebuiltKillAll:null});
+else{
+const all=Object.assign({},killAllR1||{},r2,{r1:[],incomplete:!!((killAllR1==null?void 0:killAllR1.incomplete)||r2.incomplete)});
+result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,prebuiltKillAll:all,deferKillAll:false});
 }
 }
 return result;
 };
 const blockedExecute=async()=>{
 const main=await execute();ensureCurrent();
-if(!main||main.solvable===true
-||!(solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0))return main;
+if(!main||main.solvable===true||!(solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0))return main;
 common.dom.si_blockFallback=true;
 try{
 const fallback=await execute();ensureCurrent();
@@ -420,16 +418,13 @@ if(main.incomplete)fallback.incomplete=true;
 return fallback;
 }finally{common.dom.si_blockFallback=false;}
 };
-const work=blockedExecute();
-const pending={gen:solveGen,promise:null};
-pending.promise=work.then(result=>{
+operation.promise=blockedExecute().then(result=>{
 ensureCurrent();
 return setCachedSolverResult(cacheKey,result,idBase,bucketBase);
 }).finally(()=>{
-if(_solverResultPending.get(cacheKey)===pending)_solverResultPending.delete(cacheKey);
+if(_solverResultPending.get(cacheKey)===operation)_solverResultPending.delete(cacheKey);
 });
-_solverResultPending.set(cacheKey,pending);
-return pending.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucketBase));
+return operation.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucketBase));
 }
 function replaceSolveWorker(wi){
 const p=_dq9Pool;
@@ -447,18 +442,25 @@ const err=new Error(reason||'Solver cancelled');
 err.code=SOLVER_CANCELLED;
 return err;
 }
-function cancelAllSolveTasks(reason){
-_siSolveGen++;
-_solverResultPending.clear();
-_fleePending.clear();
-const err=makeSolverCancellationError(reason);
-for(const t of _siSolveQueue)t.reject(err);
-_siSolveQueue.length=0;
-if(_siSolveBusy.size>0){
-for(const[wi,t]of _siSolveBusy){t.reject(err);replaceSolveWorker(wi);}
-_siSolveBusy.clear();
-dispatchPoolJobs();
+function cancelAllSolveTasks(reason,keepKeys,owner){
+_siSolveGen++;_siInspectorGen++;
+const err=makeSolverCancellationError(reason),keys=new Set(keepKeys||[]),retained=new Set();
+for(const[key,operation]of _solverResultPending){
+if(keys.has(key)&&!operation.cancelled){operation.gen=_siSolveGen;operation.owner=owner==='probe'?'probe':'view';retained.add(operation);}
+else{operation.cancelled=true;operation.error=err;_solverResultPending.delete(key);}
 }
+_fleePending.clear();
+let kept=0;
+for(const task of _siSolveQueue){
+if(retained.has(task.owner))_siSolveQueue[kept++]=task;
+else task.reject(err);
+}
+_siSolveQueue.length=kept;
+for(const[wi,task]of _siSolveBusy){
+if(retained.has(task.owner))continue;
+_siSolveBusy.delete(wi);task.reject(err);replaceSolveWorker(wi);
+}
+dispatchPoolJobs();
 }
 function abortAllSolveTasks(reason){
 _solverResultPending.clear();
@@ -1878,9 +1880,11 @@ patSel.options.add(new Option(pair[1],pair[0]));
 }
 function updateSeedInspector(){var _ios15,_ios16;
 window._siBuckets=null;
+_siInspectorGen++;
 let _solverOpt;
 try{_solverOpt=snapshotSolverOptions();}
 catch(e){
+_siInspectorSignature=null;
 cancelAllSolveTasks('Invalid character stats');
 const box=byId('si_at_results');if(box)box.innerHTML='<div style="color:#f44;">'+e.message+'</div>';
 const target=byId('si_target_results');if(target)target.innerHTML='';
@@ -1916,7 +1920,7 @@ const targetTotalStep=parseInt(uiVal('si_target_step'))||35;
 const pSelect=byId('si_pattern');
 const pTypeStr=pSelect.value;
 const pType=AT_PAT[pTypeStr]||0;
-if(isNaN(seed))return;
+if(isNaN(seed)){_siInspectorSignature=null;cancelAllSolveTasks('Invalid Inspector seed');return;}
 const N=atPopIndex(n);
 const{atN:atN_val,atN1:atN1_val}=getATPair(seed,N);
 const monId=getMonsterIdByAT(atN_val,envType,floorMR);
@@ -1965,6 +1969,7 @@ patternMsg=foundOffset!==-1?
 C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
 }
 let battleStr="";
+const inspectorKeys=[],inspectorProbes=[];
 let seqHtml="";
 if(pType>0&&foundOffset!==-1){
 const budgets=battleATBudgetsForRun(atContext,abs_1+foundOffset,anchorEnd);
@@ -1990,7 +1995,6 @@ return{type:'kill_all',effMon:p.T,postAlive:0};
 }
 const _solverMercyLv=(_solverOpt.chars&&_solverOpt.chars.length)
 ?Math.max(..._solverOpt.chars.map(c=>c.lv||99)):99;
-const _fleeProbes=[];
 const _atForT=(t)=>battleATForCount(budgets,t);
 const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,userDeft,canRound2});
 const _fleeState=(mg,t)=>{
@@ -2000,7 +2004,7 @@ const v=peekFleeVerdict(task,_solverOpt);
 if(v===false)return'flee';
 if(v==='fallback')return'fallback';
 if(v===true)return'ok';
-_fleeProbes.push(task);
+inspectorProbes.push(task);
 return'pending';
 };
 const _pendTag=(st)=>st==='pending'
@@ -2014,6 +2018,8 @@ bucket.mixes.push({desc,monGroups,killAllDesc,fleeDesc,order});
 }
 for(const encounter of encounters){
 const{total:T,monGroups:mg,probability}=encounter;
+const inspectorTask=_fleeTask(mg,T);
+if(inspectorTask.bat>=0)inspectorKeys.push(solverResultCacheKey(inspectorTask,_solverOpt));
 if(T===1)continue;
 const plan=_atForT(T)===0?{type:'kill_all',effMon:T,postAlive:0}:_derivePlan(mg);
 const state=_fleeState(mg,T),pTag=_pFmt(probability);
@@ -2037,12 +2043,6 @@ _addResult(T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
 }
 window._siBuckets={d1,d2,d4,monId,mapDeft,userDeft,canRound2,resultsByT,
 singleEncounter:encounters.find(e=>e.total===1)};
-if(_fleeProbes.length){
-Promise.all(_fleeProbes.map(t=>requestFleeVerdict(t,_solverOpt)))
-.then((verdicts)=>{
-if(verdicts.every(v=>v!==null))updateSeedInspector();
-});
-}
 const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L40}${lbl}${L41}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
 battleStr=`<div style="margin:2px 0;">${H06} ${_batBtn(d1,'d1','×1')} / ${_batBtn(d2,'d2','×2-3')} / ${_batBtn(d4,'d4','×4-5')}</div>`
 +`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
@@ -2058,6 +2058,15 @@ battleStr=`<div id="batLine1" style="margin:2px 0;">${H06} <span style="color:#f
 +`<div id="batLine3" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_4}</span> <span style="color:#888;font-size:10px;">×4-5</span></div>`
 +`<div style="color:#888;font-size:11px;margin-top:3px;">`+C23+`</div>`
 +`<div style="margin-top:3px;">${seqHtml}</div>`;
+}
+const activeKeys=Array.from(new Set(inspectorKeys)).sort();
+const inspectorSignature=JSON.stringify(activeKeys);
+if(inspectorSignature!==_siInspectorSignature){_siInspectorSignature=inspectorSignature;cancelAllSolveTasks('Inspector inputs changed',activeKeys,'probe');}
+const inspectorGen=_siInspectorGen;
+if(inspectorProbes.length){
+Promise.all(inspectorProbes.map(t=>requestFleeVerdict(t,_solverOpt))).then((verdicts)=>{
+if(inspectorGen===_siInspectorGen&&verdicts.every(v=>v!==null))updateSeedInspector();
+});
 }
 const s_target=advanceATRng(seed,targetTotalStep);
 const atTarget_val=atFromRng(s_target);
@@ -2088,7 +2097,7 @@ byId('seedInspectorModal').style.display='flex';
 updateSeedInspector();
 }
 function closeSeedInspector(e){
-if(!e||e.target.className==='modal-close')byId('seedInspectorModal').style.display='none';
+if(!e||e.target.className==='modal-close'){_siInspectorSignature=null;cancelAllSolveTasks('Seed Inspector closed');byId('seedInspectorModal').style.display='none';}
 }
 const debouncedUpdateSeedInspector=debounce(updateSeedInspector,100);
 function buildSolverLegendHtml(){
@@ -2319,7 +2328,7 @@ if(_fleeVerdict.has(k))return Promise.resolve(_fleeVerdict.get(k));
 if(_fleePending.has(k))return _fleePending.get(k);
 const solveGen=_siSolveGen;
 const n=++_fleeProbeSeq;
-const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n).then((m)=>{
+const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n,'probe').then((m)=>{
 if(solveGen!==_siSolveGen)return null;
 return cacheFleeVerdictResult(task,opt,m,k);
 }).catch((err)=>{
@@ -2399,8 +2408,7 @@ const body=byId('si_submodal_body');if(body)body.innerHTML='<div style="color:#f
 const modal=byId('si_submodal');if(modal)modal.style.display='flex';
 return;
 }
-cancelAllSolveTasks('Superseded by a new Solver view');
-const viewGen=_siSolveGen;
+const viewGen=_siSolveGen+1;
 ensureSolverSubmodal();
 window._solverComboMap={};window._solverComboId=0;window._solverBucketId=0;window._solverBuckets={};
 let html=buildSolverLegendHtml(),title='';
@@ -2450,6 +2458,7 @@ html+=`<div id="${fleeRowId}" style="${fleeItems.length?'':'display:none;'}font-
 }
 if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
 }
+cancelAllSolveTasks('Superseded by a new Solver view',tasks.map(task=>solverResultCacheKey(task,options)));
 byId('si_submodal_title').innerHTML=title;
 byId('si_submodal_body').innerHTML=html;
 byId('si_submodal').style.display='flex';

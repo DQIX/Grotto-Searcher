@@ -82,11 +82,13 @@ ${nm(C02,mapData.mapTypeName,mapData.mapTypeNameJP)}
 <span>${C03}: <strong>${mapData.monsterRank}</strong></span>
 <span>${C04}: <strong>${mapData.floorCount}</strong></span>
 ${nm('Boss',mapData.bossName,mapData.bossNameJP)}
+
 ${col(C05,'color:#0ff;','',locHtmlString)}
 ${col(C06,'color:#4c4;','text-align:left;',atHtmlString)}
 ${col(C07,'','text-align:left;',rnHtml)}
 ${col('A*','','text-align:left;',wHtml)}
 </div>
+
 <div class="info-bar" style="align-items:center;background:#16162a;border-bottom:1px solid #4a4a8a;padding:8px 14px;gap:6px;">
 <span style="color:#88b;font-weight:bold;white-space:nowrap;">${C08}</span>
 <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;min-width:0;">
@@ -320,7 +322,8 @@ body.innerHTML=`<div class="modal-tabs">
 <div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
 <div id="ctListEN" style="display: block;">${htmlEN}</div>
 <div id="ctListJP" style="display: none;">${htmlJP}</div>
-</div>`;
+</div>
+`;
 modal.style.display='flex';
 switchCtTab(DISPLAY_LANG!=='EN'?'JP':'EN');
 }
@@ -672,7 +675,8 @@ itemSelect.innerHTML=itemOpts;
 itemSelect.value=itemSelect.querySelector(`option[value="${currentVal}"]`)?currentVal:"ANY";
 };
 for(let i=1;i<=3;i++){
-container.innerHTML+=`<div style="display:flex;gap:2px;align-items:center;">
+container.innerHTML+=`
+<div style="display:flex;gap:2px;align-items:center;">
 <span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
 <select id="fs_f_${i}" class="fs-ctl" style="width:45px;">${floorOpts}</select>
 <select id="fs_b_${i}" class="fs-ctl" style="width:50px;">${boxOpts}</select>
@@ -716,7 +720,7 @@ isModalDragging=false;
 });
 function exportSearchResults(){
 try{
-const items=document.querySelectorAll('#searchGrid .search-result-item, #atSearchGrid .search-result-item');
+const items=document.querySelectorAll('#searchGrid .search-result-item');
 if(items.length===0){
 alert(A06);
 return;
