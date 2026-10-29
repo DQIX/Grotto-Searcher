@@ -1153,18 +1153,12 @@ if(t_val!==-1&&t_val<CHEST_TIMER_OFFSET)t_val=CHEST_TIMER_OFFSET;
 let targetItems=itm==="ANY"?[]:expandItemGroup(itm);
 let allowedRanks=new Set();
 if(r>0)allowedRanks.add(r);
-if(targetItems.length>0){
-let itemRanks=getChestRanksForItems(targetItems);
-if(r>0){
-let intersection=itemRanks.filter(rank=>rank===r);
-intersection.forEach(rank=>allowedRanks.add(rank));
-}else{
-itemRanks.forEach(rank=>allowedRanks.add(rank));
-}
+else if(targetItems.length>0){
+for(const rank of getChestRanksForItems(targetItems))allowedRanks.add(rank);
 }
 reqFloorCount=Math.max(reqFloorCount,f);
 groups.push({
-id:i,floor:f,boxIdx:b,rank:r,
+floor:f,boxIdx:b,rank:r,
 items:targetItems.length>0?targetItems:null,
 timerVal:t_val,
 allowedRanks:allowedRanks
