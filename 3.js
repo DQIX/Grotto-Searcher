@@ -346,9 +346,9 @@ if(oldPending)_solverResultPending.delete(cacheKey);
 const pool=getSearchWorkerPool();
 if(!pool)return Promise.reject(new Error('Worker pool unavailable'));
 window._solverResultCacheStats.misses++;
-const operation={gen:_siSolveGen,owner:owner==='probe'?'probe':'view',cancelled:false,stages:new Map(),promise:null};
+const operation={gen:_siSolveGen,owner:owner==='probe'?'probe':'view',cancelled:false,stages:options.blockStages||new Map(),promise:null};
 _solverResultPending.set(cacheKey,operation);
-const common={lang:DISPLAY_LANG,dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer},chars:options.chars};
+const common={lang:DISPLAY_LANG,dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer,si_blockFallback:!!options.blockFallback},chars:options.chars};
 let searchIncomplete=false;
 const ensureCurrent=()=>{
 if(operation.cancelled||operation.gen!==_siSolveGen||_solverResultPending.get(cacheKey)!==operation)
@@ -407,19 +407,12 @@ result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,prebu
 }
 return result;
 };
-const blockedExecute=async()=>{
-const main=await execute();ensureCurrent();
-if(!main||main.solvable===true||!(solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0))return main;
-common.dom.si_blockFallback=true;
-try{
-const fallback=await execute();ensureCurrent();
-if(!fallback||fallback.solvable!==true)return main;
-if(main.incomplete)fallback.incomplete=true;
-return fallback;
-}finally{common.dom.si_blockFallback=false;}
-};
-operation.promise=blockedExecute().then(result=>{
+operation.promise=execute().then(result=>{
 ensureCurrent();
+if(!options.blockFallback&&result&&result.solvable===false&&!result.incomplete&&solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0){
+result.needsBlockFallback=true;
+result.blockStages=operation.stages;
+}
 return setCachedSolverResult(cacheKey,result,idBase,bucketBase);
 }).finally(()=>{
 if(_solverResultPending.get(cacheKey)===operation)_solverResultPending.delete(cacheKey);
@@ -475,30 +468,39 @@ if(_siSolveBusy.size===0)return;
 for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);replaceSolveWorker(wi);}
 _siSolveBusy.clear();
 }
-function runSolveTaskOnMain(render,idBase,bucketBase){
-const run=()=>{
-window._solverComboId=idBase;
-window._solverBucketId=bucketBase;window._solverFallback=false;window._solverSolvable=null;
-window._solverNeedsKillAll=null;
-const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2,
-false,null,null,false,false,false,render.userDeft);
-return{html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable,incomplete:_solverSearchIncomplete};
-};
-const main=run();
-if(main.solvable===true||!(solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0))return main;
-let flag=byId('si_blockFallback');
+function runSolveTaskOnMain(render,idBase,bucketBase,blockFallback=false){
+const options=Object.assign(snapshotSolverOptions(),{blockFallback}),cacheKey=solverResultCacheKey(render,options);
+let result=getCachedSolverResult(cacheKey,idBase,bucketBase);
+if(!result){
+const comboMap=window._solverComboMap,buckets=window._solverBuckets;
+window._solverComboMap={};window._solverBuckets={};
+let flag=null;
+try{
+if(blockFallback){
+flag=byId('si_blockFallback');
 if(!flag){
 flag=document.createElement('input');
 flag.type='checkbox';flag.id='si_blockFallback';flag.hidden=true;
 document.body.appendChild(flag);
 }
 flag.checked=true;
-try{
-const fallback=run();
-if(fallback.solvable!==true)return main;
-if(main.incomplete)fallback.incomplete=true;
-return fallback;
-}finally{flag.checked=false;}
+}
+window._solverComboId=idBase;
+window._solverBucketId=bucketBase;window._solverFallback=false;window._solverSolvable=null;
+window._solverNeedsKillAll=null;
+const html=renderSolverResult(render.bat,render.monGroups,render.monId,render.mapDeft,render.canRound2,
+false,null,null,false,false,false,render.userDeft);
+result={html,comboMap:window._solverComboMap,buckets:window._solverBuckets,fallback:window._solverFallback||false,solvable:window._solverSolvable,incomplete:_solverSearchIncomplete};
+if(!blockFallback&&result.solvable===false&&!result.incomplete&&solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0)result.needsBlockFallback=true;
+result=rebaseSolverCachedResult(setCachedSolverResult(cacheKey,result,idBase,bucketBase),idBase,bucketBase);
+}finally{
+if(flag)flag.checked=false;
+window._solverComboMap=comboMap;window._solverBuckets=buckets;
+}
+}
+Object.assign(window._solverComboMap,result.comboMap||{});
+Object.assign(window._solverBuckets,result.buckets||{});
+return result;
 }
 (function(){
 if(typeof document==='undefined'||!document.createElement||!document.body||
@@ -1997,6 +1999,7 @@ const task=_fleeTask(mg,t);
 const v=peekFleeVerdict(task,_solverOpt);
 if(v===false)return'flee';
 if(v==='fallback')return'fallback';
+if(v==='block-pending')return'block-pending';
 if(v===true)return'ok';
 inspectorProbes.push(task);
 return'pending';
@@ -2135,9 +2138,38 @@ document.addEventListener('input',e=>{if(e.target.classList.contains('sv-stat'))
 window._solverComboMap={};
 window._solverComboId=0;
 window._solverBucketId=0;
-function showBlockFallback(bucketId){
+async function showBlockFallback(bucketId){
 const st=window._solverBuckets&&window._solverBuckets[bucketId];
 if(!st||!st.blocked)return;
+if(st.request){
+if(st.loading)return;
+const request=st.request,gen=_siSolveGen,el=byId(request.elementId),prompt=byId(bucketId+'_blk');
+if(!el||!prompt)return;
+st.loading=true;prompt.textContent=L43;
+try{
+await new Promise(resolve=>setTimeout(resolve,0));
+if(gen!==_siSolveGen||byId(request.elementId)!==el)return;
+const result=request.mainThread||!getSearchWorkerPool()
+?runSolveTaskOnMain(request.render,request.idBase,request.bucketBase,true)
+:await queueSolveTask(request.render,Object.assign({},request.options,{blockFallback:true,blockStages:request.stages}),request.idBase,request.bucketBase);
+if(gen!==_siSolveGen||byId(request.elementId)!==el)return;
+if(!result||typeof result.solvable!=='boolean'){
+prompt.textContent=T('Result unknown — click to retry alternatives','結果未知，點擊重試替代方案','結果は不明です — クリックして代替案を再計算');
+return;
+}
+Object.assign(window._solverComboMap,result.comboMap||{});
+for(const[id,state]of Object.entries(result.buckets||{}))window._solverBuckets[id]=Object.assign({},state);
+el.innerHTML=result.solvable?result.html:'<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">'+L44+'</span></div>';
+st.blocked=false;
+for(const id of Object.keys(result.buckets||{}))showBlockFallback(id);
+setCachedSolverResult(solverResultCacheKey(request.render,request.options),result,request.idBase,request.bucketBase);
+cacheFleeVerdictResult(request.render,request.options,result);
+if(result.fallback&&request.killAllDesc){const desc=byId(request.descId);if(desc)desc.innerHTML=request.killAllDesc;}
+}catch(e){
+if(gen===_siSolveGen&&byId(request.elementId)===el)prompt.textContent=T('Calculation failed — click to retry alternatives','計算失敗，點擊重試替代方案','計算に失敗しました — クリックして代替案を再計算');
+}finally{st.loading=false;}
+return;
+}
 const rows=document.getElementsByClassName(bucketId+'_row');
 for(let i=0;i<st.init;i++){if(rows[i])rows[i].style.display='';}
 st.shown=st.init;
@@ -2252,7 +2284,7 @@ function solverResultCacheKey(render,options){
 const canRound2=solverAllowsRound2(render.mapDeft,render.canRound2);
 const charSig=options.useStats?solverCharsSig(options.chars):'neutral';
 return[DISPLAY_LANG,render.monId,render.bat,canRound2?1:0,render.userDeft,render.mapDeft,
-options.useStats?1:0,options.multiPlayer?1:0,charSig,
+options.useStats?1:0,options.multiPlayer?1:0,options.blockFallback?1:0,charSig,
 (render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')
 ].join('|');
 }
@@ -2276,21 +2308,20 @@ return Object.assign({},src,{html,comboMap,buckets});
 function getCachedSolverResult(key,idBase,bucketBase){
 const entry=_solverResultCache.get(key);
 if(!entry)return null;
-if(solverResultVerdict(entry.result)===null){_solverResultCache.delete(key);return null;}
+if(!entry.result.needsBlockFallback&&solverResultVerdict(entry.result)===null){_solverResultCache.delete(key);return null;}
 _solverResultCache.delete(key);_solverResultCache.set(key,entry);
 window._solverResultCacheStats.hits++;
 return rebaseSolverCachedResult(entry,idBase,bucketBase);
 }
 function setCachedSolverResult(key,result,idBase,bucketBase){
 const entry={result,idBase:idBase||0,bucketBase:bucketBase||0};
-if(solverResultVerdict(result)===null)return entry;
+if(!result.needsBlockFallback&&solverResultVerdict(result)===null)return entry;
 if(_solverResultCache.has(key))_solverResultCache.delete(key);
 _solverResultCache.set(key,entry);
 while(_solverResultCache.size>SOLVER_RESULT_CACHE_MAX)
 _solverResultCache.delete(_solverResultCache.keys().next().value);
 return _solverResultCache.get(key);
 }
-const fleeFailureFallback=()=>null;
 const snapshotSolverOptions=()=>({
 chars:readCharStatsFromDom(),
 useStats:solverUseStatsEnabled(),
@@ -2302,7 +2333,7 @@ const FLEE_ID_BASE=900000,FLEE_BK_BASE=9000;
 let _fleeProbeSeq=0;
 const fleeVerdictKey=solverResultCacheKey;
 function solverResultVerdict(result){
-if(!result||result.needsKillAll||typeof result.solvable!=='boolean')return null;
+if(!result||result.needsKillAll||result.needsBlockFallback||typeof result.solvable!=='boolean')return null;
 return result.solvable;
 }
 function peekFleeVerdict(task,opt){
@@ -2310,6 +2341,7 @@ const k=fleeVerdictKey(task,opt);
 return _fleeVerdict.has(k)?_fleeVerdict.get(k):null;
 }
 function cacheFleeVerdictResult(task,opt,result,key=fleeVerdictKey(task,opt)){
+if(result&&result.needsBlockFallback){_fleeVerdict.set(key,'block-pending');return'block-pending';}
 const verdict=solverResultVerdict(result);
 if(verdict===null)return null;
 const solvable=verdict&&result.fallback?'fallback':verdict;
@@ -2325,9 +2357,7 @@ const n=++_fleeProbeSeq;
 const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n,'probe').then((m)=>{
 if(solveGen!==_siSolveGen)return null;
 return cacheFleeVerdictResult(task,opt,m,k);
-}).catch((err)=>{
-return fleeFailureFallback(err);
-}).finally(()=>{
+}).catch(()=>null).finally(()=>{
 if(_fleePending.get(k)===p)_fleePending.delete(k);
 });
 _fleePending.set(k,p);
@@ -2472,7 +2502,7 @@ const _mergeEquivalentPatterns=()=>{
 const seen=new Map();
 for(let i=0;i<tasks.length;i++){
 const meta=taskMeta[i],result=taskResults[i];
-if(!meta||!meta.pattern||!result||result.flee)continue;
+if(!meta||!meta.pattern||!result||result.flee||result.needsBlockFallback)continue;
 const sig=meta.section+'\x1a'+solverTaskOutputSignature(result.html,options.useStats);
 if(!seen.has(sig)){seen.set(sig,i);continue;}
 const keepMeta=taskMeta[seen.get(sig)];
@@ -2489,6 +2519,16 @@ if(viewGen!==_siSolveGen)return;
 if(!stateAlreadyMerged)_mergeState(result);
 const verdict=cacheFleeVerdictResult(tasks[i],options,result);
 const meta=taskMeta[i];
+if(result.needsBlockFallback){
+const bucketId='sb'+i*BK_SPAN;
+window._solverBuckets[bucketId]={blocked:true,request:{render:tasks[i],options,stages:result.blockStages,idBase:i*ID_SPAN,bucketBase:i*BK_SPAN,elementId:taskElementIds[i],descId:meta&&meta.descId,killAllDesc:meta&&meta.killAllDesc,mainThread:stateAlreadyMerged}};
+const prompt='<div id="'+bucketId+'_blk" style="font-size:10px;margin-left:16px;color:#08c;cursor:pointer;" onclick="showBlockFallback(\''+bucketId+'\')">'+L17+'</div>';
+taskResults[i]={html:prompt,flee:false,needsBlockFallback:true};
+_fill(i,prompt);
+completedTasks++;
+if(completedTasks===tasks.length)_mergeEquivalentPatterns();
+return;
+}
 if((verdict===false||verdict===null)&&(meta==null?void 0:meta.pattern)){
 taskResults[i]={html:'',flee:true};
 const section=fleeSections.get(meta.section);
