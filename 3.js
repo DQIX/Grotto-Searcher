@@ -29,24 +29,19 @@ const want=Math.ceil(totalUnits/Math.max(1,workerCount*DQ9_CHUNKS_PER_WORKER));
 return Math.max(lo,Math.min(hi,want));
 }
 function getWorkerCount(){
-try{
-const q=new URLSearchParams(window.location.search).get('workers');
-if(q){const n=parseInt(q,10);if(n>=1)return Math.min(n,256);}
-}catch{}
-if(typeof window.DQ9_WORKER_COUNT==='number'&&window.DQ9_WORKER_COUNT>=1)return Math.min(Math.floor(window.DQ9_WORKER_COUNT),256);
+try{const n=parseInt(new URLSearchParams(window.location.search).get('workers'),10);if(n>=1)return Math.min(n,256);}catch{}
+const fixed=window.DQ9_WORKER_COUNT;
+if(typeof fixed==='number'&&fixed>=1)return Math.min(Math.floor(fixed),256);
 return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
 }
 function getWorkerBlobURL(){return '5.js';}
 function createPoolWorker(blobURL,wi){
 const w=new Worker(blobURL);
-w.onmessage=(e)=>handlePoolMessage(wi,e.data);
-w.onerror=(e)=>handlePoolFatalError(wi,e);
+w.onmessage=e=>handlePoolMessage(wi,e.data);
+w.onerror=e=>handlePoolFatalError(wi,e);
 return w;
 }
-function releasePoolWorker(wi){
-const p=_dq9Pool;
-if(p&&p.idle.indexOf(wi)===-1)p.idle.push(wi);
-}
+function releasePoolWorker(wi){const p=_dq9Pool;if(p&&!p.idle.includes(wi))p.idle.push(wi);}
 function getSearchWorkerPool(){
 if(_dq9Pool)return _dq9Pool;
 if(!_dq9PreflightDone||_dq9PoolFailed)return null;
@@ -150,7 +145,6 @@ if(m.type==='error'){
 console.error('Worker chunk error:',m.message);
 broadcastToPool({type:'cancel'});
 finishPoolRun(a,null,m.message);
-return;
 }
 }
 function startPoolWatchdog(a){
@@ -258,124 +252,79 @@ let _siSolveGen=0,_siInspectorGen=0,_siInspectorSignature=null;
 let _siSolveSeq=0;
 const _siSolveQueue=[];
 const _siSolveBusy=new Map();
-const SOLVER_CANCELLED='SOLVER_CANCELLED';
-function takeIdlePoolWorker(){
-const p=_dq9Pool;
-if(!p||p.idle.length===0)return-1;
-const a=_dq9Active;
-if(a&&!a.finished&&a.queue.length>0)return-1;
-return p.idle.pop();
+function takeIdlePoolWorker(prefer){
+const p=_dq9Pool,a=_dq9Active;
+if(!p||!p.idle.length||a&&!a.finished&&a.queue.length>0)return-1;
+if(!(prefer>=0&&prefer<p.workers.length))return p.idle.pop();
+const at=p.idle.indexOf(prefer);
+return at<0?-2:p.idle.splice(at,1)[0];
 }
 function dispatchSolveQueue(){
-while(_siSolveQueue.length>0){
-const wi=takeIdlePoolWorker();
-if(wi<0)return;
-const t=_siSolveQueue.shift();
+for(let i=0;i<_siSolveQueue.length;){
+const t=_siSolveQueue[i],wi=takeIdlePoolWorker(t.prefer);
+if(wi===-1)return;
+if(wi<0){i++;continue;}
+_siSolveQueue.splice(i,1);
 _siSolveBusy.set(wi,t);
 _dq9Pool.workers[wi].postMessage(t.msg);
 }
 }
+const SOLVER_DONE_TYPES=new Set(['solveDone','solveKmcShardDone','solveKillAllShardDone']);
 function handleSolveMessage(workerIdx,m){
 const t=_siSolveBusy.get(workerIdx);
 if(!t||m.solveId!==t.solveId)return;
 _siSolveBusy.delete(workerIdx);
-const p=_dq9Pool;
-if(p&&p.idle.indexOf(workerIdx)===-1)p.idle.push(workerIdx);
+releasePoolWorker(workerIdx);
 dispatchPoolJobs();
-if(m.type==='solveDone'||m.type==='solveKmcShardDone'||
-m.type==='solveKillAllShardDone')t.resolve(m);
+if(SOLVER_DONE_TYPES.has(m.type))t.resolve(Object.assign(m,{worker:workerIdx}));
 else t.reject(new Error(m.message||'Solver Worker error'));
 }
-function queueSolverWorkerMessage(msg,front,owner){
+function queueSolverWorkerMessage(msg,front,owner,prefer){
 const solveId=++_siSolveSeq;
 return new Promise((resolve,reject)=>{
-const task={solveId,resolve,reject,owner,msg:Object.assign({},msg,{solveId})};
+const task={solveId,resolve,reject,owner,prefer,msg:{...msg,solveId}};
 if(front)_siSolveQueue.unshift(task);else _siSolveQueue.push(task);
 dispatchSolveQueue();
 });
 }
 function partitionSolverRoots(spec,workerCount){
-const src=spec.sSkills||spec.variants||[];
-const roots=[];
-for(let i=0;i<src.length;i++){
-if(src[i]&&src[i].at>0&&spec.spaces.some(sp=>
-(!sp.depths||sp.depths.length>0)&&src[i].at<=sp.target))roots.push(i);
-}
 if(workerCount<2)return null;
-if(roots.length===0)return[];
-if(roots.length<2)return null;
-return roots.map(root=>[root]);
-}
-function solverShardCapsFilled(spec,counts){
-if(spec.sSkills)return spec.spaces.every(sp=>counts.get(sp.key).total>=sp.cap);
-return spec.spaces.every(sp=>sp.depths.every(depth=>(counts.get(sp.key).depths.get(depth)||0)>=sp.cap));
+const roots=solverIndicesOf(spec.sSkills||spec.variants||[],v=>spec.spaces.some(sp=>solverRootInSpace(v,sp)));
+return roots.length===0?[]:roots.length<2?null:roots.map(root=>[root]);
 }
 async function runParallelSolverShards(type,spec,common,pool,operation){
 const groups=partitionSolverRoots(spec,pool.workers.length);
 if(groups===null)return null;
 if(groups.length===0)return mergeSolverShardPayloads(spec,[]);
-window._solverLastParallelDispatch={type,workers:pool.workers.length,shards:0,roots:0,totalRoots:groups.length};
-const payloads=[],waveWidth=Math.max(2,pool.workers.length*2);
-let limited=false;
-const counts=new Map(spec.spaces.map(sp=>[sp.key,{kept:new Map(),total:0,depths:new Map()}]));
+const progress={},waveWidth=Math.max(2,pool.workers.length*2);
 for(let start=0;start<groups.length;start+=waveWidth){
 const wave=groups.slice(start,start+waveWidth);
 const settled=await Promise.all(wave.map(roots=>
-queueSolverWorkerMessage(Object.assign({},common,{type,spec,roots}),false,operation).then(value=>({value}),error=>({error}))));
+queueSolverWorkerMessage({...common,type,spec,roots},false,operation).then(value=>({value}),error=>({error}))));
 if(operation.cancelled||operation.gen!==_siSolveGen)throw operation.error||makeSolverCancellationError('Solver generation changed');
 const failed=settled.find(x=>x.error);
 if(failed)throw failed.error;
-for(const item of settled){
-const payload=item.value.payload;
-payloads.push(payload);
-for(const space of spec.spaces){
-const rows=payload&&payload.buckets&&payload.buckets[space.key];
-if(!rows)continue;
-const count=counts.get(space.key);
-for(const row of rows){
-const depth=space.depths?row.depth:null;
-if(space.depths&&!space.depths.includes(depth))continue;
-let kept=count.kept.get(depth)||0;
-const combos=row.combos||[];
-if(spec.sSkills){
-const added=Math.min(combos.length,Math.max(0,Math.ceil(space.cap-kept)));
-kept+=added;count.total+=added;
-}else{
-for(let i=0;i<combos.length&&kept<space.cap;i++){
-const length=combos[i].length;
-count.depths.set(length,(count.depths.get(length)||0)+1);
-kept++;count.total++;
+if(mergeSolverShardPayloads(spec,settled.map(item=>item.value.payload),progress))break;
 }
-}
-count.kept.set(depth,kept);
-}
-}
-}
-window._solverLastParallelDispatch.shards+=wave.length;
-window._solverLastParallelDispatch.roots+=wave.reduce((s,g)=>s+g.length,0);
-if(solverShardCapsFilled(spec,counts)){limited=true;break;}
-}
-const merged=mergeSolverShardPayloads(spec,payloads);
-merged.limited=merged.limited||limited;
-return merged;
+return mergeSolverShardPayloads(spec,null,progress);
 }
 function queueSolveTask(render,options,idBase,bucketBase,owner){
 const cacheKey=solverResultCacheKey(render,options);
 const cached=getCachedSolverResult(cacheKey,idBase,bucketBase);
 if(cached)return Promise.resolve(cached);
-if(solverBatUnreachable(render))return Promise.resolve(rebaseSolverCachedResult(setCachedSolverResult(cacheKey,solverBatUnreachableResult(),idBase,bucketBase),idBase,bucketBase));
-if(!options.metalGate&&solverMetalCompanionGated(render.monGroups,render.monId))return Promise.resolve(solverMetalGateResult());
+if(solverBatUnreachable(render))return Promise.resolve(rebaseSolverCachedResult(setCachedSolverResult(cacheKey,solverDashResult(false),idBase,bucketBase),idBase,bucketBase));
+if(!options.metalGate&&solverMetalCompanionGated(render.monGroups,render.monId))return Promise.resolve(solverDashResult(null,{needsMetalGate:true}));
 const oldPending=_solverResultPending.get(cacheKey);
 if(oldPending&&!oldPending.cancelled&&oldPending.gen===_siSolveGen){
 if(owner!=='probe')oldPending.owner='view';
-window._solverResultCacheStats.pendingHits++;
-return oldPending.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucketBase));
+return oldPending.promise.then(entry=>entry.result.verdictOnly&&owner!=='probe'?queueSolveTask(render,options,idBase,bucketBase,owner):rebaseSolverCachedResult(entry,idBase,bucketBase));
 }
 if(oldPending)_solverResultPending.delete(cacheKey);
 const pool=getSearchWorkerPool();
 if(!pool)return Promise.reject(new Error('Worker pool unavailable'));
-window._solverResultCacheStats.misses++;
-const operation={gen:_siSolveGen,owner:owner==='probe'?'probe':'view',cancelled:false,stages:options.blockStages||new Map(),promise:null};
+const probeWork=window._solverProbeWork||(window._solverProbeWork=new Map()),work=owner==='probe'?null:probeWork.get(cacheKey);
+if(work)probeWork.delete(cacheKey);
+const operation={gen:_siSolveGen,owner:owner==='probe'?'probe':'view',cancelled:false,stages:work?work.stages:options.blockStages||new Map(),promise:null,replies:new Map(),stopped:null};
 _solverResultPending.set(cacheKey,operation);
 const common={lang:DISPLAY_LANG,dom:{si_useStats:!!options.useStats,si_multiPlayer:!!options.multiPlayer,si_blockFallback:!!options.blockFallback},chars:options.chars};
 let searchIncomplete=false,searchLimited=false;
@@ -385,10 +334,21 @@ throw operation.error||makeSolverCancellationError('Solver generation changed');
 };
 const finalRender=async(extra)=>{
 ensureCurrent();
-const result=await queueSolverWorkerMessage(Object.assign({},common,{
-type:'solve',render,idBase,bucketBase,incomplete:searchIncomplete,limited:searchLimited
-},extra||{}),true,operation);
+const msg=Object.assign({},common,{type:'solve',render,idBase,bucketBase,incomplete:searchIncomplete,limited:searchLimited},extra||{});
+const sig=JSON.stringify([extra||{},searchIncomplete,searchLimited]),resume=work&&work.stopped&&work.stopped.sig===sig?work.stopped:null;
+let result=work&&work.replies.get(sig);
+if(!result){
+if(resume)msg.resume=resume.key;
+else if(operation.owner==='probe')Object.assign(msg,{verdict:true,resumeKey:cacheKey+'#'+(++_siSolveSeq)});
+result=await queueSolverWorkerMessage(msg,true,operation,resume?resume.worker:undefined);
 ensureCurrent();
+if(result.verdictOnly&&operation.owner!=='probe'){
+result=await queueSolverWorkerMessage(Object.assign({},msg,{verdict:false,resume:msg.resumeKey}),true,operation,result.worker);
+ensureCurrent();
+}
+if(result.verdictOnly)operation.stopped={sig,key:msg.resumeKey,worker:result.worker};
+else operation.replies.set(sig,result);
+}
 (searchIncomplete||(searchIncomplete=!!result.incomplete));
 searchLimited=searchLimited||!!result.limited;
 return result;
@@ -416,7 +376,7 @@ killAllR1=await buildStage('killAll','r1');
 if(!killAllR1)return finalRender();
 result=await finalRender({prebuiltKillAll:killAllR1,deferKillAll:true});
 }else{
-const prebuiltKmc=planType==='kill_mercy_clear'?await buildStage('kmc'):null;
+const prebuiltKmc=planType==='kill_mercy_clear'?await buildStage('kmc','r1'):null;
 result=await finalRender({prebuiltKmc,deferKillAll:true});
 }
 if(result.needsKillAll==='r1'){
@@ -439,6 +399,11 @@ return result;
 };
 operation.promise=execute().then(result=>{
 ensureCurrent();
+if(result&&result.verdictOnly){
+probeWork.set(cacheKey,{stages:operation.stages,replies:operation.replies,stopped:operation.stopped});
+while(probeWork.size>SOLVER_RESULT_CACHE_MAX)probeWork.delete(probeWork.keys().next().value);
+return{result,idBase:idBase||0,bucketBase:bucketBase||0};
+}
 if(!options.blockFallback&&result&&result.solvable===false&&!result.incomplete&&solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0){
 result.needsBlockFallback=true;
 result.blockStages=operation.stages;
@@ -452,48 +417,38 @@ return operation.promise.then(entry=>rebaseSolverCachedResult(entry,idBase,bucke
 function replaceSolveWorker(wi){
 const p=_dq9Pool;
 if(!p)return;
-try{p.workers[wi].onmessage=null;p.workers[wi].onerror=null;p.workers[wi].terminate();}catch(e){}
-const w=createPoolWorker(getWorkerBlobURL(),wi);
-p.workers[wi]=w;
-const a=_dq9Active;
+const old=p.workers[wi];
+try{old.onmessage=null;old.onerror=null;old.terminate();}catch(e){}
+const w=p.workers[wi]=createPoolWorker(getWorkerBlobURL(),wi),a=_dq9Active;
 if(a&&!a.finished&&a._retryJob)w.postMessage({type:'job',gen:a.gen,job:a._retryJob});
-if(p.idle.indexOf(wi)===-1)p.idle.push(wi);
+releasePoolWorker(wi);
 }
-function makeSolverCancellationError(reason){
-const err=new Error(reason||'Solver cancelled');
-err.code=SOLVER_CANCELLED;
-return err;
+function makeSolverCancellationError(reason){return new Error(reason);}
+function solverRejectQueued(err,keep){
+let kept=0;
+for(const task of _siSolveQueue){if(keep&&keep(task))_siSolveQueue[kept++]=task;else task.reject(err);}
+_siSolveQueue.length=kept;
 }
 function cancelAllSolveTasks(reason,keepKeys,owner){
 _siSolveGen++;_siInspectorGen++;
-const err=makeSolverCancellationError(reason),keys=new Set(keepKeys||[]),retained=new Set();
+const err=makeSolverCancellationError(reason),keys=new Set(keepKeys||[]),retained=new Set(),keep=task=>retained.has(task.owner);
 for(const[key,operation]of _solverResultPending){
 if(keys.has(key)&&!operation.cancelled){operation.gen=_siSolveGen;operation.owner=owner==='probe'?'probe':'view';retained.add(operation);}
 else{operation.cancelled=true;operation.error=err;_solverResultPending.delete(key);}
 }
 _fleePending.clear();
-let kept=0;
-for(const task of _siSolveQueue){
-if(retained.has(task.owner))_siSolveQueue[kept++]=task;
-else task.reject(err);
-}
-_siSolveQueue.length=kept;
-for(const[wi,task]of _siSolveBusy){
-if(retained.has(task.owner))continue;
-_siSolveBusy.delete(wi);task.reject(err);replaceSolveWorker(wi);
-}
+solverRejectQueued(err,keep);
+for(const[wi,task]of _siSolveBusy)if(!keep(task)){_siSolveBusy.delete(wi);task.reject(err);replaceSolveWorker(wi);}
 dispatchPoolJobs();
 }
 function abortAllSolveTasks(reason){
 _solverResultPending.clear();
 const err=new Error(reason||'Worker pool lost');
-for(const t of _siSolveQueue)t.reject(err);
-_siSolveQueue.length=0;
+solverRejectQueued(err);
 for(const t of _siSolveBusy.values())t.reject(err);
 _siSolveBusy.clear();
 }
 function requeueBusySolveTasks(){
-if(_siSolveBusy.size===0)return;
 for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);replaceSolveWorker(wi);}
 _siSolveBusy.clear();
 }
@@ -1901,10 +1856,7 @@ const n=parseInt(uiVal('si_n'),10)||0;
 let groupSize=parseInt(uiVal('si_group_size'),10)||1;
 const supSel1=byId('si_sup1');
 const supSel2=byId('si_sup2');
-const supPool=[];
-forEachPoolEntry(GROTTO_SUPPORT[envType]&&GROTTO_SUPPORT[envType][floorMR]||[],e=>{
-if(!supPool.includes(e[0]))supPool.push(e[0]);
-});
+const supPool=dwSupPool(envType,floorMR);
 const supKey=envType+':'+floorMR;
 [supSel1,supSel2].forEach(sel=>{
 if(sel.dataset.poolKey!==supKey||sel.options.length!==supPool.length||supPool.some((hx,i)=>sel.options[i].value!==hx)){
@@ -2014,8 +1966,7 @@ return'pending';
 const _pendTag=(st)=>st==='pending'
 ?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':st==='limit'?' <span style="color:#fa0;font-size:9px;">'+SOLVER_LIMIT_LABEL+'</span>':'';
 function _addResult(T,effMon,desc,monGroups,killAllDesc,fleeDesc){
-if(!resultsByT.has(T))resultsByT.set(T,{mixes:[],flee:[],nextOrder:0});
-const bucket=resultsByT.get(T);
+const bucket=solverMapEntry(resultsByT,T,()=>({mixes:[],flee:[],nextOrder:0}));
 const order=bucket.nextOrder++;
 if(effMon<0){bucket.flee.push({order,desc});return;}
 bucket.mixes.push({desc,monGroups,killAllDesc,fleeDesc,order});
@@ -2027,20 +1978,15 @@ if(inspectorTask.bat>=0)inspectorKeys.push(solverResultCacheKey(inspectorTask,_s
 if(T===1)continue;
 const plan=deriveSolverBattlePlan(mg,monId,_solverMercyLv,_atForT(T)===0);
 const state=_fleeState(mg,T),pTag=_pFmt(probability);
-const mainTag=`<span style="color:#f9c">${mergedSpeciesLabel(mg[0])}</span>`;
 const labels=mg.slice(1).map(s=>mergedSpeciesLabel(s));
-const supText=labels.length?'+'+labels.join('+'):'';
-const mainPrefix=mainTag+(labels.length?' ':'');
-const supTag=labels.length?`<span style="color:#a8f">${supText}</span>`:'';
-const base=mainPrefix+supTag;
-const fleeDesc=base+pTag;
-const killAllDesc=base+_pendTag(state)+pTag;
+const base=`<span style="color:#f9c">${mergedSpeciesLabel(mg[0])}</span>`+(labels.length?` <span style="color:#a8f">+${labels.join('+')}</span>`:'');
+const fleeDesc=base+pTag,killAllDesc=base+_pendTag(state)+pTag;
 if(state==='flee')_addResult(T,-1,fleeDesc);
-else if(state==='fallback')_addResult(T,T,base+pTag,mg,undefined,fleeDesc);
+else if(state==='fallback')_addResult(T,T,fleeDesc,mg,undefined,fleeDesc);
 else if(plan.planType==='kill_all')_addResult(T,T,killAllDesc,mg,undefined,fleeDesc);
 else{
 const label=!labels.length?L36:plan.planType==='mercy_first'?L39:plan.postAlive>0?L38:L37;
-const desc=mainPrefix+supTag+`<span style="color:#0f0"> ${label}→×${plan.effMon}</span>`+_pendTag(state)+pTag;
+const desc=base+`<span style="color:#0f0"> ${label}→×${plan.effMon}</span>`+_pendTag(state)+pTag;
 _addResult(T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
 }
 }
@@ -2110,7 +2056,6 @@ window._solverBucketId=0;
 const SOLVER_RESULT_CACHE_MAX=192;
 const _solverResultCache=new Map();
 const _solverResultPending=new Map();
-window._solverResultCacheStats={hits:0,pendingHits:0,misses:0};
 const snapshotSolverOptions=()=>({
 chars:readCharStatsFromDom(),
 useStats:solverUseStatsEnabled(),
@@ -2120,113 +2065,101 @@ const _fleeVerdict=new Map();
 const _fleePending=new Map();
 const FLEE_ID_BASE=900000,FLEE_BK_BASE=9000;
 let _fleeProbeSeq=0;
-const makeD1SolveTask=(b)=>b.singleEncounter?({
-bat:b.d1,
-monGroups:b.singleEncounter.monGroups,
-monId:b.monId,
-mapDeft:b.mapDeft,
-userDeft:b.userDeft,
-canRound2:b.canRound2
-}):null;
+function solverBucketTask(b,bat,monGroups){return{bat,monGroups,monId:b.monId,mapDeft:b.mapDeft,userDeft:b.userDeft,canRound2:b.canRound2};}
+const makeD1SolveTask=b=>b.singleEncounter?solverBucketTask(b,b.d1,b.singleEncounter.monGroups):null;
+function solverFleeHTML(){return'<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">'+L44+'</span></div>';}
+function solverFleeItemsHTML(items){return items.slice().sort((a,b)=>a.order-b.order).map(v=>v.html).join(' · ');}
 function buildSolverLegendHtml(){
-const L=DISPLAY_LANG;
 const legends=[
-['🛡️',L==='EN'?'Shield block':L==='JP'?'盾ガード':'盾格擋'],
-['⚔',L==='EN'?'Falcon Blade':L==='JP'?'はやぶさの剣':'隼劍'],
-['🪡',L==='EN'?'Poison Needle':L==='JP'?'どくばり':'毒針'],
-[L==='EN'?'(weapon)':'(武器)',L==='EN'?'×1.1':L==='JP'?'×1.1':'×1.1'],
-['🗡',L==='EN'?'Metal Slime Sword/Spear':L==='JP'?'メタスラの剣／やり':'金屬史萊姆劍／槍'],
-['🌀',L==='EN'?'Attribeauty':'風林火山'],
-['💨',L==='EN'?'Miss (AT consumed)':L==='JP'?'ミス (AT消費あり)':'Miss (AT 照常消耗)'],
-['👉',L==='EN'?'Target Support Monster but not Metal':L==='JP'?'メタルではなく仲間を指名':'瞄跟班、不瞄金屬'],
-['🔱',L==='EN'?'Poker':L==='JP'?'きしんのまそう':'鬼神槍'],
+['🛡️',T('Shield block','盾格擋','盾ガード')],
+['⚔',T('Falcon Blade','隼劍','はやぶさの剣')],
+['🪡',T('Poison Needle','毒針','どくばり')],
+[T('(weapon)','(武器)'),'×1.1'],
+['🗡',T('Metal Slime Sword/Spear','金屬史萊姆劍／槍','メタスラの剣／やり')],
+['🌀',T('Attribeauty','風林火山')],
+['💨',T('Miss (AT consumed)','Miss (AT 照常消耗)','ミス (AT消費あり)')],
+['👉',T('Target Support Monster but not Metal','瞄跟班、不瞄金屬','メタルではなく仲間を指名')],
+['🔱',T('Poker','鬼神槍','きしんのまそう')],
 ];
-return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;">'
-+legends.map(([e,n])=>e+'<span style="color:#888;">'+n+'</span>').join('')
-+'</div>';
+return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;">'+legends.map(([e,n])=>e+'<span style="color:#888;">'+n+'</span>').join('')+'</div>';
 }
 function initSolverStatInputs(){
 for(let i=1;i<=4;i++){
-for(const f of SOLVER_STAT_FIELDS.filter(f=>!f.solverOnly)){const input=byId('si_'+f.dom+i);if(input){input.min=f.min;input.max=999;input.step=1;}}
+for(const f of SOLVER_INPUT_FIELDS){const input=byId('si_'+f.dom+i);if(input)Object.assign(input,{min:f.min,max:999,step:1});}
 const atk=byId('si_atk'+i);
-if(atk){
-atk.min=0;atk.max=999;atk.step=1;
-atk.placeholder=T('Auto','自動');
-atk.title=T('Final ATK override (0–999); leave blank to use STR plus equipment.','最終 ATK 覆寫（0–999）；空白時依 STR＋裝備自動計算。','最終攻撃力を指定（0–999）。空欄なら STR＋装備から自動計算。');
+if(!atk)continue;
+Object.assign(atk,{min:0,max:999,step:1,placeholder:T('Auto','自動'),
+title:T('Final ATK override (0–999); leave blank to use STR plus equipment.','最終 ATK 覆寫（0–999）；空白時依 STR＋裝備自動計算。','最終攻撃力を指定（0–999）。空欄なら STR＋装備から自動計算。')});
 atk.setAttribute('aria-label','ATK '+i);
 }
 }
-}
 function applyJobStats(charNum){
-const sel=byId('si_job'+charNum);
-if(!sel||sel.value==='')return;
-const job=VOC_STATS[parseInt(sel.value,10)];
+const sel=byId('si_job'+charNum),job=sel&&sel.value!==''&&VOC_STATS[parseInt(sel.value,10)];
 if(!job)return;
-for(const field of SOLVER_STAT_FIELDS.filter(f=>!f.solverOnly)){const el=byId('si_'+field.dom+charNum);if(el)el.value=job.s[field.preset];}
+for(const f of SOLVER_INPUT_FIELDS){const el=byId('si_'+f.dom+charNum);if(el)el.value=job.s[f.preset];}
 updateSeedInspector();
+}
+function solverRevealRows(bucketId,from,to){
+const rows=document.getElementsByClassName(bucketId+'_row');
+for(let i=from;i<to;i++)if(rows[i])rows[i].style.display='';
 }
 async function showBlockFallback(bucketId){
 const st=window._solverBuckets&&window._solverBuckets[bucketId];
 if(!st||!st.blocked)return;
-if(st.request){
+if(!st.request){
+solverRevealRows(bucketId,0,st.init);
+st.shown=st.init;
+st.blocked=false;
+const blkEl=byId(bucketId+'_blk'),moreEl=byId(bucketId+'_more');
+if(blkEl)blkEl.style.display='none';
+if(moreEl&&st.shown<st.total)moreEl.style.display='';
+return;
+}
 if(st.loading)return;
 const request=st.request,gen=_siSolveGen,el=byId(request.elementId),prompt=byId(bucketId+'_blk');
 if(!el||!prompt)return;
-st.loading=true;prompt.textContent=L43;
+const current=()=>gen===_siSolveGen&&byId(request.elementId)===el;
+st.loading=true;
+prompt.textContent=L43;
 try{
-const result=await queueSolveTask(request.render,Object.assign({},request.options,{blockFallback:true,blockStages:request.stages}),request.idBase,request.bucketBase);
-if(gen!==_siSolveGen||byId(request.elementId)!==el)return;
+const result=await queueSolveTask(request.render,{...request.options,blockFallback:true,blockStages:request.stages},request.idBase,request.bucketBase);
+if(!current())return;
 const verdict=solverResultVerdict(result);
 if(verdict!==true&&verdict!==false){
 prompt.textContent=verdict==='limit'?SOLVER_LIMIT_LABEL:T('Result unknown — click to retry alternatives','結果未知，點擊重試替代方案','結果は不明です — クリックして代替案を再計算');
 return;
 }
 Object.assign(window._solverComboMap,result.comboMap||{});
-for(const[id,state]of Object.entries(result.buckets||{}))window._solverBuckets[id]=Object.assign({},state);
-el.innerHTML=result.solvable?result.html:'<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">'+L44+'</span></div>';
+for(const[id,state]of Object.entries(result.buckets||{}))window._solverBuckets[id]={...state};
+el.innerHTML=result.solvable?result.html:solverFleeHTML();
 st.blocked=false;
 for(const id of Object.keys(result.buckets||{}))showBlockFallback(id);
 setCachedSolverResult(solverResultCacheKey(request.render,request.options),result,request.idBase,request.bucketBase);
 cacheFleeVerdictResult(request.render,request.options,result);
 if(result.fallback&&request.killAllDesc){const desc=byId(request.descId);if(desc)desc.innerHTML=request.killAllDesc;}
 }catch(e){
-if(gen===_siSolveGen&&byId(request.elementId)===el)prompt.textContent=T('Calculation failed — click to retry alternatives','計算失敗，點擊重試替代方案','計算に失敗しました — クリックして代替案を再計算');
+if(current())prompt.textContent=T('Calculation failed — click to retry alternatives','計算失敗，點擊重試替代方案','計算に失敗しました — クリックして代替案を再計算');
 }finally{st.loading=false;}
-return;
-}
-const rows=document.getElementsByClassName(bucketId+'_row');
-for(let i=0;i<st.init;i++){if(rows[i])rows[i].style.display='';}
-st.shown=st.init;
-st.blocked=false;
-const blkEl=byId(bucketId+'_blk');
-if(blkEl)blkEl.style.display='none';
-const moreEl=byId(bucketId+'_more');
-if(moreEl&&st.shown<st.total)moreEl.style.display='';
 }
 function showMoreCombos(bucketId){
 const st=window._solverBuckets&&window._solverBuckets[bucketId];
 if(!st)return;
-const SHOW_STEP=10;
-const rows=document.getElementsByClassName(bucketId+'_row');
-const next=Math.min(st.shown+SHOW_STEP,st.total);
-for(let i=st.shown;i<next;i++){if(rows[i])rows[i].style.display='';}
+const next=Math.min(st.shown+10,st.total);
+solverRevealRows(bucketId,st.shown,next);
 st.shown=next;
 const moreEl=byId(bucketId+'_more');
-if(moreEl){
+if(!moreEl)return;
 if(st.shown>=st.total)moreEl.style.display='none';
 else moreEl.textContent='+'+(st.total-st.shown)+L09;
-}
 }
 function expandCombo(id){
 if(id&&typeof id==='object'){
 const body=id.lastElementChild;
 if(!id.open||!body||body.innerHTML)return;
-const root=id.closest('[id^="combo_detail_"]');
+const root=id.closest('[id^="combo_detail_"]'),parents=[];
+for(let node=id;node&&node!==root;node=node.parentElement)if(node.dataset&&node.dataset.solverVariantKind)parents.push(node);
 let data=root&&window._solverComboMap[root.id.replace('combo_detail_','')];
-const parents=[];
-for(let node=id;node&&node!==root;node=node.parentElement)
-if(node.dataset&&node.dataset.solverVariantKind)parents.push(node);
-for(const node of parents.reverse())data=data&&data[node.dataset.solverVariantKind]&&data[node.dataset.solverVariantKind][Number(node.dataset.solverVariantIndex)];
+for(const node of parents.reverse()){const list=data&&data[node.dataset.solverVariantKind];data=list&&list[Number(node.dataset.solverVariantIndex)];}
 if(data&&(data.neutralConditions&&data.neutralConditions.proof||data.battleProof))body.innerHTML=renderSolverSimTrace(data);
 return;
 }
@@ -2239,61 +2172,51 @@ el.innerHTML=renderSolverSimTrace(data);
 el.style.display='block';
 }
 function solverResultCacheKey(render,options){
-const canRound2=solverAllowsRound2(render.mapDeft,render.canRound2);
-const charSig=options.useStats?JSON.stringify(options.chars):'neutral';
-return[DISPLAY_LANG,render.monId,render.bat,canRound2?1:0,render.userDeft,render.mapDeft,
-options.useStats?1:0,options.multiPlayer?1:0,options.blockFallback?1:0,options.metalGate?1:0,charSig,
-(render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')
-].join('|');
+return[DISPLAY_LANG,render.monId,render.bat,solverAllowsRound2(render.mapDeft,render.canRound2)?1:0,render.userDeft,render.mapDeft,
+options.useStats?1:0,options.multiPlayer?1:0,options.blockFallback?1:0,options.metalGate?1:0,options.useStats?JSON.stringify(options.chars):'neutral',
+(render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')].join('|');
+}
+function solverRewriteComboIds(html,comboFn,bucketFn){
+return html.replace(/expandCombo\((\d+)\)/g,(_,n)=>'expandCombo('+comboFn(n)+')').replace(/combo_detail_(\d+)/g,(_,n)=>'combo_detail_'+comboFn(n))
+.replace(/\bsb(\d+)(?=[_'"\s]|$)/g,(_,n)=>'sb'+bucketFn(n));
 }
 function rebaseSolverCachedResult(entry,idBase,bucketBase){
-const src=entry.result,idDelta=(idBase||0)-(entry.idBase||0);
-const bucketDelta=(bucketBase||0)-(entry.bucketBase||0);
-const html=(src.html||'')
-.replace(/expandCombo\((\d+)\)/g,(_,n)=>'expandCombo('+(+n+idDelta)+')')
-.replace(/combo_detail_(\d+)/g,(_,n)=>'combo_detail_'+(+n+idDelta))
-.replace(/\bsb(\d+)(?=[_'"\s]|$)/g,(_,n)=>'sb'+(+n+bucketDelta));
-const comboMap={};
-for(const[id,value]of Object.entries(src.comboMap||{}))
-comboMap[+id+idDelta]=Object.assign({},value);
-const buckets={};
-for(const[id,value]of Object.entries(src.buckets||{})){
-const m=/^sb(\d+)$/.exec(id);
-buckets[m?'sb'+(+m[1]+bucketDelta):id]=Object.assign({},value);
+const src=entry.result,idDelta=(idBase||0)-(entry.idBase||0),bucketDelta=(bucketBase||0)-(entry.bucketBase||0);
+const html=solverRewriteComboIds(src.html||'',n=>+n+idDelta,n=>+n+bucketDelta);
+const comboMap={},buckets={};
+for(const[id,value]of Object.entries(src.comboMap||{}))comboMap[+id+idDelta]={...value};
+for(const[id,value]of Object.entries(src.buckets||{})){const m=/^sb(\d+)$/.exec(id);buckets[m?'sb'+(+m[1]+bucketDelta):id]={...value};}
+return{...src,html,comboMap,buckets};
 }
-return Object.assign({},src,{html,comboMap,buckets});
-}
+function solverCachePut(key,entry){_solverResultCache.delete(key);_solverResultCache.set(key,entry);}
 function getCachedSolverResult(key,idBase,bucketBase){
 const entry=_solverResultCache.get(key);
 if(!entry)return null;
-_solverResultCache.delete(key);_solverResultCache.set(key,entry);
-window._solverResultCacheStats.hits++;
+solverCachePut(key,entry);
 return rebaseSolverCachedResult(entry,idBase,bucketBase);
 }
 function setCachedSolverResult(key,result,idBase,bucketBase){
 const entry={result,idBase:idBase||0,bucketBase:bucketBase||0};
 if(result.renderError||!result.needsBlockFallback&&solverResultVerdict(result)===null)return entry;
-if(_solverResultCache.has(key))_solverResultCache.delete(key);
-_solverResultCache.set(key,entry);
-while(_solverResultCache.size>SOLVER_RESULT_CACHE_MAX)
-_solverResultCache.delete(_solverResultCache.keys().next().value);
+solverCachePut(key,entry);
+while(_solverResultCache.size>SOLVER_RESULT_CACHE_MAX)_solverResultCache.delete(_solverResultCache.keys().next().value);
 return _solverResultCache.get(key);
 }
 function solverResultVerdict(result){
 if(!result||result.renderError||result.needsKillAll||result.needsBlockFallback)return null;
-if(result.solvable===true)return true;
-if(result.solvable===null&&result.limited)return'limit';
-if(result.solvable===false&&!result.incomplete)return false;
-return null;
+const s=result.solvable;
+return s===true?true:s===null&&result.limited?'limit':s===false&&!result.incomplete?false:null;
 }
 function peekFleeVerdict(task,opt){
 const k=solverResultCacheKey(task,opt);
 if(_fleeVerdict.has(k))return _fleeVerdict.get(k);
 const cached=_solverResultCache.get(k);
-return cached&&solverResultVerdict(cached.result)==='limit'?'limit':null;
+const state=!cached?null:cached.result.needsBlockFallback?'block-pending':solverResultVerdict(cached.result)==='limit'?'limit':null;
+if(state)solverCachePut(k,cached);
+return state;
 }
 function cacheFleeVerdictResult(task,opt,result,key=solverResultCacheKey(task,opt)){
-if(result&&!result.renderError&&result.needsBlockFallback){_fleeVerdict.set(key,'block-pending');return'block-pending';}
+if(result&&!result.renderError&&result.needsBlockFallback)return'block-pending';
 const verdict=solverResultVerdict(result);
 if(verdict===null||verdict==='limit')return verdict;
 const solvable=verdict&&result.fallback?'fallback':verdict;
@@ -2304,14 +2227,11 @@ function requestFleeVerdict(task,opt){
 const k=solverResultCacheKey(task,opt);
 if(_fleeVerdict.has(k))return Promise.resolve(_fleeVerdict.get(k));
 if(_fleePending.has(k))return _fleePending.get(k);
-const solveGen=_siSolveGen;
-const n=++_fleeProbeSeq;
-const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n,'probe').then((m)=>{
-if(solveGen!==_siSolveGen)return null;
-return cacheFleeVerdictResult(task,opt,m,k);
-}).catch(()=>null).finally(()=>{
-if(_fleePending.get(k)===p)_fleePending.delete(k);
-});
+const solveGen=_siSolveGen,n=++_fleeProbeSeq;
+const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n,'probe')
+.then(m=>solveGen!==_siSolveGen?null:cacheFleeVerdictResult(task,opt,m,k))
+.catch(()=>null)
+.finally(()=>{if(_fleePending.get(k)===p)_fleePending.delete(k);});
 _fleePending.set(k,p);
 return p;
 }
@@ -2331,36 +2251,139 @@ document.body.appendChild(ov);
 function closeSolverBucket(){
 cancelAllSolveTasks('Solver view closed');
 const ov=byId('si_submodal');
-if(ov){ov.style.display='none';const b=byId('si_submodal_body');if(b)b.innerHTML='';}
+if(!ov)return;
+ov.style.display='none';
+const body=byId('si_submodal_body');
+if(body)body.innerHTML='';
 }
 function solverTaskOutputSignature(htmlStr,useStats){
-const rawHtml=htmlStr||SOLVER_DASH;
-const comboIds=[];
-const comboPattern=/expandCombo\((\d+)\)/g;
-let comboMatch;
-while((comboMatch=comboPattern.exec(rawHtml))!==null)comboIds.push(comboMatch[1]);
-const htmlSig=rawHtml
-.replace(/expandCombo\(\d+\)/g,'expandCombo(#)')
-.replace(/combo_detail_\d+/g,'combo_detail_#')
-.replace(/sb\d+/g,'sb#');
-const stable=(v)=>{
-if(Array.isArray(v))return v.map(stable);
-if(v&&typeof v==='object'){
-const out={};
-for(const k of Object.keys(v).sort())out[k]=stable(v[k]);
-return out;
-}
-return v;
-};
-const rowSig=(r)=>[solverComboActionSignature(r.combo),JSON.stringify(stable(r.eggAssign||null)),
-JSON.stringify(stable(r.assign||null)),JSON.stringify(stable(r.defend||null)),
-useStats?(r.outcomeSig||''):''].join('\x1d');
+const rawHtml=htmlStr||SOLVER_DASH,comboIds=[...rawHtml.matchAll(/expandCombo\((\d+)\)/g)].map(m=>m[1]);
+const stable=v=>Array.isArray(v)?v.map(x=>stable(x)):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
+const json=v=>JSON.stringify(stable(v||null));
+const rowSig=r=>[solverComboActionSignature(r.combo),json(r.eggAssign),json(r.assign),json(r.defend),useStats?r.outcomeSig||'':''].join('\x1d');
 const detailSig=comboIds.map(id=>{
 const e=window._solverComboMap&&window._solverComboMap[id];
-if(!e)return'missing:'+id;
-return[rowSig(e),...(e.planVariants||[]).map(rowSig),'\x1f',...(e.skillVariants||[]).map(rowSig)].join('\x1e');
+return e?[rowSig(e),...(e.planVariants||[]).map(r=>rowSig(r)),'\x1f',...(e.skillVariants||[]).map(r=>rowSig(r))].join('\x1e'):'missing:'+id;
 }).join('\x1c');
-return htmlSig+'\x1b'+detailSig;
+return solverRewriteComboIds(rawHtml,()=>'#',()=>'#')+'\x1b'+detailSig;
+}
+function buildSolverBucketView(b,bucket,viewGen){
+const view={html:buildSolverLegendHtml(),title:'',tasks:[],elementIds:[],meta:[],flee:new Map()};
+const none='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
+const header=(bat,label)=>'<div style="margin:6px 0 2px 0;">'+H06+' <span style="color:#fa0;font-weight:bold;font-size:14px;">'+siFormatAT(bat)+'</span> <span style="color:#888;font-size:10px;">'+label+'</span></div>';
+const queue=(task,meta)=>{
+const id='si_solver_task_'+viewGen+'_'+view.tasks.length;
+view.tasks.push(task);view.elementIds.push(id);view.meta.push(meta||null);
+view.html+='<div id="'+id+'"><div style="color:#39C5BB;font-size:10px;margin-left:16px;">'+L43+'</div></div>';
+};
+if(bucket==='d1'){
+view.title=H06+' '+siFormatAT(b.d1)+'｜'+L40+'×1';
+view.html+=header(b.d1,'×1');
+const task=makeD1SolveTask(b);
+if(task)queue(task);else view.html+=none;
+return view;
+}
+const d2=bucket==='d2',label=d2?'×2-3':'×4-5';
+view.title=H06+' '+siFormatAT(d2?b.d2:b.d4)+'｜'+L40+label;
+let any=false;
+for(const count of d2?[2,3]:[4,5]){
+const entry=b.resultsByT&&b.resultsByT.get(count);
+if(!entry||!entry.mixes.length&&!entry.flee.length)continue;
+any=true;
+const bat=battleATForCount(b,count),section='T'+count;
+view.html+=header(bat,'×'+count);
+for(const m of entry.mixes){
+const rowId='si_solver_pattern_'+viewGen+'_'+view.tasks.length,descId=rowId+'_desc';
+view.html+='<div id="'+rowId+'"><div id="'+descId+'" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">'+m.desc+'</div>';
+queue(solverBucketTask(b,bat,m.monGroups),{pattern:true,section,rowId,descId,desc:m.desc,fleeDesc:m.fleeDesc,fleeOrder:m.order,killAllDesc:m.killAllDesc});
+view.html+='</div>';
+}
+const rowId='si_solver_flee_'+viewGen+'_'+section,itemsId=rowId+'_items',items=entry.flee.map(v=>({order:v.order,html:v.desc}));
+view.flee.set(section,{rowId,itemsId,items});
+view.html+='<div id="'+rowId+'" style="'+(items.length?'':'display:none;')+'font-size:9px;margin-left:16px;"><span style="color:#f44;">'+L44+'</span> <span id="'+itemsId+'">'+solverFleeItemsHTML(items)+'</span></div>';
+}
+if(!any)view.html+=none;
+return view;
+}
+function runSolverBucketTasks(view,options,viewGen){
+const{tasks,elementIds,meta}=view,ID_SPAN=100000,BK_SPAN=1000,results=new Array(tasks.length);
+let completed=0;
+const fill=(i,html)=>{const el=byId(elementIds[i]);if(el)el.innerHTML=html||SOLVER_DASH;};
+const mergePatterns=()=>{
+const seen=new Map();
+for(let i=0;i<tasks.length;i++){
+const m=meta[i],result=results[i];
+if(!m||!m.pattern||m.merged||!result||result.flee||result.needsBlockFallback||result.needsMetalGate)continue;
+const sig=m.section+'\x1a'+solverTaskOutputSignature(result.html,options.useStats);
+if(!seen.has(sig)){seen.set(sig,i);continue;}
+const keep=meta[seen.get(sig)];
+if(!keep.mergedDescs)keep.mergedDescs=[keep.desc];
+keep.mergedDescs.push(...(m.mergedDescs||[m.desc]));
+m.merged=true;
+const descEl=byId(keep.descId);
+if(descEl)descEl.innerHTML=keep.mergedDescs.join('<br>');
+const dup=byId(m.rowId);
+if(dup)dup.remove();
+}
+};
+const done=()=>{if(++completed===tasks.length)mergePatterns();};
+const settle=(i,result)=>{results[i]=result;fill(i,result.html);done();};
+const complete=(i,result,opt=options)=>{
+if(viewGen!==_siSolveGen)return;
+if(result.comboMap)Object.assign(window._solverComboMap,result.comboMap);
+if(result.buckets)Object.assign(window._solverBuckets,result.buckets);
+const verdict=cacheFleeVerdictResult(tasks[i],opt,result),m=meta[i];
+if(result.needsMetalGate)return settle(i,{html:solverMetalGatePromptHTML(elementIds[i],i),flee:false,needsMetalGate:true});
+if(result.needsBlockFallback){
+const bucketId='sb'+i*BK_SPAN;
+window._solverBuckets[bucketId]={blocked:true,request:{render:tasks[i],options:opt,stages:result.blockStages,idBase:i*ID_SPAN,bucketBase:i*BK_SPAN,elementId:elementIds[i],descId:m&&m.descId,killAllDesc:m&&m.killAllDesc}};
+return settle(i,{html:SOLVER_BLOCK_PROMPT_HTML.replace(/\$bucket/g,bucketId).replace('$label',L17),flee:false,needsBlockFallback:true});
+}
+if(verdict===false&&m&&m.pattern){
+results[i]={html:'',flee:true};
+const section=view.flee.get(m.section);
+if(section){
+section.items.push({order:m.fleeOrder,html:m.fleeDesc});
+const itemsEl=byId(section.itemsId),rowEl=byId(section.rowId);
+if(itemsEl)itemsEl.innerHTML=solverFleeItemsHTML(section.items);
+if(rowEl)rowEl.style.display='';
+}
+const row=byId(m.rowId);
+if(row)row.remove();
+return done();
+}
+const html=verdict===false?solverFleeHTML()
+:verdict==='limit'?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_LIMIT_LABEL+'</div>'
+:verdict===null?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+T('Result unknown.','結果未知。','結果は未確定です。')+'</div>'
+:result&&result.html!==undefined?result.html:'';
+if(verdict==='fallback'&&m&&m.killAllDesc){const descEl=byId(m.descId);if(descEl)descEl.innerHTML=m.killAllDesc;m.desc=m.killAllDesc;}
+settle(i,{html,flee:false});
+};
+window._solverRunMetalGate=i=>{
+const prompt=byId(elementIds[i]+'_mg');
+if(viewGen!==_siSolveGen||!results[i]||!results[i].needsMetalGate||!prompt||prompt.dataset.running)return;
+prompt.dataset.running='1';
+prompt.textContent=L43;
+const runOptions={...options,metalGate:true};
+queueSolveTask(tasks[i],runOptions,i*ID_SPAN,i*BK_SPAN).then(m=>{
+if(viewGen!==_siSolveGen)return;
+completed--;
+complete(i,m,runOptions);
+}).catch(e=>{
+if(viewGen!==_siSolveGen)return;
+console.warn('[Solver] 金屬跟班點擊計算失敗:',e&&e.message);
+const again=byId(elementIds[i]+'_mg');
+if(again){again.textContent=SOLVER_METAL_GATE_LABEL;delete again.dataset.running;}
+});
+};
+tasks.forEach((task,i)=>{
+queueSolveTask(task,options,i*ID_SPAN,i*BK_SPAN).then(m=>{if(viewGen===_siSolveGen)complete(i,m);}).catch(e=>{
+if(viewGen!==_siSolveGen)return;
+console.warn('[Solver] Worker solve 失敗:',e&&e.message);
+fill(i,'<div style="font-size:9px;margin-left:16px;"><span style="color:#fa0;">'+T('Worker failed. Result unknown.','Worker 失敗，結果未知。','Worker が失敗したため結果は不明です。')+'</span></div>');
+done();
+});
+});
 }
 function showSolverBucket(bucket){
 const b=window._siBuckets;
@@ -2378,166 +2401,11 @@ return;
 }
 const viewGen=_siSolveGen+1;
 ensureSolverSubmodal();
-window._solverComboMap={};window._solverComboId=0;window._solverBucketId=0;window._solverBuckets={};
-let html=buildSolverLegendHtml(),title='';
-const tasks=[],taskElementIds=[],taskMeta=[];
-const fleeSections=new Map();
-const _hdr=(bat,tLbl)=>`<div style="margin:6px 0 2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${siFormatAT(bat)}</span> <span style="color:#888;font-size:10px;">${tLbl}</span></div>`;
-const _queueTask=(task,meta)=>{
-const id='si_solver_task_'+viewGen+'_'+tasks.length;
-tasks.push(task);taskElementIds.push(id);taskMeta.push(meta||null);
-html+=`<div id="${id}"><div style="color:#39C5BB;font-size:10px;margin-left:16px;">${L43}</div></div>`;
-};
-if(bucket==='d1'){
-title=`${H06} ${siFormatAT(b.d1)}｜${L40}×1`;
-html+=_hdr(b.d1,'×1');
-const task=makeD1SolveTask(b);
-if(task)_queueTask(task);
-else html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
-}else{
-const Ts=bucket==='d2'?[2,3]:[4,5];
-const headBat=bucket==='d2'?b.d2:b.d4;
-const headLbl=bucket==='d2'?'×2-3':'×4-5';
-title=`${H06} ${siFormatAT(headBat)}｜${L40}${headLbl}`;
-let any=false;
-for(const T of Ts){
-const entry=b.resultsByT&&b.resultsByT.get(T);
-if(!entry||(entry.mixes.length===0&&entry.flee.length===0))continue;
-any=true;
-const tBat=battleATForCount(b,T);
-html+=_hdr(tBat,'×'+T);
-for(const m of entry.mixes){
-const taskNo=tasks.length;
-const rowId='si_solver_pattern_'+viewGen+'_'+taskNo;
-const descId=rowId+'_desc';
-html+=`<div id="${rowId}"><div id="${descId}" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">${m.desc}</div>`;
-_queueTask({bat:tBat,monGroups:m.monGroups,monId:b.monId,mapDeft:b.mapDeft,userDeft:b.userDeft,canRound2:b.canRound2},
-{pattern:true,section:'T'+T,rowId,descId,desc:m.desc,
-fleeDesc:m.fleeDesc||m.desc,fleeOrder:m.order,killAllDesc:m.killAllDesc});
-html+='</div>';
-}
-const fleeRowId='si_solver_flee_'+viewGen+'_T'+T;
-const fleeItemsId=fleeRowId+'_items';
-const fleeItems=entry.flee.map(v=>({order:v.order,html:v.desc}));
-const _fleeItemsHtml=()=>fleeItems.slice().sort((a,b)=>a.order-b.order)
-.map(v=>v.html).join(' · ');
-fleeSections.set('T'+T,{rowId:fleeRowId,itemsId:fleeItemsId,items:fleeItems});
-html+=`<div id="${fleeRowId}" style="${fleeItems.length?'':'display:none;'}font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span> <span id="${fleeItemsId}">${_fleeItemsHtml()}</span></div>`;
-}
-if(!any)html+='<div style="color:#666;font-size:11px;margin-left:16px;">'+L45+'</div>';
-}
-cancelAllSolveTasks('Superseded by a new Solver view',tasks.map(task=>solverResultCacheKey(task,options)));
-byId('si_submodal_title').innerHTML=title;
-byId('si_submodal_body').innerHTML=html;
+Object.assign(window,{_solverComboMap:{},_solverComboId:0,_solverBucketId:0,_solverBuckets:{}});
+const view=buildSolverBucketView(b,bucket,viewGen);
+cancelAllSolveTasks('Superseded by a new Solver view',view.tasks.map(task=>solverResultCacheKey(task,options)));
+byId('si_submodal_title').innerHTML=view.title;
+byId('si_submodal_body').innerHTML=view.html;
 byId('si_submodal').style.display='flex';
-if(tasks.length===0)return;
-const ID_SPAN=100000,BK_SPAN=1000;
-const _fill=(i,htmlStr)=>{
-const el=byId(taskElementIds[i]);
-if(el)el.innerHTML=htmlStr||SOLVER_DASH;
-};
-const taskResults=new Array(tasks.length);
-let completedTasks=0;
-const _mergeEquivalentPatterns=()=>{
-const seen=new Map();
-for(let i=0;i<tasks.length;i++){
-const meta=taskMeta[i],result=taskResults[i];
-if(!meta||!meta.pattern||meta.merged||!result||result.flee||result.needsBlockFallback||result.needsMetalGate)continue;
-const sig=meta.section+'\x1a'+solverTaskOutputSignature(result.html,options.useStats);
-if(!seen.has(sig)){seen.set(sig,i);continue;}
-const keepMeta=taskMeta[seen.get(sig)];
-if(!keepMeta.mergedDescs)keepMeta.mergedDescs=[keepMeta.desc];
-keepMeta.mergedDescs.push(...(meta.mergedDescs||[meta.desc]));
-meta.merged=true;
-const descEl=byId(keepMeta.descId);
-if(descEl)descEl.innerHTML=keepMeta.mergedDescs.join('<br>');
-const duplicateRow=byId(meta.rowId);
-if(duplicateRow)duplicateRow.remove();
-}
-};
-const _completeTask=(i,result,opt=options)=>{
-if(viewGen!==_siSolveGen)return;
-if(result.comboMap)Object.assign(window._solverComboMap,result.comboMap);
-if(result.buckets)Object.assign(window._solverBuckets,result.buckets);
-const verdict=cacheFleeVerdictResult(tasks[i],opt,result);
-const meta=taskMeta[i];
-if(result.needsMetalGate){
-const prompt=solverMetalGatePromptHTML(taskElementIds[i],i);
-taskResults[i]={html:prompt,flee:false,needsMetalGate:true};
-_fill(i,prompt);
-completedTasks++;
-if(completedTasks===tasks.length)_mergeEquivalentPatterns();
-return;
-}
-if(result.needsBlockFallback){
-const bucketId='sb'+i*BK_SPAN;
-window._solverBuckets[bucketId]={blocked:true,request:{render:tasks[i],options:opt,stages:result.blockStages,idBase:i*ID_SPAN,bucketBase:i*BK_SPAN,elementId:taskElementIds[i],descId:meta&&meta.descId,killAllDesc:meta&&meta.killAllDesc}};
-const prompt=SOLVER_BLOCK_PROMPT_HTML.replace(/\$bucket/g,bucketId).replace('$label',L17);
-taskResults[i]={html:prompt,flee:false,needsBlockFallback:true};
-_fill(i,prompt);
-completedTasks++;
-if(completedTasks===tasks.length)_mergeEquivalentPatterns();
-return;
-}
-if(verdict===false&&(meta==null?void 0:meta.pattern)){
-taskResults[i]={html:'',flee:true};
-const section=fleeSections.get(meta.section);
-if(section){
-section.items.push({order:meta.fleeOrder,html:meta.fleeDesc});
-const itemsEl=byId(section.itemsId);
-const rowEl=byId(section.rowId);
-if(itemsEl)itemsEl.innerHTML=section.items.slice().sort((a,b)=>a.order-b.order)
-.map(v=>v.html).join(' · ');
-if(rowEl)rowEl.style.display='';
-}
-const patternRow=byId(meta.rowId);
-if(patternRow)patternRow.remove();
-completedTasks++;
-if(completedTasks===tasks.length)_mergeEquivalentPatterns();
-return;
-}
-const resultHtml=verdict===false
-?`<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">${L44}</span></div>`
-:verdict==='limit'?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_LIMIT_LABEL+'</div>'
-:verdict===null?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+T('Result unknown.','結果未知。','結果は未確定です。')+'</div>'
-:(result&&result.html!==undefined?result.html:'');
-taskResults[i]={html:resultHtml,flee:false};
-if(verdict==='fallback'&&(taskMeta[i]==null?void 0:taskMeta[i].killAllDesc)){
-const descEl=byId(taskMeta[i].descId);
-const fbDesc=taskMeta[i].killAllDesc;
-if(descEl)descEl.innerHTML=fbDesc;
-taskMeta[i].desc=fbDesc;
-}
-_fill(i,taskResults[i].html);
-completedTasks++;
-if(completedTasks===tasks.length)_mergeEquivalentPatterns();
-};
-window._solverRunMetalGate=(i)=>{
-const prompt=byId(taskElementIds[i]+'_mg');
-if(viewGen!==_siSolveGen||!taskResults[i]||!taskResults[i].needsMetalGate||!prompt||prompt.dataset.running)return;
-prompt.dataset.running='1';prompt.textContent=L43;
-const runOptions=Object.assign({},options,{metalGate:true});
-queueSolveTask(tasks[i],runOptions,i*ID_SPAN,i*BK_SPAN).then((m)=>{
-if(viewGen!==_siSolveGen)return;
-completedTasks--;
-_completeTask(i,m,runOptions);
-}).catch((e)=>{
-if(viewGen!==_siSolveGen)return;
-console.warn('[Solver] 金屬跟班點擊計算失敗:',e&&e.message);
-const again=byId(taskElementIds[i]+'_mg');
-if(again){again.textContent=SOLVER_METAL_GATE_LABEL;delete again.dataset.running;}
-});
-};
-tasks.forEach((task,i)=>{
-queueSolveTask(task,options,i*ID_SPAN,i*BK_SPAN).then((m)=>{
-if(viewGen!==_siSolveGen)return;
-_completeTask(i,m);
-}).catch((e)=>{
-if(viewGen!==_siSolveGen)return;
-console.warn('[Solver] Worker solve 失敗:',e&&e.message);
-_fill(i,`<div style="font-size:9px;margin-left:16px;"><span style="color:#fa0;">${T('Worker failed. Result unknown.','Worker 失敗，結果未知。','Worker が失敗したため結果は不明です。')}</span></div>`);
-completedTasks++;
-if(completedTasks===tasks.length)_mergeEquivalentPatterns();
-});
-});
+if(view.tasks.length)runSolverBucketTasks(view,options,viewGen);
 }

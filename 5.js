@@ -20,7 +20,6 @@ wkChain=wkChain.then(()=>runChunk(m)).catch((err)=>{
 console.error('Worker chunk error:',err);
 self.postMessage({type:'error',gen:m.gen,chunkId:m.chunkId,message:''+(err&&err.message||err)});
 });
-return;
 }
 });
 async function runChunk(c){
@@ -56,22 +55,33 @@ self.window=self;
 const els=new Map(Object.entries(m.dom||{}).map(([id,on])=>[id,{checked:!!on}]));
 self.document={getElementById:id=>els.get(id)||null};
 readCharStatsFromDom=()=>m.chars||[];
-window._solverComboMap={};window._solverComboId=m.idBase||0;
-window._solverBucketId=m.bucketBase||0;window._solverBuckets={};
-window._solverFallback=!!m.initialFallback;window._solverSolvable=null;
-window._solverNeedsKillAll=null;
-_solverSearchIncomplete=false;_solverSearchLimited=false;_solverRenderDepth=0;_solverGoldState=null;
+Object.assign(window,{_solverComboMap:{},_solverComboId:m.idBase||0,_solverBucketId:m.bucketBase||0,_solverBuckets:{},
+_solverFallback:!!m.initialFallback,_solverSolvable:null,_solverNeedsKillAll:null});
+_solverSearchIncomplete=false;_solverSearchLimited=false;_solverRenderDepth=0;_solverGoldState=null;_solverVerdictMode=!!m.verdict;_solverResume=null;
 }
+const _solverResumeStore=new Map();
 self.addEventListener('message',(e)=>{
 const m=e.data;
 if(!m)return;
 if(m.type==='solve'){
 try{
 setupSolverWorker(m);
-const html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,
+const kept=m.resume?_solverResumeStore.get(m.resume):null;
+let html;
+if(kept){
+_solverResumeStore.delete(m.resume);
+_solverGoldState=kept.gold;_solverRenderDepth=kept.depth;[_solverSearchIncomplete,_solverSearchLimited]=kept.flags;_solverDmgCache=kept.cache;solverApplyBuildContext(kept.build);
+Object.assign(window,{_solverFallback:kept.fallback,_solverSolvable:true,_solverNeedsKillAll:kept.needsKillAll});
+kept.stop.on=false;
+try{html=kept.finish();}
+catch(e){console.error('[Solver]',e);window._solverRenderError=e;window._solverSolvable=null;html='<div style="color:#f44;font-size:9px;">⚠ Solver error</div>';}
+finally{_solverRenderDepth=0;_solverGoldState=null;}
+}else html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,
 m.render.mapDeft,m.render.canRound2,!!m.forceKillAll,
 m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,false,!!m.incomplete,!!m.limited);
-self.postMessage({type:'solveDone',solveId:m.solveId,html,
+const stopped=_solverResume;_solverResume=null;
+if(stopped){_solverResumeStore.set(m.resumeKey,stopped);while(_solverResumeStore.size>32)_solverResumeStore.delete(_solverResumeStore.keys().next().value);}
+self.postMessage({type:'solveDone',solveId:m.solveId,html,...(stopped?{verdictOnly:true}:{}),
 comboMap:window._solverComboMap,buckets:window._solverBuckets,
 fallback:window._solverFallback||false,solvable:window._solverSolvable,
 incomplete:_solverSearchIncomplete,limited:_solverSearchLimited,renderError:!!window._solverRenderError,
@@ -92,6 +102,5 @@ self.postMessage({type:m.type+'Done',solveId:m.solveId,payload});
 self.postMessage({type:m.type+'Error',solveId:m.solveId,
 message:''+(err&&err.stack||err)});
 }
-return;
 }
 });

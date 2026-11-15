@@ -109,7 +109,6 @@ const L06=T('Turn 2','第 2 回合','2ターン目');
 const L07=T('Details','詳情','詳細');
 const L08=T('⚠ 2T (5–8 moves) AT +n/2 or +0 when entering Turn-2','⚠ 2T (5-8 招) 進入第 2 回合時 AT +n/2 或 +0','⚠ 2T (5～8手) 2ターン目に突入するとき AT +n/2 または +0');
 const L09=T(' more ▾',' 個組合 ▾','件をさらに表示 ▾');
-const L10=T('Finisher','收尾','とどめ');
 const L12=T('Wiped out','全滅');
 const L17=T('No 100% anti-block combo — click to calculate alternatives','沒有可完全防止盾格擋的組合，點擊計算替代方案','盾ガードを完全に防げる組み合わせがありません — クリックして代替案を計算');
 const L18=T('max','最大');

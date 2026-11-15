@@ -71,7 +71,8 @@ locHtmlString=locStrings.join('<br>');
 }else{
 locHtmlString=C19;
 }
-const atValues=[35,36,37].map(i=>atFromRng(advanceATRng(mapData.MapSeed,i)));
+const rng35=advanceATRng(mapData.MapSeed,35),rng36=lcg(rng35);
+const atValues=[rng35,rng36,lcg(rng36)].map(atFromRng);
 const atHtmlString=`[35] ${atValues[0]}<br>[36] ${atValues[1]}<br>[37] ${atValues[2]}`;
 const rn=calcR2N2(mapData.MapSeed);
 const fmtRN=v=>v===-1?`<span style="color:#555;">—</span>`:`<span style="color:#0f0;">${v}</span>`;
@@ -505,9 +506,9 @@ else setTimeout(dwInit,0);
 const MODAL_TAB_LABELS={TW:'繁體中文',EN:'English',JP:'日本語',SP:'SP'};
 const MODAL_CONFIGS={
 chest:{id:'chestModal',prefix:'ct',langs:['EN','JP']},
-disclaimer:{id:'disclaimerModal',prefix:'disc',langs:['TW','EN','JP']},
+disclaimer:{id:'disclaimerModal',prefix:'disc',langs:['TW','EN','JP','SP']},
 h1:{id:'h1Modal',prefix:'h1',langs:['TW','EN','JP']},
-h2:{id:'h2Modal',prefix:'h2',langs:['TW','EN','JP','SP']},
+h2:{id:'h2Modal',prefix:'h2',langs:['TW','EN','JP']},
 h3:{id:'h3Modal',prefix:'h3',langs:['TW','EN','JP']},
 };
 function switchTab(configKey,lang){
