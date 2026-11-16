@@ -29,7 +29,7 @@ const want=Math.ceil(totalUnits/Math.max(1,workerCount*DQ9_CHUNKS_PER_WORKER));
 return Math.max(lo,Math.min(hi,want));
 }
 function getWorkerCount(){
-try{const n=parseInt(new URLSearchParams(window.location.search).get('workers'),10);if(n>=1)return Math.min(n,256);}catch{}
+try{const n=parseInt(new URLSearchParams(window.location.search).get('workers'),10);if(n>=1)return Math.min(n,256);}catch(err){}
 const fixed=window.DQ9_WORKER_COUNT;
 if(typeof fixed==='number'&&fixed>=1)return Math.min(Math.floor(fixed),256);
 return Math.max(1,Math.min(navigator.hardwareConcurrency||4,256));
@@ -287,20 +287,16 @@ if(front)_siSolveQueue.unshift(task);else _siSolveQueue.push(task);
 dispatchSolveQueue();
 });
 }
-function partitionSolverRoots(spec,workerCount){
-if(workerCount<2)return null;
-const roots=solverIndicesOf(spec.sSkills||spec.variants||[],v=>spec.spaces.some(sp=>solverRootInSpace(v,sp)));
-return roots.length===0?[]:roots.length<2?null:roots.map(root=>[root]);
-}
 async function runParallelSolverShards(type,spec,common,pool,operation){
-const groups=partitionSolverRoots(spec,pool.workers.length);
-if(groups===null)return null;
-if(groups.length===0)return mergeSolverShardPayloads(spec,[]);
+if(pool.workers.length<2)return null;
+const roots=partitionSolverRoots(spec,spec.order&&spec.order.sequence);
+if(roots.length===1)return null;
+if(roots.length===0)return mergeSolverShardPayloads(spec,[]);
 const progress={},waveWidth=Math.max(2,pool.workers.length*2);
-for(let start=0;start<groups.length;start+=waveWidth){
-const wave=groups.slice(start,start+waveWidth);
-const settled=await Promise.all(wave.map(roots=>
-queueSolverWorkerMessage({...common,type,spec,roots},false,operation).then(value=>({value}),error=>({error}))));
+for(let start=0;start<roots.length;start+=waveWidth){
+const wave=roots.slice(start,start+waveWidth);
+const settled=await Promise.all(wave.map(root=>
+queueSolverWorkerMessage({...common,type,spec,roots:[root]},false,operation).then(value=>({value}),error=>({error}))));
 if(operation.cancelled||operation.gen!==_siSolveGen)throw operation.error||makeSolverCancellationError('Solver generation changed');
 const failed=settled.find(x=>x.error);
 if(failed)throw failed.error;
@@ -355,7 +351,7 @@ return result;
 };
 const buildStage=async(kind,stage)=>{
 ensureCurrent();
-const key=kind+':'+(stage||'');
+const key=kind+':'+(stage||'')+(options.blockFallback&&render.monGroups.every(g=>!(g.count>0)||solverHexBlock(g.hex)>0)?':open':'');
 if(!operation.stages.has(key)){
 const spec=prepareParallelSolverSpec(render,options,kind,stage);
 operation.stages.set(key,spec?runParallelSolverShards(kind==='kmc'?'solveKmcShard':'solveKillAllShard',spec,common,pool,operation):Promise.resolve(null));
@@ -538,34 +534,39 @@ if(visible)previous=true;
 });
 }
 }
-function scan(root){
+function scan(root,visit){
 if(root.nodeType!==1)return;
-if(root.matches(selector))update(root);
-Array.prototype.forEach.call(root.querySelectorAll(selector),update);
+if(root.matches(selector))visit(root);
+Array.prototype.forEach.call(root.querySelectorAll(selector),visit);
 }
-scan(document.body);
-var scheduled=false;
-function rescan(){
+scan(document.body,update);
+var scheduled=false,pending=new Set();
+function schedule(el){
+pending.add(el);
 if(scheduled)return;
 scheduled=true;
-setTimeout(function(){scheduled=false;scan(document.body);},0);
+setTimeout(function(){
+scheduled=false;
+var changed=pending;
+pending=new Set();
+changed.forEach(function(node){if(document.body.contains(node))update(node);});
+},0);
 }
 new MutationObserver(function(records){
 for(var i=0;i<records.length;i++){
 var record=records[i],target=record.target;
-if(record.type==='attributes'&&target.matches(selector)){
+if(record.type==='attributes'){
 if(record.attributeName==='style'&&ownedStyle.get(target)===target.getAttribute('style'))continue;
-rescan();return;
-}
-if(record.type!=='childList')continue;
-if(states.has(target)){rescan();return;}
-for(var j=0;j<record.addedNodes.length;j++){
-var node=record.addedNodes[j];
-if(node.nodeType===1&&(node.matches(selector)||node.querySelector(selector))){rescan();return;}
+var parent=target.parentElement;
+if(parent&&parent.matches(selector))schedule(parent);
+scan(target,schedule);
+}else if(record.type==='childList'){
+if(target.nodeType===1&&target.matches(selector))schedule(target);
+Array.prototype.forEach.call(record.addedNodes,function(node){scan(node,schedule);});
 }
 }
 }).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
-window.addEventListener('resize',rescan);
+window.addEventListener('resize',function(){scan(document.body,schedule);});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);
 else start();
@@ -709,7 +710,7 @@ const mS=byId('mrt_inSeed');
 if(mR&&rStr)mR.value=rStr;
 if(mS)mS.value=seedHex;
 const resultEl=byId('result');
-try{resultEl.scrollIntoView({behavior:'smooth'});}
+try{resultEl.scrollIntoView('scrollBehavior'in document.documentElement.style?{behavior:'smooth'}:true);}
 catch(err){resultEl.scrollIntoView(true);}
 };
 }
@@ -2257,7 +2258,9 @@ const body=byId('si_submodal_body');
 if(body)body.innerHTML='';
 }
 function solverTaskOutputSignature(htmlStr,useStats){
-const rawHtml=htmlStr||SOLVER_DASH,comboIds=[...rawHtml.matchAll(/expandCombo\((\d+)\)/g)].map(m=>m[1]);
+const rawHtml=htmlStr||SOLVER_DASH,comboIds=[],pattern=/expandCombo\((\d+)\)/g;
+let match;
+while((match=pattern.exec(rawHtml)))comboIds.push(match[1]);
 const stable=v=>Array.isArray(v)?v.map(x=>stable(x)):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
 const json=v=>JSON.stringify(stable(v||null));
 const rowSig=r=>[solverComboActionSignature(r.combo),json(r.eggAssign),json(r.assign),json(r.defend),useStats?r.outcomeSig||'':''].join('\x1d');
