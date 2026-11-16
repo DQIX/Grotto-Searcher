@@ -71,17 +71,19 @@ let html;
 if(kept){
 _solverResumeStore.delete(m.resume);
 _solverGoldState=kept.gold;_solverRenderDepth=kept.depth;[_solverSearchIncomplete,_solverSearchLimited]=kept.flags;_solverDmgCache=kept.cache;solverApplyBuildContext(kept.build);
-Object.assign(window,{_solverFallback:kept.fallback,_solverSolvable:true,_solverNeedsKillAll:kept.needsKillAll});
-kept.stop.on=false;
+Object.assign(window,{_solverFallback:kept.fallback,_solverSolvable:true,_solverNeedsKillAll:m.round2?null:kept.needsKillAll});
+if(!m.round2)kept.stop.on=false;
+else if(m.prebuiltKillAll){kept.options._prebuiltKillAll=m.prebuiltKillAll;_solverSearchIncomplete=_solverSearchIncomplete||!!m.prebuiltKillAll.incomplete;_solverSearchLimited=_solverSearchLimited||!!m.prebuiltKillAll.limited;}
+else kept.options._deferKillAll=false;
 try{html=kept.finish();}
 catch(e){console.error('[Solver]',e);window._solverRenderError=e;window._solverSolvable=null;html='<div style="color:#f44;font-size:9px;">⚠ Solver error</div>';}
 finally{_solverRenderDepth=0;_solverGoldState=null;}
 }else html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,
 m.render.mapDeft,m.render.canRound2,!!m.forceKillAll,
-m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,false,!!m.incomplete,!!m.limited);
-const stopped=_solverResume;_solverResume=null;
-if(stopped){_solverResumeStore.set(m.resumeKey,stopped);while(_solverResumeStore.size>32)_solverResumeStore.delete(_solverResumeStore.keys().next().value);}
-self.postMessage({type:'solveDone',solveId:m.solveId,html,...(stopped?{verdictOnly:true}:{}),
+m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,!!m.incomplete,!!m.limited);
+const stopped=_solverResume,key=m.resumeKey||'r2#'+m.solveId;_solverResume=null;
+if(stopped){_solverResumeStore.set(key,stopped);while(_solverResumeStore.size>32)_solverResumeStore.delete(_solverResumeStore.keys().next().value);}
+self.postMessage({type:'solveDone',solveId:m.solveId,html,...(stopped?{resumeKey:key,...(window._solverNeedsKillAll==='r2'?{}:{verdictOnly:true})}:{}),
 comboMap:window._solverComboMap,buckets:window._solverBuckets,
 fallback:window._solverFallback||false,solvable:window._solverSolvable,
 incomplete:_solverSearchIncomplete,limited:_solverSearchLimited,renderError:!!window._solverRenderError,

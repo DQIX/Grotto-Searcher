@@ -3697,12 +3697,12 @@ cut=n;
 walk();
 return stopped;
 }
-function metalClearReorder(combo,search,evaluate){
+function metalClearReorder(combo,search,evaluate,floor){
 return permuteComboSlots(combo,v=>v.at>0&&!isMetalExecutionAction(v),v=>v.jp+'|'+(v.equip||'')+'|'+(v.hits||0)+'|'+v.at,(nc,prev)=>{
 if(evaluate)return evaluate(nc)||prev;
 if(!priOrderOK(nc))return prev;
 const best=findBestAssignment(nc,search);
-return best.rating?{combo:nc,best,done:true}:prev;
+return getRankOrderValue(best.rating)>getRankOrderValue(prev?prev.best.rating:floor)?{combo:nc,best,done:best.rating==='gold'}:prev;
 });
 }
 function solverPrefixFails(search,combo,sig,tensionMul,fourceEls){
@@ -4519,7 +4519,7 @@ return JSON.stringify([needs,...['min','max'].map(mode=>instances.map((inst,i)=>
 function solverConditionRegions(combo,targets,hexId,bat,proof,tensionMul,fourceEls,accept,battles,instances,decays){
 const vars=solverConditionVariables(combo,proof.assign,targets),regions=new Map();
 const collect=(party,runs)=>{
-const pairs=[],r=verifySolverConditionParty(combo,targets,hexId,bat,party,proof.assign,tensionMul,fourceEls,proof.eggAssign,false,{accept,kind:proof.fallbackKind,runs,pairs,battles},undefined,proof.eggTargets);
+const pairs=[],r=verifySolverConditionParty(combo,targets,hexId,bat,party,proof.assign,tensionMul,fourceEls,proof.eggAssign,false,{accept,kind:proof.fallbackKind,runs,pairs},undefined,proof.eggTargets);
 if(r&&r.rating===proof.rating&&r.fallbackKind===proof.fallbackKind)for(const trace of pairs){
 const key=solverConditionRegionKey(instances,decays,trace);
 if(!regions.has(key))regions.set(key,{party,trace});
@@ -4534,6 +4534,7 @@ return regions;
 }
 function solveSolverConditionBounds(combo,targets,hexId,bat,proof,tensionMul,fourceEls,accept,battles,defer){
 const vars=solverConditionVariables(combo,proof.assign,targets,proof.regions?undefined:proof.pathSig);
+const wide=()=>vars.map(v=>({lo:v.floor,hi:v.ceiling||999})),tag=x=>x.t+x.part+x.sign;
 const trace=proof.trace||[],seek=proof.seek;
 const instances=buildSimInstances(targets),constraints=[],terms=[],termRows=combo.map(()=>new Map());
 const cumulative=instances.map(()=>[]);
@@ -4591,7 +4592,7 @@ return result;
 let list=this.dips[part];
 if(!list){
 list=this.dips[part]=[];
-const whole=this.span(vars.map(v=>({lo:v.floor,hi:v.ceiling||999})));
+const whole=this.span(wide());
 for(let value=whole.lo,last=-Infinity;value<=whole.hi;value++){
 const now=this.at(value)[part];
 if(now<last)list.push(value);
@@ -4767,10 +4768,10 @@ if(!layout||layout.list.length!==constraints.length||constraints.some((c,i)=>lay
 const extra=[],slots=new Map();
 for(const c of constraints)if(!c.any)for(const x of c.expr){
 const t=x.term,id=t.depends.join();
-if(t.single<0&&t.total&&!slots.has(id)){slots.set(id,vars.length+extra.length);extra.push(t.depends);}
+if(t.single<0&&t.total&&!slots.has(id)){slots.set(id,vars.length+extra.length);extra.push(t);}
 t.slot=t.single>=0?t.single:t.total?slots.get(id):-1;
 }
-const axes=vars.map(v=>({floor:v.floor,ceiling:v.ceiling||999})).concat(extra.map(d=>({floor:d.reduce((n,i)=>n+vars[i].floor,0),ceiling:d.reduce((n,i)=>n+(vars[i].ceiling||999),0)})));
+const axes=wide();axes.push(...extra.map(t=>t.span(axes)));
 const unary=axes.map(()=>[]),multi=axes.map(()=>[]),rows=[],first=axes.map(()=>Infinity);let broken=false;
 for(const c of constraints){
 if(c.any||c.expr.some(x=>x.term.slot<0))continue;
@@ -4784,15 +4785,15 @@ const at=axes.map((v,vi)=>rows.map((r,k)=>multi[vi].findIndex(m=>m.k===k)));
 const kinds=axes.map(()=>null),label=axes.map(()=>null);
 axes.forEach((v,vi)=>{
 if(!unary[vi].length&&!multi[vi].length)return;
-const shape=c=>c.expr.map(y=>y.t+y.part+y.sign).join()+(c.op||'')+(c.op?c.rhs:'');
+const shape=c=>c.expr.map(tag).join()+(c.op||'')+(c.op?c.rhs:''),amount=(expr,x)=>{let n=0;for(const y of expr)n+=y.sign*y.term.at(x)[y.part];return n;};
 const sign=unary[vi].map(shape).join(';')+'|'+multi[vi].map(shape).join(';'),table=tables.get(sign);
 if(table){kinds[vi]=table.list;label[vi]=table.label;return;}
-const seen=new Map(),list=[],lo=v.floor,size=multi[vi].length;
-label[vi]=new Int32Array(v.ceiling-lo+1).fill(-1);
+const seen=new Map(),list=[],lo=v.lo,size=multi[vi].length;
+label[vi]=new Int32Array(v.hi-lo+1).fill(-1);
 let last=null,k=-1;
-for(let x=lo;x<=v.ceiling;x++){
-if(!unary[vi].every(c=>{let n=0;for(const y of c.expr)n+=y.sign*y.term.at(x)[y.part];return c.op==='ge'?n>=c.rhs:n<=c.rhs;}))continue;
-const vec=multi[vi].map(m=>{let n=0;for(const y of m.expr)n+=y.sign*y.term.at(x)[y.part];return n;});
+for(let x=lo;x<=v.hi;x++){
+if(!unary[vi].every(c=>c.op==='ge'?amount(c.expr,x)>=c.rhs:amount(c.expr,x)<=c.rhs))continue;
+const vec=multi[vi].map(m=>amount(m.expr,x));
 let same=!!last;
 for(let j=0;j<size&&same;j++)same=vec[j]===last[j];
 if(!same){
@@ -4819,7 +4820,7 @@ for(let mask=1;mask<span;mask++){
 const sets=new Map();
 rows.forEach((r,k)=>{
 if(!live[k]||!(cover[k]&mask)||!(cover[k]&~mask))return;
-const items=r.c.expr.filter(x=>bit[x.term.slot]&mask),id=items.map(x=>x.t+':'+x.part+':'+x.sign).sort().join();
+const items=r.c.expr.filter(x=>bit[x.term.slot]&mask),id=items.map(tag).sort().join();
 const q=sets.get(id)||sets.set(id,{set:items.reduce((m,x)=>m|bit[x.term.slot],0),ge:false,le:false}).get(id);
 q[r.ge?'ge':'le']=true;
 });
@@ -4848,9 +4849,9 @@ rows.forEach((r,k)=>{
 if(!live[k]||from[k]>s||to[k]<s)return;
 const parent=from[k]<s?prior.get(k):-1;
 if(to[k]===s){closing.push({r,parent,pos:at[vi][k]});return;}
-const id=r.c.expr.filter(x=>stage[x.term.slot]<=s).map(x=>x.t+':'+x.part+':'+x.sign).sort().join();
+const picked=r.c.expr.filter(x=>stage[x.term.slot]<=s),id=picked.map(tag).sort().join();
 let g=ids.get(id);
-if(g===undefined){ids.set(id,g=groups.length);groups.push({parent,pos:at[vi][k],ge:[],le:[],reach:[...new Set(r.c.expr.filter(x=>stage[x.term.slot]<=s).map(x=>x.term.slot))].reduce((n,u)=>n+kinds[u].length,0)});}
+if(g===undefined){ids.set(id,g=groups.length);groups.push({parent,pos:at[vi][k],ge:[],le:[],reach:[...new Set(picked.map(x=>x.term.slot))].reduce((n,u)=>n+kinds[u].length,0)});}
 groups[g][r.ge?'ge':'le'].push(k);of.set(k,g);
 });
 prior=of;
@@ -4862,7 +4863,7 @@ return{vi,groups,closing,pivot,exact,better:pivot<0?0:groups[pivot].ge.length?1:
 layout={extra,axes,list:constraints.slice(),broken,multi,rows,at,kinds,label,stage,stages,memo:new Map(),seen:new Map(),points:[]};
 }
 if(layout.broken)return false;
-if(layout.extra.length)box=box.concat(layout.extra.map(d=>({lo:d.reduce((n,i)=>n+box[i].lo,0),hi:d.reduce((n,i)=>n+box[i].hi,0)})));
+if(layout.extra.length)box=box.concat(layout.extra.map(t=>t.span(box)));
 const known=box.map(b=>b.lo+','+b.hi).join(),answer=layout.seen.get(known);
 if(answer!==undefined)return answer;
 if(layout.points.some(p=>p.every((x,i)=>x<box[i].lo||x>box[i].hi?!layout.kinds[i]:true)))return true;
@@ -4872,7 +4873,7 @@ if(!kinds[vi])continue;
 const b=box[vi],key=vi+':'+b.lo+':'+b.hi;
 let hit=memo.get(key);
 if(!hit){
-const marks=new Uint8Array(kinds[vi].length),list=[],xs=[],lo=layout.axes[vi].floor;
+const marks=new Uint8Array(kinds[vi].length),list=[],xs=[],lo=layout.axes[vi].lo;
 for(let x=b.lo;x<=b.hi;x++){const k=label[vi][x-lo];if(k>=0&&!marks[k]){marks[k]=1;list.push(kinds[vi][k]);xs.push(x);}}
 const size=multi[vi].length,min=new Array(size).fill(Infinity),max=new Array(size).fill(-Infinity),dir=new Array(size).fill(1),down=new Array(size).fill(true);
 for(let c=0;c<list.length;c++)for(let j=0;j<size;j++){
@@ -4936,7 +4937,8 @@ const dive=(s,prev)=>s===stages.length||sweep(s,prev,(vals,ci)=>{
 path[s]=ci;
 return--fuel<0||dive(s+1,vals);
 });
-if(!dive(0,[])||fuel<0){
+if(!dive(0,[]))return false;
+if(fuel<0){
 let states=[[]],pi;const trail=[];
 for(let s=0;s<stages.length;s++){
 const{pivot,exact,better}=stages[s],G=stages[s].groups.length,next=new Map(),only=exact.length===1?exact[0]:-1;
@@ -4988,7 +4990,7 @@ run.path.pop();
 return result;
 };
 if(seek){
-const span=vars.map(v=>({lo:v.floor,hi:v.ceiling||999})),rules=new Map(),nodes=new Map(),live=new Set(),hexes=[...new Set(targets.map(t=>t.hex))].filter(hex=>!isMetalHex(hex)&&getMonDB(hex));
+const span=wide(),rules=new Map(),nodes=new Map(),live=new Set(),hexes=[...new Set(targets.map(t=>t.hex))].filter(hex=>!isMetalHex(hex)&&getMonDB(hex));
 const lit=ci=>!!fEls&&fEls.length>0&&(!fource||ci>combo.indexOf(fource));
 const not=rule=>rule.no||(rule.no=ready({expr:rule.expr.map(x=>({t:x.t,part:x.part,sign:x.sign})),op:'le',rhs:rule.rhs-1}));
 const child=(node,label)=>{
@@ -4998,9 +5000,10 @@ if(id===undefined)nodes.set(key,id=nodes.size+1);
 return id;
 };
 let values,found=null,spare=null;
+const verified=new Map();
 const orangeJobs=seek.defer&&new Map(),orangeHigh=seek.defer&&new Map();
 const test=(list,expr,rhs)=>{
-const id=expr.map(x=>x.t+x.part+x.sign).join()+'>'+rhs;
+const id=expr.map(tag).join()+'>'+rhs;
 let rule=rules.get(id);
 if(!rule)rules.set(id,rule=ready({expr,op:'ge',rhs,id}));
 const d={rule,held:limits(rule,null,values)};
@@ -5084,7 +5087,8 @@ for(let link=job.trail;link;link=link.last)constraints.push(link.rule);
 if(job.turn)constraints.push(job.turn,...(job.also||[]));
 values=find(span.map(b=>({...b})),reference);
 if(!values)return;
-const runs=job.turn?[]:seek.runs,got=job.turn?seek.verify(values,runs,valuesOf):null,todo=[];
+const seen=job.turn&&verified.get(values.join()),runs=seen?seen.runs:job.turn?[]:seek.runs,got=seen?seen.got:job.turn?seek.verify(values,runs,valuesOf):null,todo=[];
+if(job.turn&&!seen)verified.set(values.join(),{runs,got});
 if(got&&(!seek.goldOnly||got.rating==='gold')){found=got;return;}
 spare=spare||got;
 for(const low of runs){
@@ -5137,7 +5141,7 @@ return found;
 if(boundsExhausted)_solverSearchIncomplete=_solverSearchLimited=true;
 return found||spare;
 }
-const whole=()=>propagate(vars.map(v=>({lo:v.floor,hi:v.ceiling||999})));
+const whole=()=>propagate(wide());
 regs[0].root=whole();
 if(!regs[0].root)return null;
 const bounds=[],witnesses=[],spans=vars.map(()=>[]);
@@ -5737,7 +5741,7 @@ if(skillRows.length>SOLVER_VARIANT_MAX)out.push(expander(skillRows.length-SOLVER
 }
 return out.join('');
 }
-function renderSolverResult(bat,monGroups,monId,mapDeft,canRound2,_forceKillAll,_prebuiltKmc,_prebuiltKillAll,_deferKillAll,_round2Only,_incomplete,_limited){
+function renderSolverResult(bat,monGroups,monId,mapDeft,canRound2,_forceKillAll,_prebuiltKmc,_prebuiltKillAll,_deferKillAll,_incomplete,_limited){
 canRound2=solverAllowsRound2(mapDeft,canRound2);
 if(_solverRenderDepth++===0){_solverSearchIncomplete=false;_solverSearchLimited=false;window._solverRenderError=null;_solverGoldState={gold:false};}
 (_solverSearchIncomplete||(_solverSearchIncomplete=!!(_incomplete||(_prebuiltKmc==null?void 0:_prebuiltKmc.incomplete)||(_prebuiltKillAll==null?void 0:_prebuiltKillAll.incomplete))));
@@ -5781,9 +5785,8 @@ const _walkNow=()=>({isMetal,killTargets,T,planType,postAlive,effMon,mercyCertai
 const _walkOK=rawCombo=>solverCandidateStructureOK(rawCombo,_walkNow());
 const mercyTrials=new Map();
 const _recoverMercy=(combo,walkOrders)=>solverRecoverMercy({bat,monGroups,useStats,chars,hexId,planType,killTargets,_walkNow,mercyTrials,assignmentSearch},combo,walkOrders);
-let combos,isRound2=false,triedRound2=false;
-const _retryRound2=()=>solverRetryRound2({bat,monGroups,monId,mapDeft,canRound2,_prebuiltKillAll,_deferKillAll,planType});
-const _emptyResult=(anyRated)=>solverEmptyResult({canRound2,planType,_fallbackKillAll,triedRound2,_retryRound2},anyRated);
+let combos,isRound2=false;
+const _emptyResult=(anyRated)=>solverEmptyResult({planType,_fallbackKillAll},anyRated);
 const _metalHPs=[];
 let _metalCount=0;
 for(const g of monGroups){
@@ -5818,10 +5821,10 @@ if(_allNeedEight){
 ({planType,postAlive,maxPostAlive,mercyCertain,effMon}=deriveSolverBattlePlan(monGroups,monId,_mercyLv,true,chars.map(c=>c.lv||99)));window._solverFallback=true;
 }
 }
-const buildOptions={bat,canRound2,_forceKillAll,_prebuiltKmc,_prebuiltKillAll,_deferKillAll,_round2Only,T,tc2,hexId,isMetal,planType,postAlive,maxPostAlive,excludedPads,excludedPadsAfterMercy,supPads,_phaseBCountsAll,_phaseBCountsAfterMercy,_walkNow,_walkOK,_metalHPs,_metalCount};
+const buildOptions={bat,canRound2,_forceKillAll,_prebuiltKmc,_prebuiltKillAll,_deferKillAll,T,tc2,hexId,isMetal,planType,postAlive,maxPostAlive,excludedPads,excludedPadsAfterMercy,supPads,_phaseBCountsAll,_phaseBCountsAfterMercy,_walkNow,_walkOK,_metalHPs,_metalCount};
 const planned=buildSolverPlanCombos(buildOptions);
 if(!planned)return'';
-({combos,triedRound2,isRound2}=planned);
+({combos,isRound2}=planned);
 if(combos.length===0&&!planned.deferredRound2)return _emptyResult(false);
 window._solverSolvable=true;
 let filtered=[],firstRound=null;
@@ -5846,22 +5849,31 @@ const evaluation={monGroups,useStats,multiPlayer,T,hexId,isMetal,mon,planType,ki
 const improvement={canRound2,multiPlayer,chars,T,hexId,planType,killTargets,assignmentSearch,comboFacts,_recoverMercy,filtered,canFilter,_x12Of,stop};
 const proving={useStats,filtered,_e323Key,_e323Best,_e323Ranks,_offProve,stop,singleNonMetal};
 const ordering={useStats,blockRule,metalFallback,planType,filtered,stop,bat,hexId,_offTargets};
-let proved=false,_anyRated,kmcPending=planned.deferredRound2;
+let proved=false,_anyRated,round2=planned.deferredRound2,ready=false;
+proving.hold=round2&&!useStats;
+const pause=()=>{_solverResume={finish,stop,options:buildOptions,depth:_solverRenderDepth,gold:_solverGoldState,flags:[_solverSearchIncomplete,_solverSearchLimited],cache:_solverDmgCache,build:solverBuildContextSnapshot(),fallback:window._solverFallback,needsKillAll:window._solverNeedsKillAll};return null;};
 const finish=()=>{
 while(!proved){
-if(evaluateSolverCandidates(evaluation)||improveSolverEntries(improvement)||proveSolverEntries(proving))return null;
-if(kmcPending&&!solverGoldFound()){
-kmcPending=false;
-const next=buildSolverPlanCombos({...buildOptions,_kmcRound2:true});
+if(!ready&&(evaluateSolverCandidates(evaluation)||improveSolverEntries(improvement)||proveSolverEntries(proving)))return pause();
+ready=true;
+if(round2&&!solverGoldFound()){
+const next=buildSolverPlanCombos({...buildOptions,_round2:true});
+if(!next)return pause();
+round2=false;
 if(next.combos.length){
-isRound2=true;firstRound=filtered;filtered=[];
+isRound2=true;firstRound={...proving};filtered=[];ready=false;
 Object.assign(evaluation,{combos:next.combos,filtered,queues:null,done:false});
 Object.assign(improvement,{filtered,context:null});
-Object.assign(proving,{filtered,order:null});
+Object.assign(proving,{filtered,order:null,hold:false});
 continue;
 }
 }
-if(firstRound)filtered=firstRound.concat(filtered);
+round2=false;
+if(proving.hold){proving.hold=false;if(proveSolverEntries(proving))return pause();}
+if(firstRound){
+if(firstRound.hold){firstRound.hold=false;if(proveSolverEntries(firstRound))return pause();}
+filtered=firstRound.filtered.concat(filtered);firstRound=null;
+}
 ordering.filtered=filtered;
 _anyRated=filtered.length>0;
 if(solverGoldFound())for(let i=filtered.length-1;i>=0;i--){
@@ -5870,30 +5882,26 @@ if(rating!=='gold')filtered.splice(i,1);
 }
 proved=true;
 }
-if(orderSolverEntries(ordering))return null;
+if(orderSolverEntries(ordering))return pause();
 if(filtered.length===0)return _emptyResult(_anyRated);
 return renderSolverRows({bat,useStats,chars,hexId,isMetal,_offTargets,_simTargets,isRound2,filtered,monBlock});
 };
 const html=finish();
 if(html!==null)return html;
-_solverResume={finish,stop,depth:_solverRenderDepth,gold:_solverGoldState,flags:[_solverSearchIncomplete,_solverSearchLimited],cache:_solverDmgCache,build:solverBuildContextSnapshot(),fallback:window._solverFallback,needsKillAll:window._solverNeedsKillAll};
-if(!stop.late)window._solverFallback=_allFallback;
+if(stop&&!stop.late)window._solverFallback=_allFallback;
 return'';
 }catch(e){console.error('[Solver]',e);window._solverRenderError=e;window._solverSolvable=null;return'<div style="color:#f44;font-size:9px;">⚠ Solver error</div>';}
 finally{if(--_solverRenderDepth===0)_solverGoldState=null;}
 }
-function solverRetryRound2({bat,monGroups,monId,mapDeft,canRound2,_prebuiltKillAll,_deferKillAll,planType}){return renderSolverResult(bat,monGroups,monId,mapDeft,canRound2,
-planType==='kill_all',null,_prebuiltKillAll,_deferKillAll,true,false,_solverSearchLimited);}
 function solverFallbackKillAll({bat,monGroups,monId,mapDeft,canRound2,_prebuiltKillAll,_deferKillAll}){
 window._solverFallback=true;
 if(_deferKillAll&&!_prebuiltKillAll){
 window._solverNeedsKillAll='r1';
 return'';
 }
-return renderSolverResult(bat,monGroups,monId,mapDeft,canRound2,true,null,_prebuiltKillAll,_deferKillAll,false,false,_solverSearchLimited);
+return renderSolverResult(bat,monGroups,monId,mapDeft,canRound2,true,null,_prebuiltKillAll,_deferKillAll,false,_solverSearchLimited);
 }
-function solverEmptyResult({canRound2,planType,_fallbackKillAll,triedRound2,_retryRound2},anyRated){
-if(!anyRated&&canRound2&&!triedRound2&&planType!=='kill_mercy_clear')return _retryRound2();
+function solverEmptyResult({planType,_fallbackKillAll},anyRated){
 if(planType!=='kill_all')return _fallbackKillAll();
 window._solverSolvable=anyRated?true:_solverSearchIncomplete?null:false;
 return SOLVER_DASH;
@@ -5931,14 +5939,14 @@ const trials=[],initial={combo:e.combo,state:{}};
 let found={combo:e.combo,proof:null,state:initial.state};
 if(safe(solverFinalActionIndex(e.combo,true))){trials.push(initial);found.proof=findSolverConditionProof(e.combo,_offTargets,hexId,bat,undefined,true,initial.state);}
 const kills=_x12Kills.k;_x12Kills=null;
-const gate=(!found.proof||found.proof.rating!=='gold')&&(one||mon&&!isMetal&&solverMetalCompanionCount()===0&&e.combo[e.combo.length-1].at>0)?makeFinisherGate(e.combo):null;
+const gate=(!found.proof||found.proof.rating!=='gold')&&(one||(mon&&!isMetal&&solverMetalCompanionCount()===0||e.combo[0].metalFirst)&&e.combo[e.combo.length-1].at>0)?makeFinisherGate(e.combo):null;
 const seen=gate?new Set([key]):null;
 let fi=gate?solverMercyIndex(e.combo)+1:e.combo.length,mercy,mi=0;
 while(!found.proof||found.proof.rating!=='gold'){
 let c,acceptActions;
 if(fi<e.combo.length){
 const i=fi++;
-if(!(e.combo[i].at>0)||!gate(i)||!safe(i))continue;
+if(!(e.combo[i].at>0)||e.combo[i].metalFirst||!gate(i)||!safe(i))continue;
 c=finisherLastOrder(e.combo,i);
 const k=JSON.stringify(c);
 if(seen.has(k))continue;
@@ -6012,8 +6020,8 @@ return false;
 if(!visit(combo))walkOrders(visit);
 return best;
 }
-function buildSolverPlanCombos({bat,canRound2,_forceKillAll,_prebuiltKmc,_prebuiltKillAll,_deferKillAll,_round2Only,T,tc2,hexId,isMetal,planType,postAlive,maxPostAlive,excludedPads,excludedPadsAfterMercy,supPads,_phaseBCountsAll,_phaseBCountsAfterMercy,_walkNow,_walkOK,_metalHPs,_metalCount,_kmcRound2}){
-let combos,isRound2=false,triedRound2=false,deferredRound2=false;
+function buildSolverPlanCombos({bat,canRound2,_forceKillAll,_prebuiltKmc,_prebuiltKillAll,_deferKillAll,T,tc2,hexId,isMetal,planType,postAlive,maxPostAlive,excludedPads,excludedPadsAfterMercy,supPads,_phaseBCountsAll,_phaseBCountsAfterMercy,_walkNow,_walkOK,_metalHPs,_metalCount,_round2}){
+let combos;
 if(planType==='kill_all'){
 if(_deferKillAll&&!_prebuiltKillAll&&!_forceKillAll){
 window._solverFallback=true;window._solverNeedsKillAll='r1';return null;
@@ -6021,16 +6029,9 @@ window._solverFallback=true;window._solverNeedsKillAll='r1';return null;
 const killAll=(key,target,slots,least)=>_prebuiltKillAll&&Object.prototype.hasOwnProperty.call(_prebuiltKillAll,key)?_prebuiltKillAll[key]||[]
 :isMetal?solveMetalComboOrders(target,T,slots,_metalCount,_metalHPs,excludedPads,hexId,supPads,undefined,_phaseBCountsAll).filter(c=>c.length>=least)
 :solveBattleCombo(target,T,slots,hexId,{walk:_walkNow(),least});
-combos=_round2Only?[]:killAll('r1',bat,SOLVER_ROUND_SIZE,1);
-if(combos.length===0&&canRound2){
-triedRound2=true;
-if(_deferKillAll&&_prebuiltKillAll&&
-!Object.prototype.hasOwnProperty.call(_prebuiltKillAll,'r2a')){
-window._solverNeedsKillAll='r2';return null;
-}
-combos=[...killAll('r2a',bat,SOLVER_MAX_ACTIONS,SOLVER_ROUND_SIZE+1),...(tc2>0?killAll('r2b',bat-tc2,SOLVER_MAX_ACTIONS,SOLVER_ROUND_SIZE+1):[])];
-isRound2=combos.length>0;
-}
+if(!_round2)combos=killAll('r1',bat,SOLVER_ROUND_SIZE,1);
+else if(_deferKillAll&&_prebuiltKillAll&&!Object.prototype.hasOwnProperty.call(_prebuiltKillAll,'r2a')){window._solverNeedsKillAll='r2';return null;}
+else combos=[...killAll('r2a',bat,SOLVER_MAX_ACTIONS,SOLVER_ROUND_SIZE+1),...(tc2>0?killAll('r2b',bat-tc2,SOLVER_MAX_ACTIONS,SOLVER_ROUND_SIZE+1):[])];
 }else if(planType==='mercy_first'){
 const _placeMercyWith=round=>c=>{const first=solverMercyPlacement(c,round);return _walkOK(first)?first:solverMercyAlternatives(first,_walkNow())[0];};
 const phase=(target,slots,least,round,relax)=>{
@@ -6038,23 +6039,16 @@ const place=_placeMercyWith(round);
 return isMetal?solveMetalComboOrders(target,maxPostAlive,slots,_metalCount,_metalHPs,excludedPads,hexId,supPads,relax,_phaseBCountsAfterMercy,postAlive).filter(c=>c.length>=least).map(place).filter(Boolean)
 :solveBattleCombo(target,postAlive,slots,null,{maxMonCount:maxPostAlive,hex:hexId,least,walk:_walkNow(),keep:place});
 };
-combos=_round2Only?[]:phase(bat,SOLVER_ROUND_SIZE-1,1,1,excludedPadsAfterMercy);
-if(combos.length===0&&canRound2){
-triedRound2=true;
-if(tc2>0)combos=phase(bat-tc2,SOLVER_MAX_ACTIONS-1,SOLVER_ROUND_SIZE,1,excludedPadsAfterMercy);
-combos=combos.concat(phase(bat,SOLVER_MAX_ACTIONS-1,SOLVER_ROUND_SIZE+1,2,undefined));
-isRound2=combos.length>0;
-}
+combos=!_round2?phase(bat,SOLVER_ROUND_SIZE-1,1,1,excludedPadsAfterMercy)
+:(tc2>0?phase(bat-tc2,SOLVER_MAX_ACTIONS-1,SOLVER_ROUND_SIZE,1,excludedPadsAfterMercy):[]).concat(phase(bat,SOLVER_MAX_ACTIONS-1,SOLVER_ROUND_SIZE+1,2,undefined));
 }else{
-const stage=_kmcRound2?'r2':'r1',key=_kmcRound2?'r2a':'r1';
+const stage=_round2?'r2':'r1',key=_round2?'r2a':'r1';
 const kmcRaw=_prebuiltKmc&&Object.prototype.hasOwnProperty.call(_prebuiltKmc,key)?_prebuiltKmc
 :buildKmcSerialPayload(makeKmcBuildSpec(bat,T,postAlive,tc2,canRound2,hexId,maxPostAlive,stage,_walkNow(),!solverBlockRuleEnabled()));
 (_solverSearchIncomplete||(_solverSearchIncomplete=!!kmcRaw.incomplete));
 _solverSearchLimited=_solverSearchLimited||!!kmcRaw.limited;
-const seeds=_kmcRound2?[...(kmcRaw.r2a||[]),...(tc2>0?kmcRaw.r2b||[]:[])]:kmcRaw.r1||[];
+const seeds=_round2?[...(kmcRaw.r2a||[]),...(tc2>0?kmcRaw.r2b||[]:[])]:kmcRaw.r1||[];
 combos=seeds;
-isRound2=!!_kmcRound2&&combos.length>0;
-deferredRound2=!_kmcRound2&&canRound2;
 }
 if(!isMetal&&solverMetalCompanionCount()>0&&combos.length){
 const _seenN=new Set(),_normN=[];
@@ -6065,7 +6059,7 @@ if(!_seenN.has(key)){_seenN.add(key);_normN.push(nc);}
 combos=_normN;
 }
 combos=combos.map(sortComboByPriority);
-return{combos,triedRound2,isRound2,deferredRound2};
+return{combos,isRound2:!!_round2&&combos.length>0,deferredRound2:!_round2&&canRound2};
 }
 function evaluateSolverCandidates(context){
 const{useStats,multiPlayer,filtered,_x12,stop,hexId,assignmentSearch}=context;
@@ -6139,15 +6133,15 @@ _x12Add(combo);
 filtered.push({combo:finisherLastOrder(combo,req?req.finIdx:solverX12Index(combo)),kill:null,req});
 }else{
 let _mCombo=combo,_mBest=useStats&&isMetal?findBestAssignment(combo,assignmentSearch):null,_mercyRecovered=false;
-if(_mBest&&!_mBest.rating&&killTargets&&killTargets.length&&T>1){
-let _alt=metalClearReorder(combo,assignmentSearch);
-if(!_alt){
+if(_mBest&&_mBest.rating!=='gold'&&killTargets&&killTargets.length&&T>1){
+let _alt=metalClearReorder(combo,assignmentSearch,null,_mBest.rating);
+if(!_alt&&!_mBest.rating){
 _alt=_recoverMercy(combo,visit=>metalClearReorder(combo,assignmentSearch,
 nc=>visit(nc)?{done:true}:null));
 _mercyRecovered=!!_alt;
-}
 if(!_alt)return;
-_mCombo=_alt.combo;_mBest=_alt.best;
+}
+if(_alt){_mCombo=_alt.combo;_mBest=_alt.best;}
 }
 const _kill=_mBest&&_mBest.rating||(isMetal?'metal':null);
 const _mAssign=_mBest&&_mBest.assign||undefined;
@@ -6394,6 +6388,7 @@ if(rank<=counterpart)continue;
 selected.set(e,found);goldKinds.add(!!proof.fallbackKind);
 if(stop&&stop.on&&stop.early&&rank===2)return true;
 }
+if(args.hold)return false;
 const orangeKinds=new Set(solverGoldFound()?[]:[false,true].filter(kind=>!goldKinds.has(kind)));
 if(orangeKinds.size)for(const e of pending){
 const counterpart=_e323Best(e.e323,ranks);
@@ -6405,7 +6400,7 @@ if(rank===2)break;
 }
 for(let i=filtered.length-1;i>=0;i--){
 const e=filtered[i],found=selected.get(e);
-if(!found||solverGoldFound()&&found.proof.rating!=='gold'){filtered.splice(i,1);continue;}
+if(!found){filtered.splice(i,1);continue;}
 const proof=found.proof;
 e.lazyBounds=singleNonMetal&&!e.combo.some(isSolverNonDamageRemoval);
 e.combo=found.combo;
@@ -6417,12 +6412,9 @@ e.kill=null;
 }
 }else{
 for(let i=filtered.length-1;i>=0;i--){
-const e=filtered[i];
-if(e.kill==='orange'&&solverGoldFound()){filtered.splice(i,1);continue;}
-const p=e.battleProof;
+const e=filtered[i],p=e.battleProof;
 if(!p){filtered.splice(i,1);continue;}
 e.kill=p.rating;e.eggAssign=p.eggAssign;
-e.mainKillCI=solverMainKillCI(p.actionResults);
 e.fallbackKind=p.fallbackKind;
 solverNoteGold(p.rating);
 }
@@ -6459,10 +6451,10 @@ if(filtered.length)window._solverFallback=filtered.every(e=>e.fallback&&!e.fallb
 args.flagged=true;
 if(stop&&stop.on&&filtered.length){stop.late=true;return true;}
 }
-if(!useStats)for(const e of filtered){
+for(const e of filtered){
 if(e.lazyBounds){e.mainKillCI=e.conditionProof.finIdx;continue;}
-finalizeSolverConditionProof(e,_offTargets,hexId,bat,true);
-e.mainKillCI=solverMainKillCI(e.conditionProof.actionResults);
+if(!useStats)finalizeSolverConditionProof(e,_offTargets,hexId,bat,true);
+e.mainKillCI=solverMainKillCI((useStats?e.battleProof:e.conditionProof).actionResults);
 }
 if(filtered.length>1&&!isMetalHex(hexId)){
 const mon=getMonDB(hexId),preferred=new Map(),alternatives=new Map();
@@ -6538,7 +6530,7 @@ const displayList=mergeSolverPlanVariants(filtered,hexId);
 const shownList=displayList.slice(0,SHOW_MAX);
 const bucketId='sb'+(window._solverBucketId++);
 window._solverBuckets=window._solverBuckets||{};
-const actors=useStats?Array.from(chars.keys()):[0,1,2,3];
+const actors=Array.from(chars.keys());
 const rowOf=({entry:v,sameCount})=>{
 finalizeSolverConditionProof(v,_offTargets,hexId,bat);
 return{
@@ -6581,8 +6573,9 @@ comboHtml=parts.slice(0,SOLVER_ROUND_SIZE).join(' + ')+transSkill+parts.slice(SO
 comboHtml=parts.join(' + ');
 }
 const disp=hidden?'display:none;':'';
-const neutralDetails=useStats?'':renderSolverSimTrace(window._solverComboMap[cid]);
+let neutralDetails='';
 if(!useStats){
+neutralDetails=renderSolverSimTrace(window._solverComboMap[cid]);
 const summary=renderSolverConditionSummary(window._solverComboMap[cid].neutralConditions);
 if(summary)tag+=' <span data-neutral-condition-summary="1" style="color:#39C5BB;font-size:9px;">'+summary+'</span>';
 }

@@ -328,6 +328,16 @@ const ensureCurrent=()=>{
 if(operation.cancelled||operation.gen!==_siSolveGen||_solverResultPending.get(cacheKey)!==operation)
 throw operation.error||makeSolverCancellationError('Solver generation changed');
 };
+const round2=async(msg,result)=>{
+while(result.needsKillAll==='r2'&&result.resumeKey){
+const r2=await buildStage('killAll','r2'),r1=msg.prebuiltKillAll||{};
+const next=Object.assign({},msg,{resume:result.resumeKey,resumeKey:result.resumeKey,round2:true,deferKillAll:!!r2,
+prebuiltKillAll:r2?Object.assign({},r1,r2,{incomplete:!!(r1.incomplete||r2.incomplete),limited:!!(r1.limited||r2.limited)}):null});
+result=await queueSolverWorkerMessage(next,true,operation,result.worker);
+ensureCurrent();
+}
+return result;
+};
 const finalRender=async(extra)=>{
 ensureCurrent();
 const msg=Object.assign({},common,{type:'solve',render,idBase,bucketBase,incomplete:searchIncomplete,limited:searchLimited},extra||{});
@@ -338,9 +348,12 @@ if(resume)msg.resume=resume.key;
 else if(operation.owner==='probe')Object.assign(msg,{verdict:true,resumeKey:cacheKey+'#'+(++_siSolveSeq)});
 result=await queueSolverWorkerMessage(msg,true,operation,resume?resume.worker:undefined);
 ensureCurrent();
+result=await round2(msg,result);
 if(result.verdictOnly&&operation.owner!=='probe'){
-result=await queueSolverWorkerMessage(Object.assign({},msg,{verdict:false,resume:msg.resumeKey}),true,operation,result.worker);
+const take=Object.assign({},msg,{verdict:false,resume:msg.resumeKey});
+result=await queueSolverWorkerMessage(take,true,operation,result.worker);
 ensureCurrent();
+result=await round2(take,result);
 }
 if(result.verdictOnly)operation.stopped={sig,key:msg.resumeKey,worker:result.worker};
 else operation.replies.set(sig,result);
@@ -365,7 +378,6 @@ ensureCurrent();
 if(!operation.stages.has('plan'))operation.stages.set('plan',prepareParallelSolverSpec(render,options,'plan'));
 const planInfo=operation.stages.get('plan');
 const planType=planInfo&&planInfo.plan?planInfo.plan.planType:'kill_all';
-const isFallbackPath=planType!=='kill_all';
 let result,killAllR1=null;
 if(planType==='kill_all'){
 killAllR1=await buildStage('killAll','r1');
@@ -382,14 +394,6 @@ result=await finalRender({forceKillAll:true,initialFallback:true});
 result.fallback=true;return result;
 }
 result=await finalRender({forceKillAll:true,initialFallback:true,prebuiltKillAll:killAllR1,deferKillAll:true});
-}
-if(result.needsKillAll==='r2'){
-const r2=await buildStage('killAll','r2');
-if(!r2)result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,prebuiltKillAll:null});
-else{
-const all=Object.assign({},killAllR1||{},r2,{r1:[],incomplete:!!((killAllR1==null?void 0:killAllR1.incomplete)||r2.incomplete),limited:!!(killAllR1&&killAllR1.limited||r2.limited)});
-result=await finalRender({forceKillAll:true,initialFallback:isFallbackPath,prebuiltKillAll:all,deferKillAll:false});
-}
 }
 return result;
 };
@@ -1857,7 +1861,8 @@ const n=parseInt(uiVal('si_n'),10)||0;
 let groupSize=parseInt(uiVal('si_group_size'),10)||1;
 const supSel1=byId('si_sup1');
 const supSel2=byId('si_sup2');
-const supPool=dwSupPool(envType,floorMR);
+const supPool=[],byEnv=GROTTO_SUPPORT[envType];
+forEachPoolEntry(byEnv&&byEnv[floorMR]||[],e=>{if(!supPool.includes(e[0]))supPool.push(e[0]);});
 const supKey=envType+':'+floorMR;
 [supSel1,supSel2].forEach(sel=>{
 if(sel.dataset.poolKey!==supKey||sel.options.length!==supPool.length||supPool.some((hx,i)=>sel.options[i].value!==hx)){
