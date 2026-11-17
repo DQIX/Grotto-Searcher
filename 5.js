@@ -74,6 +74,7 @@ _solverGoldState=kept.gold;_solverRenderDepth=kept.depth;[_solverSearchIncomplet
 Object.assign(window,{_solverFallback:kept.fallback,_solverSolvable:true,_solverNeedsKillAll:m.round2?null:kept.needsKillAll});
 if(!m.round2)kept.stop.on=false;
 else if(m.prebuiltKillAll){kept.options._prebuiltKillAll=m.prebuiltKillAll;_solverSearchIncomplete=_solverSearchIncomplete||!!m.prebuiltKillAll.incomplete;_solverSearchLimited=_solverSearchLimited||!!m.prebuiltKillAll.limited;}
+else if(m.deferKillAll&&m.prebuiltKmc)kept.options._prebuiltKmc=m.prebuiltKmc;
 else kept.options._deferKillAll=false;
 try{html=kept.finish();}
 catch(e){console.error('[Solver]',e);window._solverRenderError=e;window._solverSolvable=null;html='<div style="color:#f44;font-size:9px;">⚠ Solver error</div>';}
@@ -96,6 +97,7 @@ return;
 if(m.type==='solveKmcShard'||m.type==='solveKillAllShard'){
 try{
 setupSolverWorker(m);
+resetSolverDamageCache(m.spec.useStats,m.chars||[],m.spec.fieldHexes[0]);
 const payload=m.type==='solveKmcShard'
 ?buildKmcShardPayload(m.spec,m.roots)
 :buildKillAllShardPayload(m.spec,m.roots);

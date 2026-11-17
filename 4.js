@@ -91,23 +91,20 @@ boxCountHtmlArr.push(`<span style="margin-right:5px;display:inline-flex;align-it
 let boxString=boxCountHtmlArr.length>0?boxCountHtmlArr.join(''):'<span style="color:#888;">'+C09+'</span>';
 const nm=(l,a,b)=>`<span style="display:inline-flex;align-items:flex-start;"><span>${l}:&nbsp;</span><strong style="line-height:1.4;"><span style="display:block;color:#ffd700">${a}</span><span style="display:block;color:#ffd700">${b}</span></strong></span>`;
 const col=(l,c,ta,h)=>`<span style="display:inline-block;vertical-align:top;border-left:1px dashed #4a4a8a;padding-left:10px;margin-left:4px;">${l}:
-<strong style="display:block;${c}font-family:monospace;font-size:12px;margin-top:2px;${ta}">${h}</strong>
-</span>`;
+<strong style="display:block;${c}font-family:monospace;font-size:12px;margin-top:2px;${ta}">${h}</strong></span>`;
 let html=`<div class="info-bar">
 <span>Rank: <strong>${rStr}</strong></span>
 <span>Seed: <strong>${seedHex}</strong></span>
 ${nm(C01,mapData.mapName,mapData.mapNameJP)}
 ${nm(C02,mapData.mapTypeName,mapData.mapTypeNameJP)}
-<span>${C03}: <strong>${mapData.monsterRank}</strong></span>
-<span>${C04}: <strong>${mapData.floorCount}</strong></span>
+<span>${C03}:<strong>${mapData.monsterRank}</strong></span>
+<span>${C04}:<strong>${mapData.floorCount}</strong></span>
 ${nm('Boss',mapData.bossName,mapData.bossNameJP)}
-
 ${col(C05,'color:#0ff;','',locHtmlString)}
 ${col(C06,'color:#4c4;','text-align:left;',atHtmlString)}
 ${col(C07,'','text-align:left;',rnHtml)}
 ${col('A*','','text-align:left;',wHtml)}
-</div>
-`;
+</div>`;
 el.innerHTML=html;
 byId('map_box_counts').innerHTML=boxString;
 byId('map_box_total').textContent=`📦 ${totalBoxes}`;
@@ -315,8 +312,7 @@ const rowStyle=isHighlight?'background: rgba(255, 215, 0, 0.15);border-left: 3px
 const textStyle=isHighlight?'color: #ffd700;font-weight: bold;':'';
 const renderRow=item=>`<div class="timer-row" style="${rowStyle}">
 <span class="timer-range" style="${textStyle}">${rangeStr}</span>
-<span class="timer-item" style="${textStyle}">${item}</span>
-</div>`;
+<span class="timer-item" style="${textStyle}">${item}</span></div>`;
 htmlEN+=renderRow(res.itemEN);
 htmlJP+=renderRow(res.itemJP);
 });
@@ -324,15 +320,497 @@ body.style.padding='0';
 body.style.overflowY='hidden';
 body.style.display='flex';
 body.style.flexDirection='column';
-body.innerHTML=`<div class="modal-tabs"></div>
-<div style="padding: 12px 16px;overflow-y: auto;flex: 1;">
-<div id="ctListEN">${htmlEN}</div>
-<div id="ctListJP">${htmlJP}</div>
-</div>
-`;
+body.innerHTML=`<div class="modal-tabs"></div><div style="padding: 12px 16px;overflow-y: auto;flex: 1;"><div id="ctListEN">${htmlEN}</div><div id="ctListJP">${htmlJP}</div></div>`;
 modal.style.display='flex';
 switchTab('chest',DISPLAY_LANG!=='EN'?'JP':'EN');
 }
+const MODAL_TAB_LABELS={TW:'繁體中文',EN:'English',JP:'日本語',SP:'SP'};
+const MODAL_CONFIGS={
+chest:{id:'chestModal',prefix:'ct',langs:['EN','JP']},
+disclaimer:{id:'disclaimerModal',prefix:'disc',langs:['TW','EN','JP','SP']},
+h1:{id:'h1Modal',prefix:'h1',langs:['TW','EN','JP']},
+h2:{id:'h2Modal',prefix:'h2',langs:['TW','EN','JP']},
+h3:{id:'h3Modal',prefix:'h3',langs:['TW','EN','JP']},
+};
+function switchTab(configKey,lang){
+const config=MODAL_CONFIGS[configKey];
+const bar=byId(config.id).querySelector('.modal-tabs');
+if(!bar.firstChild)bar.innerHTML=config.langs.map(key=>`<div id="${config.prefix}Tab${key}" class="modal-lang-tab${key==='SP'?' modal-lang-tab-compact':''}" onclick="switchTab('${configKey}', '${key}')">${MODAL_TAB_LABELS[key]}</div>`).join('');
+config.langs.forEach(key=>{
+byId(config.prefix+'Tab'+key).classList.toggle('active',key===lang);
+byId(config.prefix+'List'+key).hidden=key!==lang;
+});
+}
+function openModal(configKey){
+byId(MODAL_CONFIGS[configKey].id).style.display='flex';
+switchTab(configKey,['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW');
+}
+function closeModal(configKey){byId(MODAL_CONFIGS[configKey].id).style.display='none';}
+window.addEventListener('DOMContentLoaded',()=>{
+const schedule=window.requestIdleCallback?(fn)=>window.requestIdleCallback(fn,{timeout:200}):(fn)=>setTimeout(fn,16);
+let next=0;
+const step=deadline=>{
+const started=performance.now();
+do{
+next+=16;
+if(advanceBqCountFeasibility(next))return;
+}while(performance.now()-started<4&&(!deadline||deadline.timeRemaining()>1));
+schedule(step);
+};
+schedule(step);
+});
+window.addEventListener('DOMContentLoaded',()=>{
+function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
+let selectElement=byId(selectId);
+if(!selectElement)return;
+Object.keys(dataObj).forEach(key=>{
+let item=dataObj[key];
+let option=document.createElement("option");
+option.value=key;
+option.text=`${item[nameIdx1]} ${item[nameIdx2]}`;
+selectElement.appendChild(option);
+});
+}
+MAP_RANK.forEach(r=>{const h=hex2(r),d=r===0xDD;byId('rank').add(new Option(h,'0x'+h,d,d));byId('mrt_inRank').add(new Option(h,h,d,d));});
+populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
+populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
+populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
+populateDropdownObj('cond_env',ENV_NAMES,0,1);
+populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
+const boxRow=document.querySelector('.chest-count-row');
+for(let r=10;r>=1;r--)boxRow.insertAdjacentHTML('beforeend',`<label>${CHEST_RANK[r]} <input type="number" id="cond_box_${CHEST_RANK[r]}" min="0" max="40" class="cbox-in"></label>`);
+const anomOpts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}" data-i18n="${v.i18n}"></option>`).join('');
+byId('cond_anomaly').insertAdjacentHTML('beforeend',anomOpts(ANOM_RULE)+'<option disabled>─────</option>'+anomOpts(USP_FAST_MODES));
+let topIds=["0B5","01B","0B9"];
+let seenIds=new Set(topIds);
+let envOrder=[1,2,3,4,5];
+let sel=byId('cond_only_mon');
+if(sel){
+const createOpt=(id)=>{
+let opt=document.createElement('option');
+let data=MONSTER_DB[id];
+opt.value=data.en;
+opt.textContent=`${data.en} ${data.jp}`;
+return opt;
+};
+const addSep=()=>{
+let s=document.createElement('option');
+s.disabled=true;
+s.textContent="──────────";
+sel.appendChild(s);
+};
+topIds.forEach(id=>sel.appendChild(createOpt(id)));
+addSep();
+envOrder.forEach((env,idx)=>{
+let added=false;
+ONLY_MONSTERS[env].forEach(id=>{
+if(id&&!seenIds.has(id)){
+seenIds.add(id);
+sel.appendChild(createOpt(id));
+added=true;
+}
+});
+if(added&&idx<envOrder.length-1)addSep();
+});
+}
+initItemI18n();
+switchUILang(DISPLAY_LANG);
+const srDiv=byId('searchResults');
+if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
+const seedInput=byId('seed');
+const rankSelect=byId('rank');
+if(seedInput){
+seedInput.addEventListener('keydown',(e)=>{
+if(e.key==='Enter')calculate();
+});
+}
+if(rankSelect){
+rankSelect.addEventListener('change',()=>{
+if(mapData)calculate();
+});
+}
+function initFreeSearchUI(){
+const container=byId('fs_container');
+if(!container)return;
+let floorOpts=`<option value="0">---</option>`;
+for(let i=3;i<=16;i++)floorOpts+=`<option value="${i}">B${i}F</option>`;
+let boxOpts=`<option value="-1">---</option>
+<option value="0">1</option>
+<option value="1">2</option>
+<option value="2">3${T('rd','(整列)')}</option>
+<option value="3">${T('Non-3','非整列')}</option>`;
+let rankOpts=`<option value="0">---</option>`;
+for(let r=10;r>=1;r--)rankOpts+=`<option value="${r}">${CHEST_RANK[r]}</option>`;
+window.updateFSItems=function(groupId,preserveSelection=false){
+let rankSelect=byId(`fs_r_${groupId}`);
+let itemSelect=byId(`fs_i_${groupId}`);
+if(!rankSelect||!itemSelect)return;
+let currentVal=preserveSelection?itemSelect.value:"ANY";
+let r=parseInt(rankSelect.value,10);
+let itemOpts=`<option value="ANY">---</option>`;
+let seen=new Set();
+let hasSpecial=false;
+const inRank=v=>r===0||getChestRanksForItems(expandItemGroup(v)).includes(r);
+[["Sainted soma"],["Ethereal stone"],["Millionaire",T('Millionaire','大富豪')],["Attribeauty"],
+["Metasla",T('Metal Slime Equips','金屬史萊姆裝備','メタスラ装備')],["S weapon",T('S Weapon','S武器')]].forEach(([v,label])=>{
+if(!inRank(v))return;
+itemOpts+=`<option value="${v}">${label||getDispItem(v)}</option>`;
+seen.add(v);
+hasSpecial=true;
+});
+if(hasSpecial)itemOpts+=`<option disabled>──────</option>`;
+let validItems=[];
+if(r===0){
+TableR.forEach(p=>{if(!seen.has(p[0])){seen.add(p[0]);validItems.push(p[0]);}});
+}else{
+let startIdx=TableO[r-1];
+let endIdx=(TableO[r]!==undefined)?TableO[r]:TableQ.length;
+for(let i=startIdx;i<endIdx;i++){
+let itemName=TableR[TableQ[i]][0];
+if(!seen.has(itemName)){seen.add(itemName);validItems.push(itemName);}
+}
+}
+validItems.forEach(en=>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
+itemSelect.innerHTML=itemOpts;
+itemSelect.value=[...itemSelect.options].some(o=>!o.disabled&&o.value===currentVal)?currentVal:"ANY";
+};
+let rows='';
+for(let i=1;i<=3;i++){
+rows+=`<div style="display:flex;gap:2px;align-items:center;">
+<span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
+<select id="fs_f_${i}" class="fs-ctl" style="width:45px;">${floorOpts}</select>
+<select id="fs_b_${i}" class="fs-ctl" style="width:50px;">${boxOpts}</select>
+<select id="fs_r_${i}" onchange="updateFSItems(${i})" class="fs-ctl" style="width:40px;">${rankOpts}</select>
+<select id="fs_i_${i}" class="fs-ctl" style="flex:1;width:50px;text-overflow:ellipsis;"></select>
+<input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" class="fs-ctl" style="width:35px;text-align:center;"></div>`;
+}
+container.innerHTML=rows;
+for(let i=1;i<=3;i++){
+updateFSItems(i);
+}
+}
+initFreeSearchUI();
+initSeedInspectorUI();
+initCPUBenchmark();
+const urlParams=new URLSearchParams(window.location.search);
+const urlId=urlParams.get('id');
+if(urlId&&/^[0-9A-Fa-f]{6}$/.test(urlId)){
+const urlRank=urlId.substring(0,2).toUpperCase();
+const urlSeed=urlId.substring(2,6).toUpperCase();
+const rankEl=byId('rank');
+const seedEl=byId('seed');
+const rankVal='0x'+urlRank;
+if([...rankEl.options].some(o=>o.value===rankVal)){
+rankEl.value=rankVal;
+seedEl.value=urlSeed;
+}
+}
+calculate();
+});
+let isModalDragging=false;
+const allModalIds=Object.values(MODAL_CONFIGS).map(config=>config.id);
+window.addEventListener(window.PointerEvent?'pointerdown':'mousedown',(e)=>{
+if(allModalIds.includes(e.target.id)){isModalDragging=false;}
+else{isModalDragging=true;}
+});
+window.addEventListener(window.PointerEvent?'pointerup':'mouseup',(e)=>{
+const target=document.elementFromPoint(e.clientX,e.clientY);
+if(!isModalDragging&&target&&allModalIds.includes(target.id)){target.style.display='none';}
+isModalDragging=false;
+});
+function addHelpBtn(text,title,css,onclick,id){
+const h4=document.querySelector('#unified_search_panel h4');
+if(!h4)return false;
+const b=document.createElement('button');
+if(id)b.id=id;
+b.textContent=text;
+b.title=title;
+b.className='help-btn';
+b.style.cssText=css;
+b.onclick=onclick;
+h4.appendChild(b);
+return true;
+}
+function initCPUBenchmark(){addHelpBtn('💻','CPU Benchmark','--hb-bd:#088;font-size:11px;',startCPUBenchmark,'cpuBenchBtn');}
+function startCPUBenchmark(){
+if(isSearching){requestSearchCancel();return;}
+const t0=performance.now();
+executeSharedSearch({
+btnId:'cpuBenchBtn',
+btnText:'💻',
+stopText:'🛑',
+emptyRankMsg:B07,
+searchFilterLoc:true,
+validateConds:()=>true,
+renderCap:0,
+filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
+processor:'fastest',
+params:{searchOnlyWithD:false,benchmarkMode:true},
+onDoneExtra:(d)=>{
+const elapsed=((performance.now()-t0)/1000).toFixed(2);
+const sp=byId('searchProgress');
+if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
+},
+});
+}
+const MRT_PREVIEW_ROWS=30;
+const MRT_HL={};
+MRT_HL['Sainted soma']={bg:'#FFC90E',fg:'#000'};
+ITEMS_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff'});
+MRT_HL['Ethereal stone']={bg:'#c018a0',fg:'#fff'};
+ITEMS_METAL_SLIME.forEach(i=>MRT_HL[i]={bg:'#383850',fg:'#d0d8f0'});
+ITEMS_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff'});
+MRT_HL['Lucida shard']={bg:'#B5E61D',fg:'#000'};
+['Dangerous bustier','Fuddle bow'].forEach(i=>MRT_HL[i]={bg:'#FFAEC9',fg:'#000'});
+const MRT_RK_COLORS={10:'#f4f',9:'#fa0',8:'#4cf',7:'#8f8',6:'#ff8',5:'#aaa',4:'#888',3:'#666',2:'#555',1:'#444'};
+const MRT_PRESETS={
+'DD,263C':{custom:{3:[0],4:[0],7:[0],8:[1],9:[0],10:[0],11:[0],12:[0],13:[0],14:[0],15:[0],16:[0]}},
+'B5,3CA2':{custom:{4:[0],5:[0],6:[0],7:[0],8:[0,2],9:[0],10:[1],13:[0],14:[0]}},
+'DD,2E7A':{custom:{3:[0],4:[0],6:[0],7:[1],9:[0],10:[0],11:[0,2],12:[1]}},
+'C9,7FE0':{custom:{3:[0],4:[0,2],5:[0],8:[0],9:[1],10:[0],11:[0],12:[0],13:[0]}},
+'C9,2AC6':{custom:{3:[0,1]}},
+'DD,32BB':{custom:{3:[0,1,2],4:[0,1]}},
+'DD,235E':{custom:{3:[0,1]}},
+'C9,158D':{custom:{3:[0,1]}},
+'DD,5C43':{custom:{3:[0,1],4:[0],5:[1],6:[0],9:[0],10:[0],11:[0],13:[0,1],14:[1]}},
+'DD,47D0':{custom:{3:[0,1],4:[1],5:[0],6:[0],7:[0,1,2],8:[0]}},
+'DD,1341':{custom:{3:[0,1,2],5:[0],6:[0,1],7:[0]}},
+};
+let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null,mrtHiddenChests=new Set(),mrtRankWidths={};
+function mrtMeasureRankWidths(){
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const isMobile=window.innerWidth<=600;
+const isEN=mrtLang!=='jp';
+ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'"Hiragino Sans","PingFang TC",sans-serif');
+mrtRankWidths={};
+const ranks=new Set(mrtChests.map(cd=>cd.rank));
+for(const rank of ranks){
+let maxW=0,acc=0;
+for(let i3=TableO[rank-1];i3<TableO[rank];i3++){
+if(acc>99)break;
+acc+=TableP[i3];
+const r=TableR[TableQ[i3]];
+const name=isEN?(r[0]||'\u2014'):(r[1]||r[0]||'\u2014');
+const w=ctx.measureText(name).width;
+if(w>maxW)maxW=w;
+}
+mrtRankWidths[rank]=Math.ceil(maxW)+12;
+}
+}
+let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=0,mrtElapsedMs=0;
+function mrtInternalSec(){return mrtRealSec-CHEST_TIMER_OFFSET;}
+function mrtGetStartSec(){
+const el=byId('mrt_timerStart');
+const v=el?parseFloat(el.value):NaN;
+return isNaN(v)?0:v;
+}
+function mrtOpen(){
+mrtCacheEls();
+mrtLang=DISPLAY_LANG==='EN'?'en':'jp';
+const bl=byId('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();
+mrtPopulateCustomHL();
+const modal=byId('marathonModal');
+modal.classList.add('open');
+const rSel=byId('rank');
+const sSel=byId('seed');
+if(rSel){const v=rSel.value.replace('0x','');byId('mrt_inRank').value=v;}
+if(sSel&&sSel.value)byId('mrt_inSeed').value=sSel.value;
+mrtInputChange();
+mrtResizeMain();
+}
+function mrtClose(){clearTimeout(mrtInputTimer);mrtInputTimer=null;mrtResetTimer();byId('marathonModal').classList.remove('open');}
+function mrtResizeMain(){
+const tb=document.querySelector('#marathonModal .mrt-topbar');
+const ma=byId('mrt_mainArea');
+if(tb&&ma)ma.style.height=(window.innerHeight-tb.offsetHeight)+'px';
+}
+function mrtCompute(){
+const seed=parseInt(uiVal('mrt_inSeed').trim(),16);
+if(isNaN(seed)||seed<0||seed>0x7FFF){byId('mrt_mainArea').innerHTML='<p style="color:#f44;padding:20px">Invalid Seed</p>';return;}
+mrtEngine=new GrottoDetail();
+mrtEngine.MapSeed=seed;
+mrtEngine.MapRank=parseInt(uiVal('mrt_inRank'),16);
+mrtEngine.calculateDetail();
+mrtChests=[];
+for(let f=0;f<mrtEngine.floorCount;f++){
+const d=mrtEngine.di[f];
+for(let b=0;b<d[8];b++){
+const info=mrtEngine.getBoxInfo(f,b);
+mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:CHEST_RANK[info.rank]||'?'});
+}
+}
+mrtMeasureRankWidths();
+mrtBuildTable();
+mrtRenderRows();
+}
+function mrtIsVis(cd){
+if(mrtFilter==='CUSTOM'&&mrtCustom){const a=mrtCustom[cd.floorNum];return a?a.includes(cd.box):false;}
+if(mrtFilter==='SA')return cd.rank>=9;
+if(mrtFilter==='AB')return cd.rank===9||cd.rank===8;
+return true;
+}
+function mrtBuildTable(keepScroll){
+const area=byId('mrt_mainArea');
+const savedScroll=keepScroll?area.scrollLeft:0;
+area.scrollLeft=0;area.scrollTop=0;
+mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd)&&!mrtHiddenChests.has(cd.floor+':'+cd.box));
+if(!mrtVisChests.length){area.innerHTML='<p style="color:#555;padding:20px;text-align:center">No chests</p>';return;}
+const gridCols='42px '+mrtVisChests.map(cd=>(mrtRankWidths[cd.rank]||100)+'px').join(' ');
+let hdr='<div class="mrt-vhdr-time">sec</div>';
+for(let ci=0;ci<mrtVisChests.length;ci++){
+const cd=mrtVisChests[ci];
+const clr=MRT_RK_COLORS[cd.rank]||'#888';
+hdr+='<div class="mrt-vhdr" data-ck="'+cd.floor+':'+cd.box+'" style="cursor:pointer"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
+}
+area.innerHTML='<div class="mrt-vgrid" style="grid-template-columns:'+gridCols+'">'+hdr+'<div id="mrt_vbody" style="display:contents"></div></div>';
+area.querySelector('.mrt-vgrid').addEventListener('click',function(e){
+const cell=e.target.closest('[data-ck]');
+if(!cell)return;
+mrtHiddenChests.add(cell.dataset.ck);
+mrtMarkFilter(null);
+mrtBuildTable(true);mrtRenderRows();
+});
+if(savedScroll)area.scrollLeft=savedScroll;
+}
+function mrtRenderRows(){
+const vb=byId('mrt_vbody');
+if(!vb||!mrtVisChests.length)return;
+const is=mrtInternalSec();
+const st=Math.max(0,is),ed=st+MRT_PREVIEW_ROWS;
+const isEN=mrtLang!=='jp';
+const cellCls=isEN?'mrt-vcell mrt-vcell-en':'mrt-vcell';
+const parts=[];
+for(let s=st;s<=ed;s++){
+const cur=(s===is),rCls=cur?' mrt-vrow-cur':'';
+parts.push('<div class="mrt-vtime',rCls,'">',String(s+CHEST_TIMER_OFFSET).padStart(3,'0'),'</div>');
+for(let ci=0;ci<mrtVisChests.length;ci++){
+const cd=mrtVisChests[ci];
+const[en,jp]=mrtEngine.getBoxItem(cd.floor,cd.box,s);
+const hl=en?MRT_HL[en]:null;
+const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+';cursor:pointer"':' style="cursor:pointer"';
+const label=mrtLang==='jp'?(jp||en||'\u2014'):(en||'\u2014');
+parts.push('<div class="',cellCls,rCls,'" data-ck="',cd.floor,':',cd.box,'"',style,'>',label,'</div>');
+}
+}
+vb.innerHTML=parts.join('');
+}
+function mrtTimerLoop(){
+if(!mrtRunning)return;
+mrtElapsedMs=Date.now()-mrtOrigin;
+const ns=Math.floor(mrtElapsedMs/1000);
+mrtUpdateStopwatch(mrtElapsedMs);
+if(ns!==mrtRealSec){mrtRealSec=ns;mrtRenderRows();}
+mrtRAF=requestAnimationFrame(mrtTimerLoop);
+}
+let _mrtTimerText=null,_mrtTimerDisp=null,_mrtBtnStart=null;
+function mrtCacheEls(){
+_mrtTimerText=byId('mrt_timerText');
+_mrtTimerDisp=byId('mrt_timerDisp');
+_mrtBtnStart=byId('mrt_btnStart');
+}
+function mrtUpdateStopwatch(ms){
+if(!_mrtTimerText)mrtCacheEls();
+if(!_mrtTimerText)return;
+const isPrep=ms<0;
+const absMs=Math.abs(ms);
+const s=Math.floor(absMs/1000);
+const cs=Math.floor((absMs%1000)/10);
+_mrtTimerText.textContent=isPrep?'-'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0'):String(s).padStart(3,'0')+'.'+String(cs).padStart(2,'0');
+_mrtTimerDisp.style.color=isPrep?'#f88':'#0f0';
+}
+function mrtToggleTimer(){
+if(mrtRunning){
+mrtRunning=false;
+if(mrtRAF){cancelAnimationFrame(mrtRAF);mrtRAF=null;}
+_mrtBtnStart.textContent='\u25B6';
+_mrtBtnStart.classList.remove('running');
+}else{
+mrtOrigin=Date.now()-mrtElapsedMs;
+mrtRunning=true;
+_mrtBtnStart.textContent='\u23F8';
+_mrtBtnStart.classList.add('running');
+mrtTimerLoop();
+}
+}
+function mrtResetTimer(render=true){
+if(mrtRunning){cancelAnimationFrame(mrtRAF);mrtRAF=null;mrtRunning=false;}
+const s=mrtGetStartSec();
+mrtRealSec=s;mrtElapsedMs=s*1000;
+if(_mrtBtnStart){_mrtBtnStart.textContent='\u25B6';_mrtBtnStart.classList.remove('running');}
+mrtUpdateStopwatch(mrtElapsedMs);
+if(render)mrtRenderRows();
+}
+const mrtMarkFilter=f=>document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+function mrtSetFilter(f){
+mrtFilter=f;mrtCustom=null;mrtHiddenChests.clear();
+mrtMarkFilter(f);
+mrtBuildTable();mrtRenderRows();
+}
+function mrtToggleLang(){
+mrtLang=mrtLang==='en'?'jp':'en';
+byId('mrt_btnLang').textContent=mrtLang.toUpperCase();
+mrtPopulateCustomHL();
+mrtMeasureRankWidths();
+mrtBuildTable();mrtRenderRows();
+}
+function mrtApplyPreset(){
+const sel=byId('mrt_presets');
+if(!sel.value)return;
+clearTimeout(mrtInputTimer);mrtInputTimer=null;
+const[rank,seed]=sel.value.split(',');
+byId('mrt_inRank').value=rank;
+byId('mrt_inSeed').value=seed;
+const pd=MRT_PRESETS[sel.value];
+if(pd&&pd.custom){mrtFilter='CUSTOM';mrtCustom=pd.custom;mrtMarkFilter(null);}
+mrtHiddenChests.clear();
+mrtResetTimer(false);mrtCompute();
+}
+function mrtInputChange(){
+clearTimeout(mrtInputTimer);mrtInputTimer=null;
+byId('mrt_presets').value='';
+const seedVal=uiVal('mrt_inSeed').trim();
+if(seedVal.length<1||/[^0-9A-Fa-f]/.test(seedVal))return;
+mrtCustom=null;mrtFilter='ALL';mrtHiddenChests.clear();
+mrtMarkFilter('ALL');
+mrtResetTimer(false);mrtCompute();
+}
+let mrtInputTimer=null;
+const debouncedMrtInput=()=>{clearTimeout(mrtInputTimer);mrtInputTimer=setTimeout(mrtInputChange,200);};
+const MRT_CUSTOM_HL1={bg:'#801',fg:'#fff'};
+const MRT_CUSTOM_HL2={bg:'#3f48cc',fg:'#fff'};
+let mrtCustomHL1Item='',mrtCustomHL2Item='';
+const MRT_BUILTIN_HL={};
+for(const k in MRT_HL)MRT_BUILTIN_HL[k]=MRT_HL[k];
+function mrtPopulateCustomHL(){
+const seen={},items=[];
+TableR.forEach(r=>{if(!seen[r[0]]){seen[r[0]]=true;items.push({en:r[0],jp:r[1]});}});
+const isJP=mrtLang==='jp';
+items.sort((a,b)=>isJP?a.jp.localeCompare(b.jp,'ja'):a.en.localeCompare(b.en));
+['mrt_customHL1','mrt_customHL2'].forEach(id=>{
+const sel=byId(id);
+if(!sel)return;
+const prev=sel.value;
+const label=id.endsWith('1')?'\u2014 HL1 \u2014':'\u2014 HL2 \u2014';
+let html='<option value="">'+label+'</option>';
+items.forEach(it=>{html+='<option value="'+it.en+'">'+(isJP?it.jp:it.en)+'</option>';});
+sel.innerHTML=html;
+sel.value=prev;
+});
+}
+function mrtApplyCustomHL(){
+[mrtCustomHL1Item,mrtCustomHL2Item].forEach(name=>{
+if(!name)return;
+if(MRT_BUILTIN_HL[name])MRT_HL[name]=MRT_BUILTIN_HL[name];
+else delete MRT_HL[name];
+});
+mrtCustomHL1Item=uiVal('mrt_customHL1');
+mrtCustomHL2Item=uiVal('mrt_customHL2');
+if(mrtCustomHL1Item)MRT_HL[mrtCustomHL1Item]=MRT_CUSTOM_HL1;
+if(mrtCustomHL2Item)MRT_HL[mrtCustomHL2Item]=MRT_CUSTOM_HL2;
+mrtRenderRows();
+}
+window.addEventListener('resize',()=>{if(byId('marathonModal').classList.contains('open'))mrtResizeMain();});
 const DW_L={
 TW:{
 name:md=>md.jp,mainFmt:md=>`${md.jp} (${md.en})`,
@@ -503,206 +981,6 @@ out.innerHTML=html;
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',dwInit);
 else setTimeout(dwInit,0);
-const MODAL_TAB_LABELS={TW:'繁體中文',EN:'English',JP:'日本語',SP:'SP'};
-const MODAL_CONFIGS={
-chest:{id:'chestModal',prefix:'ct',langs:['EN','JP']},
-disclaimer:{id:'disclaimerModal',prefix:'disc',langs:['TW','EN','JP','SP']},
-h1:{id:'h1Modal',prefix:'h1',langs:['TW','EN','JP']},
-h2:{id:'h2Modal',prefix:'h2',langs:['TW','EN','JP']},
-h3:{id:'h3Modal',prefix:'h3',langs:['TW','EN','JP']},
-};
-function switchTab(configKey,lang){
-const config=MODAL_CONFIGS[configKey];
-const bar=byId(config.id).querySelector('.modal-tabs');
-if(!bar.firstChild)bar.innerHTML=config.langs.map(key=>`<div id="${config.prefix}Tab${key}" class="modal-lang-tab${key==='SP'?' modal-lang-tab-compact':''}" onclick="switchTab('${configKey}', '${key}')">${MODAL_TAB_LABELS[key]}</div>`).join('');
-config.langs.forEach(key=>{
-byId(config.prefix+'Tab'+key).classList.toggle('active',key===lang);
-byId(config.prefix+'List'+key).hidden=key!==lang;
-});
-}
-function openModal(configKey){
-byId(MODAL_CONFIGS[configKey].id).style.display='flex';
-switchTab(configKey,['TW','EN','JP'].includes(DISPLAY_LANG)?DISPLAY_LANG:'TW');
-}
-function closeModal(configKey){
-byId(MODAL_CONFIGS[configKey].id).style.display='none';
-}
-window.addEventListener('DOMContentLoaded',()=>{
-const schedule=window.requestIdleCallback?(fn)=>window.requestIdleCallback(fn,{timeout:200}):(fn)=>setTimeout(fn,16);
-let next=0;
-const step=deadline=>{
-const started=performance.now();
-do{
-next+=16;
-if(advanceBqCountFeasibility(next))return;
-}while(performance.now()-started<4&&(!deadline||deadline.timeRemaining()>1));
-schedule(step);
-};
-schedule(step);
-});
-window.addEventListener('DOMContentLoaded',()=>{
-function populateDropdownObj(selectId,dataObj,nameIdx1,nameIdx2){
-let selectElement=byId(selectId);
-if(!selectElement)return;
-Object.keys(dataObj).forEach(key=>{
-let item=dataObj[key];
-let option=document.createElement("option");
-option.value=key;
-option.text=`${item[nameIdx1]} ${item[nameIdx2]}`;
-selectElement.appendChild(option);
-});
-}
-MAP_RANK.forEach(r=>{const h=hex2(r),d=r===0xDD;byId('rank').add(new Option(h,'0x'+h,d,d));byId('mrt_inRank').add(new Option(h,h,d,d));});
-populateDropdownObj('cond_prefix',PREFIX_NAMES,0,1);
-populateDropdownObj('cond_suffix',SUFFIX_NAMES,0,1);
-populateDropdownObj('cond_locale',LOCALE_NAMES,0,1);
-populateDropdownObj('cond_env',ENV_NAMES,0,1);
-populateDropdownObj('cond_boss',BOSS_NAMES,0,2);
-const boxRow=document.querySelector('.chest-count-row');
-for(let r=10;r>=1;r--)boxRow.insertAdjacentHTML('beforeend',`<label>${CHEST_RANK[r]} <input type="number" id="cond_box_${CHEST_RANK[r]}" min="0" max="40" class="cbox-in"></label>`);
-const anomOpts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}" data-i18n="${v.i18n}"></option>`).join('');
-byId('cond_anomaly').insertAdjacentHTML('beforeend',anomOpts(ANOM_RULE)+'<option disabled>─────</option>'+anomOpts(USP_FAST_MODES));
-let topIds=["0B5","01B","0B9"];
-let seenIds=new Set(topIds);
-let envOrder=[1,2,3,4,5];
-let sel=byId('cond_only_mon');
-if(sel){
-const createOpt=(id)=>{
-let opt=document.createElement('option');
-let data=MONSTER_DB[id];
-opt.value=data.en;
-opt.textContent=`${data.en} ${data.jp}`;
-return opt;
-};
-const addSep=()=>{
-let s=document.createElement('option');
-s.disabled=true;
-s.textContent="──────────";
-sel.appendChild(s);
-};
-topIds.forEach(id=>sel.appendChild(createOpt(id)));
-addSep();
-envOrder.forEach((env,idx)=>{
-let added=false;
-ONLY_MONSTERS[env].forEach(id=>{
-if(id&&!seenIds.has(id)){
-seenIds.add(id);
-sel.appendChild(createOpt(id));
-added=true;
-}
-});
-if(added&&idx<envOrder.length-1)addSep();
-});
-}
-initItemI18n();
-switchUILang(DISPLAY_LANG);
-const srDiv=byId('searchResults');
-if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
-const seedInput=byId('seed');
-const rankSelect=byId('rank');
-if(seedInput){
-seedInput.addEventListener('keydown',(e)=>{
-if(e.key==='Enter')calculate();
-});
-}
-if(rankSelect){
-rankSelect.addEventListener('change',()=>{
-if(mapData)calculate();
-});
-}
-function initFreeSearchUI(){
-const container=byId('fs_container');
-if(!container)return;
-let floorOpts=`<option value="0">---</option>`;
-for(let i=3;i<=16;i++)floorOpts+=`<option value="${i}">B${i}F</option>`;
-let boxOpts=`
-<option value="-1">---</option>
-<option value="0">1</option>
-<option value="1">2</option>
-<option value="2">3${T('rd','(整列)')}</option>
-<option value="3">${T('Non-3','非整列')}</option>
-`;
-let rankOpts=`<option value="0">---</option>`;
-for(let r=10;r>=1;r--)rankOpts+=`<option value="${r}">${CHEST_RANK[r]}</option>`;
-window.updateFSItems=function(groupId,preserveSelection=false){
-let rankSelect=byId(`fs_r_${groupId}`);
-let itemSelect=byId(`fs_i_${groupId}`);
-if(!rankSelect||!itemSelect)return;
-let currentVal=preserveSelection?itemSelect.value:"ANY";
-let r=parseInt(rankSelect.value,10);
-let itemOpts=`<option value="ANY">---</option>`;
-let seen=new Set();
-let hasSpecial=false;
-const inRank=v=>r===0||getChestRanksForItems(expandItemGroup(v)).includes(r);
-[["Sainted soma"],["Ethereal stone"],["Millionaire",T('Millionaire','大富豪')],["Attribeauty"],
-["Metasla",T('Metal Slime Equips','金屬史萊姆裝備','メタスラ装備')],["S weapon",T('S Weapon','S武器')]].forEach(([v,label])=>{
-if(!inRank(v))return;
-itemOpts+=`<option value="${v}">${label||getDispItem(v)}</option>`;
-seen.add(v);
-hasSpecial=true;
-});
-if(hasSpecial)itemOpts+=`<option disabled>──────</option>`;
-let validItems=[];
-if(r===0){
-TableR.forEach(p=>{if(!seen.has(p[0])){seen.add(p[0]);validItems.push(p[0]);}});
-}else{
-let startIdx=TableO[r-1];
-let endIdx=(TableO[r]!==undefined)?TableO[r]:TableQ.length;
-for(let i=startIdx;i<endIdx;i++){
-let itemName=TableR[TableQ[i]][0];
-if(!seen.has(itemName)){seen.add(itemName);validItems.push(itemName);}
-}
-}
-validItems.forEach(en=>{itemOpts+=`<option value="${en}">${getDispItem(en)}</option>`;});
-itemSelect.innerHTML=itemOpts;
-itemSelect.value=[...itemSelect.options].some(o=>!o.disabled&&o.value===currentVal)?currentVal:"ANY";
-};
-let rows='';
-for(let i=1;i<=3;i++){
-rows+=`
-<div style="display:flex;gap:2px;align-items:center;">
-<span style="color:#0ff;font-size:10px;width:10px;text-align:center;">${i}</span>
-<select id="fs_f_${i}" class="fs-ctl" style="width:45px;">${floorOpts}</select>
-<select id="fs_b_${i}" class="fs-ctl" style="width:50px;">${boxOpts}</select>
-<select id="fs_r_${i}" onchange="updateFSItems(${i})" class="fs-ctl" style="width:40px;">${rankOpts}</select>
-<select id="fs_i_${i}" class="fs-ctl" style="flex:1;width:50px;text-overflow:ellipsis;"></select>
-<input type="number" id="fs_t_${i}" value="7" min="5" placeholder="sec" class="fs-ctl" style="width:35px;text-align:center;">
-</div>`;
-}
-container.innerHTML=rows;
-for(let i=1;i<=3;i++){
-updateFSItems(i);
-}
-}
-initFreeSearchUI();
-initSeedInspectorUI();
-initCPUBenchmark();
-const urlParams=new URLSearchParams(window.location.search);
-const urlId=urlParams.get('id');
-if(urlId&&/^[0-9A-Fa-f]{6}$/.test(urlId)){
-const urlRank=urlId.substring(0,2).toUpperCase();
-const urlSeed=urlId.substring(2,6).toUpperCase();
-const rankEl=byId('rank');
-const seedEl=byId('seed');
-const rankVal='0x'+urlRank;
-if([...rankEl.options].some(o=>o.value===rankVal)){
-rankEl.value=rankVal;
-seedEl.value=urlSeed;
-}
-}
-calculate();
-});
-let isModalDragging=false;
-const allModalIds=Object.values(MODAL_CONFIGS).map(config=>config.id);
-window.addEventListener(window.PointerEvent?'pointerdown':'mousedown',(e)=>{
-if(allModalIds.includes(e.target.id)){isModalDragging=false;}
-else{isModalDragging=true;}
-});
-window.addEventListener(window.PointerEvent?'pointerup':'mouseup',(e)=>{
-const target=document.elementFromPoint(e.clientX,e.clientY);
-if(!isModalDragging&&target&&allModalIds.includes(target.id)){target.style.display='none';}
-isModalDragging=false;
-});
 function exportSearchResults(){
 try{
 const items=document.querySelectorAll('#searchGrid .search-result-item');

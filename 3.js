@@ -4,14 +4,14 @@ let _dq9PreflightDone=false;
 let _dq9Gen=0;
 let _dq9Active=null;
 (function runWorkerPreflight(){
-const end=ok=>{if(!ok)_dq9PoolFailed=true;_dq9PreflightDone=true;};
+const end=ok=>{_dq9PoolFailed=!ok;_dq9PreflightDone=true;};
 if(typeof Worker==='undefined'||typeof Blob==='undefined'||typeof URL.createObjectURL!=='function')return end(false);
 try{
 const blob=new Blob(['self.postMessage("ok")'],{type:'text/javascript'});
 const url=URL.createObjectURL(blob);
 const w=new Worker(url);
 const stop=(ok,msg)=>{clearTimeout(t);w.terminate();URL.revokeObjectURL(url);console[ok?'info':'warn']('[DQ9] Worker preflight '+msg);end(ok);};
-const t=setTimeout(()=>stop(false,'timeout — disabling Workers'),2000);
+const t=setTimeout(()=>{console.warn('[DQ9] Worker preflight timeout — disabling Workers');end(false);},2000);
 w.onmessage=()=>stop(true,'OK');
 w.onerror=()=>stop(false,'error — disabling Workers');
 }catch(e){
@@ -100,6 +100,7 @@ if(_dq9Active===a)_dq9Active=null;
 if(errMsg==='_RETRY_MAIN_THREAD_'&&a._retryJob&&a._retryCallbacks){
 console.info('[DQ9] Retrying search on main thread...');
 runSearchJob(a._retryJob,a._retryCallbacks);
+_dq9PoolFailed=false;
 return;
 }
 if(errMsg!==undefined){if(a.callbacks.onError)a.callbacks.onError(errMsg);}
@@ -275,9 +276,10 @@ const t=_siSolveBusy.get(workerIdx);
 if(!t||m.solveId!==t.solveId)return;
 _siSolveBusy.delete(workerIdx);
 releasePoolWorker(workerIdx);
-dispatchPoolJobs();
 if(SOLVER_DONE_TYPES.has(m.type))t.resolve(Object.assign(m,{worker:workerIdx}));
 else t.reject(new Error(m.message||'Solver Worker error'));
+if(m.resumeKey)setTimeout(dispatchPoolJobs,0);
+else dispatchPoolJobs();
 }
 function queueSolverWorkerMessage(msg,front,owner,prefer){
 const solveId=++_siSolveSeq;
@@ -289,18 +291,29 @@ dispatchSolveQueue();
 }
 async function runParallelSolverShards(type,spec,common,pool,operation){
 if(pool.workers.length<2)return null;
-const roots=partitionSolverRoots(spec,spec.order&&spec.order.sequence);
+const roots=partitionSolverRoots(spec);
 if(roots.length===1)return null;
 if(roots.length===0)return mergeSolverShardPayloads(spec,[]);
-const progress={},waveWidth=Math.max(2,pool.workers.length*2);
-for(let start=0;start<roots.length;start+=waveWidth){
-const wave=roots.slice(start,start+waveWidth);
-const settled=await Promise.all(wave.map(root=>
-queueSolverWorkerMessage({...common,type,spec,roots:[root]},false,operation).then(value=>({value}),error=>({error}))));
+const progress={},waveWidth=Math.max(2,pool.workers.length*2),pending=new Map();
+let next=0;
+const send=()=>{
+while(pending.size<waveWidth&&next<roots.length){
+const root=roots[next++];
+pending.set(root,queueSolverWorkerMessage({...common,type,spec,roots:[root]},false,operation).then(value=>({value}),error=>({error})));
+}
+};
+try{
+send();
+for(const root of roots){
+const item=await pending.get(root);
+pending.delete(root);
 if(operation.cancelled||operation.gen!==_siSolveGen)throw operation.error||makeSolverCancellationError('Solver generation changed');
-const failed=settled.find(x=>x.error);
-if(failed)throw failed.error;
-if(mergeSolverShardPayloads(spec,settled.map(item=>item.value.payload),progress))break;
+if(item.error)throw item.error;
+if(mergeSolverShardPayloads(spec,[item.value.payload],progress))break;
+send();
+}
+}finally{
+solverRejectQueued(makeSolverCancellationError('Solver shards filled'),task=>task.msg.spec!==spec);
 }
 return mergeSolverShardPayloads(spec,null,progress);
 }
@@ -309,7 +322,7 @@ const cacheKey=solverResultCacheKey(render,options);
 const cached=getCachedSolverResult(cacheKey,idBase,bucketBase);
 if(cached)return Promise.resolve(cached);
 if(solverBatUnreachable(render))return Promise.resolve(rebaseSolverCachedResult(setCachedSolverResult(cacheKey,solverDashResult(false),idBase,bucketBase),idBase,bucketBase));
-if(!options.metalGate&&solverMetalCompanionGated(render.monGroups,render.monId))return Promise.resolve(solverDashResult(null,{needsMetalGate:true}));
+if(!options.metalGate&&solverMetalCompanionGated(render.monGroups,render.monId,options.chars))return Promise.resolve(solverDashResult(null,{needsMetalGate:true}));
 const oldPending=_solverResultPending.get(cacheKey);
 if(oldPending&&!oldPending.cancelled&&oldPending.gen===_siSolveGen){
 if(owner!=='probe')oldPending.owner='view';
@@ -330,9 +343,9 @@ throw operation.error||makeSolverCancellationError('Solver generation changed');
 };
 const round2=async(msg,result)=>{
 while(result.needsKillAll==='r2'&&result.resumeKey){
-const r2=await buildStage('killAll','r2'),r1=msg.prebuiltKillAll||{};
+const kmc=!!msg.prebuiltKmc,r2=await buildStage(kmc?'kmc':'killAll','r2'),r1=(kmc?msg.prebuiltKmc:msg.prebuiltKillAll)||{};
 const next=Object.assign({},msg,{resume:result.resumeKey,resumeKey:result.resumeKey,round2:true,deferKillAll:!!r2,
-prebuiltKillAll:r2?Object.assign({},r1,r2,{incomplete:!!(r1.incomplete||r2.incomplete),limited:!!(r1.limited||r2.limited)}):null});
+[kmc?'prebuiltKmc':'prebuiltKillAll']:r2?Object.assign({},r1,r2,{incomplete:!!(r1.incomplete||r2.incomplete),limited:!!(r1.limited||r2.limited)}):kmc?r1:null});
 result=await queueSolverWorkerMessage(next,true,operation,result.worker);
 ensureCurrent();
 }
@@ -389,10 +402,7 @@ result=await finalRender({prebuiltKmc,deferKillAll:true});
 }
 if(result.needsKillAll==='r1'){
 killAllR1=await buildStage('killAll','r1');
-if(!killAllR1){
-result=await finalRender({forceKillAll:true,initialFallback:true});
-result.fallback=true;return result;
-}
+if(!killAllR1){result=await finalRender({forceKillAll:true,initialFallback:true});result.fallback=true;return result;}
 result=await finalRender({forceKillAll:true,initialFallback:true,prebuiltKillAll:killAllR1,deferKillAll:true});
 }
 return result;
@@ -448,14 +458,9 @@ solverRejectQueued(err);
 for(const t of _siSolveBusy.values())t.reject(err);
 _siSolveBusy.clear();
 }
-function requeueBusySolveTasks(){
-for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);replaceSolveWorker(wi);}
-_siSolveBusy.clear();
-}
+function requeueBusySolveTasks(){for(const[wi,t]of _siSolveBusy){_siSolveQueue.unshift(t);replaceSolveWorker(wi);}_siSolveBusy.clear();}
 (function(){
-if(typeof document==='undefined'||!document.createElement||!document.body||
-!document.body.appendChild||!document.body.removeChild||
-!document.body.querySelectorAll||typeof MutationObserver!=='function')return;
+if(typeof document==='undefined'||!document.createElement||!document.body||!document.body.appendChild||!document.body.removeChild||!document.body.querySelectorAll||typeof MutationObserver!=='function')return;
 function supportsFlexGap(){
 var probe=document.createElement('div');
 probe.style.cssText='position:absolute;visibility:hidden;display:flex;flex-direction:column;row-gap:1px';
@@ -467,9 +472,7 @@ return supported;
 }
 function start(){
 if(supportsFlexGap())return;
-var selector='.header,.checkbox-field,.cb-pair,.chest-count-row,.si-grid,.si-field,'+
-'#solverPanel .sv-row,#solverPanel .sv-hdr,#marathonModal .mrt-topbar,'+
-'#marathonModal .mrt-tbg,.chest-count-row>label,[style*="gap:"]';
+var selector='.header,.checkbox-field,.cb-pair,.chest-count-row,.si-grid,.si-field,'+'#solverPanel .sv-row,#solverPanel .sv-hdr,#marathonModal .mrt-topbar,'+'#marathonModal .mrt-tbg,.chest-count-row>label,[style*="gap:"]';
 var states=new WeakMap(),bases=new WeakMap(),applied=new WeakMap(),ownedStyle=new WeakMap();
 function base(child){
 var saved=bases.get(child);
@@ -487,37 +490,21 @@ var changes=applied.get(el);
 if(!changes){changes={};applied.set(el,changes);}
 var prior=changes[key];
 if(prior&&prior[0]===value&&el.style[key]===prior[1])return;
-if(el.style[key]!==value){
-el.style[key]=value;
-ownedStyle.set(el,el.getAttribute('style'));
-}
+if(el.style[key]!==value){el.style[key]=value;ownedStyle.set(el,el.getAttribute('style'));}
 changes[key]=[value,el.style[key]];
 }
-function setMargin(child,values){
-['marginTop','marginRight','marginBottom','marginLeft'].forEach(function(key,i){
-setStyle(child,key,values[i]);
-});
-}
+function setMargin(child,values){['marginTop','marginRight','marginBottom','marginLeft'].forEach(function(key,i){setStyle(child,key,values[i]);});}
 function add(value,gap){return gap?'calc('+value+' + '+gap+'px)':value;}
 function update(el){
 var state=states.get(el),css=getComputedStyle(el);
 if(css.display!=='flex'&&css.display!=='inline-flex')return;
 var row=parseFloat(css.rowGap)||0,col=parseFloat(css.columnGap)||0;
 if(!row&&!col)return;
-if(css.flexWrap!=='nowrap'){
-if(!state){
-state={paddingTop:css.paddingTop,paddingLeft:css.paddingLeft,
-marginTop:css.marginTop,marginLeft:css.marginLeft,width:el.style.width};
-states.set(el,state);
+if(css.flexWrap!=='nowrap'){if(!state){state={paddingTop:css.paddingTop,paddingLeft:css.paddingLeft,marginTop:css.marginTop,marginLeft:css.marginLeft,width:el.style.width};states.set(el,state);}
+if(parseFloat(state.paddingLeft)>=col)setStyle(el,'paddingLeft','calc('+state.paddingLeft+' - '+col+'px)');
+else{setStyle(el,'marginLeft','calc('+state.marginLeft+' - '+col+'px)');if(state.width==='100%')setStyle(el,'width','calc(100% + '+col+'px)');
 }
-if(parseFloat(state.paddingLeft)>=col)setStyle(el,'paddingLeft',
-'calc('+state.paddingLeft+' - '+col+'px)');
-else{
-setStyle(el,'marginLeft','calc('+state.marginLeft+' - '+col+'px)');
-if(state.width==='100%')setStyle(el,'width','calc(100% + '+col+'px)');
-}
-if(parseFloat(state.paddingTop)>=row)setStyle(el,'paddingTop',
-'calc('+state.paddingTop+' - '+row+'px)');
+if(parseFloat(state.paddingTop)>=row)setStyle(el,'paddingTop','calc('+state.paddingTop+' - '+row+'px)');
 else setStyle(el,'marginTop','calc('+state.marginTop+' - '+row+'px)');
 Array.prototype.forEach.call(el.children,function(child){
 var margins=base(child);
@@ -532,17 +519,12 @@ Array.prototype.forEach.call(el.childNodes,function(child){
 if(child.nodeType===3){if(child.textContent.trim())previous=true;return;}
 if(child.nodeType!==1)return;
 var margins=base(child),visible=getComputedStyle(child).display!=='none';
-setMargin(child,[add(margins[0],vertical&&previous&&visible?row:0),
-margins[1],margins[2],add(margins[3],!vertical&&previous&&visible?col:0)]);
+setMargin(child,[add(margins[0],vertical&&previous&&visible?row:0),margins[1],margins[2],add(margins[3],!vertical&&previous&&visible?col:0)]);
 if(visible)previous=true;
 });
 }
 }
-function scan(root,visit){
-if(root.nodeType!==1)return;
-if(root.matches(selector))visit(root);
-Array.prototype.forEach.call(root.querySelectorAll(selector),visit);
-}
+function scan(root,visit){if(root.nodeType!==1)return;if(root.matches(selector))visit(root);Array.prototype.forEach.call(root.querySelectorAll(selector),visit);}
 scan(document.body,update);
 var scheduled=false,pending=new Set();
 function schedule(el){
@@ -1503,305 +1485,8 @@ runAtResultSearch(job,grid,progressSpan,restoreBtn,
 p=>Math.floor((p.processed/p.total)*100)+'% (Seed '+p.seedHex+') ['+B04+''+p.hits+' '+B03+']',
 "AT Pattern Search error:");
 }
-function addHelpBtn(text,title,css,onclick,id){
-const h4=document.querySelector('#unified_search_panel h4');
-if(!h4)return false;
-const b=document.createElement('button');
-if(id)b.id=id;
-b.textContent=text;
-b.title=title;
-b.className='help-btn';
-b.style.cssText=css;
-b.onclick=onclick;
-h4.appendChild(b);
-return true;
-}
-function initCPUBenchmark(){addHelpBtn('💻','CPU Benchmark','--hb-bd:#088;font-size:11px;',startCPUBenchmark,'cpuBenchBtn');}
-function startCPUBenchmark(){
-if(isSearching){requestSearchCancel();return;}
-const t0=performance.now();
-executeSharedSearch({
-btnId:'cpuBenchBtn',
-btnText:'💻',
-stopText:'🛑',
-emptyRankMsg:B07,
-searchFilterLoc:true,
-validateConds:()=>true,
-renderCap:0,
-filterRanks:(ranksToSearch,conds)=>sharedRankFilter(ranksToSearch,conds,false),
-processor:'fastest',
-params:{searchOnlyWithD:false,benchmarkMode:true},
-onDoneExtra:(d)=>{
-const elapsed=((performance.now()-t0)/1000).toFixed(2);
-const sp=byId('searchProgress');
-if(sp)sp.textContent=searchDoneMsg(d.hits)+' ⏱ '+elapsed+'s';
-},
-});
-}
-const MRT_PREVIEW_ROWS=30;
-const MRT_HL={};
-MRT_HL['Sainted soma']={bg:'#FFC90E',fg:'#000'};
-ITEMS_S_WEAPONS.forEach(w=>MRT_HL[w]={bg:'#1a8a3c',fg:'#fff'});
-MRT_HL['Ethereal stone']={bg:'#c018a0',fg:'#fff'};
-ITEMS_METAL_SLIME.forEach(i=>MRT_HL[i]={bg:'#383850',fg:'#d0d8f0'});
-ITEMS_MILLIONAIRE.forEach(i=>MRT_HL[i]={bg:'#08c',fg:'#fff'});
-MRT_HL['Lucida shard']={bg:'#B5E61D',fg:'#000'};
-['Dangerous bustier','Fuddle bow'].forEach(i=>MRT_HL[i]={bg:'#FFAEC9',fg:'#000'});
-const MRT_RK_COLORS={10:'#f4f',9:'#fa0',8:'#4cf',7:'#8f8',6:'#ff8',5:'#aaa',4:'#888',3:'#666',2:'#555',1:'#444'};
-const MRT_PRESETS={
-'DD,263C':{custom:{3:[0],4:[0],7:[0],8:[1],9:[0],10:[0],11:[0],12:[0],13:[0],14:[0],15:[0],16:[0]}},
-'B5,3CA2':{custom:{4:[0],5:[0],6:[0],7:[0],8:[0,2],9:[0],10:[1],13:[0],14:[0]}},
-'DD,2E7A':{custom:{3:[0],4:[0],6:[0],7:[1],9:[0],10:[0],11:[0,2],12:[1]}},
-'C9,7FE0':{custom:{3:[0],4:[0,2],5:[0],8:[0],9:[1],10:[0],11:[0],12:[0],13:[0]}},
-'C9,2AC6':{custom:{3:[0,1]}},
-'DD,32BB':{custom:{3:[0,1,2],4:[0,1]}},
-'DD,235E':{custom:{3:[0,1]}},
-'C9,158D':{custom:{3:[0,1]}},
-'DD,5C43':{custom:{3:[0,1],4:[0],5:[1],6:[0],9:[0],10:[0],11:[0],13:[0,1],14:[1]}},
-'DD,47D0':{custom:{3:[0,1],4:[1],5:[0],6:[0],7:[0,1,2],8:[0]}},
-'DD,1341':{custom:{3:[0,1,2],5:[0],6:[0,1],7:[0]}},
-};
-let mrtEngine=null,mrtChests=[],mrtVisChests=[],mrtFilter='ALL',mrtCustom=null,mrtHiddenChests=new Set(),mrtRankWidths={};
-function mrtMeasureRankWidths(){
-const canvas=document.createElement('canvas');
-const ctx=canvas.getContext('2d');
-const isMobile=window.innerWidth<=600;
-const isEN=mrtLang!=='jp';
-ctx.font=(isMobile?'10px ':'11px ')+(isEN?'system-ui,-apple-system,sans-serif':'"Hiragino Sans","PingFang TC",sans-serif');
-mrtRankWidths={};
-const ranks=new Set(mrtChests.map(cd=>cd.rank));
-for(const rank of ranks){
-let maxW=0,acc=0;
-for(let i3=TableO[rank-1];i3<TableO[rank];i3++){
-if(acc>99)break;
-acc+=TableP[i3];
-const r=TableR[TableQ[i3]];
-const name=isEN?(r[0]||'\u2014'):(r[1]||r[0]||'\u2014');
-const w=ctx.measureText(name).width;
-if(w>maxW)maxW=w;
-}
-mrtRankWidths[rank]=Math.ceil(maxW)+12;
-}
-}
-let mrtLang=DISPLAY_LANG==='EN'?'en':'jp',mrtRunning=false,mrtRAF=null,mrtOrigin=0,mrtRealSec=0,mrtElapsedMs=0;
-function mrtInternalSec(){return mrtRealSec-CHEST_TIMER_OFFSET;}
-function mrtGetStartSec(){
-const el=byId('mrt_timerStart');
-const v=el?parseFloat(el.value):NaN;
-return isNaN(v)?0:v;
-}
-function mrtOpen(){
-mrtCacheEls();
-mrtLang=DISPLAY_LANG==='EN'?'en':'jp';
-const bl=byId('mrt_btnLang');if(bl)bl.textContent=mrtLang.toUpperCase();
-mrtPopulateCustomHL();
-const modal=byId('marathonModal');
-modal.classList.add('open');
-const rSel=byId('rank');
-const sSel=byId('seed');
-if(rSel){const v=rSel.value.replace('0x','');byId('mrt_inRank').value=v;}
-if(sSel&&sSel.value)byId('mrt_inSeed').value=sSel.value;
-mrtInputChange();
-mrtResizeMain();
-}
-function mrtClose(){clearTimeout(mrtInputTimer);mrtInputTimer=null;mrtResetTimer();byId('marathonModal').classList.remove('open');}
-function mrtResizeMain(){
-const tb=document.querySelector('#marathonModal .mrt-topbar');
-const ma=byId('mrt_mainArea');
-if(tb&&ma)ma.style.height=(window.innerHeight-tb.offsetHeight)+'px';
-}
-function mrtCompute(){
-const seed=parseInt(uiVal('mrt_inSeed').trim(),16);
-if(isNaN(seed)||seed<0||seed>0x7FFF){byId('mrt_mainArea').innerHTML='<p style="color:#f44;padding:20px">Invalid Seed</p>';return;}
-mrtEngine=new GrottoDetail();
-mrtEngine.MapSeed=seed;
-mrtEngine.MapRank=parseInt(uiVal('mrt_inRank'),16);
-mrtEngine.calculateDetail();
-mrtChests=[];
-for(let f=0;f<mrtEngine.floorCount;f++){
-const d=mrtEngine.di[f];
-for(let b=0;b<d[8];b++){
-const info=mrtEngine.getBoxInfo(f,b);
-mrtChests.push({floor:f,floorNum:f+1,floorLabel:'B'+(f+1)+'F',box:b,rank:info.rank,rankName:CHEST_RANK[info.rank]||'?'});
-}
-}
-mrtMeasureRankWidths();
-mrtBuildTable();
-mrtRenderRows();
-}
-function mrtIsVis(cd){
-if(mrtFilter==='CUSTOM'&&mrtCustom){const a=mrtCustom[cd.floorNum];return a?a.includes(cd.box):false;}
-if(mrtFilter==='SA')return cd.rank>=9;
-if(mrtFilter==='AB')return cd.rank===9||cd.rank===8;
-return true;
-}
-function mrtBuildTable(keepScroll){
-const area=byId('mrt_mainArea');
-const savedScroll=keepScroll?area.scrollLeft:0;
-area.scrollLeft=0;area.scrollTop=0;
-mrtVisChests=mrtChests.filter(cd=>mrtIsVis(cd)&&!mrtHiddenChests.has(cd.floor+':'+cd.box));
-if(!mrtVisChests.length){area.innerHTML='<p style="color:#555;padding:20px;text-align:center">No chests</p>';return;}
-const gridCols='42px '+mrtVisChests.map(cd=>(mrtRankWidths[cd.rank]||100)+'px').join(' ');
-let hdr='<div class="mrt-vhdr-time">sec</div>';
-for(let ci=0;ci<mrtVisChests.length;ci++){
-const cd=mrtVisChests[ci];
-const clr=MRT_RK_COLORS[cd.rank]||'#888';
-hdr+='<div class="mrt-vhdr" data-ck="'+cd.floor+':'+cd.box+'" style="cursor:pointer"><span class="mrt-vhdr-floor">'+cd.floorLabel+'</span><br><span class="mrt-vhdr-rk" style="color:'+clr+'">'+cd.rankName+(cd.box+1)+'</span></div>';
-}
-area.innerHTML='<div class="mrt-vgrid" style="grid-template-columns:'+gridCols+'">'+hdr+'<div id="mrt_vbody" style="display:contents"></div></div>';
-area.querySelector('.mrt-vgrid').addEventListener('click',function(e){
-const cell=e.target.closest('[data-ck]');
-if(!cell)return;
-mrtHiddenChests.add(cell.dataset.ck);
-mrtMarkFilter(null);
-mrtBuildTable(true);mrtRenderRows();
-});
-if(savedScroll)area.scrollLeft=savedScroll;
-}
-function mrtRenderRows(){
-const vb=byId('mrt_vbody');
-if(!vb||!mrtVisChests.length)return;
-const is=mrtInternalSec();
-const st=Math.max(0,is),ed=st+MRT_PREVIEW_ROWS;
-const isEN=mrtLang!=='jp';
-const cellCls=isEN?'mrt-vcell mrt-vcell-en':'mrt-vcell';
-const parts=[];
-for(let s=st;s<=ed;s++){
-const cur=(s===is),rCls=cur?' mrt-vrow-cur':'';
-parts.push('<div class="mrt-vtime',rCls,'">',String(s+CHEST_TIMER_OFFSET).padStart(3,'0'),'</div>');
-for(let ci=0;ci<mrtVisChests.length;ci++){
-const cd=mrtVisChests[ci];
-const[en,jp]=mrtEngine.getBoxItem(cd.floor,cd.box,s);
-const hl=en?MRT_HL[en]:null;
-const style=hl?' style="background:'+hl.bg+';color:'+hl.fg+';cursor:pointer"':' style="cursor:pointer"';
-const label=mrtLang==='jp'?(jp||en||'\u2014'):(en||'\u2014');
-parts.push('<div class="',cellCls,rCls,'" data-ck="',cd.floor,':',cd.box,'"',style,'>',label,'</div>');
-}
-}
-vb.innerHTML=parts.join('');
-}
-function mrtTimerLoop(){
-if(!mrtRunning)return;
-mrtElapsedMs=Date.now()-mrtOrigin;
-const ns=Math.floor(mrtElapsedMs/1000);
-mrtUpdateStopwatch(mrtElapsedMs);
-if(ns!==mrtRealSec){mrtRealSec=ns;mrtRenderRows();}
-mrtRAF=requestAnimationFrame(mrtTimerLoop);
-}
-let _mrtTimerText=null,_mrtTimerDisp=null,_mrtBtnStart=null;
-function mrtCacheEls(){
-_mrtTimerText=byId('mrt_timerText');
-_mrtTimerDisp=byId('mrt_timerDisp');
-_mrtBtnStart=byId('mrt_btnStart');
-}
-function mrtUpdateStopwatch(ms){
-if(!_mrtTimerText)mrtCacheEls();
-if(!_mrtTimerText)return;
-const isPrep=ms<0;
-const absMs=Math.abs(ms);
-const s=Math.floor(absMs/1000);
-const cs=Math.floor((absMs%1000)/10);
-_mrtTimerText.textContent=isPrep?'-'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0'):String(s).padStart(3,'0')+'.'+String(cs).padStart(2,'0');
-_mrtTimerDisp.style.color=isPrep?'#f88':'#0f0';
-}
-function mrtToggleTimer(){
-if(mrtRunning){
-mrtRunning=false;
-if(mrtRAF){cancelAnimationFrame(mrtRAF);mrtRAF=null;}
-_mrtBtnStart.textContent='\u25B6';
-_mrtBtnStart.classList.remove('running');
-}else{
-mrtOrigin=Date.now()-mrtElapsedMs;
-mrtRunning=true;
-_mrtBtnStart.textContent='\u23F8';
-_mrtBtnStart.classList.add('running');
-mrtTimerLoop();
-}
-}
-function mrtResetTimer(render=true){
-if(mrtRunning){cancelAnimationFrame(mrtRAF);mrtRAF=null;mrtRunning=false;}
-const s=mrtGetStartSec();
-mrtRealSec=s;mrtElapsedMs=s*1000;
-if(_mrtBtnStart){_mrtBtnStart.textContent='\u25B6';_mrtBtnStart.classList.remove('running');}
-mrtUpdateStopwatch(mrtElapsedMs);
-if(render)mrtRenderRows();
-}
-const mrtMarkFilter=f=>document.querySelectorAll('#marathonModal .mrt-fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
-function mrtSetFilter(f){
-mrtFilter=f;mrtCustom=null;mrtHiddenChests.clear();
-mrtMarkFilter(f);
-mrtBuildTable();mrtRenderRows();
-}
-function mrtToggleLang(){
-mrtLang=mrtLang==='en'?'jp':'en';
-byId('mrt_btnLang').textContent=mrtLang.toUpperCase();
-mrtPopulateCustomHL();
-mrtMeasureRankWidths();
-mrtBuildTable();mrtRenderRows();
-}
-function mrtApplyPreset(){
-const sel=byId('mrt_presets');
-if(!sel.value)return;
-clearTimeout(mrtInputTimer);mrtInputTimer=null;
-const[rank,seed]=sel.value.split(',');
-byId('mrt_inRank').value=rank;
-byId('mrt_inSeed').value=seed;
-const pd=MRT_PRESETS[sel.value];
-if(pd&&pd.custom){mrtFilter='CUSTOM';mrtCustom=pd.custom;mrtMarkFilter(null);}
-mrtHiddenChests.clear();
-mrtResetTimer(false);mrtCompute();
-}
-function mrtInputChange(){
-clearTimeout(mrtInputTimer);mrtInputTimer=null;
-byId('mrt_presets').value='';
-const seedVal=uiVal('mrt_inSeed').trim();
-if(seedVal.length<1||/[^0-9A-Fa-f]/.test(seedVal))return;
-mrtCustom=null;mrtFilter='ALL';mrtHiddenChests.clear();
-mrtMarkFilter('ALL');
-mrtResetTimer(false);mrtCompute();
-}
-let mrtInputTimer=null;
-const debouncedMrtInput=()=>{clearTimeout(mrtInputTimer);mrtInputTimer=setTimeout(mrtInputChange,200);};
-const MRT_CUSTOM_HL1={bg:'#801',fg:'#fff'};
-const MRT_CUSTOM_HL2={bg:'#3f48cc',fg:'#fff'};
-let mrtCustomHL1Item='',mrtCustomHL2Item='';
-const MRT_BUILTIN_HL={};
-for(const k in MRT_HL)MRT_BUILTIN_HL[k]=MRT_HL[k];
-function mrtPopulateCustomHL(){
-const seen={},items=[];
-TableR.forEach(r=>{if(!seen[r[0]]){seen[r[0]]=true;items.push({en:r[0],jp:r[1]});}});
-const isJP=mrtLang==='jp';
-items.sort((a,b)=>isJP?a.jp.localeCompare(b.jp,'ja'):a.en.localeCompare(b.en));
-['mrt_customHL1','mrt_customHL2'].forEach(id=>{
-const sel=byId(id);
-if(!sel)return;
-const prev=sel.value;
-const label=id.endsWith('1')?'\u2014 HL1 \u2014':'\u2014 HL2 \u2014';
-let html='<option value="">'+label+'</option>';
-items.forEach(it=>{html+='<option value="'+it.en+'">'+(isJP?it.jp:it.en)+'</option>';});
-sel.innerHTML=html;
-sel.value=prev;
-});
-}
-function mrtApplyCustomHL(){
-[mrtCustomHL1Item,mrtCustomHL2Item].forEach(name=>{
-if(!name)return;
-if(MRT_BUILTIN_HL[name])MRT_HL[name]=MRT_BUILTIN_HL[name];
-else delete MRT_HL[name];
-});
-mrtCustomHL1Item=uiVal('mrt_customHL1');
-mrtCustomHL2Item=uiVal('mrt_customHL2');
-if(mrtCustomHL1Item)MRT_HL[mrtCustomHL1Item]=MRT_CUSTOM_HL1;
-if(mrtCustomHL2Item)MRT_HL[mrtCustomHL2Item]=MRT_CUSTOM_HL2;
-mrtRenderRows();
-}
-window.addEventListener('resize',()=>{if(byId('marathonModal').classList.contains('open'))mrtResizeMain();});
 function siBuildSeqHtml(seqArray){
-const GC=[
-[['#f44','#ccc'],['#c018a0','#ccc']],
-[['#4c4','#ccc'],['#fa0','#ccc']],
-[['#00A2E8','#ccc'],['#88f','#ccc']]
-];
+const GC=[[['#f44','#ccc'],['#c018a0','#ccc']],[['#4c4','#ccc'],['#fa0','#ccc']],[['#00A2E8','#ccc'],['#88f','#ccc']]];
 const BK=['','rgba(255,136,255,0.25)','rgba(34,177,76,0.25)','rgba(0,162,232,0.25)','rgba(255,170,0,0.25)'];
 let items=seqArray.map(item=>{
 let gi=item.gIdx!==undefined?item.gIdx:0;
@@ -1839,7 +1524,7 @@ patSel.options.add(new Option('----','none'));
 appendPatternOptions(patSel);
 }
 }
-function updateSeedInspector(){
+function updateSeedInspector(settled){
 window._siBuckets=null;
 _siInspectorGen++;
 let _solverOpt;
@@ -1871,12 +1556,7 @@ for(const hx of supPool){sel.options.add(new Option(getMonsterShieldName(hx),hx)
 sel.dataset.poolKey=supKey;
 }
 });
-const tLvs=[
-parseInt(uiVal('si_t1'),10)||0,
-parseInt(uiVal('si_t2'),10)||0,
-parseInt(uiVal('si_t3'),10)||0,
-parseInt(uiVal('si_t4'),10)||0
-];
+const tLvs=[parseInt(uiVal('si_t1'),10)||0,parseInt(uiVal('si_t2'),10)||0,parseInt(uiVal('si_t3'),10)||0,parseInt(uiVal('si_t4'),10)||0];
 const scanMax=parseInt(uiVal('si_scan_max'),10)||0;
 const targetTotalStep=parseInt(uiVal('si_target_step'),10)||35;
 const pSelect=byId('si_pattern');
@@ -1958,19 +1638,19 @@ const _atForT=(t)=>battleATForCount(budgets,t);
 const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,userDeft,canRound2});
 const _fleeState=(mg,t)=>{
 if(_atForT(t)<0)return'flee';
-if(solverMetalCompanionGated(mg,monId))return'metal-gate';
-const task=_fleeTask(mg,t);
-const v=peekFleeVerdict(task,_solverOpt);
+if(solverMetalCompanionGated(mg,monId,_solverOpt.chars))return'metal-gate';
+const task=_fleeTask(mg,t),key=solverResultCacheKey(task,_solverOpt),known=settled&&settled.has(key);
+const v=known?settled.get(key):peekFleeVerdict(task,_solverOpt);
 if(v===false)return'flee';
 if(v==='fallback')return'fallback';
 if(v==='block-pending')return'block-pending';
 if(v==='limit')return'limit';
 if(v===true)return'ok';
+if(known)return'unknown';
 inspectorProbes.push(task);
 return'pending';
 };
-const _pendTag=(st)=>st==='pending'
-?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':st==='limit'?' <span style="color:#fa0;font-size:9px;">'+SOLVER_LIMIT_LABEL+'</span>':'';
+const _pendTag=(st)=>st==='pending'?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':st==='limit'||st==='unknown'?' <span style="color:#fa0;font-size:9px;">'+(st==='limit'?SOLVER_LIMIT_LABEL:SOLVER_UNKNOWN_LABEL)+'</span>':'';
 function _addResult(T,effMon,desc,monGroups,killAllDesc,fleeDesc){
 const bucket=solverMapEntry(resultsByT,T,()=>({mixes:[],flee:[],nextOrder:0}));
 const order=bucket.nextOrder++;
@@ -2020,7 +1700,7 @@ if(inspectorSignature!==_siInspectorSignature){_siInspectorSignature=inspectorSi
 const inspectorGen=_siInspectorGen;
 if(inspectorProbes.length){
 Promise.all(inspectorProbes.map(t=>requestFleeVerdict(t,_solverOpt))).then((verdicts)=>{
-if(inspectorGen===_siInspectorGen&&verdicts.every(v=>v!==null))updateSeedInspector();
+if(inspectorGen===_siInspectorGen)updateSeedInspector(new Map(inspectorProbes.map((t,i)=>[solverResultCacheKey(t,_solverOpt),verdicts[i]])));
 });
 }
 const s_target=advanceATRng(seed,targetTotalStep);
@@ -2047,13 +1727,8 @@ targetBox.innerHTML=`
 `+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${passesATThreshold(atTarget_val,ThiefThreshold)?'✅ '+L46:'❌ '+L47}
 </div>`;
 }
-function openSeedInspector(){
-byId('seedInspectorModal').style.display='flex';
-updateSeedInspector();
-}
-function closeSeedInspector(e){
-if(!e||e.target.className==='modal-close'){_siInspectorSignature=null;cancelAllSolveTasks('Seed Inspector closed');byId('seedInspectorModal').style.display='none';}
-}
+function openSeedInspector(){byId('seedInspectorModal').style.display='flex';updateSeedInspector();}
+function closeSeedInspector(e){if(!e||e.target.className==='modal-close'){_siInspectorSignature=null;cancelAllSolveTasks('Seed Inspector closed');byId('seedInspectorModal').style.display='none';}}
 const debouncedUpdateSeedInspector=debounce(updateSeedInspector,100);
 document.addEventListener('input',e=>{if(e.target.classList.contains('sv-stat'))debouncedUpdateSeedInspector();});
 window._solverComboMap={};
@@ -2062,11 +1737,7 @@ window._solverBucketId=0;
 const SOLVER_RESULT_CACHE_MAX=192;
 const _solverResultCache=new Map();
 const _solverResultPending=new Map();
-const snapshotSolverOptions=()=>({
-chars:readCharStatsFromDom(),
-useStats:solverUseStatsEnabled(),
-multiPlayer:solverMultiPlayerEnabled()
-});
+const snapshotSolverOptions=()=>({chars:readCharStatsFromDom(),useStats:solverUseStatsEnabled(),multiPlayer:solverMultiPlayerEnabled()});
 const _fleeVerdict=new Map();
 const _fleePending=new Map();
 const FLEE_ID_BASE=900000,FLEE_BK_BASE=9000;
@@ -2105,10 +1776,7 @@ if(!job)return;
 for(const f of SOLVER_INPUT_FIELDS){const el=byId('si_'+f.dom+charNum);if(el)el.value=job.s[f.preset];}
 updateSeedInspector();
 }
-function solverRevealRows(bucketId,from,to){
-const rows=document.getElementsByClassName(bucketId+'_row');
-for(let i=from;i<to;i++)if(rows[i])rows[i].style.display='';
-}
+function solverRevealRows(bucketId,from,to){const rows=document.getElementsByClassName(bucketId+'_row');for(let i=from;i<to;i++)if(rows[i])rows[i].style.display='';}
 async function showBlockFallback(bucketId){
 const st=window._solverBuckets&&window._solverBuckets[bucketId];
 if(!st||!st.blocked)return;
@@ -2174,7 +1842,7 @@ if(!el)return;
 if(el.innerHTML){el.style.display=el.style.display==='none'?'block':'none';return;}
 const data=window._solverComboMap[id];
 if(!data)return;
-el.innerHTML=renderSolverSimTrace(data);
+el.innerHTML=el.dataset.merged?JSON.parse(el.dataset.merged).map(([cid,desc],n)=>'<div style="font-size:9px;margin:4px 0 0 24px;">'+desc+'</div>'+(n?'<div id="combo_detail_'+cid+'">'+renderSolverSimTrace(window._solverComboMap[cid])+'</div>':renderSolverSimTrace(data))).join(''):renderSolverSimTrace(data);
 el.style.display='block';
 }
 function solverResultCacheKey(render,options){
@@ -2256,19 +1924,19 @@ document.body.appendChild(ov);
 }
 function closeSolverBucket(){
 cancelAllSolveTasks('Solver view closed');
+if(_siInspectorSignature)updateSeedInspector();
 const ov=byId('si_submodal');
 if(!ov)return;
 ov.style.display='none';
 const body=byId('si_submodal_body');
 if(body)body.innerHTML='';
 }
+function solverComboIds(html){return(html.match(/expandCombo\(\d+\)/g)||[]).map(x=>x.slice(12,-1));}
 function solverTaskOutputSignature(htmlStr,useStats){
-const rawHtml=htmlStr||SOLVER_DASH,comboIds=[],pattern=/expandCombo\((\d+)\)/g;
-let match;
-while((match=pattern.exec(rawHtml)))comboIds.push(match[1]);
+const rawHtml=htmlStr||SOLVER_DASH,comboIds=solverComboIds(rawHtml);
 const stable=v=>Array.isArray(v)?v.map(x=>stable(x)):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
 const json=v=>JSON.stringify(stable(v||null));
-const rowSig=r=>[solverComboActionSignature(r.combo),json(r.eggAssign),json(r.assign),json(r.defend),useStats?r.outcomeSig||'':''].join('\x1d');
+const rowSig=r=>[solverComboActionSignature(r.combo),json(r.eggAssign),json(r.assign),json(r.defend),useStats?'':renderSolverConditionSummary(r.neutralConditions)].join('\x1d');
 const detailSig=comboIds.map(id=>{
 const e=window._solverComboMap&&window._solverComboMap[id];
 return e?[rowSig(e),...(e.planVariants||[]).map(r=>rowSig(r)),'\x1f',...(e.skillVariants||[]).map(r=>rowSig(r))].join('\x1e'):'missing:'+id;
@@ -2330,6 +1998,15 @@ keep.mergedDescs.push(...(m.mergedDescs||[m.desc]));
 m.merged=true;
 const descEl=byId(keep.descId);
 if(descEl)descEl.innerHTML=keep.mergedDescs.join('<br>');
+const other=solverComboIds(result.html);
+solverComboIds(results[seen.get(sig)].html).forEach((id,k)=>{
+const el=byId('combo_detail_'+id),from=byId('combo_detail_'+other[k]);
+if(!el)return;
+const list=JSON.parse(el.dataset.merged||JSON.stringify([[id,keep.desc]]));
+list.push(...(from&&from.dataset.merged?JSON.parse(from.dataset.merged):[[other[k],m.desc]]));
+el.dataset.merged=JSON.stringify(list);
+el.innerHTML='';el.style.display='none';
+});
 const dup=byId(m.rowId);
 if(dup)dup.remove();
 }
@@ -2362,7 +2039,7 @@ return done();
 }
 const html=verdict===false?solverFleeHTML()
 :verdict==='limit'?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_LIMIT_LABEL+'</div>'
-:verdict===null?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+T('Result unknown.','結果未知。','結果は未確定です。')+'</div>'
+:verdict===null?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_UNKNOWN_LABEL+'</div>'
 :result&&result.html!==undefined?result.html:'';
 if(verdict==='fallback'&&m&&m.killAllDesc){const descEl=byId(m.descId);if(descEl)descEl.innerHTML=m.killAllDesc;m.desc=m.killAllDesc;}
 settle(i,{html,flee:false});
@@ -2379,7 +2056,7 @@ completed--;
 complete(i,m,runOptions);
 }).catch(e=>{
 if(viewGen!==_siSolveGen)return;
-console.warn('[Solver] 金屬跟班點擊計算失敗:',e&&e.message);
+console.warn('[Solver] 金屬點擊計算失敗:',e&&e.message);
 const again=byId(elementIds[i]+'_mg');
 if(again){again.textContent=SOLVER_METAL_GATE_LABEL;delete again.dataset.running;}
 });

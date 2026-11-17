@@ -134,7 +134,7 @@ const L41=T(' recommended combos',' 推薦組合',' おすすめの組み合わ�
 const L42=T('▸ Click an AT value to view recommended combos for that enemy pattern','▸ 點 AT 値査看該 pattern 的推薦組合','▸ AT値をクリックすると、その敵パターンのおすすめ組み合わせを表示');
 const L43=T('Solver calculating…','Solver 計算中…');
 const L44=T('Flee','逃跑','にげる');
-const SOLVER_LIMIT_LABEL=T('No solution within search limit','上限內無解','探索上限に達しました（解は見つかりませんでした）');
+const SOLVER_LIMIT_LABEL=T('No solution within search limit','上限內無解','探索上限に達しました（解は見つかりませんでした）'),SOLVER_UNKNOWN_LABEL=T('Result unknown.','結果未知。','結果は未確定です。');
 const L45=T('(No corresponding formation for this case)','（此情形無對應形態）','（この条件に対応する編成なし）');
 const L46=T('YES','是','はい');
 const L47=T('NO','否','いいえ');
