@@ -76,22 +76,22 @@
 </div>
 <div class="mrt-main" id="mrt_mainArea"></div>
 </div>
-<div id="seedInspectorModal" class="modal-overlay" onclick="closeSeedInspector(event)">
+<div id="atDetailModal" class="modal-overlay" onclick="closeATDetail(event)">
 <div class="si-modal-content modal-content" onclick="event.stopPropagation()">
 <div class="si-header">
 <h3 style="color:#0ff;margin:0;font-size:14px;">AT Detail Search</h3>
-<button class="modal-close" onclick="closeSeedInspector()">×</button>
+<button class="modal-close" onclick="closeATDetail()">×</button>
 </div>
 <div class="modal-body" style="padding:12px;overflow-y:auto;max-height:85vh;">
 <div class="si-section">
 <div class="si-grid">
-<div class="si-field"><label for="si_seed">Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px;text-transform:uppercase;" oninput="debouncedUpdateSeedInspector()"></div>
-<div class="si-field"><label for="si_env" data-i18n="C02"></label><select id="si_env" style="width:65px;" onchange="debouncedUpdateSeedInspector()"><option value="1"></option><option value="2" selected></option><option value="3"></option><option value="4"></option><option value="5"></option></select></div>
-<div class="si-field"><label for="si_mr" data-i18n="G09"></label><select id="si_mr" onchange="debouncedUpdateSeedInspector()"></select></div>
-<div class="si-field"><label for="si_deft" data-i18n="G18"></label><input type="number" id="si_deft" value=910 min=1 max=999 style="width:60px;" oninput="debouncedUpdateSeedInspector()"></div>
-<div class="si-field"><label for="si_n" data-i18n="G19"></label><input type="number" id="si_n" value=0 min=0 oninput="debouncedUpdateSeedInspector()"></div>
-<div class="si-field"><label for="si_pattern" data-i18n="G20"></label><select id="si_pattern" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
-<div class="si-field"><label for="si_scan_max" data-i18n="G21"></label><input type="number" id="si_scan_max" value=2000 min=0 style="width:60px;" oninput="debouncedUpdateSeedInspector()"></div>
+<div class="si-field"><label for="si_seed">Seed</label><input type="text" id="si_seed" value="7340" maxlength="4" style="width:65px;text-transform:uppercase;" oninput="debUpdATDetail()"></div>
+<div class="si-field"><label for="si_env" data-i18n="C02"></label><select id="si_env" style="width:65px;" onchange="debUpdATDetail()"><option value="1"></option><option value="2" selected></option><option value="3"></option><option value="4"></option><option value="5"></option></select></div>
+<div class="si-field"><label for="si_mr" data-i18n="G09"></label><select id="si_mr" onchange="debUpdATDetail()"></select></div>
+<div class="si-field"><label for="si_deft" data-i18n="G18"></label><input type="number" id="si_deft" value=910 min=1 max=999 style="width:60px;" oninput="debUpdATDetail()"></div>
+<div class="si-field"><label for="si_n" data-i18n="G19"></label><input type="number" id="si_n" value=0 min=0 oninput="debUpdATDetail()"></div>
+<div class="si-field"><label for="si_pattern" data-i18n="G20"></label><select id="si_pattern" style="width:85px;" onchange="debUpdATDetail()"></select></div>
+<div class="si-field"><label for="si_scan_max" data-i18n="G21"></label><input type="number" id="si_scan_max" value=2000 min=0 style="width:60px;" oninput="debUpdATDetail()"></div>
 </div>
 </div>
 <div class="si-section"><div class="si-result-box" id="si_at_results"></div></div>
@@ -99,8 +99,8 @@
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <span style="color:#0ff;font-size:11px;font-weight:bold;">⚔ Solver</span>
 <div style="display:flex;gap:6px;align-items:center;">
-<label style="font-size:9px;color:#888;cursor:pointer;"><input type="checkbox" id="si_useStats" onchange="debouncedUpdateSeedInspector()" style="width:13px;height:13px;vertical-align:middle;cursor:pointer;"> Stats</label>
-<label style="font-size:9px;color:#f80;cursor:pointer;"><input type="checkbox" id="si_multiPlayer" onchange="debouncedUpdateSeedInspector()" style="width:13px;height:13px;vertical-align:middle;cursor:pointer;"> Multi</label>
+<label style="font-size:9px;color:#888;cursor:pointer;"><input type="checkbox" id="si_useStats" onchange="debUpdATDetail()" style="width:13px;height:13px;vertical-align:middle;cursor:pointer;"> Stats</label>
+<label style="font-size:9px;color:#f80;cursor:pointer;"><input type="checkbox" id="si_multiPlayer" onchange="debUpdATDetail()" style="width:13px;height:13px;vertical-align:middle;cursor:pointer;"> Multi</label>
 <button onclick="var p=document.getElementById('solverPanel');p.style.display=p.style.display==='none'?'':'none'" style="background:none;border:1px solid #555;color:#888;font-size:10px;padding:1px 6px;border-radius:3px;cursor:pointer;">▼</button>
 </div>
 </div>
@@ -142,15 +142,15 @@
 </div>
 <div class="si-section">
 <div class="si-grid" style="gap:6px;">
-<div class="si-field"><label for="si_group_size" data-i18n="G22"></label><select id="si_group_size" onchange="debouncedUpdateSeedInspector()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-<div class="si-field"><label for="si_sup1" data-i18n="G23"></label><select id="si_sup1" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
-<div class="si-field"><label for="si_sup2" data-i18n="G24"></label><select id="si_sup2" style="width:85px;" onchange="debouncedUpdateSeedInspector()"></select></div>
+<div class="si-field"><label for="si_group_size" data-i18n="G22"></label><select id="si_group_size" onchange="debUpdATDetail()" style="width:45px;"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+<div class="si-field"><label for="si_sup1" data-i18n="G23"></label><select id="si_sup1" style="width:85px;" onchange="debUpdATDetail()"></select></div>
+<div class="si-field"><label for="si_sup2" data-i18n="G24"></label><select id="si_sup2" style="width:85px;" onchange="debUpdATDetail()"></select></div>
 <div class="si-field"><label for="si_t1" data-i18n="G25"></label>
 <div style="display:flex;gap:4px;">
-<select id="si_t1" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
-<select id="si_t2" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
-<select id="si_t3" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
-<select id="si_t4" onchange="debouncedUpdateSeedInspector()" style="width:45px;"></select>
+<select id="si_t1" onchange="debUpdATDetail()" style="width:45px;"></select>
+<select id="si_t2" onchange="debUpdATDetail()" style="width:45px;"></select>
+<select id="si_t3" onchange="debUpdATDetail()" style="width:45px;"></select>
+<select id="si_t4" onchange="debUpdATDetail()" style="width:45px;"></select>
 </div>
 </div>
 </div>
@@ -158,7 +158,7 @@
 <div class="si-section">
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
 <label for="si_target_step" style="color:#aaa;font-size:12px;">AT Debug</label>
-<input type="number" id="si_target_step" value="35" min="1" style="width:65px;" oninput="debouncedUpdateSeedInspector()">
+<input type="number" id="si_target_step" value="35" min="1" style="width:65px;" oninput="debUpdATDetail()">
 </div>
 <div class="si-result-box" id="si_target_results" style="border-color:#f44;"></div>
 </div>
@@ -168,7 +168,7 @@
 <div id="disclaimerModal" class="modal-overlay modal-overlay-credits">
 <div class="modal-content modal-content-md" onclick="event.stopPropagation()">
 <div class="modal-header">
-<h3 id="disclaimerModalTitle">聲明 / Credits &amp;Disclaimer</h3>
+<h3 id="disclaimerModalTitle">聲明與致謝 / Disclaimer &amp; SP Thanks</h3>
 <button class="modal-close" onclick="closeModal('disclaimer')">×</button>
 </div>
 <div class="modal-body modal-lang-body modal-lang-body-credits" id="disclaimerModalBody">
@@ -1970,7 +1970,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <input type="number" id="dw_lv_TW" value="99" min="1" max="99" oninput="dwRenderDeb('TW')" style="background:#000;color:#39C5BB;border:1px solid #555;padding:2px;font-size:12px;width:45px;text-align:center">
 </div>
 <div id="dw_out_TW"></div>
-<p class=k52>※ 判定 6 以後不在上表 Pattern 的搜尋範圍內（Pattern 錨定於判定 1），該處命中屬額外收穫。掃描與命中判定和 Seed Inspector 完全同源。</p>
+<p class=k52>※ 判定 6 以後不在上表 Pattern 的搜尋範圍內（Pattern 錨定於判定 1），該處命中屬額外收穫。掃描與命中判定和 AT Detail 完全同源。</p>
 </div>
 <h3 class="h3sec">搜尋結果解讀與 AT 消耗公式</h3>
 <div class=k28>
@@ -2119,7 +2119,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <input type="number" id="dw_lv_EN" value="99" min="1" max="99" oninput="dwRenderDeb('EN')" style="background:#000;color:#39C5BB;border:1px solid #555;padding:2px;font-size:12px;width:45px;text-align:center">
 </div>
 <div id="dw_out_EN"></div>
-<p class=k52>※ Judgments 6+ are outside the Pattern search range above (patterns are anchored at judgment 1); hits there are a bonus. Scanning &amp; hit evaluation share the exact same engine as the Seed Inspector.</p>
+<p class=k52>※ Judgments 6+ are outside the Pattern search range above (patterns are anchored at judgment 1); hits there are a bonus. Scanning &amp; hit evaluation share the exact same engine as the AT Detail.</p>
 </div>
 <h3 class="h3sec">Search Results & AT Consumption Formula</h3>
 <div class=k28>
@@ -2258,7 +2258,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <input type="number" id="dw_lv_JP" value="99" min="1" max="99" oninput="dwRenderDeb('JP')" style="background:#000;color:#39C5BB;border:1px solid #555;padding:2px;font-size:12px;width:45px;text-align:center">
 </div>
 <div id="dw_out_JP"></div>
-<p class=k52>※ 判定6以降は上表パターンの検索範囲外（パターンは判定1に固定）。そこでの命中はおまけ扱い。走査・命中判定は Seed Inspector と完全に同一エンジン。</p>
+<p class=k52>※ 判定6以降は上表パターンの検索範囲外（パターンは判定1に固定）。そこでの命中はおまけ扱い。走査・命中判定は AT Detail と完全に同一エンジン。</p>
 </div>
 <h3 class="h3sec">検索結果の読み方と AT 消費計算式</h3>
 <div class=k28>
@@ -2336,18 +2336,22 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <div><label for="cond_prefix" data-i18n="G03"></label><select id="cond_prefix"><option value="">------</option></select></div>
 <div><label for="cond_suffix" data-i18n="G04"></label><select id="cond_suffix"><option value="">------</option></select></div>
 <div><label for="cond_locale" data-i18n="G05"></label><select id="cond_locale"><option value="">------</option></select></div>
-<div style="display:flex;gap:6px;"><div style="flex:1;"><label for="cond_lv">Lv</label><input type="number" id="cond_lv" min="1" max="99" placeholder="99" style="width:100%;"></div><div style="flex:1;"><label for="cond_location" data-i18n="G06"></label><input type="text" id="cond_location" maxlength="2" placeholder="96" onchange="validateHex('cond_location',0x01,0x96,0,A09)" style="width:100%;text-transform:uppercase;"></div></div>
+<div style="display:flex;gap:6px;">
+<div style="flex:1;"><label for="cond_lv">Lv</label><input type="number" id="cond_lv" min="1" max="99" placeholder="99" style="width:100%;"></div>
+<div style="flex:1;"><label for="cond_location" data-i18n="G06"></label><input type="text" id="cond_location" maxlength="2" placeholder="96" onchange="validateHex('cond_location',0x01,0x96,0,A09)" style="width:100%;text-transform:uppercase;"></div>
+</div>
 <div><label for="cond_bq_count" data-i18n="GBQ"></label><select id="cond_bq_count" style="width:40px;flex-shrink:0;padding:0 1px;display:inline-block;vertical-align:top;margin-right:3px;" onchange="var b=document.getElementById('cond_bq');if(this.value){b.value='';b.disabled=true;b.style.opacity='0.4';}else{b.disabled=false;b.style.opacity='1';}"><option value="">---</option><option value="1">1</option><option value="1p">1'</option><option value="D">D</option><option value="Dp">D'</option></select><input type="number" id="cond_bq" min="2" max="248" placeholder="248" style="display:inline-block;vertical-align:top;width:calc(100% - 46px);"></div>
 <div><label for="cond_env" data-i18n="C02"></label><select id="cond_env"><option value="">------</option></select></div>
-<div style="display:flex;gap:6px;"><div style="flex:1;"><label for="cond_monster" data-i18n="C03"></label><input type="number" id="cond_monster" min="1" max="9" placeholder="9" style="width:100%;"></div><div style="flex:1;"><label for="cond_depth" data-i18n="G10"></label><input type="number" id="cond_depth" min="2" max="16" placeholder="16" style="width:100%;"></div></div>
+<div style="display:flex;gap:6px;">
+<div style="flex:1;"><label for="cond_monster" data-i18n="C03"></label><input type="number" id="cond_monster" min="1" max="9" placeholder="9" style="width:100%;"></div>
+<div style="flex:1;"><label for="cond_depth" data-i18n="G10"></label><input type="number" id="cond_depth" min="2" max="16" placeholder="16" style="width:100%;"></div>
+</div>
 <div><label for="cond_boss">BOSS</label><select id="cond_boss"><option value="">------</option></select></div>
-<div><label for="cond_seed_min" data-i18n="G14"></label><div style="display:flex;align-items:center;gap:2px;"><input type="text" id="cond_seed_min" maxlength="4" placeholder="0000" onchange="validateHex('cond_seed_min',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"><span style="color:#aaa;font-size:10px;flex-shrink:0;">-</span><input type="text" id="cond_seed_max" maxlength="4" placeholder="7FFF" onchange="validateHex('cond_seed_max',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"></div></div>
-<div><label for="cond_anomaly" style="color:#fc4;" data-i18n="G11"></label>
-<select id="cond_anomaly" style="color:#ffcc44;border-color:#ccaa44;">
-<option value="">------</option>
-</select></div>
-<div><label for="cond_elist" style="color:#f88;" data-i18n="G12"></label>
-<select id="cond_elist" style="color:#fcf;border-color:#c44;">
+<div><label for="cond_seed_min" data-i18n="G14"></label>
+<div style="display:flex;align-items:center;gap:2px;"><input type="text" id="cond_seed_min" maxlength="4" placeholder="0000" onchange="validateHex('cond_seed_min',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"><span style="color:#aaa;font-size:10px;flex-shrink:0;">-</span><input type="text" id="cond_seed_max" maxlength="4" placeholder="7FFF" onchange="validateHex('cond_seed_max',0x0000,0x7FFF,4,A10)" style="flex:1;text-align:center;font-family:monospace;text-transform:uppercase;"></div>
+</div>
+<div><label for="cond_anomaly" style="color:#fc4;" data-i18n="G11"></label><select id="cond_anomaly" style="color:#fc4;border-color:#ca4;"><option value="">------</option></select></div>
+<div><label for="cond_elist" style="color:#f88;" data-i18n="G12"></label><select id="cond_elist" style="color:#fcf;border-color:#c44;">
 <option value="">------</option>
 <option value="MULTI_SPECIAL" data-i18n="EL_M"></option>
 <option value="SIZE_15">15×15</option>
@@ -2356,12 +2360,8 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <option value="3" data-i18n="EL_3"></option>
 <option value="2" data-i18n="EL_2"></option>
 <option value="ONLY" data-i18n="EL_1"></option>
-<option value="NONE" data-i18n="EL_0"></option>
-</select></div>
-<div><label for="cond_only_mon" style="color:#f8d;" data-i18n="G13"></label>
-<select id="cond_only_mon" style="color:#fcf;border-color:#c4a;">
-<option value="">------</option>
-</select></div>
+<option value="NONE" data-i18n="EL_0"></option></select></div>
+<div><label for="cond_only_mon" style="color:#f8d;" data-i18n="G13"></label><select id="cond_only_mon" style="color:#fcf;border-color:#c4a;"><option value="">------</option></select></div>
 <div style="grid-column:span 2;display:flex;flex-direction:column;justify-content:flex-end;background:#1a0a1a;border:1px solid #525;border-radius:4px;padding:2px 8px 4px;">
 <span style="color:#f8f;font-size:11px;margin-bottom:2px;" data-i18n="G15"></span>
 <div style="display:flex;align-items:center;gap: 6px;">
@@ -2370,14 +2370,12 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <input type="checkbox" id="requireFloorIncrease" style="margin-right:2px;"><span data-i18n="F04"></span></label>
 <label style="color:#aaa;font-size:11px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;">
 <input type="checkbox" id="requireBugFloorHit" style="margin-right:2px;">🍊</label>
-</div>
-</div>
-</div>
+</div></div></div>
 <div style="background:#111;padding:6px;border-radius:4px;border:1px solid #4c4;margin-bottom:8px;">
 <div class="chest-count-row" style="display:flex;flex-wrap:wrap;font-size:12px;color:#fff;"></div>
 </div>
 <div style="display:flex;width:100%;">
-<button id="searchBtnSpecific" class="go" style="flex:1;background:linear-gradient(135deg,#0ff,#08a);color:#000;font-size:15px;padding:8px;font-weight:bold;letter-spacing: 2px;margin-right:8px;" onclick="startUltimateSearch()">🎯 Search</button>
+<button id="searchBtnSpecific" class="go" style="flex:1;background:linear-gradient(135deg,#0ff,#08a);color:#000;font-size:15px;padding:8px;font-weight:bold;letter-spacing: 2px;margin-right:8px;" onclick="startUltimateSearch()">Search</button>
 <button class="go" style="background:linear-gradient(135deg,#556,#334);color:#fff;font-size:15px;padding:8px 12px;font-weight:bold;border-radius:4px;border:1px solid #666;" onclick="clearUltimateSearch()" title="Clear">Clear</button>
 </div>
 </div>
@@ -2468,7 +2466,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <div style="background:#16162a;padding:10px;border-radius:8px;border:1px solid #055;margin-top:10px;box-shadow:0 0 8px rgba(0, 204, 170, 0.05);">
 <h4 style="color:#0ca;margin-top:0;margin-bottom:10px;font-size:13px;display:flex;align-items:center;">3️⃣ <span style="margin-left:8px" data-i18n="H04"></span>
 <button onclick="openModal('h3')" class="help-btn" style="--hb-bg:#001a1a;--hb-fg:#0ca;--hb-bd:#055;" title="Help">?</button>
-<button class="go" onclick="openSeedInspector()" style="margin-left:6px;background:linear-gradient(135deg,#0aa,#044);color:#fff;padding:4px 8px;font-size:11px;height:28px;">Detail</button>
+<button class="go" onclick="openATDetail()" style="margin-left:6px;background:linear-gradient(135deg,#0aa,#044);color:#fff;padding:4px 8px;font-size:11px;height:28px;">Detail</button>
 </h4>
 <div class="compact-search-row">
 <div class="search-group" style="background:#001a1a;border-color:#055;padding:8px;">
@@ -2524,10 +2522,10 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <span style="width:100%;text-align:center;line-height:1.8;">
 Based on research by DQ9 Lovers from 5ch / GameFAQs / The Quester's Rest / Other communities<br>
 ElistOfs is introduced by 43 (DQ9TMAP101.exe's author) and fixed by TKG<br>
-Powered by Gemini and Claude<br>
+Powered by Claude, Gemini, ChatGPT<br>
 Produced by WWWild<br>
-Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX;Copyright Koichi Sugiyama<br>
-<span style="cursor:pointer;background:#224;color:#aaa;border:1px solid #4a4a8a;padding:4px 10px;border-radius:4px;margin-left:12px;display:inline-block;font-size:12px;transition:all 0.2s;" onclick="openModal('disclaimer')" onmouseover="this.style.borderColor='#ffd700';this.style.color='#ffd700';" onmouseout="this.style.borderColor='#4a4a8a';this.style.color='#aaa';">📜 Disclaimer</span>
+Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE ENIX; Copyright Koichi Sugiyama<br>
+<span style="cursor:pointer;background:#224;color:#aaa;border:1px solid #4a4a8a;padding:4px 10px;border-radius:4px;margin-left:12px;display:inline-block;font-size:12px;transition:all 0.2s;" onclick="openModal('disclaimer')" onmouseover="this.style.borderColor='#ffd700';this.style.color='#ffd700';" onmouseout="this.style.borderColor='#4a4a8a';this.style.color='#aaa';">📜 Disclaimer / Special Thanks</span>
 </span>
 </div>
 <script type="text/html" id="NameFormat_Table"><tr class="hdr"><td colspan="5" class="hdr2">English</td></tr>

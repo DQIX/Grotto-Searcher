@@ -15,7 +15,6 @@ const A09=T('Invalid Location. Valid range: 01–96 (hex), digits 0–9 and A–
 const A10=T('Invalid Seed. Valid range: 0000–7FFF (hex), digits 0–9 and A–F only.','無效的 Seed 値。有效範圍：0000–7FFF（十六進制），僅限 0–9 及 A–F。','無効な Seed です。有効な入力範囲：0000–7FFF（16進数）、0–9 および A–F のみ。');
 const A11=T('"Only Monster" cannot be paired with ONLY (1-enemy) / No-enemy / 15x15 / Multi-special together.','「指定 ONLY 怪物」不可與 ONLY(任何怪)／敵無／15x15／複數特殊層 一起選擇。','「オンリーモンスター」は オンリー／敵無／15x15／複数の特殊フロア と併用できません。')
 const A12=T('Multibug search does not support Bug Terrain conditions.','Multibug 搜尋不支援 Bug地形。','マルチバグ検索はネタ地形に対応しておりません。')
-const A13=T('Fastest Map Search does not support this option.','最短地圖搜尋不支援此選項。','最短地図検索はこの選択肢に対応しておりません。')
 const A14=T('Fastest Map Search requires at least one of: Depth, Lv, Sp.Floor (ElistOfs), ONLY Monster, Location, or Boss.','最短地圖搜尋需至少填寫以下其中一項：樓層深度、Lv、特殊樓層 (ElistOfs)、指定 ONLY 怪物、位置、Boss。','最短地図検索では、深さ・Lv・特殊フロア (ElistOfs)・オンリーモンスター・場所・ボス のうち、少なくとも 1 つの入力が必要です。')
 const A15=T('This is a Fastest / Slowest search mode. Please press the main "Search" button to run it.','這是「最短／最長」搜尋模式，請按主搜尋鈕「Search」執行。','これは「最短／最長」検索モードです。メインの「Search」ボタンで実行してください。')
 const A16=T('Fastest Floor requires Sp.Floor (ElistOfs), ONLY Monster, or Depth as the cutoff floor.','最短樓層需以 特殊樓層 (ElistOfs)／指定 ONLY 怪物／樓層深度 其中之一作為截止樓層。','最短フロアでは、特殊フロア (ElistOfs)／オンリーモンスター／深さ のいずれかを到達フロアとして指定してください。')

@@ -8,8 +8,18 @@ const COLORS={
 8:'#ccd8c0'
 };
 const WALL_COLOR='#000';
+const tileNames=[D01,D02,D03,D02,C11,C11,C15,null,D04];
+const floorGrid=new Path2D();
+for(let p=0;p<=16*TILE_SIZE;p+=TILE_SIZE){
+floorGrid.moveTo(p,0);
+floorGrid.lineTo(p,16*TILE_SIZE);
+floorGrid.moveTo(0,p);
+floorGrid.lineTo(16*TILE_SIZE,p);
+}
 let mapData=null;
 let activeFloor=0;
+const floorViews=new Map();
+const floorElist=[];
 function calculate(){
 const seedStr=uiVal('seed').trim();
 const seed=parseInt(seedStr,16);
@@ -46,6 +56,9 @@ rng=lcg(rng);
 return result;
 }
 function renderResult(errorMessage=C18){
+for(const{canvas}of floorViews.values())canvas.width=0;
+floorViews.clear();
+floorElist.length=0;
 const el=byId('map_summary');
 const hasMap=!!(mapData&&mapData.floorCount>0);
 byId('map_box_label').textContent=hasMap?C08:'';
@@ -97,8 +110,8 @@ let html=`<div class="info-bar">
 <span>Seed: <strong>${seedHex}</strong></span>
 ${nm(C01,mapData.mapName,mapData.mapNameJP)}
 ${nm(C02,mapData.mapTypeName,mapData.mapTypeNameJP)}
-<span>${C03}:<strong>${mapData.monsterRank}</strong></span>
-<span>${C04}:<strong>${mapData.floorCount}</strong></span>
+<span>${C03}: <strong>${mapData.monsterRank}</strong></span>
+<span>${C04}: <strong>${mapData.floorCount}</strong></span>
 ${nm('Boss',mapData.bossName,mapData.bossNameJP)}
 ${col(C05,'color:#0ff;','',locHtmlString)}
 ${col(C06,'color:#4c4;','text-align:left;',atHtmlString)}
@@ -113,6 +126,7 @@ const ELIST_TAB_COLORS={none:'#c0c0c0',only:'#FFC90E',reduced:'#B5E61D',partial:
 for(let i=0;i<mapData.floorCount;i++){
 let tabStyle='';
 const einfo=getFloorElistInfo(mapData,i);
+floorElist.push(einfo);
 if(einfo.state){
 const c=ELIST_TAB_COLORS[classifyElistState(einfo.state).kind]||null;
 if(c)tabStyle=` style="background:${c};color:#000;border-color:${c}"`;
@@ -122,12 +136,7 @@ html+=`<div class="floor-tab${i===activeFloor?' active':''}"${tabStyle} onclick=
 html+='</div>';
 html+='<div class="floor-content" id="floor-content"></div>';
 byId('map_floors').innerHTML=html;
-renderFloor(activeFloor);
-}
-function switchFloor(f){
-activeFloor=f;
-document.querySelectorAll('.floor-tab').forEach((t,i)=>t.classList.toggle('active',i===f));
-renderFloor(f);
+switchFloor(activeFloor);
 }
 function getCanvasTilePoint(canvas,event){
 const rect=canvas.getBoundingClientRect();
@@ -137,51 +146,91 @@ x:Math.floor((point.clientX-rect.left)/TILE_SIZE),
 y:Math.floor((point.clientY-rect.top)/TILE_SIZE),
 };
 }
-function renderFloor(f){
-const container=byId('floor-content');
-const w=mapData.getFloorWidth(f);
-const h=mapData.getFloorHeight(f);
-const map=mapData.getFloorMap(f);
+function showMapCoordinate(event){
+const view=floorViews.get(activeFloor);
+if(!view||event.target!==view.canvas)return;
+const{canvas,marks}=view;
+const{x,y}=getCanvasTilePoint(canvas,event);
+const d=mapData.di[activeFloor];
+const inside=x>=0&&x<d[2]&&y>=0&&y<d[3];
+const cell=(y<<4)+x;
+const mark=inside&&marks[cell];
+if(event.type==='click'){
+if(mark&&mark.box)showChestTimer(activeFloor,mark.box-1,x,y);
+return;
+}
+const tile=inside&&d[792+cell];
+const label=inside?`(${x},${y}) ${(mark&&mark.hover)||tileNames[tile]||'tile:'+tile}`:'';
+const coord=canvas.nextElementSibling;
+if(coord.textContent!==label)coord.textContent=label;
+canvas.style.cursor=mark&&mark.box?'pointer':'default';
+}
+function switchFloor(f){
+const current=byId('floor-content');
+const previous=floorViews.get(activeFloor);
+if(previous){
+previous.canvas.parentElement.scrollLeft=0;
+previous.canvas.style.cursor='';
+previous.canvas.nextElementSibling.textContent='';
+}
+if(f!==activeFloor){
+const tabs=current.previousElementSibling.children;
+tabs[activeFloor].classList.remove('active');
+tabs[f].classList.add('active');
+activeFloor=f;
+}else if(previous)return;
+const cached=floorViews.get(f);
+let view=cached;
+if(cached){
+floorViews.delete(f);
+}else if(floorViews.size===3){
+const[oldest,reusable]=floorViews.entries().next().value;
+floorViews.delete(oldest);
+view=reusable;
+}else{
+const panel=current.cloneNode(false);
+panel.innerHTML='<div class="map-container"><canvas id="mapCanvas" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div><div class="floor-info"></div>';
+view={panel,canvas:panel.querySelector('canvas')};
+for(const type of['mousemove','touchstart','touchmove','click'])panel.addEventListener(type,showMapCoordinate,{passive:true});
+}
+current.replaceWith(view.panel);
+if(!cached)renderFloor(f,view);
+floorViews.set(f,view);
+}
+function renderFloor(f,view){
+const d=mapData.di[f];
+const w=d[2],h=d[3],boxCount=d[8];
 const up=mapData.getUpStair(f);
 const down=mapData.getDownStair(f);
-const boxCount=mapData.getBoxCount(f);
-const canvasW=w*TILE_SIZE;
-const canvasH=h*TILE_SIZE;
-let infoHtml='<div class="floor-info">';
-infoHtml+=`<h3>B${f+1}F</h3>`;
-infoHtml+='<table>';
-infoHtml+=`<tr><td>${C10}</td><td>${w} × ${h}</td></tr>`;
-infoHtml+=`<tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　${f<mapData.floorCount-1?'▼':'Boss'} (${down.x}, ${down.y})</td></tr>`;
-const elistInfo=getFloorElistInfo(mapData,f);
-let stateHtml=elistInfo.state?` <span style="background:#f4c;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:6px;white-space:nowrap;">${elistInfo.state}</span>`:'';
-let dHtml=makeDBadge(elistInfo.dValue);
-infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${elistInfo.hex}${stateHtml}${dHtml}</td></tr>`;
+const lastFloor=f===mapData.floorCount-1;
+const marks=view.marks=[];
+marks[(down.y<<4)+down.x]={tile:5,label:'▼',hover:lastFloor?'Boss▼':D06+'▼'};
+marks[(up.y<<4)+up.x]={tile:4,label:'▲',hover:D05+'▲'};
+let infoHtml=`<h3>B${f+1}F</h3><table><tr><td>${C10}</td><td>${w} × ${h}</td></tr><tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　${lastFloor?'Boss':'▼'} (${down.x}, ${down.y})</td></tr>`;
+const{hex,state,dValue}=floorElist[f];
+const stateHtml=state?` <span style="background:#f4c;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:6px;white-space:nowrap;">${state}</span>`:'';
+infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${hex}${stateHtml}${makeDBadge(dValue)}</td></tr>`;
 const envType=mapData._details[3];
-let floorMR=floorMRAt(mapData._details[2],f);
-const spawnList=getSpawnList(envType,floorMR);
-const normals=spawnList.filter(e=>e.length===3);
-const stCls=classifyElistState(elistInfo.state||'');
-let grayFrom=normals.length;
-if(stCls.kind==='reduced')grayFrom=stCls.count;
-else if(stCls.kind==='none')grayFrom=0;
-const onlyMonId=(ONLY_MONSTERS[envType]&&ONLY_MONSTERS[envType][floorMR])||'';
-const isOnlyMode=(stCls.kind==='only');
-let monsterSpans=normals.map((entry,i)=>{
-if(!MONSTER_DB[entry[0]])return'';
-const name=getMonsterDisplayName(entry[0]);
-const isGray=isOnlyMode?(entry[0]!==onlyMonId):(i>=grayFrom);
-const bg=isGray?'#1a1a2e':'#2a2a4a';
-const fg=isGray?'#555':'#ddd';
-return`<span class="mon-pill" style="color:${fg};background:${bg};">${name}</span>`;
-}).filter(Boolean);
-if(monsterSpans.length>0){
-infoHtml+=`<tr><td>${C12}</td><td class="mon-td">${monsterSpans.join('')}</td></tr>`;
+const floorMR=floorMRAt(mapData._details[2],f);
+const{kind,count}=classifyElistState(state||'');
+const only=(ONLY_MONSTERS[envType]||[])[floorMR];
+let pills='',normalIndex=0;
+for(const entry of getSpawnList(envType,floorMR)){
+if(entry.length!==3)continue;
+const id=entry[0];
+const gray=kind==='only'?id!==only:kind==='none'||(kind==='reduced'&&normalIndex>=count);
+normalIndex++;
+if(!MONSTER_DB[id])continue;
+const style=gray?'color:#555;background:#1a1a2e;':'color:#ddd;background:#2a2a4a;';
+pills+=`<span class="mon-pill" style="${style}">${getMonsterDisplayName(id)}</span>`;
 }
+if(pills)infoHtml+=`<tr><td>${C12}</td><td class="mon-td">${pills}</td></tr>`;
 if(boxCount>0){
 infoHtml+=`<tr><td>${C13}</td><td>${boxCount} <font color=#666>${C14}</font></td></tr>`;
 for(let i=0;i<boxCount;i++){
 const box=mapData.getBoxInfo(f,i);
 const rn=CHEST_RANK[box.rank]||box.rank;
+marks[(box.y<<4)+box.x]={tile:6,label:(CHEST_RANK[box.rank]||'?')+(i+1),box:i+1};
 const[dispSolo,dispParty,dispPpap]=[1,2,4].map(s=>mapData.getBoxItem(f,i,s)[DISPLAY_LANG!=='EN'?1:0]||'?');
 infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
 <div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span> (${box.x}, ${box.y})</div>
@@ -193,95 +242,51 @@ infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
 }else{
 infoHtml+=`<tr><td>${C15}</td><td>${C16}</td></tr>`;
 }
-infoHtml+='</table>';
-infoHtml+='</div>';
-container.innerHTML=`<div class="map-container"><canvas id="mapCanvas" width="${canvasW}" height="${canvasH}" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div>${infoHtml}`;
-document.querySelector('.map-container').style.position='relative';
-const mapCanvas=byId('mapCanvas');
-const showMapCoordinate=(e)=>{
-const{x:mx,y:my}=getCanvasTilePoint(mapCanvas,e);
-const coordEl=byId('coordDisplay');
-if(mx>=0&&mx<w&&my>=0&&my<h){
-const tNames={0:D01,1:D02,2:D03,3:D02,4:C11,5:C11,6:C15,8:D04};
-const tile=map[my][mx];
-let label=tNames[tile]||`tile:${tile}`;
-if(mx===up.x&&my===up.y)label=D05+'▲';
-if(mx===down.x&&my===down.y)label=(f<mapData.floorCount-1)?D06+'▼':'Boss▼';
-coordEl.textContent=`(${mx},${my}) ${label}`;
-mapCanvas.style.cursor=boxPositions.has(mx+','+my)?'pointer':'default';
-}else{
-coordEl.textContent='';
-mapCanvas.style.cursor='default';
-}
-};
-mapCanvas.addEventListener('mousemove',showMapCoordinate);
-mapCanvas.addEventListener('touchstart',showMapCoordinate,{passive:true});
-mapCanvas.addEventListener('touchmove',showMapCoordinate,{passive:true});
-const boxPositions=new Map();
-for(let i=0;i<boxCount;i++){
-const b=mapData.getBoxInfo(f,i);
-boxPositions.set(b.x+','+b.y,{num:i+1,rank:b.rank});
-}
-mapCanvas.addEventListener('click',(e)=>{
-const{x:mx,y:my}=getCanvasTilePoint(mapCanvas,e);
-if(boxPositions&&boxPositions.has(mx+','+my)){
-const boxObj=boxPositions.get(mx+','+my);
-showChestTimer(f,boxObj.num-1,mx,my);
-}
-});
-const canvas=byId('mapCanvas');
+const{panel,canvas}=view;
+panel.lastElementChild.innerHTML=infoHtml+'</table>';
+const canvasW=w*TILE_SIZE,canvasH=h*TILE_SIZE;
+if(canvas.width!==canvasW)canvas.width=canvasW;
+if(canvas.height!==canvasH)canvas.height=canvasH;
 const ctx=canvas.getContext('2d');
-ctx.fillStyle='#000';
+ctx.fillStyle=WALL_COLOR;
 ctx.fillRect(0,0,canvasW,canvasH);
 for(let y=0;y<h;y++){
-for(let x=0;x<w;x++){
-let tile=map[y][x];
-const px=x*TILE_SIZE;
-const py=y*TILE_SIZE;
-const isUpStair=(x===up.x&&y===up.y);
-const isDownStair=(x===down.x&&y===down.y);
-const boxObj=boxPositions.get(x+','+y)||null;
-const isBox=!!boxObj;
-let displayTile=tile;
-if(isUpStair)displayTile=4;
-else if(isDownStair)displayTile=5;
-else if(isBox)displayTile=6;
-else if(tile===4||tile===5||tile===6)displayTile=0;
-if(displayTile===1||displayTile===3){
-ctx.fillStyle=WALL_COLOR;
-ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
-}else{
-ctx.fillStyle=COLORS[displayTile]||COLORS[0];
-ctx.fillRect(px,py,TILE_SIZE,TILE_SIZE);
-ctx.strokeStyle='rgba(0,0,0,0.25)';
-ctx.strokeRect(px+0.5,py+0.5,TILE_SIZE-1,TILE_SIZE-1);
+const row=792+(y<<4);
+for(let x=0;x<w;){
+const start=x++;
+const tile=d[row+start];
+while(x<w&&d[row+x]===tile)x++;
+if(tile===1||tile===3)continue;
+ctx.fillStyle=tile===2||tile===8?COLORS[tile]:COLORS[0];
+ctx.fillRect(start*TILE_SIZE,y*TILE_SIZE,(x-start)*TILE_SIZE,TILE_SIZE);
+}
 }
 ctx.textAlign='center';
 ctx.textBaseline='middle';
-if(isUpStair||isDownStair){
-ctx.fillStyle='#000';
-ctx.font='bold 12px sans-serif';
-ctx.fillText(isUpStair?'▲':'▼',px+TILE_SIZE/2,py+TILE_SIZE/2);
-}else if(isBox){
-const chestLabel=(CHEST_RANK[boxObj.rank]||'?')+boxObj.num;
+marks.forEach((mark,cell)=>{
+const x=(cell&15)*TILE_SIZE,y=(cell>>4)*TILE_SIZE;
+ctx.fillStyle=COLORS[mark.tile];
+ctx.fillRect(x,y,TILE_SIZE,TILE_SIZE);
+ctx.fillStyle=WALL_COLOR;
 ctx.save();
-ctx.fillStyle='#000';
+ctx.translate(x+TILE_SIZE/2,y+TILE_SIZE/2);
+if(mark.box){
 ctx.font='11px sans-serif';
-ctx.translate(px+TILE_SIZE/2,py+TILE_SIZE/2);
 ctx.scale(1,1.35);
-ctx.fillText(chestLabel,0,0);
+}else ctx.font='bold 12px sans-serif';
+ctx.fillText(mark.label,0,0);
 ctx.restore();
-}
-}
-}
+});
+ctx.lineWidth=2;
+ctx.strokeStyle='rgba(0,0,0,0.25)';
+ctx.stroke(floorGrid);
 ctx.fillStyle='rgba(0,0,0,0.3)';
 ctx.font='9px monospace';
-ctx.textAlign='center';
 ctx.textBaseline='top';
-for(let x=0;x<w;x++)ctx.fillText(x,x*TILE_SIZE+TILE_SIZE/2,2);
+for(let x=0;x<w;x++)ctx.fillText(x,(x+0.5)*TILE_SIZE,2);
 ctx.textBaseline='middle';
 ctx.textAlign='left';
-for(let y=0;y<h;y++)ctx.fillText(y,2,y*TILE_SIZE+TILE_SIZE/2);
+for(let y=0;y<h;y++)ctx.fillText(y,2,(y+0.5)*TILE_SIZE);
 }
 function showChestTimer(floorIndex,boxIndex,x,y){
 const modal=byId('chestModal');
@@ -490,7 +495,7 @@ updateFSItems(i);
 }
 }
 initFreeSearchUI();
-initSeedInspectorUI();
+initATDetailUI();
 initCPUBenchmark();
 const urlParams=new URLSearchParams(window.location.search);
 const urlId=urlParams.get('id');
@@ -518,7 +523,7 @@ const target=document.elementFromPoint(e.clientX,e.clientY);
 if(!isModalDragging&&target&&allModalIds.includes(target.id)){target.style.display='none';}
 isModalDragging=false;
 });
-function addHelpBtn(text,title,css,onclick,id){
+function addHelpBtn(text,title,css,onclick,id,before){
 const h4=document.querySelector('#unified_search_panel h4');
 if(!h4)return false;
 const b=document.createElement('button');
@@ -528,7 +533,7 @@ b.title=title;
 b.className='help-btn';
 b.style.cssText=css;
 b.onclick=onclick;
-h4.appendChild(b);
+h4.insertBefore(b,before||null);
 return true;
 }
 function initCPUBenchmark(){addHelpBtn('💻','CPU Benchmark','--hb-bd:#088;font-size:11px;',startCPUBenchmark,'cpuBenchBtn');}

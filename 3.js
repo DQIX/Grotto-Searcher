@@ -249,7 +249,7 @@ if(callbacks.onError)callbacks.onError(''+(err&&err.message||err));
 }
 })();
 }
-let _siSolveGen=0,_siInspectorGen=0,_siInspectorSignature=null;
+let _siSolveGen=0,_siDtlGen=0,_siDtlSignature=null;
 let _siSolveSeq=0;
 const _siSolveQueue=[];
 const _siSolveBusy=new Map();
@@ -342,11 +342,11 @@ if(operation.cancelled||operation.gen!==_siSolveGen||_solverResultPending.get(ca
 throw operation.error||makeSolverCancellationError('Solver generation changed');
 };
 const round2=async(msg,result)=>{
-while(result.needsKillAll==='r2'&&result.resumeKey){
-const kmc=!!msg.prebuiltKmc,r2=await buildStage(kmc?'kmc':'killAll','r2'),r1=(kmc?msg.prebuiltKmc:msg.prebuiltKillAll)||{};
-const next=Object.assign({},msg,{resume:result.resumeKey,resumeKey:result.resumeKey,round2:true,deferKillAll:!!r2,
+while(result.needsKillAll&&result.resumeKey){
+const first=result.needsKillAll==='r1',kmc=!first&&!!msg.prebuiltKmc,r2=await buildStage(kmc?'kmc':'killAll',result.needsKillAll),r1=first?{}:(kmc?msg.prebuiltKmc:msg.prebuiltKillAll)||{};
+msg=Object.assign({},msg,{resume:result.resumeKey,resumeKey:result.resumeKey,round2:true,deferKillAll:!!r2,...(first?{prebuiltKmc:null}:{}),
 [kmc?'prebuiltKmc':'prebuiltKillAll']:r2?Object.assign({},r1,r2,{incomplete:!!(r1.incomplete||r2.incomplete),limited:!!(r1.limited||r2.limited)}):kmc?r1:null});
-result=await queueSolverWorkerMessage(next,true,operation,result.worker);
+result=await queueSolverWorkerMessage(msg,true,operation,result.worker);
 ensureCurrent();
 }
 return result;
@@ -440,7 +440,7 @@ for(const task of _siSolveQueue){if(keep&&keep(task))_siSolveQueue[kept++]=task;
 _siSolveQueue.length=kept;
 }
 function cancelAllSolveTasks(reason,keepKeys,owner){
-_siSolveGen++;_siInspectorGen++;
+_siSolveGen++;_siDtlGen++;
 const err=makeSolverCancellationError(reason),keys=new Set(keepKeys||[]),retained=new Set(),keep=task=>retained.has(task.owner);
 for(const[key,operation]of _solverResultPending){
 if(keys.has(key)&&!operation.cancelled){operation.gen=_siSolveGen;operation.owner=owner==='probe'?'probe':'view';retained.add(operation);}
@@ -643,6 +643,16 @@ seedMin:'cond_seed_min',seedMax:'cond_seed_max',elist:'cond_elist',
 onlyMon:'cond_only_mon',anomaly:'cond_anomaly'
 };
 const BOX_RANK_CHARS=Array.from({length:10},(_,i)=>CHEST_RANK[i+1]);
+function getUltimateConds(){
+const getV=(id)=>{const el=byId(id);return el?el.value.trim():"";};
+const reqBox={};
+BOX_RANK_CHARS.forEach((ch,i)=>{reqBox[i+1]=parseInt(getV('cond_box_'+ch),10)||0;});
+const conds={};
+for(const[key,id]of Object.entries(COND_FIELDS))conds[key]=getV(id);
+conds.reqBox=reqBox;
+conds.hasBoxCond=Object.values(reqBox).some(v=>v>0);
+return conds;
+}
 const USP_FAST_MODES={
 'usp_map':{i18n:'TKB4_1',mode:'map'},
 'usp_map_d':{i18n:'TKB4_2',mode:'map',showFloors:true},
@@ -656,16 +666,6 @@ const USP_FAST_MODES={
 'usp_maxiso':{i18n:'TKB4_10',mode:'maxtile',metric:'maxiso'},
 'usp_maxghost':{i18n:'TKB4_11',mode:'maxtile',metric:'maxghost'}
 };
-function getUltimateConds(){
-const getV=(id)=>{const el=byId(id);return el?el.value.trim():"";};
-const reqBox={};
-BOX_RANK_CHARS.forEach((ch,i)=>{reqBox[i+1]=parseInt(getV('cond_box_'+ch),10)||0;});
-const conds={};
-for(const[key,id]of Object.entries(COND_FIELDS))conds[key]=getV(id);
-conds.reqBox=reqBox;
-conds.hasBoxCond=Object.values(reqBox).some(v=>v>0);
-return conds;
-}
 let isSearching=false;
 let searchCancel=false;
 function initSearchResultArea(headerHtml,progressText){
@@ -700,13 +700,8 @@ try{resultEl.scrollIntoView('scrollBehavior'in document.documentElement.style?{b
 catch(err){resultEl.scrollIntoView(true);}
 };
 }
-function searchDoneMsg(hitCount){
-return searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${(''+B06)?B06+' ':''}${hitCount} ${B03})`;
-}
-function restoreSearchUI(restoreBtn){
-isSearching=false;
-restoreBtn();
-}
+function searchDoneMsg(hitCount){return searchCancel?`${B05} (${B04}${hitCount} ${B03})`:`100% (${(''+B06)?B06+' ':''}${hitCount} ${B03})`;}
+function restoreSearchUI(restoreBtn){isSearching=false;restoreBtn();}
 function handleSearchError(errorLabel,msg,restoreBtn,progressSpan,hitCount){
 console.error(errorLabel,msg);
 alert(A02);
@@ -939,7 +934,6 @@ const fm=USP_FAST_MODES[conds.anomaly];
 const fastFloor=!!fm&&fm.mode==='floor';
 if(fm&&!fastFloor){alert(A15);return;}
 if(conds.anomaly&&!fastFloor){alert(A12);return;}
-if(fastFloor&&conds.elist==='MULTI_SPECIAL'){alert(A13);return;}
 const cond_elist=conds.elist;
 const cond_only_mon=conds.onlyMon;
 const isCombinedSearch=isCombinedElistMonsterSearch(conds);
@@ -981,7 +975,6 @@ if(el){el.checked=false;}
 }
 function startFastestSearch(conds=getUltimateConds()){
 if(!validateElistOnlyMonCombo(conds))return;
-if(conds.elist==='MULTI_SPECIAL'){alert(A13);return;}
 const fm=USP_FAST_MODES[conds.anomaly];
 const mode=fm?fm.mode:((conds.elist||conds.onlyMon)?'floor':'map');
 const slowest=fm?fm.slowest:false;
@@ -1005,9 +998,7 @@ emptyRankMsg:B07,
 sortTopN:isMaxTile?undefined:((mode==='floor'&&!useDepth2)?Infinity:50),
 sortDesc:slowest||(isMaxTile&&metricType!=='mintile'),
 dedupBySeed,
-dedupBetter:isMaxTile?
-((cand,cur)=>(metricType==='mintile'?cand.sortCost<cur.sortCost:cand.sortCost>cur.sortCost)||(cand.sortCost===cur.sortCost&&cand.jumpFloor<cur.jumpFloor))
-:undefined,
+dedupBetter:isMaxTile?((cand,cur)=>(metricType==='mintile'?cand.sortCost<cur.sortCost:cand.sortCost>cur.sortCost)||(cand.sortCost===cur.sortCost&&cand.jumpFloor<cur.jumpFloor)):undefined,
 dedupKeyFn:isMaxTile?(it=>(it._dimLabel||'')+':'+(it.seed+it.jumpFloor+1)):undefined,
 renderFinal:isMaxTile?renderMetricSearchResults(metricType):undefined,
 validateConds:()=>true,
@@ -1500,7 +1491,7 @@ return`<span style="color:${color};font-weight:${fw};${bgStyle}" title="${item.t
 });
 return`<div style="margin-top:6px;font-size:11px;color:#aaa;line-height:1.6;">`+C24+`: [ ${items.join(', ')} ]</div>`;
 }
-function initSeedInspectorUI(){
+function initATDetailUI(){
 initSolverStatInputs();
 const mrSel=byId('si_mr');
 if(mrSel){
@@ -1524,13 +1515,19 @@ patSel.options.add(new Option('----','none'));
 appendPatternOptions(patSel);
 }
 }
-function updateSeedInspector(settled){
+function _addResult(resultsByT,T,effMon,desc,monGroups,killAllDesc,fleeDesc){
+const bucket=solverMapEntry(resultsByT,T,()=>({mixes:[],flee:[],nextOrder:0}));
+const order=bucket.nextOrder++;
+if(effMon<0){bucket.flee.push({order,desc});return;}
+bucket.mixes.push({desc,monGroups,killAllDesc,fleeDesc,order});
+}
+function updATDetail(settled){
 window._siBuckets=null;
-_siInspectorGen++;
+_siDtlGen++;
 let _solverOpt;
 try{_solverOpt=snapshotSolverOptions();}
 catch(e){
-_siInspectorSignature=null;
+_siDtlSignature=null;
 cancelAllSolveTasks('Invalid character stats');
 const box=byId('si_at_results');if(box)box.innerHTML='<div style="color:#f44;">'+e.message+'</div>';
 const target=byId('si_target_results');if(target)target.innerHTML='';
@@ -1563,7 +1560,7 @@ const pSelect=byId('si_pattern');
 const pTypeStr=pSelect.value;
 const pType=AT_PAT[pTypeStr]||0;
 if(!/^[0-9A-Fa-f]{1,4}$/.test(seedHex)){
-_siInspectorSignature=null;
+_siDtlSignature=null;
 closeSolverBucket();
 byId('si_at_results').innerHTML='<div style="color:#f44;">'+C17+'</div>';
 byId('si_target_results').innerHTML='';
@@ -1580,9 +1577,8 @@ if(_isAlone)groupSize=1;
 const grpSel=byId('si_group_size');
 grpSel.disabled=_isAlone;
 if(_isAlone)grpSel.value='1';
-if(_isAlone){
-[supSel1,supSel2].forEach(s=>{s.innerHTML='<option disabled selected>Alone</option>';s.disabled=true;});
-}else{
+if(_isAlone){[supSel1,supSel2].forEach(s=>{s.innerHTML='<option disabled selected>Alone</option>';s.disabled=true;});}
+else{
 if((supSel1.disabled=groupSize<=1))supSel1.value='';
 else if(!supSel1.value&&supPool.length)supSel1.value=supPool[0];
 if((supSel2.disabled=groupSize<=2))supSel2.value='';
@@ -1617,13 +1613,13 @@ patternMsg=foundOffset!==-1?
 C20+` <span class="si-highlight" style="color:#0f0;">AT +${abs_1+foundOffset}</span>`:`<span style="color:#888;">${scanMax}`+C21+`</span>`;
 }
 let battleStr="";
-const inspectorKeys=[],inspectorProbes=[];
+const atDtlKeys=[],atDtlProbes=[];
 let seqHtml="";
 if(pType>0&&foundOffset!==-1){
 const budgets=battleATBudgetsForRun(atContext,abs_1+foundOffset,anchorEnd);
 const{d1,d2,d4}=budgets;
 seqHtml=siBuildSeqHtml(foundSequence);
-const showCombos=d1>=0&&d1<=BAT_AT_MAX;
+const showCombos=d1>=0&&d1<=970;
 const encounters=enumerateEncounterOutcomes(encounterModel);
 if(showCombos){
 const resultsByT=new Map();
@@ -1647,60 +1643,48 @@ if(v==='block-pending')return'block-pending';
 if(v==='limit')return'limit';
 if(v===true)return'ok';
 if(known)return'unknown';
-inspectorProbes.push(task);
+atDtlProbes.push(task);
 return'pending';
 };
-const _pendTag=(st)=>st==='pending'?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':st==='limit'||st==='unknown'?' <span style="color:#fa0;font-size:9px;">'+(st==='limit'?SOLVER_LIMIT_LABEL:SOLVER_UNKNOWN_LABEL)+'</span>':'';
-function _addResult(T,effMon,desc,monGroups,killAllDesc,fleeDesc){
-const bucket=solverMapEntry(resultsByT,T,()=>({mixes:[],flee:[],nextOrder:0}));
-const order=bucket.nextOrder++;
-if(effMon<0){bucket.flee.push({order,desc});return;}
-bucket.mixes.push({desc,monGroups,killAllDesc,fleeDesc,order});
-}
+const _pendTag=(st)=>st==='pending'?' <span style="color:#888;font-size:9px;" title="solver judging">…</span>':st==='unknown'?' <span style="color:#fa0;font-size:9px;">'+SOLVER_UNKNOWN_LABEL+'</span>':'';
 for(const encounter of encounters){
 const{total:T,monGroups:mg,probability}=encounter;
-const inspectorTask=_fleeTask(mg,T);
-if(inspectorTask.bat>=0)inspectorKeys.push(solverResultCacheKey(inspectorTask,_solverOpt));
+const atDtlTask=_fleeTask(mg,T);
+if(atDtlTask.bat>=0)atDtlKeys.push(solverResultCacheKey(atDtlTask,_solverOpt));
 if(T===1)continue;
 const plan=deriveSolverBattlePlan(mg,monId,_solverMercyLv,_atForT(T)===0);
 const state=_fleeState(mg,T),pTag=_pFmt(probability);
 const labels=mg.slice(1).map(s=>mergedSpeciesLabel(s));
 const base=`<span style="color:#f9c">${mergedSpeciesLabel(mg[0])}</span>`+(labels.length?` <span style="color:#a8f">+${labels.join('+')}</span>`:'');
 const fleeDesc=base+pTag,killAllDesc=base+_pendTag(state)+pTag;
-if(state==='flee')_addResult(T,-1,fleeDesc);
-else if(state==='fallback')_addResult(T,T,fleeDesc,mg,undefined,fleeDesc);
-else if(plan.planType==='kill_all')_addResult(T,T,killAllDesc,mg,undefined,fleeDesc);
+if(state==='flee')_addResult(resultsByT,T,-1,fleeDesc);
+else if(state==='fallback')_addResult(resultsByT,T,T,fleeDesc,mg,undefined,fleeDesc);
+else if(plan.planType==='kill_all')_addResult(resultsByT,T,T,killAllDesc,mg,undefined,fleeDesc);
 else{
 const label=!labels.length?L36:plan.planType==='mercy_first'?L39:plan.postAlive>0?L38:L37;
 const desc=base+`<span style="color:#0f0"> ${label}→×${plan.effMon}</span>`+_pendTag(state)+pTag;
-_addResult(T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
+_addResult(resultsByT,T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
 }
 }
 window._siBuckets={d1,d2,d4,monId,mapDeft,userDeft,canRound2,resultsByT,
 singleEncounter:encounters.find(e=>e.total===1)};
 const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L40}${lbl}${L41}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
-battleStr=`<div style="margin:2px 0;">${H06} ${_batBtn(d1,'d1','×1')} / ${_batBtn(d2,'d2','×2-3')} / ${_batBtn(d4,'d4','×4-5')}</div>`
-+`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
+battleStr=`<div style="margin:2px 0;">${H06} ${_batBtn(d1,'d1','×1')} / ${_batBtn(d2,'d2','×2-3')} / ${_batBtn(d4,'d4','×4-5')}</div>`+`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
 }
-battleStr+=`<div style="color:#888;font-size:11px;margin-top:3px;">`+C22+`</div>`
-+`<div style="margin-top:3px;">${seqHtml}</div>`;
+battleStr+=`<div style="color:#888;font-size:11px;margin-top:3px;">`+C22+`</div>`+`<div style="margin-top:3px;">${seqHtml}</div>`;
 }else{
 const currentRng=advanceATRng(seed,abs_1-1);
 const defaultSim=simulateDropSlots(currentRng,dropSlots,true);
 seqHtml=siBuildSeqHtml(defaultSim.seq);
-battleStr=`<div id="batLine1" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_1}</span> <span style="color:#888;font-size:10px;">×1</span></div>`
-+`<div id="batLine2" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_2}</span> <span style="color:#888;font-size:10px;">×2-3</span></div>`
-+`<div id="batLine3" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_4}</span> <span style="color:#888;font-size:10px;">×4-5</span></div>`
-+`<div style="color:#888;font-size:11px;margin-top:3px;">`+C23+`</div>`
-+`<div style="margin-top:3px;">${seqHtml}</div>`;
+battleStr=`<div id="batLine1" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_1}</span> <span style="color:#888;font-size:10px;">×1</span></div>`+`<div id="batLine2" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_2}</span> <span style="color:#888;font-size:10px;">×2-3</span></div>`+`<div id="batLine3" style="margin:2px 0;">${H06} <span style="color:#fa0;font-weight:bold;font-size:14px;">${abs_4}</span> <span style="color:#888;font-size:10px;">×4-5</span></div>`+`<div style="color:#888;font-size:11px;margin-top:3px;">`+C23+`</div>`+`<div style="margin-top:3px;">${seqHtml}</div>`;
 }
-const activeKeys=Array.from(new Set(inspectorKeys)).sort();
-const inspectorSignature=JSON.stringify(activeKeys);
-if(inspectorSignature!==_siInspectorSignature){_siInspectorSignature=inspectorSignature;cancelAllSolveTasks('Inspector inputs changed',activeKeys,'probe');}
-const inspectorGen=_siInspectorGen;
-if(inspectorProbes.length){
-Promise.all(inspectorProbes.map(t=>requestFleeVerdict(t,_solverOpt))).then((verdicts)=>{
-if(inspectorGen===_siInspectorGen)updateSeedInspector(new Map(inspectorProbes.map((t,i)=>[solverResultCacheKey(t,_solverOpt),verdicts[i]])));
+const activeKeys=Array.from(new Set(atDtlKeys)).sort();
+const atDtlSignature=JSON.stringify(activeKeys);
+if(atDtlSignature!==_siDtlSignature){_siDtlSignature=atDtlSignature;cancelAllSolveTasks('AT Detail inputs changed',activeKeys,'probe');}
+const atDtlGen=_siDtlGen;
+if(atDtlProbes.length){
+Promise.all(atDtlProbes.map(t=>requestFleeVerdict(t,_solverOpt))).then((verdicts)=>{
+if(atDtlGen===_siDtlGen)updATDetail(new Map(atDtlProbes.map((t,i)=>[solverResultCacheKey(t,_solverOpt),verdicts[i]])));
 });
 }
 const s_target=advanceATRng(seed,targetTotalStep);
@@ -1710,27 +1694,18 @@ const DropThreshold=dropATThreshold(_mainRR);
 let firstThiefLv=tLvs[0]>0?tLvs[0]:99;
 const ThiefThreshold=thiefATThreshold(_mainRR,firstThiefLv);
 const resBox=byId('si_at_results');
-resBox.innerHTML=`
-<div style="display:flex;justify-content:space-between;">
+resBox.innerHTML=`<div style="display:flex;justify-content:space-between;">
 <span>AT ${N}: <span class="si-highlight">${atN_val}</span> → ${monName}</span>
-<span style="font-size:11px;">${patternMsg}</span>
-</div>
+<span style="font-size:11px;">${patternMsg}</span></div>
 <div>AT ${N+1}: <span style="color:#39C5BB;">${atN1_val}</span> ➔ `+G26+`: <span class="si-highlight">${mapDeft}</span></div>
-<div style="margin-top:5px;padding-top:5px;border-top:1px dashed #335;">
-${battleStr}
-</div>`;
+<div style="margin-top:5px;padding-top:5px;border-top:1px dashed #335;">${battleStr}</div>`;
 const targetBox=byId('si_target_results');
-targetBox.innerHTML=`
-<div>AT <span style="color:#fff;">${targetTotalStep}</span>: <span class="si-highlight" style="color:#f44;font-size:15px;">${atTarget_val}</span></div>
-<div style="font-size:11px;margin-top:5px;color:#ccc;">
-`+C25+` (≤${DropThreshold}): ${passesATThreshold(atTarget_val,DropThreshold)?'✅ '+L46:'❌ '+L47}<br>
-`+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${passesATThreshold(atTarget_val,ThiefThreshold)?'✅ '+L46:'❌ '+L47}
-</div>`;
+targetBox.innerHTML=`<div>AT <span style="color:#fff;">${targetTotalStep}</span>: <span class="si-highlight" style="color:#f44;font-size:15px;">${atTarget_val}</span></div><div style="font-size:11px;margin-top:5px;color:#ccc;">`+C25+` (≤${DropThreshold}): ${passesATThreshold(atTarget_val,DropThreshold)?'✅ '+L46:'❌ '+L47}<br>`+C26+` (Lv${firstThiefLv} ≤${ThiefThreshold}): ${passesATThreshold(atTarget_val,ThiefThreshold)?'✅ '+L46:'❌ '+L47}</div>`;
 }
-function openSeedInspector(){byId('seedInspectorModal').style.display='flex';updateSeedInspector();}
-function closeSeedInspector(e){if(!e||e.target.className==='modal-close'){_siInspectorSignature=null;cancelAllSolveTasks('Seed Inspector closed');byId('seedInspectorModal').style.display='none';}}
-const debouncedUpdateSeedInspector=debounce(updateSeedInspector,100);
-document.addEventListener('input',e=>{if(e.target.classList.contains('sv-stat'))debouncedUpdateSeedInspector();});
+function openATDetail(){byId('atDetailModal').style.display='flex';updATDetail();}
+function closeATDetail(e){if(!e||e.target.className==='modal-close'){_siDtlSignature=null;cancelAllSolveTasks('AT Detail closed');byId('atDetailModal').style.display='none';}}
+const debUpdATDetail=debounce(updATDetail,100);
+document.addEventListener('input',e=>{if(e.target.classList.contains('sv-stat'))debUpdATDetail();});
 window._solverComboMap={};
 window._solverComboId=0;
 window._solverBucketId=0;
@@ -1755,7 +1730,7 @@ const legends=[
 ['🗡',T('Metal Slime Sword/Spear','金屬史萊姆劍／槍','メタスラの剣／やり')],
 ['🌀',T('Attribeauty','風林火山')],
 ['💨',T('Miss (AT consumed)','Miss (AT 照常消耗)','ミス (AT消費あり)')],
-['👉',T('Target Support Monster but not Metal','瞄跟班、不瞄金屬','メタルではなく仲間を指名')],
+['👉',T('Target Support Monster but not Metal','瞄跟班、不瞄金屬','メタルでなくお供を撃つ')],
 ['🔱',T('Poker','鬼神槍','きしんのまそう')],
 ];
 return'<div style="font-size:9px;color:#666;margin:4px 0 2px 0;line-height:1.6;">'+legends.map(([e,n])=>e+'<span style="color:#888;">'+n+'</span>').join('')+'</div>';
@@ -1774,7 +1749,7 @@ function applyJobStats(charNum){
 const sel=byId('si_job'+charNum),job=sel&&sel.value!==''&&VOC_STATS[parseInt(sel.value,10)];
 if(!job)return;
 for(const f of SOLVER_INPUT_FIELDS){const el=byId('si_'+f.dom+charNum);if(el)el.value=job.s[f.preset];}
-updateSeedInspector();
+updATDetail();
 }
 function solverRevealRows(bucketId,from,to){const rows=document.getElementsByClassName(bucketId+'_row');for(let i=from;i<to;i++)if(rows[i])rows[i].style.display='';}
 async function showBlockFallback(bucketId){
@@ -1803,13 +1778,17 @@ if(verdict!==true&&verdict!==false){
 prompt.textContent=verdict==='limit'?SOLVER_LIMIT_LABEL:T('Result unknown — click to retry alternatives','結果未知，點擊重試替代方案','結果は不明です — クリックして代替案を再計算');
 return;
 }
+const completeFlee=verdict===false&&request.completeFlee;
+if(completeFlee)completeFlee(result,request.options);
+else{
 Object.assign(window._solverComboMap,result.comboMap||{});
 for(const[id,state]of Object.entries(result.buckets||{}))window._solverBuckets[id]={...state};
 el.innerHTML=result.solvable?result.html:solverFleeHTML();
+}
 st.blocked=false;
 for(const id of Object.keys(result.buckets||{}))showBlockFallback(id);
 setCachedSolverResult(solverResultCacheKey(request.render,request.options),result,request.idBase,request.bucketBase);
-cacheFleeVerdictResult(request.render,request.options,result);
+if(!completeFlee)cacheFleeVerdictResult(request.render,request.options,result);
 if(result.fallback&&request.killAllDesc){const desc=byId(request.descId);if(desc)desc.innerHTML=request.killAllDesc;}
 }catch(e){
 if(current())prompt.textContent=T('Calculation failed — click to retry alternatives','計算失敗，點擊重試替代方案','計算に失敗しました — クリックして代替案を再計算');
@@ -1845,15 +1824,8 @@ if(!data)return;
 el.innerHTML=el.dataset.merged?JSON.parse(el.dataset.merged).map(([cid,desc],n)=>'<div style="font-size:9px;margin:4px 0 0 24px;">'+desc+'</div>'+(n?'<div id="combo_detail_'+cid+'">'+renderSolverSimTrace(window._solverComboMap[cid])+'</div>':renderSolverSimTrace(data))).join(''):renderSolverSimTrace(data);
 el.style.display='block';
 }
-function solverResultCacheKey(render,options){
-return[DISPLAY_LANG,render.monId,render.bat,solverAllowsRound2(render.mapDeft,render.canRound2)?1:0,render.userDeft,render.mapDeft,
-options.useStats?1:0,options.multiPlayer?1:0,options.blockFallback?1:0,options.metalGate?1:0,options.useStats?JSON.stringify(options.chars):'neutral',
-(render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')].join('|');
-}
-function solverRewriteComboIds(html,comboFn,bucketFn){
-return html.replace(/expandCombo\((\d+)\)/g,(_,n)=>'expandCombo('+comboFn(n)+')').replace(/combo_detail_(\d+)/g,(_,n)=>'combo_detail_'+comboFn(n))
-.replace(/\bsb(\d+)(?=[_'"\s]|$)/g,(_,n)=>'sb'+bucketFn(n));
-}
+function solverResultCacheKey(render,options){return[DISPLAY_LANG,render.monId,render.bat,solverAllowsRound2(render.mapDeft,render.canRound2)?1:0,render.userDeft,render.mapDeft,options.useStats?1:0,options.multiPlayer?1:0,options.blockFallback?1:0,options.metalGate?1:0,options.useStats?JSON.stringify(options.chars):'neutral',(render.monGroups||[]).map(g=>[g.hex,g.count||1,g.death||0,g.isMain?1:0].join(':')).join(',')].join('|');}
+function solverRewriteComboIds(html,comboFn,bucketFn){return html.replace(/expandCombo\((\d+)\)/g,(_,n)=>'expandCombo('+comboFn(n)+')').replace(/combo_detail_(\d+)/g,(_,n)=>'combo_detail_'+comboFn(n)).replace(/\bsb(\d+)(?=[_'"\s]|$)/g,(_,n)=>'sb'+bucketFn(n));}
 function rebaseSolverCachedResult(entry,idBase,bucketBase){
 const src=entry.result,idDelta=(idBase||0)-(entry.idBase||0),bucketDelta=(bucketBase||0)-(entry.bucketBase||0);
 const html=solverRewriteComboIds(src.html||'',n=>+n+idDelta,n=>+n+bucketDelta);
@@ -1902,10 +1874,7 @@ const k=solverResultCacheKey(task,opt);
 if(_fleeVerdict.has(k))return Promise.resolve(_fleeVerdict.get(k));
 if(_fleePending.has(k))return _fleePending.get(k);
 const solveGen=_siSolveGen,n=++_fleeProbeSeq;
-const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n,'probe')
-.then(m=>solveGen!==_siSolveGen?null:cacheFleeVerdictResult(task,opt,m,k))
-.catch(()=>null)
-.finally(()=>{if(_fleePending.get(k)===p)_fleePending.delete(k);});
+const p=queueSolveTask(task,opt,FLEE_ID_BASE+n*100,FLEE_BK_BASE+n,'probe').then(m=>solveGen!==_siSolveGen?null:cacheFleeVerdictResult(task,opt,m,k)).catch(()=>null).finally(()=>{if(_fleePending.get(k)===p)_fleePending.delete(k);});
 _fleePending.set(k,p);
 return p;
 }
@@ -1915,16 +1884,12 @@ const ov=document.createElement('div');
 ov.id='si_submodal';
 ov.style.cssText='display:none;position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:10001;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;padding:18px;overflow:auto;';
 ov.onclick=(e)=>{if(e.target===ov)closeSolverBucket();};
-ov.innerHTML='<div onclick="event.stopPropagation()" style="background:#0a0a1a;border:1px solid #0ff;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:14px;box-shadow:0 0 24px rgba(0,255,255,0.25);">'
-+'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:-webkit-sticky;position:sticky;top:0;background:#0a0a1a;padding-bottom:6px;border-bottom:1px solid #224;">'
-+'<span id="si_submodal_title" style="color:#0ff;font-size:14px;font-weight:bold;"></span>'
-+'<span onclick="closeSolverBucket()" style="cursor:pointer;color:#999;font-size:22px;line-height:1;padding:0 4px;">&times;</span>'
-+'</div><div id="si_submodal_body"></div></div>';
+ov.innerHTML='<div onclick="event.stopPropagation()" style="background:#0a0a1a;border:1px solid #0ff;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:14px;box-shadow:0 0 24px rgba(0,255,255,0.25);">'+'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:-webkit-sticky;position:sticky;top:0;background:#0a0a1a;padding-bottom:6px;border-bottom:1px solid #224;">'+'<span id="si_submodal_title" style="color:#0ff;font-size:14px;font-weight:bold;"></span>'+'<span onclick="closeSolverBucket()" style="cursor:pointer;color:#999;font-size:22px;line-height:1;padding:0 4px;">&times;</span>'+'</div><div id="si_submodal_body"></div></div>';
 document.body.appendChild(ov);
 }
 function closeSolverBucket(){
 cancelAllSolveTasks('Solver view closed');
-if(_siInspectorSignature)updateSeedInspector();
+if(_siDtlSignature)updATDetail();
 const ov=byId('si_submodal');
 if(!ov)return;
 ov.style.display='none';
@@ -1971,7 +1936,8 @@ view.html+=header(bat,'×'+count);
 for(const m of entry.mixes){
 const rowId='si_solver_pattern_'+viewGen+'_'+view.tasks.length,descId=rowId+'_desc';
 view.html+='<div id="'+rowId+'"><div id="'+descId+'" style="font-size:9px;margin-left:16px;color:#888;line-height:1.4;margin-bottom:1px;">'+m.desc+'</div>';
-queue(solverBucketTask(b,bat,m.monGroups),{pattern:true,section,rowId,descId,desc:m.desc,fleeDesc:m.fleeDesc,fleeOrder:m.order,killAllDesc:m.killAllDesc});
+queue(solverBucketTask(b,bat,m.monGroups),{
+pattern:true,section,rowId,descId,desc:m.desc,fleeDesc:m.fleeDesc,fleeOrder:m.order,killAllDesc:m.killAllDesc});
 view.html+='</div>';
 }
 const rowId='si_solver_flee_'+viewGen+'_'+section,itemsId=rowId+'_items',items=entry.flee.map(v=>({order:v.order,html:v.desc}));
@@ -2021,10 +1987,14 @@ const verdict=cacheFleeVerdictResult(tasks[i],opt,result),m=meta[i];
 if(result.needsMetalGate)return settle(i,{html:solverMetalGatePromptHTML(elementIds[i],i),flee:false,needsMetalGate:true});
 if(result.needsBlockFallback){
 const bucketId='sb'+i*BK_SPAN;
-window._solverBuckets[bucketId]={blocked:true,request:{render:tasks[i],options:opt,stages:result.blockStages,idBase:i*ID_SPAN,bucketBase:i*BK_SPAN,elementId:elementIds[i],descId:m&&m.descId,killAllDesc:m&&m.killAllDesc}};
+const request={render:tasks[i],options:opt,stages:result.blockStages,idBase:i*ID_SPAN,bucketBase:i*BK_SPAN,
+elementId:elementIds[i],descId:m&&m.descId,killAllDesc:m&&m.killAllDesc,
+completeFlee:m&&m.pattern?complete.bind(null,i):null};
+window._solverBuckets[bucketId]={blocked:true,request};
 return settle(i,{html:SOLVER_BLOCK_PROMPT_HTML.replace(/\$bucket/g,bucketId).replace('$label',L17),flee:false,needsBlockFallback:true});
 }
 if(verdict===false&&m&&m.pattern){
+const replacingBlockPrompt=results[i]&&results[i].needsBlockFallback;
 results[i]={html:'',flee:true};
 const section=view.flee.get(m.section);
 if(section){
@@ -2035,12 +2005,10 @@ if(rowEl)rowEl.style.display='';
 }
 const row=byId(m.rowId);
 if(row)row.remove();
-return done();
+if(!replacingBlockPrompt)done();
+return;
 }
-const html=verdict===false?solverFleeHTML()
-:verdict==='limit'?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_LIMIT_LABEL+'</div>'
-:verdict===null?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_UNKNOWN_LABEL+'</div>'
-:result&&result.html!==undefined?result.html:'';
+const html=verdict===false?solverFleeHTML():verdict==='limit'?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_LIMIT_LABEL+'</div>':verdict===null?'<div style="font-size:9px;margin-left:16px;color:#fa0;">'+SOLVER_UNKNOWN_LABEL+'</div>':result&&result.html!==undefined?result.html:'';
 if(verdict==='fallback'&&m&&m.killAllDesc){const descEl=byId(m.descId);if(descEl)descEl.innerHTML=m.killAllDesc;m.desc=m.killAllDesc;}
 settle(i,{html,flee:false});
 };
