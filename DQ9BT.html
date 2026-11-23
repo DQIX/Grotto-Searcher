@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -399,7 +399,7 @@
     <h2 data-i18n="app.subtitle"></h2>
   </div>
   <div class="lang-row">
-    <button class="lang-sw" data-lang="zh-TW" onclick="switchUILang('zh-TW')">中文</button>
+    <button class="lang-sw" data-lang="TW" onclick="switchUILang('TW')">中文</button>
     <button class="lang-sw" data-lang="en"    onclick="switchUILang('en')">English</button>
     <button class="lang-sw" data-lang="ja"    onclick="switchUILang('ja')">日本語</button>
   </div>
@@ -593,16 +593,14 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  i18n — 介面文字全在這裡，程式一律走 t(key)。加語言＝複製整個物件改語言碼。
 //  官方譯名：ホイミ Heal／ベホイミ Midheal／ベホイム Moreheal／
 //            ベホマラー Multiheal／ベホマズン Omniheal／やくそう Medicinal Herb／
 //            ホイミテーブル Hoimi Table／とうぞくの秘伝書 Thief's Theory
-//  用詞：單位一律「步」。B-Table 面板只有ホイミ一種推進，故講「ホイミ次數」。
 // ═══════════════════════════════════════════════════════════════
-let LANG = 'zh-TW';
+let LANG = document.documentElement.lang;
 
 const I18N = {
-  'zh-TW': {
+  'TW': {
     'zk.frameHintFlee': '<span class="dim">一場雜魚戰消耗 <span class="hi">{len}</span> 格 = {parts}，最後 {fleeMax} 格依序是第 1～{fleeMax} 次逃跑。</span>',
     'zk.fleeGroup'   : '逃跑',
     'zk.questTag'    : 'Quest #{id}',
@@ -1138,10 +1136,7 @@ function t(key, params) {
   return str;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  卡帶／平台 BT Seed 範圍 —— 單一真相來源：平台識別、搜尋範圍選單、範圍文字。
-//  順序＝選單順序。美版範圍被歐版包住，故須排在歐版前面。
-// ═══════════════════════════════════════════════════════════════
+// BT Seed 範圍
 const SEED_RANGES = [
   { platKey:'plat.emu', nameKey:'plat.all', from:0x16000, to:0x3FFFF, color:'var(--text-dim)', fallback:true },
   { platKey:'plat.us',  nameKey:'plat.us',  from:0x31600, to:0x319FF, color:'#60a0e8' },
@@ -1154,17 +1149,14 @@ const rangeText    = r => `${hexUp(r.from)}–${hexUp(r.to)}`;
 const rangeValue   = r => `${hexUp(r.from)},${hexUp(r.to)}`; // 選單 value，逆推用 split(',') 取回
 const seedRangeAll = () => SEED_RANGES.find(r => r.fallback);
 
-// ═══════════════════════════════════════════════════════════════
-//  推進手段 —— 單一真相來源：推進按鈕與「已消耗 N 步」的換算都由此產生。
-//  由小到大＝按鈕順序。
-// ═══════════════════════════════════════════════════════════════
+// 推進手段
 const TR_CASTS = [
   { nameKey:'spell.heal',      btnKey:'tr.adv1',         steps:1 },
   { nameKey:'spell.multiheal', btnKey:'spell.multiheal', steps:4 },
   { nameKey:'spell.omniheal',  btnKey:'spell.omniheal',  steps:8 },
 ];
 
-// 換算成施法次數。由大到小貪心；8=2×4、4=4×1，故貪心即最少次數。
+// 換算成施法次數
 function castBreakdown(steps) {
   let left = steps;
   const parts = [];
@@ -1186,7 +1178,7 @@ const SPELLS = [
   { key: 'spell.herb',     base: 30,  m: 10, steps: 2 },
 ];
 
-// 下拉選單的預設值 —— 單一真相來源：建構選項與載入時寫回都吃這裡
+// 下拉選單的預設值
 function selectDefaults() {
   return {
     bt_a: 10, bt_b: 0, bt_m: 'any', bt_n: 'any',
@@ -1199,14 +1191,14 @@ function selectDefaults() {
   };
 }
 
-// 切換 UI 語言：只換字典，畫面狀態（已展開的格子、搜尋結果、下拉選擇）全部保留
+// 切換 UI 語言
 function switchUILang(lang) {
   if (!I18N[lang]) return;
   LANG = lang;
   applyI18n();
 }
 
-// 把字典套到畫面上；換語言時重跑這個函式即可
+// 把字典套到畫面上
 function applyI18n() {
   document.title = t('app.title');
   document.documentElement.lang = LANG;
@@ -1287,9 +1279,7 @@ function buildCastButtons() {
     `${ready ? '' : ' disabled'}>+${c.steps}</button></div>`).join('');
 }
 
-// ═══════════════════════════════════════════════════════════════
 //  核心 LCG — 全程 BigInt。乘數是 63-bit，Number 只有 53-bit 有效位，必爆精度。
-// ═══════════════════════════════════════════════════════════════
 const LCG_MULT = 0x5d588b656c078965n;
 const LCG_ADD  = 0x269ec3n;
 const LCG_MASK = 0xFFFFFFFFFFFFFFFFn;
@@ -1305,7 +1295,7 @@ function hi32(seed) {return Number(seed >> 32n); }
 function toPercent(seed) {return hi32(seed) / 4294967296 * 100; }
 
 // ═══════════════════════════════════════════════════════════════
-//  Boss 戰掉寶判定 —— 單一真相來源
+//  Boss 戰掉寶判定
 //  一次 15 個亂數：A B x1 │ C D x2 │ E F x3 │ G H x4 │ I J x5
 //    A/C/E/G/I 稀有、B/D/F/H/J 普通、x1 恆掉、x2～x5 消耗但無關
 //    第 2 次判定起門檻降 1%（盜賊秘傳書）
