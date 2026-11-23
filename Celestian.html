@@ -673,14 +673,14 @@ if(filters.prefix)filterDesc.push(`Prefix=${filters.prefix} (${PREFIX_NAMES[filt
 if(filters.level)filterDesc.push(`Level=${filters.level}`);if(filters.location)filterDesc.push(`Location=0x${filters.location.toString(16).toUpperCase().padStart(2, '0')}`);if(filters.baseQuality)filterDesc.push(`BaseQ=${filters.baseQuality}`);if(filters.env)filterDesc.push(`Env=${filters.env} (${ENV_NAMES[filters.env][1]})`);if(filters.depth)filterDesc.push(`Depth=${filters.depth}`);if(filters.smr)filterDesc.push(`SMR=${filters.smr}`);if(filters.boss)filterDesc.push(`Boss=${filters.boss} (${BOSS_NAMES[filters.boss][1]})`);if(seedFrom!==0x0000||seedTo!==0x7FFF){filterDesc.push(`SEED=0x${seedFrom.toString(16).toUpperCase().padStart(4, '0')}~0x${seedTo.toString(16).toUpperCase().padStart(4, '0')}`);}
 if(filters.atFilters&&filters.atFilters.length>0){filters.atFilters.forEach(atf=>{let targetName='カスタム';if(atf.target===35)targetName='POP';if(atf.target===36)targetName='きようさ(くちぶえ)';if(atf.target===37)targetName='きようさ(通常)';if(atf.target===39)targetName='きようさ(通常2)';if(atf.target===64)targetName='POP(ルーラ1回)';if(atf.target===65)targetName='きようさ(口笛ルーラ1)';if(atf.target===93)targetName='POP(ルーラ2回)';if(atf.target===94)targetName='きようさ(口笛ルーラ2)';if(atf.target===122)targetName='POP(ルーラ3回)';if(atf.target===123)targetName='きようさ(口笛ルーラ3)';filterDesc.push(`AT ${atf.target} (${targetName})=${atf.from}~${atf.to}`);});}
 document.getElementById('result-summary').innerHTML=`検索条件：${filterDesc.length > 0 ? filterDesc.join(', ') : '無'} | ${matchingSeeds.length} 件の結果が見つかりました`;const container=document.getElementById('results-container');if(matchingSeeds.length===0){container.innerHTML='<div class="no-result">条件に一致する SEED はありません</div>';return;}
-matchingSeeds.sort((a,b)=>a.rank-b.rank||a.seed-b.seed);const displaySeeds=matchingSeeds.slice(0,300);for(const item of displaySeeds){if(item.validLocations===null){item.validLocations=getValidLocations(item.seed,item.rank,filters.baseQuality);}if(!item.specialAtMatches){item.specialAtMatches=getSpecialAtMatches(item.seed,"");}}let html=`
+container.innerHTML=`
 <table class="results-table normal-search">
 <thead>
 <tr>
 <th>R</th>
 <th>S</th>
 <th>地図名</th>
-<th>Lv</th>
+<th scope="col" aria-sort="none"><button type="button" id="sort-by-level" style="background: transparent; border: 0; color: inherit; cursor: pointer; font: inherit; text-decoration: underline;">Lv<span aria-hidden="true"></span></button></th>
 <th>地形</th>
 <th>敵</th>
 <th>深</th>
@@ -689,8 +689,20 @@ matchingSeeds.sort((a,b)=>a.rank-b.rank||a.seed-b.seed);const displaySeeds=match
 <th>備考</th>
 </tr>
 </thead>
-<tbody>
-`;for(const{seed,rank,info,validLocations,specialInfo,specialAtMatches}of displaySeeds){const nameJP=mapName(info);const isGhost=GHOST_SEEDS.has(seed);const rankIdx=ALL_RANKS.indexOf(rank)+1;const locStr=validLocations.length>0?validLocations.map(l=>l.toString(16).toUpperCase().padStart(2,'0')).join(', '):'無';const mapKey=`${rank.toString(16).toUpperCase().padStart(2, '0')}-${seed.toString(16).toUpperCase().padStart(4, '0')}`;const namedInfo=FAMOUS_MAPS[mapKey]||null;let remarksParts=[];if(specialInfo)remarksParts.push(specialInfo.display);if(namedInfo)remarksParts.push(`<span style="background: rgba(0, 0, 0, 0.5); color: #81d4fa; padding: 2px 6px; border-radius: 4px; font-size: 11px;">${namedInfo}</span>`);let remarks=remarksParts.join(' ');if(specialAtMatches&&specialAtMatches.length>0){const atStr=`特AT: ${specialAtMatches.join(', ')}`;remarks=remarks?`${remarks}<br><span style="color: var(--accent-green); font-size: 10px;">${atStr}</span>`:`<span style="color: var(--accent-green); font-size: 10px;">${atStr}</span>`;}
+<tbody></tbody>
+</table>
+<div class="result-count">
+合計 ${matchingSeeds.length} 件の結果
+${matchingSeeds.length > 300 ? '（上位 300 件のみ表示）' : ''}
+</div>
+`;
+const sortButton = document.getElementById('sort-by-level');
+const tableBody = container.querySelector('tbody');
+let levelOrder = 0;
+function renderResults() {
+matchingSeeds.sort((a, b) => levelOrder * (a.info.level - b.info.level) || a.rank - b.rank || a.seed - b.seed);
+const displaySeeds=matchingSeeds.slice(0,300);for(const item of displaySeeds){if(item.validLocations===null){item.validLocations=getValidLocations(item.seed,item.rank,filters.baseQuality);}if(!item.specialAtMatches){item.specialAtMatches=getSpecialAtMatches(item.seed,"");}}let html='';
+for(const{seed,rank,info,validLocations,specialInfo,specialAtMatches}of displaySeeds){const nameJP=mapName(info);const isGhost=GHOST_SEEDS.has(seed);const rankIdx=ALL_RANKS.indexOf(rank)+1;const locStr=validLocations.length>0?validLocations.map(l=>l.toString(16).toUpperCase().padStart(2,'0')).join(', '):'無';const mapKey=`${rank.toString(16).toUpperCase().padStart(2, '0')}-${seed.toString(16).toUpperCase().padStart(4, '0')}`;const namedInfo=FAMOUS_MAPS[mapKey]||null;let remarksParts=[];if(specialInfo)remarksParts.push(specialInfo.display);if(namedInfo)remarksParts.push(`<span style="background: rgba(0, 0, 0, 0.5); color: #81d4fa; padding: 2px 6px; border-radius: 4px; font-size: 11px;">${namedInfo}</span>`);let remarks=remarksParts.join(' ');if(specialAtMatches&&specialAtMatches.length>0){const atStr=`特AT: ${specialAtMatches.join(', ')}`;remarks=remarks?`${remarks}<br><span style="color: var(--accent-green); font-size: 10px;">${atStr}</span>`:`<span style="color: var(--accent-green); font-size: 10px;">${atStr}</span>`;}
 if(!remarks)remarks='-';html+=`
 <tr>
 <td data-label="R">${RANK_NAMES[rankIdx][0]}</td>
@@ -708,14 +720,16 @@ ${isGhost ? '<span style="color: var(--warning);"> ⚠</span>' : ''}
 <td data-label="備考" style="color: var(--accent-gold); line-height: 1.4;">${remarks}</td>
 </tr>
 `;}
-html+=`
-</tbody>
-</table>
-<div class="result-count">
-合計 ${matchingSeeds.length} 件の結果
-${matchingSeeds.length > 300 ? '（上位 300 件のみ表示）' : ''}
-</div>
-`;container.innerHTML=html;}
+tableBody.innerHTML = html;
+}
+sortButton.addEventListener('click', () => {
+levelOrder = levelOrder === 1 ? -1 : 1;
+sortButton.parentElement.setAttribute('aria-sort', levelOrder === 1 ? 'ascending' : 'descending');
+sortButton.firstElementChild.textContent = levelOrder === 1 ? ' ▲' : ' ▼';
+renderResults();
+});
+renderResults();
+}
 document.addEventListener('DOMContentLoaded',()=>{populateFilterOptions();buildKeypads();setTimeout(()=>getTimersForSeed(0),50);});function clearFilters(){const filterSelects=['filter-rank','filter-env','filter-boss','filter-prefix','filter-suffix','filter-depth','filter-smr','filter-locale','filter-monster','filter-special-at','filter-special-map','filter-spawn-env','filter-spawn-rank','filter-spawn-monster'].map(id=>document.getElementById(id));const filterInputs=['filter-level','filter-location','filter-seed-from','filter-seed-to','filter-base-quality','filter-at-target-1','filter-at-from-1','filter-at-to-1','filter-at-target-2','filter-at-from-2','filter-at-to-2','filter-at-target-3','filter-at-from-3','filter-at-to-3'].map(id=>document.getElementById(id));filterSelects.forEach(sel=>{if(sel)sel.value='';});filterInputs.forEach(inp=>{if(inp)inp.value='';});syncChoiceGroups();syncPads();}
 function openEmptyModal(){document.getElementById('modal-rank-select').value='';document.getElementById('modal-seed-input').value='';document.getElementById('modal-map-info').innerHTML='<div class="no-result" style="padding: 20px;">Rank と SEED を入力して「Go」を押してください</div>';document.getElementById('modal-summary').innerHTML='';document.getElementById('modal-results').innerHTML='';document.getElementById('seed-modal').style.display="block";}
 function showSeedDetails(seed,rankHex){const modal=document.getElementById('seed-modal');modal.style.display="block";document.getElementById('modal-rank-select').value="0x"+rankHex.toString(16).toUpperCase().padStart(2,'0');document.getElementById('modal-seed-input').value=seed.toString(16).toUpperCase().padStart(4,'0');runModalSearch();}
