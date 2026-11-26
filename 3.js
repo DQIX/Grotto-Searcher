@@ -267,7 +267,9 @@ if(wi===-1)return;
 if(wi<0){i++;continue;}
 _siSolveQueue.splice(i,1);
 _siSolveBusy.set(wi,t);
-_dq9Pool.workers[wi].postMessage(t.msg);
+const worker=_dq9Pool.workers[wi],spec=t.msg.spec;
+worker.postMessage(spec&&spec===worker.solverSpec?{...t.msg,spec:null}:t.msg);
+worker.solverSpec=spec;
 }
 }
 const SOLVER_DONE_TYPES=new Set(['solveDone','solveKmcShardDone','solveKillAllShardDone']);
@@ -322,7 +324,7 @@ const cacheKey=solverResultCacheKey(render,options);
 const cached=getCachedSolverResult(cacheKey,idBase,bucketBase);
 if(cached)return Promise.resolve(cached);
 if(solverBatUnreachable(render))return Promise.resolve(rebaseSolverCachedResult(setCachedSolverResult(cacheKey,solverDashResult(false),idBase,bucketBase),idBase,bucketBase));
-if(!options.metalGate&&solverMetalCompanionGated(render.monGroups,render.monId,options.chars))return Promise.resolve(solverDashResult(null,{needsMetalGate:true}));
+if(!options.metalGate&&render.metal!==false&&solverMetalCompanionGated(render.monGroups,render.monId,options.chars))return Promise.resolve(solverDashResult(null,{needsMetalGate:true}));
 const oldPending=_solverResultPending.get(cacheKey);
 if(oldPending&&!oldPending.cancelled&&oldPending.gen===_siSolveGen){
 if(owner!=='probe')oldPending.owner='view';
@@ -411,7 +413,7 @@ operation.promise=execute().then(result=>{
 ensureCurrent();
 if(result&&result.verdictOnly){
 probeWork.set(cacheKey,{stages:operation.stages,replies:operation.replies,stopped:operation.stopped});
-while(probeWork.size>SOLVER_RESULT_CACHE_MAX)probeWork.delete(probeWork.keys().next().value);
+solverTrimCache(probeWork,SOLVER_RESULT_CACHE_MAX);
 return{result,idBase:idBase||0,bucketBase:bucketBase||0};
 }
 if(!options.blockFallback&&result&&result.solvable===false&&!result.incomplete&&solverFieldBlock(render.monGroups.filter(g=>g.count>0).map(g=>g.hex))>0){
@@ -809,6 +811,7 @@ ranks:ranksToSearch,
 startSeed,endSeed,
 lang:DISPLAY_LANG,
 bySeed,
+discard:config.renderCap===0&&sortBucket===null&&!dedupBySeed&&!bySeed,
 };
 runSearchJob(job,{
 unordered:(sortBucket!==null)||dedupBySeed,
@@ -1631,11 +1634,11 @@ return` <span style="color:#6a6;font-size:9px;">p≈${txt}%</span>`;
 };
 const _solverMercyLv=maxCharLv(_solverOpt.chars);
 const _atForT=(t)=>battleATForCount(budgets,t);
-const _fleeTask=(mg,t)=>({bat:_atForT(t),monGroups:mg,monId,mapDeft,userDeft,canRound2});
+const _taskBase={monId,mapDeft,userDeft,canRound2,metal:encounterModel.metal},_fleeTask=(mg,t)=>solverBucketTask(_taskBase,_atForT(t),mg);
 const _fleeState=(mg,t)=>{
 if(_atForT(t)<0)return'flee';
-if(solverMetalCompanionGated(mg,monId,_solverOpt.chars))return'metal-gate';
 const task=_fleeTask(mg,t),key=solverResultCacheKey(task,_solverOpt),known=settled&&settled.has(key);
+if(task.metal&&solverMetalCompanionGated(mg,monId,_solverOpt.chars))return'metal-gate';
 const v=known?settled.get(key):peekFleeVerdict(task,_solverOpt);
 if(v===false)return'flee';
 if(v==='fallback')return'fallback';
@@ -1652,7 +1655,7 @@ const{total:T,monGroups:mg,probability}=encounter;
 const atDtlTask=_fleeTask(mg,T);
 if(atDtlTask.bat>=0)atDtlKeys.push(solverResultCacheKey(atDtlTask,_solverOpt));
 if(T===1)continue;
-const plan=deriveSolverBattlePlan(mg,monId,_solverMercyLv,_atForT(T)===0);
+const plan=deriveSolverBattlePlan(mg,monId,_solverMercyLv,_atForT(T)===0,null,atDtlTask.metal);
 const state=_fleeState(mg,T),pTag=_pFmt(probability);
 const labels=mg.slice(1).map(s=>mergedSpeciesLabel(s));
 const base=`<span style="color:#f9c">${mergedSpeciesLabel(mg[0])}</span>`+(labels.length?` <span style="color:#a8f">+${labels.join('+')}</span>`:'');
@@ -1666,7 +1669,7 @@ const desc=base+`<span style="color:#0f0"> ${label}→×${plan.effMon}</span>`+_
 _addResult(resultsByT,T,plan.effMon,desc,mg,killAllDesc,fleeDesc);
 }
 }
-window._siBuckets={d1,d2,d4,monId,mapDeft,userDeft,canRound2,resultsByT,
+window._siBuckets={d1,d2,d4,monId,mapDeft,userDeft,canRound2,metal:encounterModel.metal,resultsByT,
 singleEncounter:encounters.find(e=>e.total===1)};
 const _batBtn=(val,bk,lbl)=>`<span onclick="showSolverBucket('${bk}')" title="${L40}${lbl}${L41}" style="color:#fa0;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:underline dotted;padding:0 3px;">${siFormatAT(val)}</span>`;
 battleStr=`<div style="margin:2px 0;">${H06} ${_batBtn(d1,'d1','×1')} / ${_batBtn(d2,'d2','×2-3')} / ${_batBtn(d4,'d4','×4-5')}</div>`+`<div style="color:#0aa;font-size:9px;margin:1px 0 0 0;">${L42}</div>`;
@@ -1717,7 +1720,7 @@ const _fleeVerdict=new Map();
 const _fleePending=new Map();
 const FLEE_ID_BASE=900000,FLEE_BK_BASE=9000;
 let _fleeProbeSeq=0;
-function solverBucketTask(b,bat,monGroups){return{bat,monGroups,monId:b.monId,mapDeft:b.mapDeft,userDeft:b.userDeft,canRound2:b.canRound2};}
+function solverBucketTask(b,bat,monGroups){return{bat,monGroups,monId:b.monId,mapDeft:b.mapDeft,userDeft:b.userDeft,canRound2:b.canRound2,metal:b.metal&&monGroups.some(g=>isMetalHex(g.hex))};}
 const makeD1SolveTask=b=>b.singleEncounter?solverBucketTask(b,b.d1,b.singleEncounter.monGroups):null;
 function solverFleeHTML(){return'<div style="font-size:9px;margin-left:16px;"><span style="color:#f44;">'+L44+'</span></div>';}
 function solverFleeItemsHTML(items){return items.slice().sort((a,b)=>a.order-b.order).map(v=>v.html).join(' · ');}
@@ -1845,7 +1848,7 @@ function setCachedSolverResult(key,result,idBase,bucketBase){
 const entry={result,idBase:idBase||0,bucketBase:bucketBase||0};
 if(result.renderError||!result.needsBlockFallback&&solverResultVerdict(result)===null)return entry;
 solverCachePut(key,entry);
-while(_solverResultCache.size>SOLVER_RESULT_CACHE_MAX)_solverResultCache.delete(_solverResultCache.keys().next().value);
+solverTrimCache(_solverResultCache,SOLVER_RESULT_CACHE_MAX);
 return _solverResultCache.get(key);
 }
 function solverResultVerdict(result){

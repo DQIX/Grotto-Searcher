@@ -37,7 +37,7 @@ const runner=getCoreSearchRunner(job.kind);
 const hits=runner?await runner(chunkJob,io):0;
 const aborted=io.cancelled();
 self.postMessage({type:'chunkDone',gen:c.gen,chunkId:c.chunkId,
-items:aborted?[]:items,hits:aborted?0:hits,aborted});
+items:aborted||job.discard?[]:items,hits:aborted?0:hits,aborted});
 }
 function setupSolverWorker(m){
 setDisplayLang(m.lang||'EN');
@@ -62,10 +62,12 @@ _solverVerdictMode=!!m.verdict;
 _solverResume=null;
 }
 const _solverResumeStore=new Map();
+let solverShardSpec;
 self.addEventListener('message',(e)=>{
 const m=e.data;
 if(!m)return;
 if(m.type==='solve'){
+solverShardSpec=null;
 try{
 setupSolverWorker(m);
 const kept=m.resume?_solverResumeStore.get(m.resume):null;
@@ -93,11 +95,11 @@ try{html=kept.finish();}
 catch(e){console.error('[Solver]',e);window._solverRenderError=e;window._solverSolvable=null;html='<div style="color:#f44;font-size:9px;">⚠ Solver error</div>';}
 finally{_solverRenderDepth=0;_solverGoldState=null;}
 }else html=renderSolverResult(m.render.bat,m.render.monGroups,m.render.monId,m.render.mapDeft,m.render.canRound2,!!m.forceKillAll,
-m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,!!m.incomplete,!!m.limited);
+m.prebuiltKmc||null,m.prebuiltKillAll||null,!!m.deferKillAll,!!m.incomplete,!!m.limited,null,m.render.metal);
 const stopped=_solverResume,key=m.resumeKey||'r2#'+m.solveId;_solverResume=null;
 if(stopped){
 _solverResumeStore.set(key,stopped);
-while(_solverResumeStore.size>32)_solverResumeStore.delete(_solverResumeStore.keys().next().value);
+solverTrimCache(_solverResumeStore,32);
 }
 self.postMessage({
 type:'solveDone',
@@ -113,8 +115,9 @@ return;
 if(m.type==='solveKmcShard'||m.type==='solveKillAllShard'){
 try{
 setupSolverWorker(m);
-resetSolverDamageCache(m.spec.useStats,m.chars||[],m.spec.fieldHexes[0]);
-const payload=buildSolverShardPayload(m.spec,m.roots);
+const spec=solverShardSpec=m.spec||solverShardSpec;
+resetSolverDamageCache(spec.useStats,m.chars||[],spec.fieldHexes[0]);
+const payload=buildSolverShardPayload(spec,m.roots);
 self.postMessage({type:m.type+'Done',solveId:m.solveId,payload});
 }catch(err){self.postMessage({type:m.type+'Error',solveId:m.solveId,message:''+(err&&err.stack||err)});}
 }

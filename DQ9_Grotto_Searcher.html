@@ -306,8 +306,8 @@
 <td><a href=https://seesaawiki.jp/oka33max-dq9maps target=_blank class="h2m">マックスさんwiki</a></td>
 </tr>
 <tr>
-<td><a href=https://w.atwiki.jp/dq9buena target=_blank class="h2m">ブエナさんwiki</a></td>
-<td></td>
+<td><a href=https://youtu.be/@to-madoraquechannel target=_blank class="h2m">トーマさんチャンネル</a></td>
+<td><a href=https://youtu.be/@DQ_Rizu target=_blank class="h2m">リズさんチャンネル</a></td>
 </tr>
 <tr>
 <td><a href=https://dragonquest9.com target=_blank class="h2m">DQ9攻略Wiki</a></td>
@@ -349,9 +349,9 @@
 <div class="h1box">
 <ul class=k20>
 <li><strong class=c39c5bb>前綴：</strong>由 <span class=h2b9>B1F 怪物等級 (SMR)</span> 決定。</li>
-<li><strong class=c39c5bb>後綴：</strong>由 <span class=h2b9>BOSS 種類</span> 決定。</li>
+<li><strong class=c39c5bb>後綴：</strong>由 <span class=h2b9>BOSS 編號</span> 決定。</li>
 <li><strong class=c39c5bb>中間名：</strong>由 <span class=h2b9>樓層深度</span> 與 <span class=h2b9>地形</span> 共同決定。</li>
-<li><strong class=c39c5bb>Lv</strong>＝<code class=h2k>(樓層深度＋B1F怪物等級(SMR)＋BOSS種類－4)×3±5</code></li>
+<li><strong class=c39c5bb>Lv</strong>＝<code class=h2k>(樓層深度＋B1F怪物等級(SMR)＋BOSS編號－4)×3±5</code></li>
 </ul>
 </div>
 <details class="h1det" id="det-prefix-TW">
@@ -391,14 +391,14 @@
 </div>
 </details>
 <h3 class="h1sec" id="sec-rank-seed-TW">Rank、Seed</h3>
-<p style="margin-bottom:12px;">藏寶圖表面上由 <span class=cfff>地圖名稱</span> 組成，實際上由 <strong class=c0ff>Rank</strong> 和 <strong class=cf8f>Seed</strong> 兩個隱藏參數構成。<br>本工具的運作原理，就是透過您輸入的各種「表面特徵」(例如 地圖名稱、位置、地形、怪物等級、樓層深度、BOSS 等)，査出 Rank 與 Seed 這兩個代表每一張地圖的「身分證號」。</p>
+<p style="margin-bottom:12px;">藏寶圖表面上由 <span class=cfff>地圖名稱</span> 組成，實際上由 <strong class=c0ff>Rank</strong> 和 <strong class=cf8f>Seed</strong> 兩個隱藏參數構成。<br>本工具的運作原理，就是用您輸入的各種「表面特徵」(例如 地圖名稱、位置、地形、怪物等級、樓層深度、BOSS 等) 査出 Rank 與 Seed 這兩個代表每一張地圖的「身分證號」。</p>
 <div class=k23>
 <h4 class=k42>Seed</h4>
 <ul class=k46>
 <li>合法取値範圍是 <strong class=cfff>0000 ~ 7FFF</strong>。</li>
 <li>雖然系統中存在 <span class=c888>8000 ~ FFFF</span> 的 Seed，但在正常遊戲中 沒有合法生成它們的手段。</li>
 <li>即便在合法取値範圍內，仍有 <strong>302 個</strong> 特定 Seed 無法被正常生成。</li>
-<li>所有不能合法生成的地圖，本工具皆會將其判定並顯示為「<span style="color:#ED4C64">無符合條件的位置</span>」。</li>
+<li>所有不能合法生成的地圖，本工具會將其判定並顯示為「<span style="color:#ED4C64">無符合條件的位置</span>」。</li>
 </ul>
 </div>
 <div class="h1box2">
@@ -444,7 +444,7 @@
 </details>
 <h3 class="h1sec" id="sec-terrain-TW">地形</h3>
 <div class="h1box">
-<p class=k57>地形共分為 <strong class=h2k>洞窟、遺跡、冰、水、火山</strong> 五種。生成機率分別為：洞窟 30%，遺跡 40%，其餘各 10%。遊戲中的部分 QUEST 需要獲取「指定地形」與「指定 FloorMR」的地圖才能達成。</p>
+<p class=k57>地形共分為 <strong class=h2k>洞窟、遺跡、冰、水、火山</strong> 五種。生成機率分別為：洞窟 30%，遺跡 40%，其餘各 10%。遊戲中的一部分 QUEST 需要獲取「指定地形」與「指定 FloorMR」的地圖才能達成。</p>
 <ul class=k20>
 <li><strong class=c39c5bb>遺跡：</strong>通道入口出現怪物時 <span class=cf88>極易被堵死</span>。</li>
 <li><strong class=c39c5bb>洞窟 & 水：</strong>廣闊空間的 側邊 有齒狀突出結構，如果不是走對角線，會讓玩家多走一點腳程。</li>
@@ -453,10 +453,11 @@
 <li><strong class=c39c5bb>BOSS 樓層所需時間：</strong>從入口到 BOSS 跟前的行走時間也有地形差別：<span class=c0ff>遺跡 6.6秒</span>，<span class=cf88>火山 7.4秒</span>，<span style="color:#ddd">其餘 7.2秒</span>。這微小的差距足以改變部分低Lv發掘用地圖的排名。(來源: <a href="https://w.atwiki.jp/masha-masha/181.html" target=_blank class=k14>勇気ある旅人さんwiki</a>)</li>
 </ul>
 </div>
-<h3 class="h1sec" id="sec-smr-depth-boss-TW">B1F 怪物等級、樓層深度、BOSS</h3>
+<h3 class="h1sec" id="sec-smr-depth-boss-TW">B1F 怪物等級 (SMR)、樓層深度、BOSS</h3>
 <div class=k53>
 <strong class=c0ff>具體某一層樓的怪物等級 (FloorMR) 的計算公式：</strong><br>
-<code style="background:#000;padding:2px 6px;color:#cff;border:1px solid #333;border-radius:3px;display:inline-block;margin-top:4px">FloorMR＝B1F怪物等級(SMR)＋int[(樓層數－1)÷4]</code>
+<code style="background:#000;padding:2px 6px;color:#cff;border:1px solid #333;border-radius:3px;display:inline-block;margin-top:4px">FloorMR＝B1F怪物等級(SMR)＋int[(樓層數－1)÷4]</code><br>
+※「樓層數」指「具體第幾層樓」,「樓層深度」指「BOSS前總共幾層樓」, 勿混淆
 </div>
 <table class="h1t fs11">
 <!--@SMRBoss_Table-->
@@ -1772,7 +1773,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <li>ストップウォッチを用意する (iPhone の「時計」アプリにこの機能がある)。</li>
 <li>地図に入り、指定されたフロアで「中断セーブ」した後、<strong class="h2op">以下の 2 つを同時に行う</strong>：<br><strong>① タイトル画面で A ボタンを押して「中断データからはじめる」<br>② ストップウォッチを起動して計測を始める</strong></li>
 <li>その後約 5 秒経つと、ゲーム内でもタイマー (Chest Timer) がバックグラウンドで起動し、1 秒ごとに進み、決して止まらない。</li>
-<li>その後、<strong class=h2k>「戦歴を開く→閉じる」</strong>や<strong class="h2k">「タイミングに合わせて階段を上る／下る (階段合わせ)」</strong>を行うと (<strong class="h2op">ストップウォッチの LAP ボタンを押して LAP TIME を記録するのと同じ</strong>)、「上記の操作を終えた瞬間」の Chest Timer の秒数が記録される。あとは<strong>表を引けば</strong><strong style=color:#11F514>「その秒にどの宝箱から何のアイテムが出るか」</strong>が分かる。「どの宝箱から何秒目に何のアイテムが出るか」は<strong style=color:#11F514>そのフロアの</strong><strong class=h2k>宝箱の数・宝箱番号 (宝箱の位置)・宝箱ランク</strong>に左右される。<strong>詳しくは下の「中断技 詳解」を参照</strong>。</li>
+<li>その後、<strong class=h2k>「戦歴を開く→閉じる」</strong>や<strong class="h2k">「タイミングに合わせて階段を上る／下る (階段合わせ)」</strong>を行うと (<strong class="h2op">ストップウォッチの LAP ボタンを押して LAP TIME を記録するのと同じ</strong>)、「上記の操作を終えた瞬間」の Chest Timer の秒数が記録される。あとは<strong>表を引けば</strong><strong style=color:#11F514>「その秒にどの宝箱から何のアイテムが出るか」</strong>が分かる。「どの宝箱から何秒目に何のアイテムが出るか」は<strong style=color:#11F514>そのフロアの</strong><strong class=h2k>宝箱の数・宝箱番号 (宝箱の位置)・宝箱ランク</strong>に左右される。<strong>詳しくは下の「中断技の詳しい解説」を参照</strong>。</li>
 </ol><h4 class=h1h4>補足</h4>
 <ul class=k2>
 <li>ストップウォッチで測った時間を「中断秒数」、Chest Timer の時間を「内部時間」と呼ぶ。<strong class=h2k>中断秒数＝内部時間＋5 秒</strong>。</li>
@@ -1889,7 +1890,75 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <div class="modal-tabs"></div>
 <div class="modal-lang-scroll modal-lang-scroll-help">
 <div id="h3ListTW">
-<h3 class="h3sec" style="margin-top:0">AT 搜尋可以幹甚麼？</h3>
+<h3 class="h1sec" style="margin-top:0">地圖法</h3>
+<h4 class="h1h4 mt8">甚麼叫「地圖法」？</h4>
+<p class=k57>　2010年初，玩家發現 一般怪物掉寶與否 可由「排在地圖頁最下方的地圖」來控制，因此而得名。基本操作如下：</p>
+<ol class=k8>
+<li>按 X 鍵打開 Menu</li>
+<li>選擇 どうぐ → たからのちず 進入 藏寶圖一覽</li>
+<li>把 <strong>地圖法用地圖</strong> 排到 任意一頁的最下方<br><span style=color:#888>(也就是 從上往下數 第 8 張，或最後一頁的最後一張)<br>(排法有 3 種：按 Select 改變排序 / 刪掉不要的地圖 / 多打幾張新地圖)</span></li>
+<li>走到 <strong>能出現目標怪物 的特定區域</strong>，打開 藏寶圖一覽，翻到地圖 A 所在頁面，按 B 鍵關閉<br><span style=color:#888>(在藏寶圖中，<strong>能出現目標怪物 的特定區域</strong>＝AT 靜止區域，俗稱 <strong style=color:#f6f>無敵 Zone</strong>)</span></li>
+<li>之後有兩種操作方式：<br>① 往指定方向走，地圖上出現 指定怪物，觸碰它進入戰鬥<br><strong style=color:magenta>② 站在原地不動，使用戰士技能「くちぶえ」呼叫被 地圖法用地圖 指定的怪物，進入戰鬥</strong><br><span style=color:#888>(不出現指定怪物時，從第 4 步重來)</span><br>老地圖 只能用方式 ①，新地圖 只能用方式 ②，本工具僅支援 ②</li>
+<li>按照 <strong>地圖法用地圖 指定的招式組合</strong>出招，幹掉所有敵怪，得到掉寶</li>
+<li>重複以上步驟 4～6，掉寶數量快到 99 時 用掉 (比如吃種子)，或 離開原地 賣了物品之後 從 3 重來</li>
+</ol>
+<details class="h1det">
+<summary>📖 地圖法用地圖 詳解</summary>
+<div>
+<h4 class=h1h4>地圖法用地圖 (排在地圖頁最下方的地圖)</h4>
+<p class=k47>作用：</p>
+<ol class=k8>
+<li>指定之後出現哪一種怪物</li>
+<li>判定戰鬥是否能「先制」</li>
+<li>指定 戰鬥時使用的 招式組合<span style=color:#888>(魔法/特技/道具)</span>，使戰鬥結束後 必定掉寶</li>
+</ol>
+<p class=k47>如何實現：</p>
+<ol class=k8>
+<li>首先把 地圖法用地圖 的 Seed 代入 AT 函數，關注其「步數」及「第幾步的返回值」</li>
+<li>怪物指定：用「第 35 步」的返回值 查該「地形×FloorMR」的怪物出現列表，即可查到它指定哪一種怪物
+<li>先制判定：用「第 36 步」的返回值 代入「<a href=#det-mapdef-formula-TW class=k1>地圖靈巧值公式</a>」算出 地圖靈巧值<br>之後只要玩家隊伍任一角色靈巧值≥地圖靈巧值，進入戰鬥時就能「先制」</li>
+<li>戰鬥起始 AT 步數判定：見下表
+<br><table class=h1t>
+<tr><td>先制狀態</td><td>敵怪 1 隻</td><td>敵怪 2-3 隻</td><td>敵怪 4-5 隻</td></tr>
+<tr><td>先制</td><td>第 38 步</td><td>第 39 步</td><td>第 40 步</td></tr>
+<tr><td>非先制</td><td>第 39 步</td><td>第 40 步</td><td>第 41 步</td></tr>
+</table>之後按以下公式計算：
+<br><code>「戰」＝符合掉寶 Pattern 的 AT 步數－(戰鬥起始 AT 步數＋29×魯拉次數) </code>
+<br>符合掉寶 Pattern 的 AT 步數 是每個 Seed 的固有值，分好幾種 Pattern
+<br><span style=color:#888>本工具「AT」及「M」按鈕 已能完美搜尋 每張地圖法用地圖的「戰」</li>
+<li>招式組合：一場戰鬥中 敵怪行動前 使用的所有招
+<br>① 剛好「湊夠 AT」<span style=color:#888>(也就是 <code>AT 消耗量之和 ＝「戰」</code>)</span>
+<br>② 最後一招 恰好能 清光 戰鬥中所有敵怪
+<br>二者必須同時滿足，缺一不可
+<br>另外，先制與否 影響 我方能出幾招 湊 AT：
+<br><table class=h1t>
+<tr><td>先制狀態</td><td>效果</td><td>我方行動</td><td>我方最多出</td></tr>
+<tr><td>先制</td><td>第一回合 敵怪 未察覺<br>或被嚇得不敢動</td><td>2 回合</td><td>8 招</td></tr>
+<tr><td>非先制</td><td>第一回合 敵怪 已能行動</td><td>1 回合</td><td>4 招</td></tr>
+</table></li>
+</ol>
+<p class=k47>注意：</p>
+<ul class=k8>
+<li>怪物指定 在 大地圖 不一定用 第 35 步，具體用第幾步 隨 地圖 Seed 及 地點 而變<br><span style=color:#888>本工具並未包含 大地圖 怪物出現列表 的資料，無法支援 大地圖 的地圖法</span></li>
+<li>先制判定 在 ① 往指定方向走 遇敵 時 不一定用 第 36 步，有些地圖用第 37 步，還有些地圖用第 38 39 42 步，具體用第幾步 隨 地圖 Seed 及 地點 而變<br><span style=color:#888>這類地圖 使用目的大多是 怪物指定 而非 掉寶，本工具「M」搜尋 已能完美對應</span></li>
+<li>另外 進入戰鬥前，用 n 次「魯拉」可以把「怪物指定」「先制判定」「戰鬥起始 AT 步數」的步數 都推後 29n：
+<br><table class=h1t>
+<tr><td>項目</td><td>用 n 次魯拉之後</td></tr>
+<tr><td>怪物指定</td><td>第 35+29n 步</td></tr>
+<tr><td>先制判定</td><td>第 36+29n 步</td></tr>
+<tr><td>戰鬥起始 AT 步數</td><td>第 38/39/40/41+29n 步</td></tr>
+</table></li>
+<li>多人連線且每片 DQ9 卡帶都有 盜賊秘傳書 時，「湊 AT」可以湊「戰-2／戰-4／戰-6」而不影響 掉寶個數／掉寶內容<br><span style=color:#888>因程式碼維護難度高，本工具暫不支援「戰-2／戰-4／戰-6」的 招式組合計算，敬請諒解</span><br><table class=h1t>
+<tr><td>Pattern</td><td>戰</td><td>戰-2</td><td>戰-4</td><td>戰-6</td></tr>
+<tr><td>具體湊多少 AT<br>(舉例)</td><td>17</td><td>15</td><td>13</td><td>11</td></tr>
+<tr><td>對應招式組合<br>(舉例)</td><td>マヒャデドス<br>(打1隻怪:17)</td><td>とうこん討ち⚔<br>(打1隻怪2下:15)</td><td>パワフルスロー<br>(打2隻怪各1下:13)</td><td>メラゾーマ<br>(打1隻怪:11)</td></tr>
+<tr><td>浪費頭幾個人<br>的盜賊書判定</td><td>0</td><td>1</td><td>2</td><td>3</td></tr>
+</table></li>
+</ul>
+<p class=k47>注意：</p>
+</div>
+</details>
+<strong>　本工具的 AT 按鈕及 M 按鈕 均能搜尋您想要的 地圖 A：</strong>
 <table class="h3t">
 <tr class="hdr">
 <th style="width:70px">按鈕</th>
@@ -1908,16 +1977,6 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <td class="cc">指定 <strong style=color:#FFAEC9>地圖 Seed、①地形、②FloorMR、④靈巧値上限、⑤魯拉、⑧掉寶 Pattern、⑥最大步數</strong>，<strong style=color:#99D9EA>Solver (Stats → 讓 隊伍 4 人的職業及數値 生效，Multi → 多人連線 解鎖多人使用 おうえん / 秘傳書招式)</strong>，<strong style=color:#B5E61D>敵組 (敵怪有幾組)、⑦稀有/普通掉寶率、盜賊秘傳書持有者 Lv</strong> 的情況下，算出 戰鬥中 應該出甚麼招式組合 才能精準掉寶。<br>注：DETAIL 是一個 附加的小工具，與搜尋無關。將來作者會在 DETAIL 的界面中提供 DETAIL 專用的說明書 (現在還沒開始做)。</td>
 </tr>
 </table>
-<h3 class="h3sec">地圖法基本操作</h3>
-<ol class=k8>
-<li>按 DS 的 X 鍵打開 Menu，然後選擇 どうぐ → たからのちず 進入 藏寶圖一覽。</li>
-<li>找到符合 本工具篩選條件 的 地圖 A，用 改變排序 / 刪掉不要的地圖 / 多打幾張新地圖 等方式 把它排到 任意一頁的最下方 (也就是 從上往下數 第 8 張，或最後一頁的最後一張)。</li>
-<li>進入另一張地圖 B —— 地圖 B 不符合本工具篩選條件，但它提供 您想要的怪物 —— 該怪物在您指定的 地形×FloorMR 組合中出現，且符合該組合的樓層中有 AT 靜止區域</li>
-<li>走到 AT 靜止區域，用第 1 步的操作方式 打開 藏寶圖一覽，翻到地圖 A 所在頁面，按 B 鍵關閉、退出<br>如果是多人連線，B 鍵關閉後，主人在此呼叫所有客人，被呼叫的客人要調整角色的朝向及位置，直到與主人完全一致 (若有yi'ming朝向或位置有任何偏差，AT 靜止區域 將失效——特殊樓層的 Flag0 區域除外)</li>
-<li>做完第 4 步後，站在原地不動，使用技能「くちぶえ」呼叫 被地圖 A 指定呼叫出來的那種怪物，之後直接進入戰鬥</li>
-<li>按照 地圖 A 固有的 技能組合 出招，幹掉所有敵怪，得到掉寶</li>
-<li>重複以上步驟 4～6，掉寶數量快到 99 時 用掉 (比如吃種子)，或 離開地圖 賣了物品之後 從 3 重來</li>
-</ol>
 <h3 class="h3sec">面板參數說明（由左到右按順序）</h3>
 <ul class=k8>
 <li><strong>①地形</strong>：指定 地形。</li>
@@ -1981,7 +2040,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <li><strong>先制所需最小靈巧値</strong>：指定魯拉次數後，於戰鬥中觸發「先制攻擊」所需的最低靈巧値門檻。</li>
 <li><strong>戰鬥中消耗的 AT 步數「戰」</strong>：在到達掉寶 Pattern 前，必須在戰鬥中手動消耗的 AT 步數。<span class=caaa>(依先制與否、怪物數量而變動；AT 搜尋必顯示，M 搜尋需指定 Pattern 後顯示)</span><br>消耗步數的手段：魔法、特技，以及可作道具使用的武器，詳見下表。</li>
 </ol>
-<details class="h1det mb16">
+<details class="h1det mb16" id=det-mapdef-formula-TW>
 <summary>📖 靈巧値計算公式</summary>
 <ul class=k11>
 <li><code>靈巧値＝ceil(AT÷32768×100-2)×20</code></li>
@@ -1991,7 +2050,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 <details class="h1det mb16">
 <summary>📖 戰鬥中消耗的 AT 步數「戰」的計算公式</summary>
 <ul class=k11>
-<li><code>「戰」＝ 符合掉寶 pattern 的 AT 步數 - (<font color=c0a865>戰鬥開始時 AT</font>＋29×魯拉次數)</code></li>
+<li><code>「戰」＝ 符合掉寶 pattern 的 AT 步數 - (<font color=c0a865>戰鬥起始 AT 步數</font>＋29×魯拉次數)</code></li>
 <li>「戰」可拆分為下列 魔法、特技 的組合 (原則上最多 4 項，先制時若能精確掌握第 2 回合 AT 追加消耗規律，可增至 8 項)</li>
 </ul>
 <table class="h3t sm ctr">
@@ -2011,7 +2070,7 @@ Finally, the remaining 12 floors of the <strong>effective upper-bound Seed</stro
 </ul>
 <strong style="color:#fa0;display:block;margin-top:8px">進入第 2 回合時，系統會重新排列怪物的顯示順序並消耗 AT：</strong>
 <ul class=k11>
-<li><strong>AT + int(怪物總數÷2)</strong>(怪物總數含已死怪物)</li>
+<li><strong>AT + int(怪物總數÷2)</strong>　　(怪物總數含已死怪物)</li>
 <li>如果第一回合結束時畫面已顯示全體怪物，則不重排 ➔ <strong>AT + 0</strong></li>
 </ul>
 <span class=c888>※ 來源：TKG 反組譯解析</span>
@@ -2590,6 +2649,37 @@ Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE EN
 <tr><td>6</td><td>Dolour</td><td>夢</td><td>14</td><td>Evil</td><td>星々</td></tr>
 <tr><td>7</td><td>Regret</td><td>影</td><td>15</td><td>Ruin</td><td>悪霊</td></tr>
 <tr><td>8</td><td>Bane</td><td>大地</td><td>16</td><td>Death</td><td>神々</td></tr></script>
+<script type="text/html" id="Locale_Name"><tr class="hdr">
+<th>${T('No.','編號','No')}</th>
+<th>${T('English','英文','英語')}</th>
+<th>${T('Japanese','日文','日本語')}</th>
+<th class="w">X</th>
+<th>${T('Appears in terrain','出現於地形','出現する地形')}</th>
+</tr>
+<tr><td>1</td><td>Cave</td><td>洞くつ</td><td>1</td><td>${T('Caves,Ice,Water,Fire','洞窟・冰・水・火山','洞窟・氷・水・火山')}</td></tr>
+<tr><td>2</td><td>Tunnel</td><td>地下道</td><td>1</td><td>${T('Ruins','遺跡')}</td></tr>
+<tr><td>3</td><td>Mine</td><td>坑道</td><td>2</td><td>${T('Caves,Ruins,Fire','洞窟・遺跡・火山')}</td></tr>
+<tr><td>4</td><td>Crevasse</td><td>雪道</td><td>2</td><td>${T('Ice','冰','氷')}</td></tr>
+<tr><td>5</td><td>Marsh</td><td>沼地</td><td>2</td><td>${T('Water','水')}</td></tr>
+<tr><td>6</td><td>Lair</td><td>アジト</td><td>3</td><td>${T('Caves,Ruins','洞窟・遺跡')}</td></tr>
+<tr><td>7</td><td>Icepit</td><td>氷穴</td><td>3</td><td>${T('Ice','冰','氷')}</td></tr>
+<tr><td>8</td><td>Lake</td><td>地底湖</td><td>3</td><td>${T('Water','水')}</td></tr>
+<tr><td>9</td><td>Crater</td><td>火口</td><td>3</td><td>${T('Fire','火山')}</td></tr>
+<tr><td>10</td><td>Path</td><td>道</td><td>4</td><td>${T('Caves,Ruins','洞窟・遺跡')}</td></tr>
+<tr><td>11</td><td>Snowhall</td><td>雪原</td><td>4</td><td>${T('Ice','冰','氷')}</td></tr>
+<tr><td>12</td><td>Moor</td><td>湿原</td><td>4</td><td>${T('Water','水')}</td></tr>
+<tr><td>13</td><td>Dungeon</td><td>牢ごく</td><td>4</td><td>${T('Fire','火山')}</td></tr>
+<tr><td>14</td><td>Crypt</td><td>墓場</td><td>5</td><td>${T('Caves,Ruins,Ice,Water,Fire','洞窟・遺跡・冰・水・火山','洞窟・遺跡・氷・水・火山')}</td></tr>
+<tr><td>15</td><td>Nest</td><td>巣</td><td>6</td><td>${T('Caves,Fire','洞窟・火山')}</td></tr>
+<tr><td>16</td><td>Ruins</td><td>遺跡</td><td>6</td><td>${T('Ruins','遺跡')}</td></tr>
+<tr><td>17</td><td>Tundra</td><td>凍土</td><td>6</td><td>${T('Ice','冰','氷')}</td></tr>
+<tr><td>18</td><td>Waterway</td><td>水脈</td><td>6</td><td>${T('Water','水')}</td></tr>
+<tr><td>19</td><td>World</td><td>世界</td><td>7</td><td>${T('Caves,Ruins,Ice,Water,Fire','洞窟・遺跡・冰・水・火山','洞窟・遺跡・氷・水・火山')}</td></tr>
+<tr><td>20</td><td>Abyss</td><td>奈落</td><td>8</td><td>${T('Caves','洞窟')}</td></tr>
+<tr><td>21</td><td>Maze</td><td>迷宮</td><td>8</td><td>${T('Ruins','遺跡')}</td></tr>
+<tr><td>22</td><td>Glacier</td><td>氷河</td><td>8</td><td>${T('Ice','冰','氷')}</td></tr>
+<tr><td>23</td><td>Chasm</td><td>眠る地</td><td>8</td><td>${T('Water','水')}</td></tr>
+<tr><td>24</td><td>Void</td><td>じごく</td><td>8</td><td>${T('Fire','火山')}</td></tr></script>
 <script type="text/html" id="Loc_Table"><tr class="hdr">
 <th>${T('FQ Range','FQ 範圍','Final 値')}</th>
 <th>${T('Location Range','位置的候補 (16進位)','場所候補 (16進数)')}</th>
@@ -2597,6 +2687,166 @@ Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE EN
 <tr><td class="w">2 ~ 50</td><td class="loc">01 ~ 2F</td></tr>
 <tr><td class="w">51 ~ 80</td><td class="loc">01 ~ 83</td></tr>
 <tr><td class="w">81 ~ 248</td><td class="loc">01 ~ 96</td></tr></script>
+<script type="text/html" id="Region_Table"><thead class=hdr2 style="position:-webkit-sticky;position:sticky;top:0">
+<tr>
+<th style="width:125px">${T('Area','地區名 (JP / EN)','エリア名 (JP / EN)')}</th>
+<th style="width:40px">${T('Loc','位置','場所')}</th>
+<th style="width:30px">${T('Hit','撞','当')}</th>
+<th>${T('Notes','備考')}</th>
+</tr>
+</thead>
+<tbody>
+<tr><td rowspan="5" class="rh">ウォルロ地方<br><span class="sm">Angel Falls</span></td><td class="loc">01</td><td>◯</td><td>4.81s (${T('3rd','第3名','3位')})</td></tr>
+<tr><td class="loc">02</td><td>×</td><td></td></tr>
+<tr><td class="loc"><u>03</u></td><td>◯</td><td></td></tr>
+<tr><td class="loc">04</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>86</b></td><td>×</td><td></td></tr>
+<tr><td rowspan="4" class="rh">西セントシュタイン<br><span class="sm">Western Stornway</span></td><td class="loc">05</td><td>◯</td><td>5.86s (${T('7th','第7名','7位')})</td></tr>
+<tr><td class="loc">06</td><td>◯</td><td>8.31s (${T('13th','第13名','13位')})</td></tr>
+<tr><td class="loc">07</td><td>◯</td><td></td></tr>
+<tr><td class="loc">08</td><td>×</td><td></td></tr>
+<tr><td rowspan="5" class="rh">東セントシュタイン<br><span class="sm">Eastern Stornway</span></td><td class="loc">09</td><td>◯</td><td></td></tr>
+<tr><td class="loc">0A</td><td>×</td><td></td></tr>
+<tr><td class="loc">0B</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>87</b></td><td>◎</td><td></td></tr>
+<tr><td class="loc"><b>88</b></td><td>×</td><td></td></tr>
+<tr><td rowspan="5" class="rh">エラフィタ地方<br><span class="sm">Zere</span></td><td class="loc"><u>0C</u></td><td>◯</td><td></td></tr>
+<tr><td class="loc">0D</td><td>×</td><td></td></tr>
+<tr><td class="loc">0E</td><td>×</td><td></td></tr>
+<tr><td class="loc">0F</td><td>×</td><td>8.72s (${T('14th','第14名','14位')})</td></tr>
+<tr><td class="loc">10</td><td>◯</td><td></td></tr>
+<tr><td rowspan="3" class="rh">ほろびのもり<br><span class="sm">Doomingale Forest</span></td><td class="loc">11</td><td>×</td><td></td></tr>
+<tr><td class="loc">12</td><td>×</td><td></td></tr>
+<tr><td class="loc">13</td><td>◯</td><td></td></tr>
+<tr><td rowspan="5" class="rh">東ベクセリア地方<br><span class="sm">Eastern Coffinwell</span></td><td class="loc">14</td><td>×</td><td></td></tr>
+<tr><td class="loc">15</td><td>×</td><td></td></tr>
+<tr><td class="loc"><u>16</u></td><td>◯</td><td></td></tr>
+<tr><td class="loc">17</td><td>◯</td><td>5.50s (${T('6th','第6名','6位')})</td></tr>
+<tr><td class="loc">18</td><td>◯</td><td></td></tr>
+<tr><td rowspan="7" class="rh">西ベクセリア地方<br><span class="sm">Western Coffinwell</span></td><td class="loc"><u>19</u></td><td>×</td><td></td></tr>
+<tr><td class="loc">1A</td><td>◯</td><td></td></tr>
+<tr><td class="loc">1B</td><td>×</td><td></td></tr>
+<tr><td class="loc">1C</td><td>×</td><td></td></tr>
+<tr><td class="loc"><i>68</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>89</b></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>8A</b></td><td>×</td><td></td></tr>
+<tr><td rowspan="7" class="rh">アユルダーマとう<br><span class="sm">Newid Isle</span></td><td class="loc">1D</td><td>×</td><td>5.36s (${T('5th','第5名','5位')})</td></tr>
+<tr><td class="loc">1E</td><td>◯</td><td></td></tr>
+<tr><td class="loc">1F</td><td>◯</td><td></td></tr>
+<tr><td class="loc">20</td><td>◯</td><td>7.35s (${T('10th','第10名','10位')})</td></tr>
+<tr><td class="loc">21</td><td>×</td><td></td></tr>
+<tr><td class="loc"><b>8B</b></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>8C</b></td><td>△</td><td></td></tr>
+<tr><td rowspan="3" class="rh">ベレンのきしべ<br><span class="sm">Slurry Coast</span></td><td class="loc">22</td><td>×</td><td>1.45s (${T('1st','第1名','1位')})</td></tr>
+<tr><td class="loc">23</td><td>◯</td><td></td></tr>
+<tr><td class="loc">24</td><td>×</td><td></td></tr>
+<tr><td rowspan="3" class="rh">カラコタ地方<br><span class="sm">Dourbridge</span></td><td class="loc">25</td><td>×</td><td></td></tr>
+<tr><td class="loc">26</td><td>◯</td><td></td></tr>
+<tr><td class="loc">27</td><td>◯</td><td></td></tr>
+<tr><td rowspan="3" class="rh">ビタリへいげん<br><span class="sm">Lonely Plains</span></td><td class="loc">28</td><td>◯</td><td></td></tr>
+<tr><td class="loc">29</td><td>×</td><td></td></tr>
+<tr><td class="loc">2A</td><td>◯</td><td></td></tr>
+<tr><td rowspan="5" class="rh">サンマロウ地方<br><span class="sm">Bloomingdale</span></td><td class="loc">2B</td><td>◯</td><td></td></tr>
+<tr><td class="loc">2C</td><td>×</td><td>7.98s (${T('11th','第11名','11位')})</td></tr>
+<tr><td class="loc">2D</td><td>◯</td><td>8.85s (${T('15th','第15名','15位')})</td></tr>
+<tr><td class="loc">2E</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>2F</i></td><td>×</td><td></td></tr>
+<tr><td rowspan="6" class="rh">ビタリかいがん<br><span class="sm">Lonely Coast</span></td><td class="loc"><i>30</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>31</i></td><td>×</td><td></td></tr>
+<tr><td class="loc"><i>32</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>8D</b></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>8E</b></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>8F</b></td><td>×</td><td></td></tr>
+<tr><td class="rh">あめのしま<br><span class="sm">Pluvi Isle</span></td><td class="loc"><i>33</i></td><td>×</td><td></td></tr>
+<tr><td rowspan="8" class="rh">グビアナさばく<br><span class="sm">Djust Desert</span></td><td class="loc"><i>34</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>35</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc">36</td><td>×</td><td>${T('Very easy to get lost','非常容易迷路','迷子になりやすい')}</td></tr>
+<tr><td class="loc">37</td><td>◯</td><td></td></tr>
+<tr><td class="loc">38</td><td>△</td><td></td></tr>
+<tr><td class="loc">39</td><td>◯</td><td></td></tr>
+<tr><td class="loc">3A</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>90</b></td><td>◯</td><td></td></tr>
+<tr><td rowspan="5" class="rh">アシュバル地方<br><span class="sm">Hermany</span></td><td class="loc">3B</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>3C</i></td><td>◎</td><td></td></tr>
+<tr><td class="loc">3D</td><td>◯</td><td></td></tr>
+<tr><td class="loc">3E</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>91</b></td><td>×</td><td></td></tr>
+<tr><td rowspan="5" class="rh">エルマニオンかいがん<br><span class="sm">Snowberian Coast</span></td><td class="loc">3F</td><td>×</td><td></td></tr>
+<tr><td class="loc">40</td><td>×</td><td>${T('Will hit after 10 mins','10分鐘後被撞','10分後当たる')}</td></tr>
+<tr><td class="loc">41</td><td>×</td><td></td></tr>
+<tr><td class="loc">42</td><td>◯</td><td>${T('Narrow landing hitbox','降落判定很窄','着陸判定が狭い')}</td></tr>
+<tr><td class="loc">43</td><td>×</td><td></td></tr>
+<tr><td rowspan="5" class="rh">エルマニオンせつげん<br><span class="sm">Snowberia</span></td><td class="loc">44</td><td>△</td><td>3.21s (${T('2nd','第2名','2位')})</td></tr>
+<tr><td class="loc">45</td><td>×</td><td></td></tr>
+<tr><td class="loc">46</td><td>◯</td><td></td></tr>
+<tr><td class="loc">47</td><td>◯</td><td></td></tr>
+<tr><td class="loc">48</td><td>◯</td><td></td></tr>
+<tr><td rowspan="4" class="rh">アイスバリーかいがん<br><span class="sm">Cringle Coast</span></td><td class="loc">49</td><td>×</td><td></td></tr>
+<tr><td class="loc">4A</td><td>△</td><td></td></tr>
+<tr><td class="loc">4B</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>92</b></td><td>◯</td><td></td></tr>
+<tr><td rowspan="7" class="rh">ヤハーンしっち<br><span class="sm">Urdus Marshland</span></td><td class="loc">4C</td><td>×</td><td></td></tr>
+<tr><td class="loc">4D</td><td>×</td><td></td></tr>
+<tr><td class="loc">4E</td><td>×</td><td></td></tr>
+<tr><td class="loc">4F</td><td>×</td><td></td></tr>
+<tr><td class="loc">50</td><td>◯</td><td></td></tr>
+<tr><td class="loc">51</td><td>◯</td><td></td></tr>
+<tr><td class="loc">52</td><td>×</td><td></td></tr>
+<tr><td rowspan="5" class="rh">カルバド大そうげん<br><span class="sm">Iluugazar Plains</span></td><td class="loc">53</td><td>◯</td><td>6.36s (${T('8th','第8名','8位')})</td></tr>
+<tr><td class="loc">54</td><td>◯</td><td>12.20s</td></tr>
+<tr><td class="loc">55</td><td>◯</td><td></td></tr>
+<tr><td class="loc">56</td><td>◯</td><td></td></tr>
+<tr><td class="loc">57</td><td>×</td><td>8.16s (${T('12th','第12名','12位')})</td></tr>
+<tr><td rowspan="7" class="rh">カズチィチィ山<br><span class="sm">Mt Ulzuun</span></td><td class="loc">58</td><td>◯</td><td></td></tr>
+<tr><td class="loc">59</td><td>×</td><td></td></tr>
+<tr><td class="loc">5A</td><td>×</td><td></td></tr>
+<tr><td class="loc">5B</td><td>◯</td><td></td></tr>
+<tr><td class="loc">5F</td><td>×</td><td></td></tr>
+<tr><td class="loc">60</td><td>×</td><td></td></tr>
+<tr><td class="loc">61</td><td>◯</td><td></td></tr>
+<tr><td rowspan="3" class="rh">ダダマルダ山<br><span class="sm">Mt Ulbaruun</span></td><td class="loc">5C</td><td>×</td><td></td></tr>
+<tr><td class="loc">5D</td><td>×</td><td></td></tr>
+<tr><td class="loc">5E</td><td>×</td><td></td></tr>
+<tr><td rowspan="3" class="rh">ジャーホジ地方<br><span class="sm">Khaalag Coast</span></td><td class="loc"><i>62</i></td><td>×</td><td></td></tr>
+<tr><td class="loc"><i>63</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>64</i></td><td>×</td><td></td></tr>
+<tr><td rowspan="4" class="rh">オンゴリのがけ<br><span class="sm">Ondor Cliffs</span></td><td class="loc"><i>65</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>66</i></td><td>×</td><td></td></tr>
+<tr><td class="loc"><i>67</i></td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>93</b></td><td>◯</td><td></td></tr>
+<tr><td rowspan="5" class="rh">東ナザム地方<br><span class="sm">Eastern Wormwood</span></td><td class="loc">69</td><td>◯</td><td>5.00s (${T('4th','第4名','4位')})</td></tr>
+<tr><td class="loc">6A</td><td>◯</td><td>${T('Must land nearby','要降落在旁邊','近くに着陸する必要あり')}</td></tr>
+<tr><td class="loc">6B</td><td>◯</td><td></td></tr>
+<tr><td class="loc">6C</td><td>×</td><td></td></tr>
+<tr><td class="loc"><b>94</b></td><td>◎</td><td></td></tr>
+<tr><td rowspan="6" class="rh">西ナザム地方<br><span class="sm">Western Wormwood</span></td><td class="loc">6D</td><td>◯</td><td></td></tr>
+<tr><td class="loc">6E</td><td>×</td><td></td></tr>
+<tr><td class="loc">6F</td><td>◯</td><td></td></tr>
+<tr><td class="loc">70</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><i>71</i></td><td>×</td><td></td></tr>
+<tr><td class="loc"><b>95</b></td><td>×</td><td></td></tr>
+<tr><td rowspan="2" class="rh">竜のもん<br><span class="sm">Wormwood Canyon</span></td><td class="loc">72</td><td>◯</td><td></td></tr>
+<tr><td class="loc">73</td><td>×</td><td></td></tr>
+<tr><td rowspan="7" class="rh">竜のしっぽ地方<br><span class="sm">Wyrmtail</span></td><td class="loc">74</td><td>×</td><td></td></tr>
+<tr><td class="loc">75</td><td>◯</td><td></td></tr>
+<tr><td class="loc">76</td><td>◎</td><td></td></tr>
+<tr><td class="loc">77</td><td>×</td><td></td></tr>
+<tr><td class="loc">7B</td><td>◯</td><td></td></tr>
+<tr><td class="loc">7C</td><td>◯</td><td></td></tr>
+<tr><td class="loc"><b>96</b></td><td>◯</td><td></td></tr>
+<tr><td rowspan="3" class="rh">竜のつばさ地方<br><span class="sm">Wyrmwing</span></td><td class="loc">78</td><td>◯</td><td></td></tr>
+<tr><td class="loc">79</td><td>◯</td><td></td></tr>
+<tr><td class="loc">7A</td><td>◯</td><td></td></tr>
+<tr><td rowspan="4" class="rh">竜のあぎと地方<br><span class="sm">Wyrmsmaw</span></td><td class="loc">7D</td><td>◯</td><td></td></tr>
+<tr><td class="loc">7E</td><td>◯</td><td></td></tr>
+<tr><td class="loc">7F</td><td>◯</td><td></td></tr>
+<tr><td class="loc">80</td><td>×</td><td>6.45s (${T('9th','第9名','9位')})</td></tr>
+<tr><td rowspan="3" class="rh">竜のくび地方<br><span class="sm">Wyrmneck</span></td><td class="loc">81</td><td>×</td><td></td></tr>
+<tr><td class="loc"><u>82</u></td><td>◯</td><td></td></tr>
+<tr><td class="loc">83</td><td>×</td><td></td></tr>
+<tr><td rowspan="2" class="rh">ガナンていこくりょう<br><span class="sm">The Gittish Empire</span></td><td class="loc">84</td><td>×</td><td></td></tr>
+<tr><td class="loc">85</td><td>◯</td><td></td></tr>
+</tbody></script>
 <script type="text/html" id="Rank_Table"><tr class=hdr2>
 <th>Rank</th>
 <th>${T('FQ (Hex)','FQ (16進位)','Final 値 (16進数)')}</th>
@@ -2614,24 +2864,150 @@ Dragon Quest IX Copyright 2009, 2010 ARMOR PROJECT/BIRD STUDIO/LEVEL-5/SQUARE EN
 <tr><td class="w">B5</td><td class="loc">B5 ~ C8</td><td class="g">181 ~ 200</td></tr>
 <tr><td class="w">C9</td><td class="loc">C9 ~ DC</td><td class="g">201 ~ 220</td></tr>
 <tr><td class="w">DD</td><td class="loc">DD ~ F8</td><td class="g">221 ~ 248</td></tr></script>
+<script type="text/html" id="SMRBoss_Table"><tr class=hdr2>
+<th>Rank</th>
+<th>${T('SMR','B1F 怪物等級','B1F 敵ランク')}</th>
+<th>${T('Depth','樓層深度','深さ')}</th>
+<th>${T('Boss','BOSS')}</th>
+</tr>
+<tr>
+<td class="rk">02</td>
+<td class="w">X (1~3)</td>
+<td class="loc">2 ~ 4</td>
+<td rowspan="2" class="p">馬, 爪, 髭</td>
+</tr>
+<tr>
+<td class="rk">38</td>
+<td rowspan="2" class="w">X+1 (2~4)</td>
+<td rowspan="2" class="loc">4 ~ 6</td>
+</tr>
+<tr>
+<td class="rk">3D</td>
+<td rowspan="2" class="p">爪, 髭, 機, 教</td>
+</tr>
+<tr>
+<td class="rk">4C</td>
+<td rowspan="2" class="w">X+2 (3~5)</td>
+<td rowspan="2" class="loc">6 ~ 10</td>
+</tr>
+<tr>
+<td class="rk">51</td>
+<td class="p">髭, 機, 教, 血, 巨</td>
+</tr>
+<tr>
+<td class="rk">65</td>
+<td rowspan="2" class="w">X+3 (4~6)</td>
+<td class="loc">8 ~ 12</td>
+<td class="p">機, 教, 血, 巨</td>
+</tr>
+<tr>
+<td class="rk">79</td>
+<td class="loc">10 ~ 14</td>
+<td class="p">教, 血, 巨, 猪, 鳥</td>
+</tr>
+<tr>
+<td class="rk">8D</td>
+<td rowspan="2" class="w">X+4 (5~7)</td>
+<td rowspan="2" class="loc">10 ~ 16</td>
+<td class="p">血, 巨, 猪, 鳥</td>
+</tr>
+<tr>
+<td class="rk">A1</td>
+<td class="p">巨, 猪, 鳥, 猫</td>
+</tr>
+<tr>
+<td class="rk">B5</td>
+<td class="w">Y (6~9)</td>
+<td class="loc">11 ~ 16</td>
+<td class="p">猪, 鳥, 猫, 滅, 竜</td>
+</tr>
+<tr>
+<td class="rk">C9</td>
+<td class="w">8 (Y${T(' is even','為偶數','が偶数')})<br>9 (Y${T(' is odd','為奇數','が奇数')})</td>
+<td class="loc">12 ~ 16</td>
+<td rowspan="2" class="p">${T('All 12 types','全12種')}</td>
+</tr>
+<tr>
+<td class="rk">DD</td>
+<td class="w">9</td>
+<td class="loc">14 ~ 16</td>
+</tr></script>
 <script type="text/html" id="Boss_Name"><tr class="hdr">
+<th>No.</th>
 <th>${T('Abb.','縮寫','略称')}</th>
 <th>${T('English','英文全名','英語名')}</th>
 <th>${T('Japanese','日文全名','日本語名')}</th>
 
 </tr>
-<tr><td>馬</td><td>Equinox</td><td>黒竜丸</td></tr>
-<tr><td>爪</td><td>Nemean</td><td>ハヌマーン</td></tr>
-<tr><td>髭</td><td>Shogum</td><td>スライムジェネラル</td></tr>
-<tr><td>機</td><td>Trauminator</td><td>Sキラーマシン</td></tr>
-<tr><td>教</td><td>Elusid</td><td>イデアラゴン</td></tr>
-<tr><td>血</td><td>Sir Sanguinus</td><td>ブラッドナイト</td></tr>
-<tr><td>巨</td><td>Atlas</td><td>アトラス</td></tr>
-<tr><td>猪</td><td>Hammibal</td><td>怪力軍曹イボイノス</td></tr>
-<tr><td>鳥</td><td>Fowleye</td><td>邪眼皇帝アウルート</td></tr>
-<tr><td>猫</td><td>Excalipurr</td><td>魔剣神レパルド</td></tr>
-<tr><td>滅</td><td>Tyrannosaurus Wrecks</td><td>破壊神フォロボス</td></tr>
-<tr><td>竜</td><td>Greygnarl</td><td>グレイナル</td></tr></script>
+<tr><td>1</td><td>馬</td><td>Equinox</td><td>黒竜丸</td></tr>
+<tr><td>2</td><td>爪</td><td>Nemean</td><td>ハヌマーン</td></tr>
+<tr><td>3</td><td>髭</td><td>Shogum</td><td>スライムジェネラル</td></tr>
+<tr><td>4</td><td>機</td><td>Trauminator</td><td>Sキラーマシン</td></tr>
+<tr><td>5</td><td>教</td><td>Elusid</td><td>イデアラゴン</td></tr>
+<tr><td>6</td><td>血</td><td>Sir Sanguinus</td><td>ブラッドナイト</td></tr>
+<tr><td>7</td><td>巨</td><td>Atlas</td><td>アトラス</td></tr>
+<tr><td>8</td><td>猪</td><td>Hammibal</td><td>怪力軍曹イボイノス</td></tr>
+<tr><td>9</td><td>鳥</td><td>Fowleye</td><td>邪眼皇帝アウルート</td></tr>
+<tr><td>10</td><td>猫</td><td>Excalipurr</td><td>魔剣神レパルド</td></tr>
+<tr><td>11</td><td>滅</td><td>Tyrannosaurus Wrecks</td><td>破壊神フォロボス</td></tr>
+<tr><td>12</td><td>竜</td><td>Greygnarl</td><td>グレイナル</td></tr></script>
+<script type="text/html" id="ElistOfs_Table"><tr class=hdr2>
+<th style="width:90px">ElistOfs</th>
+<th style="width:40px">${T('MonC','怪數','モン数')}</th>
+<th>${T('Floor State (Normal)','樓層狀態 (一般)','フロア状態 (通常)')}</th>
+<th>${T('Floor State (A)','樓層狀態 (A)','フロア状態 (A)')}</th>
+<th>${T('Floor State (B)','樓層狀態 (B)','フロア状態 (B)')}</th>
+</tr>
+<tr>
+<td class="cy">~ 2B30</td>
+<td class="fw">8</td>
+<td colspan="3" class="g">${T('Not a special floor','非特殊樓層','特殊フロアではない')}</td>
+</tr>
+<tr>
+<td class="cy">2B34 ~ 2B44</td>
+<td class="fw">7</td>
+<td class="p">${T('4-enemy','敵減 4 種')}</td>
+<td class="g">${T('Not a special floor','非特殊樓層','特殊フロアではない')}</td>
+<td class="p">${T('4-enemy','敵減 4 種')}</td>
+</tr>
+<tr>
+<td class="cy">2B48 ~ 2B58</td>
+<td class="fw">6</td>
+<td colspan="3" class="p">${T('3-enemy','敵減 3 種')}</td>
+</tr>
+<tr>
+<td class="cy">2B5C ~ 2B6C</td>
+<td class="fw">5</td>
+<td colspan="3" class="p">${T('2-enemy','敵減 2 種')}</td>
+</tr>
+<tr>
+<td class="cy">2B70 ~ 2B80</td>
+<td class="fw">4</td>
+<td colspan="3" class="r4">${T('ONLY','ONLY','オンリー')}</td>
+</tr>
+<tr>
+<td class="cy">2B84 ~ 2B94</td>
+<td class="fw">3</td>
+<td colspan="2" class="c">${T('No-enemy','敵無')}</td>
+<td class="r4">${T('ONLY','ONLY','オンリー')} <span class=k13>(${T('Pandora\'s Box vanishes','Pandora\'s Box 消失','パンドラボックス消滅')})</span></td>
+</tr>
+<tr>
+<td class="cy">2B98 ~ 2BA8</td>
+<td class="fw">2</td>
+<td colspan="2" class="c">${T('No-enemy','敵無')} <span class=k26>(${T('Pandora\'s Box vanishes','Pandora\'s Box 消失','パンドラボックス消滅')})</span></td>
+<td class="r4">${T('ONLY','ONLY','オンリー')} <span class=k13>(${T('Mimic vanishes','Mimic 消失','ミミック消滅')})</span></td>
+</tr>
+<tr>
+<td class="cy">2BAC ~ 2BBC</td>
+<td class="fw">1</td>
+<td colspan="2" class="c">${T('No-enemy','敵無')} <span class=k26>(${T('Mimic vanishes','Mimic 消失','ミミック消滅')})</span></td>
+<td class="r4">${T('ONLY','ONLY','オンリー')} <span class=k13>(${T('Cannibox vanishes','Cannibox 消失','ひとくいばこ消滅')})</span></td>
+</tr>
+<tr>
+<td class="cy">2BC0 ~ </td>
+<td class="fw">0</td>
+<td colspan="3" class="c">${T('No-enemy','敵無')} <span class=k26>(${T('all trap monsters vanish','所有寶箱怪消失','すべての宝箱モンスター消滅')})</span></td>
+</tr></script>
 <script type="text/html" id="Multibug_Table"><tr class=hdr2>
 <th>Rank</th>
 <th>${T('Min Floor','最小樓層數','最小階層数')}</th>
@@ -2837,354 +3213,6 @@ ${T('Magic water','まほうのせいすい')}<br>
 ${T('Evac-u-bell','おもいでのすず')}</td>
 </tr>
 <tr><td>${T('Gleeban groat','グビアナどうか')}<br>125G</td></tr></script>
-<script type="text/html" id="Locale_Name"><tr class="hdr">
-<th>${T('No.','編號','No')}</th>
-<th>${T('English','英文','英語')}</th>
-<th>${T('Japanese','日文','日本語')}</th>
-<th class="w">X</th>
-<th>${T('Appears in terrain','出現於地形','出現する地形')}</th>
-</tr>
-<tr><td>1</td><td>Cave</td><td>洞くつ</td><td>1</td><td>${T('Caves,Ice,Water,Fire','洞窟・冰・水・火山','洞窟・氷・水・火山')}</td></tr>
-<tr><td>2</td><td>Tunnel</td><td>地下道</td><td>1</td><td>${T('Ruins','遺跡')}</td></tr>
-<tr><td>3</td><td>Mine</td><td>坑道</td><td>2</td><td>${T('Caves,Ruins,Fire','洞窟・遺跡・火山')}</td></tr>
-<tr><td>4</td><td>Crevasse</td><td>雪道</td><td>2</td><td>${T('Ice','冰','氷')}</td></tr>
-<tr><td>5</td><td>Marsh</td><td>沼地</td><td>2</td><td>${T('Water','水')}</td></tr>
-<tr><td>6</td><td>Lair</td><td>アジト</td><td>3</td><td>${T('Caves,Ruins','洞窟・遺跡')}</td></tr>
-<tr><td>7</td><td>Icepit</td><td>氷穴</td><td>3</td><td>${T('Ice','冰','氷')}</td></tr>
-<tr><td>8</td><td>Lake</td><td>地底湖</td><td>3</td><td>${T('Water','水')}</td></tr>
-<tr><td>9</td><td>Crater</td><td>火口</td><td>3</td><td>${T('Fire','火山')}</td></tr>
-<tr><td>10</td><td>Path</td><td>道</td><td>4</td><td>${T('Caves,Ruins','洞窟・遺跡')}</td></tr>
-<tr><td>11</td><td>Snowhall</td><td>雪原</td><td>4</td><td>${T('Ice','冰','氷')}</td></tr>
-<tr><td>12</td><td>Moor</td><td>湿原</td><td>4</td><td>${T('Water','水')}</td></tr>
-<tr><td>13</td><td>Dungeon</td><td>牢ごく</td><td>4</td><td>${T('Fire','火山')}</td></tr>
-<tr><td>14</td><td>Crypt</td><td>墓場</td><td>5</td><td>${T('Caves,Ruins,Ice,Water,Fire','洞窟・遺跡・冰・水・火山','洞窟・遺跡・氷・水・火山')}</td></tr>
-<tr><td>15</td><td>Nest</td><td>巣</td><td>6</td><td>${T('Caves,Fire','洞窟・火山')}</td></tr>
-<tr><td>16</td><td>Ruins</td><td>遺跡</td><td>6</td><td>${T('Ruins','遺跡')}</td></tr>
-<tr><td>17</td><td>Tundra</td><td>凍土</td><td>6</td><td>${T('Ice','冰','氷')}</td></tr>
-<tr><td>18</td><td>Waterway</td><td>水脈</td><td>6</td><td>${T('Water','水')}</td></tr>
-<tr><td>19</td><td>World</td><td>世界</td><td>7</td><td>${T('Caves,Ruins,Ice,Water,Fire','洞窟・遺跡・冰・水・火山','洞窟・遺跡・氷・水・火山')}</td></tr>
-<tr><td>20</td><td>Abyss</td><td>奈落</td><td>8</td><td>${T('Caves','洞窟')}</td></tr>
-<tr><td>21</td><td>Maze</td><td>迷宮</td><td>8</td><td>${T('Ruins','遺跡')}</td></tr>
-<tr><td>22</td><td>Glacier</td><td>氷河</td><td>8</td><td>${T('Ice','冰','氷')}</td></tr>
-<tr><td>23</td><td>Chasm</td><td>眠る地</td><td>8</td><td>${T('Water','水')}</td></tr>
-<tr><td>24</td><td>Void</td><td>じごく</td><td>8</td><td>${T('Fire','火山')}</td></tr></script>
-<script type="text/html" id="Region_Table"><thead class=hdr2 style="position:-webkit-sticky;position:sticky;top:0">
-<tr>
-<th style="width:125px">${T('Area','地區名 (JP / EN)','エリア名 (JP / EN)')}</th>
-<th style="width:40px">${T('Loc','位置','場所')}</th>
-<th style="width:30px">${T('Hit','撞','当')}</th>
-<th>${T('Notes','備考')}</th>
-</tr>
-</thead>
-<tbody>
-<tr><td rowspan="5" class="rh">ウォルロ地方<br><span class="sm">Angel Falls</span></td><td class="loc">01</td><td>◯</td><td>4.81s (${T('3rd','第3名','3位')})</td></tr>
-<tr><td class="loc">02</td><td>×</td><td></td></tr>
-<tr><td class="loc"><u>03</u></td><td>◯</td><td></td></tr>
-<tr><td class="loc">04</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>86</b></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="4" class="rh">西セントシュタイン<br><span class="sm">Western Stornway</span></td><td class="loc">05</td><td>◯</td><td>5.86s (${T('7th','第7名','7位')})</td></tr>
-<tr><td class="loc">06</td><td>◯</td><td>8.31s (${T('13th','第13名','13位')})</td></tr>
-<tr><td class="loc">07</td><td>◯</td><td></td></tr>
-<tr><td class="loc">08</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">東セントシュタイン<br><span class="sm">Eastern Stornway</span></td><td class="loc">09</td><td>◯</td><td></td></tr>
-<tr><td class="loc">0A</td><td>×</td><td></td></tr>
-<tr><td class="loc">0B</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>87</b></td><td>◎</td><td></td></tr>
-<tr><td class="loc"><b>88</b></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">エラフィタ地方<br><span class="sm">Zere</span></td><td class="loc"><u>0C</u></td><td>◯</td><td></td></tr>
-<tr><td class="loc">0D</td><td>×</td><td></td></tr>
-<tr><td class="loc">0E</td><td>×</td><td></td></tr>
-<tr><td class="loc">0F</td><td>×</td><td>8.72s (${T('14th','第14名','14位')})</td></tr>
-<tr><td class="loc">10</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">ほろびのもり<br><span class="sm">Doomingale Forest</span></td><td class="loc">11</td><td>×</td><td></td></tr>
-<tr><td class="loc">12</td><td>×</td><td></td></tr>
-<tr><td class="loc">13</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">東ベクセリア地方<br><span class="sm">Eastern Coffinwell</span></td><td class="loc">14</td><td>×</td><td></td></tr>
-<tr><td class="loc">15</td><td>×</td><td></td></tr>
-<tr><td class="loc"><u>16</u></td><td>◯</td><td></td></tr>
-<tr><td class="loc">17</td><td>◯</td><td>5.50s (${T('6th','第6名','6位')})</td></tr>
-<tr><td class="loc">18</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="7" class="rh">西ベクセリア地方<br><span class="sm">Western Coffinwell</span></td><td class="loc"><u>19</u></td><td>×</td><td></td></tr>
-<tr><td class="loc">1A</td><td>◯</td><td></td></tr>
-<tr><td class="loc">1B</td><td>×</td><td></td></tr>
-<tr><td class="loc">1C</td><td>×</td><td></td></tr>
-<tr><td class="loc"><i>68</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>89</b></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>8A</b></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="7" class="rh">アユルダーマとう<br><span class="sm">Newid Isle</span></td><td class="loc">1D</td><td>×</td><td>5.36s (${T('5th','第5名','5位')})</td></tr>
-<tr><td class="loc">1E</td><td>◯</td><td></td></tr>
-<tr><td class="loc">1F</td><td>◯</td><td></td></tr>
-<tr><td class="loc">20</td><td>◯</td><td>7.35s (${T('10th','第10名','10位')})</td></tr>
-<tr><td class="loc">21</td><td>×</td><td></td></tr>
-<tr><td class="loc"><b>8B</b></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>8C</b></td><td>△</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">ベレンのきしべ<br><span class="sm">Slurry Coast</span></td><td class="loc">22</td><td>×</td><td>1.45s (${T('1st','第1名','1位')})</td></tr>
-<tr><td class="loc">23</td><td>◯</td><td></td></tr>
-<tr><td class="loc">24</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">カラコタ地方<br><span class="sm">Dourbridge</span></td><td class="loc">25</td><td>×</td><td></td></tr>
-<tr><td class="loc">26</td><td>◯</td><td></td></tr>
-<tr><td class="loc">27</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">ビタリへいげん<br><span class="sm">Lonely Plains</span></td><td class="loc">28</td><td>◯</td><td></td></tr>
-<tr><td class="loc">29</td><td>×</td><td></td></tr>
-<tr><td class="loc">2A</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">サンマロウ地方<br><span class="sm">Bloomingdale</span></td><td class="loc">2B</td><td>◯</td><td></td></tr>
-<tr><td class="loc">2C</td><td>×</td><td>7.98s (${T('11th','第11名','11位')})</td></tr>
-<tr><td class="loc">2D</td><td>◯</td><td>8.85s (${T('15th','第15名','15位')})</td></tr>
-<tr><td class="loc">2E</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>2F</i></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="6" class="rh">ビタリかいがん<br><span class="sm">Lonely Coast</span></td><td class="loc"><i>30</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>31</i></td><td>×</td><td></td></tr>
-<tr><td class="loc"><i>32</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>8D</b></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>8E</b></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>8F</b></td><td>×</td><td></td></tr>
-
-<tr><td class="rh">あめのしま<br><span class="sm">Pluvi Isle</span></td><td class="loc"><i>33</i></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="8" class="rh">グビアナさばく<br><span class="sm">Djust Desert</span></td><td class="loc"><i>34</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>35</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc">36</td><td>×</td><td>${T('Very easy to get lost','非常容易迷路','迷子になりやすい')}</td></tr>
-<tr><td class="loc">37</td><td>◯</td><td></td></tr>
-<tr><td class="loc">38</td><td>△</td><td></td></tr>
-<tr><td class="loc">39</td><td>◯</td><td></td></tr>
-<tr><td class="loc">3A</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>90</b></td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">アシュバル地方<br><span class="sm">Hermany</span></td><td class="loc">3B</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>3C</i></td><td>◎</td><td></td></tr>
-<tr><td class="loc">3D</td><td>◯</td><td></td></tr>
-<tr><td class="loc">3E</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>91</b></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">エルマニオンかいがん<br><span class="sm">Snowberian Coast</span></td><td class="loc">3F</td><td>×</td><td></td></tr>
-<tr><td class="loc">40</td><td>×</td><td>${T('Will hit after 10 mins','10分鐘後被撞','10分後当たる')}</td></tr>
-<tr><td class="loc">41</td><td>×</td><td></td></tr>
-<tr><td class="loc">42</td><td>◯</td><td>${T('Narrow landing hitbox','降落判定很窄','着陸判定が狭い')}</td></tr>
-<tr><td class="loc">43</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">エルマニオンせつげん<br><span class="sm">Snowberia</span></td><td class="loc">44</td><td>△</td><td>3.21s (${T('2nd','第2名','2位')})</td></tr>
-<tr><td class="loc">45</td><td>×</td><td></td></tr>
-<tr><td class="loc">46</td><td>◯</td><td></td></tr>
-<tr><td class="loc">47</td><td>◯</td><td></td></tr>
-<tr><td class="loc">48</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="4" class="rh">アイスバリーかいがん<br><span class="sm">Cringle Coast</span></td><td class="loc">49</td><td>×</td><td></td></tr>
-<tr><td class="loc">4A</td><td>△</td><td></td></tr>
-<tr><td class="loc">4B</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>92</b></td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="7" class="rh">ヤハーンしっち<br><span class="sm">Urdus Marshland</span></td><td class="loc">4C</td><td>×</td><td></td></tr>
-<tr><td class="loc">4D</td><td>×</td><td></td></tr>
-<tr><td class="loc">4E</td><td>×</td><td></td></tr>
-<tr><td class="loc">4F</td><td>×</td><td></td></tr>
-<tr><td class="loc">50</td><td>◯</td><td></td></tr>
-<tr><td class="loc">51</td><td>◯</td><td></td></tr>
-<tr><td class="loc">52</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">カルバド大そうげん<br><span class="sm">Iluugazar Plains</span></td><td class="loc">53</td><td>◯</td><td>6.36s (${T('8th','第8名','8位')})</td></tr>
-<tr><td class="loc">54</td><td>◯</td><td>12.20s</td></tr>
-<tr><td class="loc">55</td><td>◯</td><td></td></tr>
-<tr><td class="loc">56</td><td>◯</td><td></td></tr>
-<tr><td class="loc">57</td><td>×</td><td>8.16s (${T('12th','第12名','12位')})</td></tr>
-
-<tr><td rowspan="7" class="rh">カズチィチィ山<br><span class="sm">Mt Ulzuun</span></td><td class="loc">58</td><td>◯</td><td></td></tr>
-<tr><td class="loc">59</td><td>×</td><td></td></tr>
-<tr><td class="loc">5A</td><td>×</td><td></td></tr>
-<tr><td class="loc">5B</td><td>◯</td><td></td></tr>
-<tr><td class="loc">5F</td><td>×</td><td></td></tr>
-<tr><td class="loc">60</td><td>×</td><td></td></tr>
-<tr><td class="loc">61</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">ダダマルダ山<br><span class="sm">Mt Ulbaruun</span></td><td class="loc">5C</td><td>×</td><td></td></tr>
-<tr><td class="loc">5D</td><td>×</td><td></td></tr>
-<tr><td class="loc">5E</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">ジャーホジ地方<br><span class="sm">Khaalag Coast</span></td><td class="loc"><i>62</i></td><td>×</td><td></td></tr>
-<tr><td class="loc"><i>63</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>64</i></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="4" class="rh">オンゴリのがけ<br><span class="sm">Ondor Cliffs</span></td><td class="loc"><i>65</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>66</i></td><td>×</td><td></td></tr>
-<tr><td class="loc"><i>67</i></td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>93</b></td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="5" class="rh">東ナザム地方<br><span class="sm">Eastern Wormwood</span></td><td class="loc">69</td><td>◯</td><td>5.00s (${T('4th','第4名','4位')})</td></tr>
-<tr><td class="loc">6A</td><td>◯</td><td>${T('Must land nearby','要降落在旁邊','近くに着陸する必要あり')}</td></tr>
-<tr><td class="loc">6B</td><td>◯</td><td></td></tr>
-<tr><td class="loc">6C</td><td>×</td><td></td></tr>
-<tr><td class="loc"><b>94</b></td><td>◎</td><td></td></tr>
-
-<tr><td rowspan="6" class="rh">西ナザム地方<br><span class="sm">Western Wormwood</span></td><td class="loc">6D</td><td>◯</td><td></td></tr>
-<tr><td class="loc">6E</td><td>×</td><td></td></tr>
-<tr><td class="loc">6F</td><td>◯</td><td></td></tr>
-<tr><td class="loc">70</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><i>71</i></td><td>×</td><td></td></tr>
-<tr><td class="loc"><b>95</b></td><td>×</td><td></td></tr>
-
-<tr><td rowspan="2" class="rh">竜のもん<br><span class="sm">Wormwood Canyon</span></td><td class="loc">72</td><td>◯</td><td></td></tr>
-<tr><td class="loc">73</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="7" class="rh">竜のしっぽ地方<br><span class="sm">Wyrmtail</span></td><td class="loc">74</td><td>×</td><td></td></tr>
-<tr><td class="loc">75</td><td>◯</td><td></td></tr>
-<tr><td class="loc">76</td><td>◎</td><td></td></tr>
-<tr><td class="loc">77</td><td>×</td><td></td></tr>
-<tr><td class="loc">7B</td><td>◯</td><td></td></tr>
-<tr><td class="loc">7C</td><td>◯</td><td></td></tr>
-<tr><td class="loc"><b>96</b></td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="3" class="rh">竜のつばさ地方<br><span class="sm">Wyrmwing</span></td><td class="loc">78</td><td>◯</td><td></td></tr>
-<tr><td class="loc">79</td><td>◯</td><td></td></tr>
-<tr><td class="loc">7A</td><td>◯</td><td></td></tr>
-
-<tr><td rowspan="4" class="rh">竜のあぎと地方<br><span class="sm">Wyrmsmaw</span></td><td class="loc">7D</td><td>◯</td><td></td></tr>
-<tr><td class="loc">7E</td><td>◯</td><td></td></tr>
-<tr><td class="loc">7F</td><td>◯</td><td></td></tr>
-<tr><td class="loc">80</td><td>×</td><td>6.45s (${T('9th','第9名','9位')})</td></tr>
-
-<tr><td rowspan="3" class="rh">竜のくび地方<br><span class="sm">Wyrmneck</span></td><td class="loc">81</td><td>×</td><td></td></tr>
-<tr><td class="loc"><u>82</u></td><td>◯</td><td></td></tr>
-<tr><td class="loc">83</td><td>×</td><td></td></tr>
-
-<tr><td rowspan="2" class="rh">ガナンていこくりょう<br><span class="sm">The Gittish Empire</span></td><td class="loc">84</td><td>×</td><td></td></tr>
-<tr><td class="loc">85</td><td>◯</td><td></td></tr>
-</tbody></script>
-<script type="text/html" id="SMRBoss_Table"><tr class=hdr2>
-<th>Rank</th>
-<th>${T('SMR','B1F 怪物等級','B1F 敵ランク')}</th>
-<th>${T('Depth','樓層深度','深さ')}</th>
-<th>${T('Boss','BOSS')}</th>
-</tr>
-<tr>
-<td class="rk">02</td>
-<td class="w">X (1~3)</td>
-<td class="loc">2 ~ 4</td>
-<td rowspan="2" class="p">馬, 爪, 髭</td>
-</tr>
-<tr>
-<td class="rk">38</td>
-<td rowspan="2" class="w">X+1 (2~4)</td>
-<td rowspan="2" class="loc">4 ~ 6</td>
-</tr>
-<tr>
-<td class="rk">3D</td>
-<td rowspan="2" class="p">爪, 髭, 機, 教</td>
-</tr>
-<tr>
-<td class="rk">4C</td>
-<td rowspan="2" class="w">X+2 (3~5)</td>
-<td rowspan="2" class="loc">6 ~ 10</td>
-</tr>
-<tr>
-<td class="rk">51</td>
-<td class="p">髭, 機, 教, 血, 巨</td>
-</tr>
-<tr>
-<td class="rk">65</td>
-<td rowspan="2" class="w">X+3 (4~6)</td>
-<td class="loc">8 ~ 12</td>
-<td class="p">機, 教, 血, 巨</td>
-</tr>
-<tr>
-<td class="rk">79</td>
-<td class="loc">10 ~ 14</td>
-<td class="p">教, 血, 巨, 猪, 鳥</td>
-</tr>
-<tr>
-<td class="rk">8D</td>
-<td rowspan="2" class="w">X+4 (5~7)</td>
-<td rowspan="2" class="loc">10 ~ 16</td>
-<td class="p">血, 巨, 猪, 鳥</td>
-</tr>
-<tr>
-<td class="rk">A1</td>
-<td class="p">巨, 猪, 鳥, 猫</td>
-</tr>
-<tr>
-<td class="rk">B5</td>
-<td class="w">Y (6~9)</td>
-<td class="loc">11 ~ 16</td>
-<td class="p">猪, 鳥, 猫, 滅, 竜</td>
-</tr>
-<tr>
-<td class="rk">C9</td>
-<td class="w">8 (Y${T(' is even','為偶數','が偶数')})<br>9 (Y${T(' is odd','為奇數','が奇数')})</td>
-<td class="loc">12 ~ 16</td>
-<td rowspan="2" class="p">${T('All 12 types','全12種')}</td>
-</tr>
-<tr>
-<td class="rk">DD</td>
-<td class="w">9</td>
-<td class="loc">14 ~ 16</td>
-</tr></script>
-<script type="text/html" id="ElistOfs_Table"><tr class=hdr2>
-<th style="width:90px">ElistOfs</th>
-<th style="width:40px">${T('MonC','怪數','モン数')}</th>
-<th>${T('Floor State (Normal)','樓層狀態 (一般)','フロア状態 (通常)')}</th>
-<th>${T('Floor State (A)','樓層狀態 (A)','フロア状態 (A)')}</th>
-<th>${T('Floor State (B)','樓層狀態 (B)','フロア状態 (B)')}</th>
-</tr>
-<tr>
-<td class="cy">~ 2B30</td>
-<td class="fw">8</td>
-<td colspan="3" class="g">${T('Not a special floor','非特殊樓層','特殊フロアではない')}</td>
-</tr>
-<tr>
-<td class="cy">2B34 ~ 2B44</td>
-<td class="fw">7</td>
-<td class="p">${T('4-enemy','敵減 4 種')}</td>
-<td class="g">${T('Not a special floor','非特殊樓層','特殊フロアではない')}</td>
-<td class="p">${T('4-enemy','敵減 4 種')}</td>
-</tr>
-<tr>
-<td class="cy">2B48 ~ 2B58</td>
-<td class="fw">6</td>
-<td colspan="3" class="p">${T('3-enemy','敵減 3 種')}</td>
-</tr>
-<tr>
-<td class="cy">2B5C ~ 2B6C</td>
-<td class="fw">5</td>
-<td colspan="3" class="p">${T('2-enemy','敵減 2 種')}</td>
-</tr>
-<tr>
-<td class="cy">2B70 ~ 2B80</td>
-<td class="fw">4</td>
-<td colspan="3" class="r4">${T('ONLY','ONLY','オンリー')}</td>
-</tr>
-<tr>
-<td class="cy">2B84 ~ 2B94</td>
-<td class="fw">3</td>
-<td colspan="2" class="c">${T('No-enemy','敵無')}</td>
-<td class="r4">${T('ONLY','ONLY','オンリー')} <span class=k13>(${T('Pandora\'s Box vanishes','Pandora\'s Box 消失','パンドラボックス消滅')})</span></td>
-</tr>
-<tr>
-<td class="cy">2B98 ~ 2BA8</td>
-<td class="fw">2</td>
-<td colspan="2" class="c">${T('No-enemy','敵無')} <span class=k26>(${T('Pandora\'s Box vanishes','Pandora\'s Box 消失','パンドラボックス消滅')})</span></td>
-<td class="r4">${T('ONLY','ONLY','オンリー')} <span class=k13>(${T('Mimic vanishes','Mimic 消失','ミミック消滅')})</span></td>
-</tr>
-<tr>
-<td class="cy">2BAC ~ 2BBC</td>
-<td class="fw">1</td>
-<td colspan="2" class="c">${T('No-enemy','敵無')} <span class=k26>(${T('Mimic vanishes','Mimic 消失','ミミック消滅')})</span></td>
-<td class="r4">${T('ONLY','ONLY','オンリー')} <span class=k13>(${T('Cannibox vanishes','Cannibox 消失','ひとくいばこ消滅')})</span></td>
-</tr>
-<tr>
-<td class="cy">2BC0 ~ </td>
-<td class="fw">0</td>
-<td colspan="3" class="c">${T('No-enemy','敵無')} <span class=k26>(${T('all trap monsters vanish','所有寶箱怪消失','すべての宝箱モンスター消滅')})</span></td>
-</tr></script>
 <script type="text/html" id="ATPattern_List"><tr class="hdr">
 <th>Pattern ${T('(1 group)','(敵1組)')}</th>
 <th class="cr">${T('D','掉','落')}</th>
@@ -3261,367 +3289,365 @@ ${T('Evac-u-bell','おもいでのすず')}</td>
 </tr></script>
 <script type="text/html" id="BattleSkillAT"><tr class="hdr">
 <th style="width:115px">${T('Spell','魔法')}</th>
-<th class=w35>${T('DM','傷害','DM')}</th>
 <th class=w35>${T('AT','消耗','AT')}</th>
 <th class=w35>${T('CD','公差')}</th>
+<th class=w35>${T('Blk','盾')}</th>
 <th>${T('Notes','備考')}</th>
 </tr>
 <tr>
 <td class="ml">${T('Kazammle','ドルマドン')}</td>
-<td class="cc"></td>
 <td class="ct c b">67</td>
 <td class="cg c">-</td>
-<td class="cc">${T('vs Metal: 59;can be shield-blocked','金屬 59；會被盾格擋','対メタル 59；盾ガード')}</td>
+<td class="cw c">○</td>
+<td class="cc">${T('vs Metal:','金屬','対メタル')} 59</td>
 </tr>
 <tr>
 <td class="ml">${T('Kafrizzle','メラガイアー')}</td>
-<td class="cc"></td>
 <td class="ct c b">55</td>
 <td class="cg c">-</td>
-<td class="cc">${T('vs Metal: 41;can be shield-blocked','金屬 41；會被盾格擋','対メタル 41；盾ガード')}</td>
+<td class="cw c">○</td>
+<td class="cc">${T('vs Metal:','金屬','対メタル')} 41</td>
 </tr>
 <tr>
 <td class="ml">${T('Kaswooshle','バギムーチョ')}</td>
-<td class="cc"></td>
 <td class="ct c b">46</td>
 <td class="cr c">+?</td>
+<td class="cw c">×</td>
 <td class="cc"></td>
 </tr>
 <tr>
-<td class="ml">${T('Kacrack','マヒャド')}</td>
-<td class="cc"></td>
+<td class="ml">${T('Kacrack','マヒャド')}<br>${T('Kaboomle','イオグランデ')}</td>
 <td class="ct c b">29</td>
 <td class="cr c">+1</td>
-<td class="cc">${T('can be shield-blocked. 29 or 30 is unknown','會被盾格擋，29還是30不確定','盾ガード、29か30わからない')}</td>
+<td class="cw c">○<br>×</td>
+<td class="cc">${T('Kacrack 29 or 30 is unknown','マヒャド 29還是30不確定','マヒャド 29か30わからない')}</td>
 </tr>
 <tr>
 <td class="ml">${T('Kacrackle','マヒャデドス')}<br>${T('Kaswoosh','バギクロス')}</td>
-<td class="cc"></td>
 <td class="ct c b">17</td>
 <td class="cr c">+1</td>
+<td class="cw c">×<br>×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="ml">${T('Kazam','ドルモーア')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cg c">-</td>
+<td class="cw c">×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="ml">${T('Swoosh','バギマ')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cr c">+1</td>
+<td class="cw c">×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="ml">${T('Kafrizz','メラゾーマ')}</td>
-<td class="cc"></td>
 <td class="ct c b">11</td>
 <td class="cg c">-</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="ml">${T('Woosh','バギ')}</td>
-<td class="cc"></td>
 <td class="ct c b">11</td>
 <td class="cr c">+1</td>
+<td class="cw c">×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="ml">${T('Frizz','メラ')}<br>${T('Frizzle','メラミ')}<br>${T('Crack','ヒャド')}<br>${T('Zam','ドルマ')}<br>${T('Zammle','ドルクマ')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cg c">-</td>
+<td class="cw c">○<br>○<br>○<br>×<br>×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="ml">${T('Crackle','ヒャダルコ')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+8</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
-
 <tr class=hdr2>
 <th>${T('Item','道具')}</th>
-<th>${T('DM','傷害','DM')}</th>
 <th>${T('AT','消耗','AT')}</th>
 <th>${T('CD','公差')}</th>
+<th>${T('Blk','盾')}</th>
 <th>${T('Notes','備考')}</th>
 </tr>
 <tr>
 <td class="gl">${T('Rockbomb Shard','ばくだん石')}</td>
-<td class="cc"></td>
 <td class="ct c b">29</td>
 <td class="cr c">+1</td>
+<td class="cw c">×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="gl">${T('Magma Staff','マグマの杖')}</td>
-<td class="cc"></td>
 <td class="ct c b">28</td>
 <td class="cr c">+1</td>
-<td class="cc"></td>
+<td class="cw c">×</td>
+<td class="cc">${T('vs Metal:','金屬','対メタル')} 20</td>
 </tr>
 <tr>
 <td class="gl">${T('Staff of Sentencing','さばきの杖')}<br>${T('Staff of Divine Wrath','てんばつの杖')}<br>${T('Foehn Fan','れっぷうのおうぎ','	れっぷうのおうぎ')}<br>${T('Gale Force Fan','たつまきのおうぎ')}</td>
-<td class="cc"></td>
 <td class="ct c b">11</td>
 <td class="cr c">+1</td>
+<td class="cw c">×<br>×<br>×<br>×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="gl">${T('Cautery Sword','はじゃのつるぎ')}<br>${T('Aurora Blade','ひかりのつるぎ')}<br>${T('Fire Blade','ほのおのつるぎ')}<br>${T('Inferno Blade','インフェルノソード')}<br>${T('Wyrmwand','ドラゴンの杖')}<br>${T('Fire Claws','ほのおのツメ')}<br>${T('Combusticlaws','しゃくねつのツメ')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+1</td>
+<td class="cw c">×<br>×<br>×<br>×<br>×<br>×<br>×</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="gl">${T('Icicle Dirk','こおりのやいば')}<br>${T('Fenrir Fang','フェンリルのキバ')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+8</td>
+<td class="cw c">×<br>×</td>
 <td class="cc"></td>
 </tr>
-
 <tr class=hdr2>
 <th>${T('Skill','特技')}</th>
-<th>${T('DM','傷害','DM')}</th>
 <th>${T('AT','消耗','AT')}</th>
 <th>${T('CD','公差')}</th>
+<th>${T('Blk','盾')}</th>
 <th>${T('Notes','備考')}</th>
 </tr>
 <tr>
 <td class="bl">${T('Hot Lick','火ふき芸')}</td>
-<td class="cc"></td>
 <td class="ct c b">128</td>
 <td class="cg c">-</td>
+<td class="cw c">×</td>
 <td class="cc">${T('vs Metal:','金屬','対メタル')} 120</td>
 </tr>
 <tr>
 <td class="bl">${T('Big Banga','ビッグバン')}</td>
-<td class="cc"></td>
 <td class="ct c b">74</td>
 <td class="cw c">0</td>
+<td class="cw c">○</td>
 <td class="cc">${T('vs Metal: 74;on critical hit:','金屬 74，命中要害時','対メタル 74、会心時')} &lt;74</td>
 </tr>
 <tr>
 <td class="bl">${T('Gigathrow','ギガスロー')}</td>
-<td class="cc"></td>
 <td class="ct c b">39</td>
 <td class="cg c">-</td>
+<td class="cw c">○</td>
 <td class="cc">${T('vs Metal on miss:','金屬未命中時','メタルにミスする時')} 29</td>
 </tr>
 <tr>
 <td class="bl">${T('Twin Dragon Lash','双竜打ち')}</td>
-<td class="cc"></td>
 <td class="ct c b">30</td>
 <td class="cg c">-</td>
+<td class="cw c">○</td>
 <td class="cc">${T('On 2-hit: 42 if target is 1 monster, 43 if 2 or more monsters','2 hit 時，被選中敵怪 1 隻 42，2 隻以上 43','2 hit 時、選択された敵が 1 体の場合 42、2 体以上の場合 43')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Serpent\'s Bite','地這い大蛇')}<br>${T('Crackerwhack','ランドインパクト')}<br>${T('Shining Shot','シャイニングボウ')}<br>${T('Starburst Throw','シャインスコール')}</td>
-<td class="cc"></td>
 <td class="ct c b">29</td>
 <td class="cr c">+1</td>
+<td class="cw c">○<br>○<br>○<br>○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Multithrust','さみだれづき')}</td>
-<td class="cc"></td>
 <td class="ct c b">28</td>
 <td class="cr c">+8</td>
+<td class="cw c">○</td>
 <td class="cc">${T('Hit count: 3 or 4 (may be &lt;3 if all monsters are killed)','攻擊次數：3 或 4 (如把敵怪全部幹掉，可小於 3 次)','攻撃回数：3 または 4（敵を全滅させた場合は 3 未満になり得る）')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Gigagash','ギガブレイク')}</td>
-<td class="cc"></td>
 <td class="ct c b">23</td>
 <td class="cr c">+1</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Hypnowhip','らせん打ち')}<br>${T('Trammel Lash','しばり打ち')}</td>
-<td class="cc"></td>
 <td class="ct c b">22</td>
 <td class="cg c">-</td>
-<td class="cc">22${T(' = 14 + ','=14+',' = 14 + ')}8</td>
+<td class="cw c">○<br>○</td>
+<td class="cc">22=14+8</td>
 </tr>
 <tr>
 <td class="bl">${T('Lightning Storm','ジゴスパーク')}<br>${T('Boulder Toss','岩石おとし')}</td>
-<td class="cc"></td>
 <td class="ct c b">20</td>
 <td class="cr c">+1</td>
+<td class="cw c">○<br>○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Multifists','ばくれつけん')}</td>
-<td class="cc"></td>
 <td class="ct c b">20</td>
 <td class="cr c">+8</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Clap Trap','とうこん討ち')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cr c">+1</td>
+<td class="cw c">○</td>
 <td class="cc">${T('Falcon Blade 2-hit: 15;Attribeauty 14 can preempt;Metal Slime Sword/Spear and Attribeauty 14 work on Metals','隼劍 2 hit 時為 15；風林火山 14 可先制；金屬史萊姆劍／槍、風林火山 14 對金屬有效','はやぶさの剣 2hit 時 15；風林火山 14 で先制可；メタスラの剣／やり、風林火山 14 はメタルに有効')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Thunder Thrust','一閃づき')}<br>${T('Hatchet Man','まじん斬り')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cg c">-</td>
+<td class="cw c">○<br>○</td>
 <td class="cc">${T('0 on miss','不成功時為 0','ミスする時 0')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Pressure Pointer','きゅうしょづき')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cg c">-</td>
+<td class="cw c">○</td>
 <td class="cc">${T('0 on instant-death','即死效果觸發時為 0','即死効果が発動した時 0')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Hand of God','ゴッドスマッシュ')}<br>${T('Water Slaughterer','波紋演舞')}<br>${T('Poplar Toppler','たいぼく斬')}<br>${T('Parallax','蒼天魔斬')}<br>${T('Helm Splitter','かぶと割り')}<br>${T('Whopper Chop','森羅万象斬')}<br>${T('Heart Breaker','ハートブレイク')}<br>${T('Penny Pincher','ゴールドハンマー')}<br>${T('Bagsy Last','ラストバッター')}<br>${T('Knuckle Sandwich','せいけんづき')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cg c">-</td>
+<td class="cw c">○<br>○<br>○<br>○<br>○<br>○<br>○<br>○<br>○<br>○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Solar Flair','グランドネビュラ')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cr c">+1</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Axes of Evil','オノむそう')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cr c">+4</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Lashings of Love','愛のムチ')}<br>${T('Hit the Hay','ねむり打ち')}<br>${T('Schadenfreude','ヒールウィップ')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cr c">+5</td>
+<td class="cw c">○<br>○<br>○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Rain of Pain','さみだれうち')}</td>
-<td class="cc"></td>
 <td class="ct c b">14</td>
 <td class="cr c">+10</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Have a Ball','キラージャグリング')}</td>
-<td class="cc"></td>
 <td class="ct c b">11</td>
 <td class="cr c">+4</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Metal Slash','メタル斬り')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+1</td>
+<td class="cw c">○</td>
 <td class="cc">${T('Falcon Blade 2-hit: 9;always work on Metals','隼劍 2 hit 時 9','はやぶさの剣 2hit 時 9')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Attack','攻擊','攻撃')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+8</td>
+<td class="cw c">○</td>
 <td class="cc">${T('Falcon Blade 2-hit: 16;+1 hit when Gladiator\'s Guide\'s effect triggers','隼劍 2 hit 時 16，戰鬥大師秘傳書效果發動時 +1 hit','はやぶさの剣 2hit 時 16；バトルマスター秘伝書効果発動時 +1 hit')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Attack (group / all)','攻擊 (小組/全體)','攻撃（グループ／全体）')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+4</td>
+<td class="cw c">○<br>○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Falcon Slash','はやぶさ斬り')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+8</td>
+<td class="cw c">○</td>
 <td class="cc">${T('Falcon Blade 4-hit: 32;Metal Slime Sword 2-hit: 16 works on Metals','隼劍 4 hit 時為 32；金屬史萊姆劍 2 hit 時 16，對金屬有效','はやぶさの剣 4hit 時 32；メタスラの剣 2hit 時 16 はメタルに有効')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Mercurial Thrust','しっぷうづき')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cg c">-</td>
+<td class="cw c">○</td>
 <td class="cc">${T('Attack priority > Attribeauty;Metal Slime Spear works on Metals','攻擊優先度 > 風林火山，金屬史萊姆槍對金屬有效','攻撃優先度 > 風林火山；メタスラのやりはメタルに有効')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Disco Stew','バックダンサー呼び')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+1</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
-<td class="bl">${T('Gigaslash<br>Crosscutter Throw','ギガスラッシュ<br>クロスカッター','クロスカッター')}</td>
-<td class="cc"></td>
+<td class="bl">${T('Gigaslash<br>Crosscutter Throw','ギガスラッシュ<br>クロスカッター')}</td>
 <td class="ct c b">8</td>
 <td class="cr c">+4</td>
+<td class="cw c">○<br>○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Power Throw','パワフルスロー')}<br>${T('Ooze Bruiser','スライムブロウ')}<br>${T('Metalicker','メタルウィング')}<br>${T('Wind Sickles','かまいたち')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+5</td>
-<td class="cc"></td>
+<td class="cw c">○<br>○<br>○<br>○</td>
+<td class="cc">${T('','パワフルスロー 傷害不遞減，メタルウィング 對金屬有效','メタルウィング はメタルに有効')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Fan Dango','おうぎのまい')}<br>${T('Firebird Throw','バーニングバード')}<br>${T('Stone\'s Throw','石つぶて')}</td>
-<td class="cc"></td>
 <td class="ct c b">8</td>
 <td class="cr c">+8</td>
-<td class="cc">${T('Attribeauty × Fan Dango works on Metals','風林火山×おうぎのまい 對金屬有效','')}</td>
+<td class="cw c">○<br>○<br>○</td>
+<td class="cc">${T('Attribeauty × Fan Dango works on Metals','風林火山×おうぎのまい 對金屬有效','風林火山×おうぎのまい はメタルに有効')}</td>
 </tr>
 <tr>
 <td class="bl">${T('Party Pooper','なぎはらい')}</td>
-<td class="cg c">-</td>
 <td class="ct c b">6</td>
 <td class="cr c">+6</td>
+<td class="cw c">○</td>
 <td class="cc"></td>
 </tr>
 <tr>
 <td class="bl">${T('Whack','ザキ')}<br>${T('Thwack','ザラキ')}<br>${T('Kathwack','ザラキーマ')}</td>
-<td class="cg c">-</td>
 <td class="cw c b">0</td>
 <td class="cw c">0</td>
+<td class="cw c">×<br>×<br>×</td>
 <td class="cc">${T('Works only if death resistance >0, independent of monster\'s internal Lv','即死耐性大於 0 才有效，與 怪物內部 Lv 無關','即死耐性が 0 より大きい場合のみ有効；モンスター内部 Lv とは無関係')}</td>
 </tr>
 <tr>
-<td class="bl">${T('Fources','各種フォース')}</td>
-<td class="cg c">-</td>
+<td class="bl">${T('Mercy','みのがす')}</td>
 <td class="cw c b">0</td>
+<td class="cg c">-</td>
+<td class="cw c">×</td>
+<td class="cc">${T('Only works if death resistance >0 and user Lv ≥ monster\'s internal Lv +7','即死耐性大於 0 且使用者 Lv ≥ 怪物內部 Lv+7 才有效','即死耐性が 0 より大きく、かつ使用者 Lv ≥ モンスター内部 Lv+7 の場合のみ有効')}</td>
+</tr>
+<tr>
+<td class="bl">${T('Fources','各種フォース')}</td>
+<td class="cw c b">0</td>
+<td class="cg c">-</td>
 <td class="cg c">-</td>
 <td class="cc">${T('Use when extra damage is needed','需要增加傷害値時使用','ダメージ増加が必要な場合に使用')}</td>
 </tr>
 <tr>
-<td class="bl">${T('Mercy','みのがす')}</td>
-<td class="cg c">-</td>
-<td class="cw c b">0</td>
-<td class="cg c">-</td>
-<td class="cc">${T('Only works if death resistance >0 and user Lv ≥ monster\'s internal Lv +7','即死耐性大於 0 且使用者 Lv ≥ 怪物內部 Lv+7 才有效','即死耐性が 0 より大きく、かつ使用者 Lv ≥ モンスター内部 Lv+7 の場合のみ有効')}</td>
-</tr>
-<tr>
 <td class="bl">${T('Egg On','おうえん')}</td>
-<td class="cg c">-</td>
 <td class="cw c b">0</td>
+<td class="cg c">-</td>
 <td class="cg c">-</td>
 <td class="cc">${T('Use when extra damage is needed;×1.5 after 1 use, ×2.5 after 2, ×4 after 3','需要增加傷害値時使用，用一次大約 1.5 倍，兩次 2.5 倍，三次 4 倍','ダメージ増加が必要な場合に使用、1 回で約 1.5 倍、2 回で約 2.5 倍、3 回で約 4 倍')}</td>
 </tr></script>

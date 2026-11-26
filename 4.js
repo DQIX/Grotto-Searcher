@@ -9,6 +9,7 @@ const COLORS={
 };
 const WALL_COLOR='#000';
 const tileNames=[D01,D02,D03,D02,C11,C11,C15,null,D04];
+const chestItemModes=[[1,'solo',STR_SOLO],[2,'party',STR_PARTY],[4,'ppap','PPAP']];
 const floorGrid=new Path2D();
 for(let p=0;p<=16*TILE_SIZE;p+=TILE_SIZE){
 floorGrid.moveTo(p,0);
@@ -124,18 +125,14 @@ byId('map_box_total').textContent=`📦 ${totalBoxes}`;
 html='<div class="floor-tabs">';
 const ELIST_TAB_COLORS={none:'#c0c0c0',only:'#FFC90E',reduced:'#B5E61D',partial:'#00A2E8'};
 for(let i=0;i<mapData.floorCount;i++){
-let tabStyle='';
 const einfo=getFloorElistInfo(mapData,i);
+if(einfo.state)Object.assign(einfo,classifyElistState(einfo.state));
 floorElist.push(einfo);
-if(einfo.state){
-const c=ELIST_TAB_COLORS[classifyElistState(einfo.state).kind]||null;
-if(c)tabStyle=` style="background:${c};color:#000;border-color:${c}"`;
-}
+const color=ELIST_TAB_COLORS[einfo.kind];
+const tabStyle=color?` style="background:${color};color:#000;border-color:${color}"`:'';
 html+=`<div class="floor-tab${i===activeFloor?' active':''}"${tabStyle} onclick="switchFloor(${i})">B${i+1}F</div>`;
 }
-html+='</div>';
-html+='<div class="floor-content" id="floor-content"></div>';
-byId('map_floors').innerHTML=html;
+byId('map_floors').innerHTML=html+'</div><div class="floor-content" id="floor-content"></div>';
 switchFloor(activeFloor);
 }
 function getCanvasTilePoint(canvas,event){
@@ -167,6 +164,7 @@ canvas.style.cursor=mark&&mark.box?'pointer':'default';
 }
 function switchFloor(f){
 const current=byId('floor-content');
+const floors=current.parentElement;
 const previous=floorViews.get(activeFloor);
 if(previous){
 previous.canvas.parentElement.scrollLeft=0;
@@ -174,7 +172,7 @@ previous.canvas.style.cursor='';
 previous.canvas.nextElementSibling.textContent='';
 }
 if(f!==activeFloor){
-const tabs=current.previousElementSibling.children;
+const tabs=floors.firstElementChild.children;
 tabs[activeFloor].classList.remove('active');
 tabs[f].classList.add('active');
 activeFloor=f;
@@ -189,12 +187,22 @@ floorViews.delete(oldest);
 view=reusable;
 }else{
 const panel=current.cloneNode(false);
-panel.innerHTML='<div class="map-container"><canvas id="mapCanvas" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div><div class="floor-info"></div>';
+panel.lang=document.documentElement.lang;
+panel.innerHTML='<div class="map-container"><canvas id="mapCanvas" title=""></canvas><div id="coordDisplay" style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#aaa;font-family:monospace;pointer-events:none"></div></div><div class="floor-info"><h3>B</h3><table></table></div>';
 view={panel,canvas:panel.querySelector('canvas')};
-for(const type of['mousemove','touchstart','touchmove','click'])panel.addEventListener(type,showMapCoordinate,{passive:true});
 }
-current.replaceWith(view.panel);
 if(!cached)renderFloor(f,view);
+if(cached&&previous){
+current.removeAttribute('id');
+previous.canvas.removeAttribute('id');
+previous.canvas.nextElementSibling.removeAttribute('id');
+if(!view.panel.isConnected)floors.appendChild(view.panel);
+}else current.replaceWith(view.panel);
+if(!view.panel.id){
+view.panel.id='floor-content';
+view.canvas.id='mapCanvas';
+view.canvas.nextElementSibling.id='coordDisplay';
+}
 floorViews.set(f,view);
 }
 function renderFloor(f,view){
@@ -206,13 +214,12 @@ const lastFloor=f===mapData.floorCount-1;
 const marks=view.marks=[];
 marks[(down.y<<4)+down.x]={tile:5,label:'▼',hover:lastFloor?'Boss▼':D06+'▼'};
 marks[(up.y<<4)+up.x]={tile:4,label:'▲',hover:D05+'▲'};
-let infoHtml=`<h3>B${f+1}F</h3><table><tr><td>${C10}</td><td>${w} × ${h}</td></tr><tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　${lastFloor?'Boss':'▼'} (${down.x}, ${down.y})</td></tr>`;
-const{hex,state,dValue}=floorElist[f];
+let infoHtml=`<tr><td>${C10}</td><td>${w} × ${h}</td></tr><tr><td>${C11}</td><td>▲ (${up.x}, ${up.y})　${lastFloor?'Boss':'▼'} (${down.x}, ${down.y})</td></tr>`;
+const{hex,state,dValue,kind,count}=floorElist[f];
 const stateHtml=state?` <span style="background:#f4c;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:6px;white-space:nowrap;">${state}</span>`:'';
 infoHtml+=`<tr><td>ElistOfs</td><td style="font-family:monospace;color:#4c4;">${hex}${stateHtml}${makeDBadge(dValue)}</td></tr>`;
 const envType=mapData._details[3];
 const floorMR=floorMRAt(mapData._details[2],f);
-const{kind,count}=classifyElistState(state||'');
 const only=(ONLY_MONSTERS[envType]||[])[floorMR];
 let pills='',normalIndex=0;
 for(const entry of getSpawnList(envType,floorMR)){
@@ -226,24 +233,28 @@ pills+=`<span class="mon-pill" style="${style}">${getMonsterDisplayName(id)}</sp
 }
 if(pills)infoHtml+=`<tr><td>${C12}</td><td class="mon-td">${pills}</td></tr>`;
 if(boxCount>0){
+const lang=DISPLAY_LANG==='EN'?0:1;
 infoHtml+=`<tr><td>${C13}</td><td>${boxCount} <font color=#666>${C14}</font></td></tr>`;
 for(let i=0;i<boxCount;i++){
 const box=mapData.getBoxInfo(f,i);
 const rn=CHEST_RANK[box.rank]||box.rank;
 marks[(box.y<<4)+box.x]={tile:6,label:(CHEST_RANK[box.rank]||'?')+(i+1),box:i+1};
-const[dispSolo,dispParty,dispPpap]=[1,2,4].map(s=>mapData.getBoxItem(f,i,s)[DISPLAY_LANG!=='EN'?1:0]||'?');
 infoHtml+=`<tr><td>${C15} ${i+1}</td><td>
 <div class="chest-row"><span class="chest-rank rank-${rn}">Rank ${rn}</span> (${box.x}, ${box.y})</div>
-<div class="chest-item"><span class="chest-item-solo">Item (${STR_SOLO}): ${dispSolo}</span></div>
-<div class="chest-item"><span class="chest-item-party">Item (${STR_PARTY}): ${dispParty}</span></div>
-<div class="chest-item"><span class="chest-item-ppap">Item (PPAP): ${dispPpap}</span></div>
-</td></tr>`;
+`;
+for(const[sec,mode,label]of chestItemModes){
+const item=mapData.getBoxItem(f,i,sec)[lang]||'?';
+infoHtml+=`<div class="chest-item"><span class="chest-item-${mode}">Item (${label}): ${item}</span></div>\n`;
+}
+infoHtml+='</td></tr>';
 }
 }else{
 infoHtml+=`<tr><td>${C15}</td><td>${C16}</td></tr>`;
 }
 const{panel,canvas}=view;
-panel.lastElementChild.innerHTML=infoHtml+'</table>';
+const info=panel.lastElementChild;
+info.firstElementChild.firstChild.data='B'+(f+1)+'F';
+info.lastElementChild.innerHTML=infoHtml;
 const canvasW=w*TILE_SIZE,canvasH=h*TILE_SIZE;
 if(canvas.width!==canvasW)canvas.width=canvasW;
 if(canvas.height!==canvasH)canvas.height=canvasH;
@@ -424,6 +435,7 @@ const srDiv=byId('searchResults');
 if(srDiv&&srDiv.children.length<=1)srDiv.innerHTML='<div style="color:#666;font-size:13px;text-align:center;margin-top:20px;">'+J02+'</div>';
 const seedInput=byId('seed');
 const rankSelect=byId('rank');
+for(const type of['mousemove','touchstart','touchmove','click'])byId('map_floors').addEventListener(type,showMapCoordinate,{passive:true});
 if(seedInput){
 seedInput.addEventListener('keydown',(e)=>{
 if(e.key==='Enter')calculate();

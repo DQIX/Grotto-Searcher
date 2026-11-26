@@ -897,7 +897,15 @@ this.trackOverflow=true;this.isStairOverflow[floor]=false;
 this.routineJ(floor);
 const overflow=this.isStairOverflow[floor];
 this.trackOverflow=track;this.isStairOverflow[floor]=track?overflow:before;
-return{bytes:d.slice(),seed:this._seed,overflow,derived:[null,null,null]};
+if(!this.floorPool){
+const buffer=new Uint8Array((FLOOR_CACHE_MAX+1)*1336);
+this.floorPool=[];
+for(let i=0;i<=FLOOR_CACHE_MAX;i++)this.floorPool.push(buffer.subarray(i*1336,(i+1)*1336));
+this.floorNext=0;
+}
+const bytes=this.floorPool[this.floorNext++%this.floorPool.length];
+bytes.set(d);
+return{bytes,seed:this._seed,overflow,derived:[null,null,null]};
 }
 createDungeonDetail(){
 const cache=this._floorCache||(this._floorCache=new Map());
@@ -935,6 +943,15 @@ this._details2[d[i14+9]-1]++;
 }
 get floorCount(){return this._details[1];}
 get monsterRank(){return this._details[2];}
+getFloorWidth(f){return this.di[f][2];}
+getFloorHeight(f){return this.di[f][3];}
+getUpStair(f){return{x:this.di[f][4],y:this.di[f][5]};}
+getDownStair(f){return{x:this.di[f][6],y:this.di[f][7]};}
+getBoxCount(f){return this.di[f][8];}
+getBoxInfo(f,i){
+const d=this.di[f];
+return{rank:d[9+i],x:d[i*2+13],y:d[i*2+14]};
+}
 get mapTypeName(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][0]:"Unknown";}
 get mapTypeNameJP(){return ENV_NAMES[this._details[3]]?ENV_NAMES[this._details[3]][1]:"不明";}
 get bossName(){return BOSS_NAMES[this._details[0]]?BOSS_NAMES[this._details[0]][0]:"Unknown";}
@@ -952,25 +969,6 @@ const p=PREFIX_NAMES[this._details[5]][1];
 const s=SUFFIX_NAMES[this._details[6]][1];
 const l=LOCALE_NAMES[this.MapLocale][1];
 return`${p}${s}の${l}Lv${this._details[4]}`;
-}
-getFloorWidth(f){return this.di[f][2];}
-getFloorHeight(f){return this.di[f][3];}
-getUpStair(f){return{x:this.di[f][4],y:this.di[f][5]};}
-getDownStair(f){return{x:this.di[f][6],y:this.di[f][7]};}
-getBoxCount(f){return this.di[f][8];}
-getBoxInfo(f,i){
-const d=this.di[f];
-return{rank:d[9+i],x:d[i*2+13],y:d[i*2+14]};
-}
-getFloorMap(f){
-const w=this.getFloorWidth(f),h=this.getFloorHeight(f);
-const map=[];
-for(let y=0;y<h;y++){
-map[y]=[];
-for(let x=0;x<w;x++)
-map[y][x]=this.di[f][x+(y<<4)+792];
-}
-return map;
 }
 getBoxItem(floor,boxIndex,second){
 this._seed=(this.di[floor][0]+this.MapSeed+second)>>>0;
@@ -1527,27 +1525,23 @@ const W=di[2],H=di[3];
 if(W<=0||H<=0)return null;
 if(sx===gx&&sy===gy)return 0;
 if(sx<0||sx>=W||sy<0||sy>=H||gx<0||gx>=W||gy<0||gy>=H)return null;
-const S=USP_STRIDE,dist=_uspDIST,slot=eng._floorSlot&&eng._floorSlot[f];
-let paths=slot&&slot.paths;
-const walk=paths?paths.walk:_uspWALK;
-if(!paths){
+const S=USP_STRIDE,dist=_uspDIST,walk=_uspWALK,slot=eng._floorSlot&&eng._floorSlot[f];
+const paths=slot&&(slot.paths||(slot.paths=new Map()));
+const tx=gx+1,ty=gy+1,goal=ty*S+tx,s=(sy+1)*S+sx+1;
+const key=paths&&(s>goal&&isMainWalkable(di[(sy<<4)+sx+792])&&isMainWalkable(di[(gy<<4)+gx+792])?goal*S*S+s:s*S*S+goal);
+if(paths&&paths.has(key))return paths.get(key);
 walk.fill(0);
 for(let y=0;y<H;y++){
 const row=(y<<4)+792,base=(y+1)*S+1;
 for(let x=0;x<W;x++)walk[base+x]=isMainWalkable(di[row+x])?1:0;
 }
-if(slot)paths=slot.paths={walk:walk.slice(),costs:new Map()};
-}
-const tx=gx+1,ty=gy+1,goal=ty*S+tx,s=(sy+1)*S+sx+1;
-const key=paths&&(walk[s]&&walk[goal]&&s>goal?goal+','+s:s+','+goal);
-if(paths&&paths.costs.has(key))return paths.costs.get(key);
 dist.fill(Infinity);
 const h=(n)=>{const dx=Math.abs(n%S-tx),dy=Math.abs((n/S|0)-ty);return dx>dy?dx+0.5*dy:dy+0.5*dx;};
 dist[s]=0;_uspHS=0;pushAstarNode(h(s),s);
 while(_uspHS>0){
 const nd=popAstarNode();const co=dist[nd];
 if(_uspPC-h(nd)>co)continue;
-if(nd===goal){if(paths)paths.costs.set(key,co);return co;}
+if(nd===goal){if(paths)paths.set(key,co);return co;}
 for(let k=0;k<8;k++){
 const ni=nd+_uspOFS[k];
 if(!walk[ni])continue;
@@ -1556,7 +1550,7 @@ const nc=co+DIR_W[k];
 if(nc<dist[ni]){dist[ni]=nc;pushAstarNode(nc+h(ni),ni);}
 }
 }
-if(paths)paths.costs.set(key,null);
+if(paths)paths.set(key,null);
 return null;
 }
 function calcFloorWalkCost(eng,f){
